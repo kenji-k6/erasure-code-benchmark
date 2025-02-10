@@ -1,0 +1,15 @@
+[submodule "libraries/isa-l"]
+	path = libraries/isa-l
+	url = https://github.com/intel/isa-l.git
+[submodule "libraries/leopard"]
+	path = libraries/leopard
+	url = https://github.com/catid/leopard.git
+[submodule "libraries/cm256"]
+	path = libraries/cm256
+	url = https://github.com/catid/cm256.git
+[submodule "libraries/wirehair"]
+	path = libraries/wirehair
+	url = https://github.com/catid/wirehair.git
+[submodule "libraries/aff3ct"]
+	path = libraries/aff3ct
+	url = https://github.com/aff3ct/aff3ct.git
