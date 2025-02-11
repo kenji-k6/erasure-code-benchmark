@@ -13,3 +13,6 @@
 [submodule "libraries/aff3ct"]
 	path = libraries/aff3ct
 	url = https://github.com/aff3ct/aff3ct.git
+[submodule "libraries/gnuradio"]
+	path = libraries/gnuradio
+	url = https://github.com/gnuradio/gnuradio.git
