@@ -7,6 +7,8 @@
 #include "leopard.h"
 #include "wirehair/wirehair.h"
 
+#include "utils.h"
+
 #include <iostream>
 #include <chrono>
 

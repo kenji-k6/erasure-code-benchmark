@@ -2,6 +2,7 @@
 
 
 
+
 int benchmark_leopard() {
   if (leo_init()) {
     // error in initialization
