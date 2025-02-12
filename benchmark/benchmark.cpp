@@ -84,6 +84,40 @@ public:
     return 0;
   }
 
+
+  int encode() override {
+    // Start the timer
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    // Encode the data
+    LeopardResult encode_result = leo_encode(
+      config_.computed.actual_block_size,
+      config_.computed.original_blocks,
+      config_.computed.recovery_blocks,
+      encode_work_count_,
+      original_ptrs_.data(),
+      work_ptrs_.data()
+    );
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+    // Check for errors
+    if (encode_result != Leopard_Success) {
+      std::cerr << "Leopard: Encode failed with error " << encode_result << ".\n";
+      return -1;
+    }
+
+    decode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+
+    return 0;
+  }
+
+
+  int decode(float loss_rate) override {
+    // TODO...
+    return 0;
+  }
+
 private:
   unsigned encode_work_count_ = 0;
   unsigned decode_work_count_ = 0;
