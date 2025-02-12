@@ -1,5 +1,5 @@
-#ifndef BENCHMARK_RUNNER_H
-#define BENCHMARK_RUNNER_H
+#ifndef BENCHMARK_H
+#define BENCHMARK_H
 
 #include "aff3ct.hpp"
 #include "cm256.h"
@@ -11,9 +11,13 @@
 
 #include <iostream>
 
-#define MAX_BLOCKS 64000
-#define MIN_BLOCKS 2
-#define BLOCK_SIZE_ALIGNMENT 64
+
+#define LEOPARD_MIN_BLOCKS 2
+#define LEOPARD_MAX_BLOCKS 65536
+#define LEOPARD_BLOCK_SIZE_ALIGNMENT 64
+
+#define WIREHAIR_MIN_BLOCKS 2
+#define WIREHAIR_MAX_BLOCKS 64000
 
 
 /*
@@ -43,13 +47,13 @@ public:
   virtual ~ECCBenchmark() = default;
 
   // Initialize the benchmark with the given configuration
-  virtual bool setup(const BenchmarkConfig& config) = 0;
+  virtual int setup(const BenchmarkConfig& config) = 0;
 
   // Run the encoding process
-  virtual bool encode() = 0;
+  virtual int encode() = 0;
 
   // Run the decoding process (with simulated data loss)
-  virtual bool decode(float loss_rate) = 0;
+  virtual int decode(float loss_rate) = 0;
 
   // Cleanup the benchmark
   virtual void teardown() = 0;
@@ -97,6 +101,9 @@ private:
 
   // Save results to a CSV file
   void save_results(Library lib, const BenchmarkConfig& config, const ECCBenchmark::Metrics& metrics);
+
+  // Computes the left over configuration parameters 
+  void compute_config(BenchmarkConfig& config);
 
   // Collection of test cases
   std::vector<std::pair<Library, BenchmarkConfig>> test_cases_;
