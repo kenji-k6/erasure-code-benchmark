@@ -1,5 +1,5 @@
 #include "benchmark_runner.h"
-
+#include "utils.h"
 
 
 
@@ -14,7 +14,13 @@ int benchmark_leopard() {
 
 
 int main() {
-  std::cout << "All libraries compiled!" << '\n';
+  PCGRandom rng1(0, 0);
+  PCGRandom rng2(0, 0);
+
+  std::cout << rng1.next() << '\n' << rng2.next() << "\n\n";
+  std::cout << rng1.next() << '\n' << rng2.next() << "\n\n";
+  std::cout << rng1.next() << '\n' << rng2.next() << "\n\n";
+  std::cout << rng1.next() << '\n' << rng2.next() << "\n\n";
 
   return 0;
 }

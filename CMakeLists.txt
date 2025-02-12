@@ -16,7 +16,6 @@ find_package(OpenMP REQUIRED) # needed for leopard
 set (SOURCES
   benchmark/main.cpp
   benchmark/benchmark_runner.cpp
-  benchmark/error_injector.cpp
   benchmark/utils.cpp
 )
 
