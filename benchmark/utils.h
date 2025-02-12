@@ -3,6 +3,7 @@
 
 #include <cstddef> // for size_t
 #include <cstdint>
+#include <chrono>
 
 
 
@@ -22,3 +23,16 @@ class PCGRandom {
 }; // class PCGRandom
 
 #endif // UTILS_H
+
+
+
+/*
+ * Timer utility functions
+*/
+// Get the current time in microseconds
+inline long long get_current_time_us() {
+  auto now = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+  return duration.count();
+}
+
