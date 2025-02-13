@@ -39,5 +39,4 @@ private:
   BenchmarkConfig config_;
 };
 
-
 #endif // LEOPARD_BENCHMARK_H
