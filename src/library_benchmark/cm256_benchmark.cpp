@@ -85,8 +85,36 @@ int CM256Benchmark::encode() {
 
 
 int CM256Benchmark::decode(double loss_rate) {
-  // TODO: Implement
-  return -1;
+  // Start the timer
+  auto start_time = std::chrono::high_resolution_clock::now();
+  // TODO: Implement data loss simulation
+
+  // Decode the data
+  int decode_result = cm256_decode(
+    params_,
+    blocks_
+  );
+
+  // Stop the timer
+  auto end_time = std::chrono::high_resolution_clock::now();
+
+  // Check for errors in decoding
+  if (decode_result) {
+    std::cerr << "CM256: Decode failed with error " << decode_result << ".\n";
+    return -1;
+  }
+
+  // Check for corruption
+  // TODO: Implement data corruption check
+
+  // Calculate the time taken to decode
+  decode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+
+  // Calculate the throughput(s)
+  decode_input_throughput_mbps_ = ((double) (config_.data_size * 8)) / decode_time_us_; // throughput of (original) input data
+  decode_output_throughput_mbps_ = ((double) (config_.computed.recovery_blocks * config_.block_size * 8)) / decode_time_us_; // throughput of output data (recovery blocks)
+
+  return 0;
 }
 
 
