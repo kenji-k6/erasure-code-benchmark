@@ -16,13 +16,13 @@ struct BenchmarkConfig {
   // Common parameters
   size_t data_size;             // Total size of original data
   size_t block_size;            // Size of each block
-  float redudandy_ratio;        // Recovery blocks / original blocks ratio
+  double redudandy_ratio;       // Recovery blocks / original blocks ratio
+  double loss_rate;             // Simulated data loss rate
   int iterations;               // Number of iterations to run the benchmark
 
   struct {                      // Derived value (calculated during setup)
     size_t original_blocks;
     size_t recovery_blocks;
-    size_t actual_block_size; 
   } computed;
 }; // struct BenchmarkConfig
 
@@ -51,8 +51,10 @@ public:
     long long encode_time_us;
     long long decode_time_us;
     size_t memory_used;
-    double encode_throughput_mbps;
-    double decode_throughput_mbps;
+    double encode_input_throughput_mbps;
+    double encode_output_throughput_mbps;
+    double decode_input_throughput_mbps;
+    double decode_output_throughput_mbps;
   };
 
   // Get the metrics collected during the benchmark

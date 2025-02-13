@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <chrono>
 
+#define MEGABYTE_TO_BYTE_FACTOR 1048576.0
+
 
 
 /*

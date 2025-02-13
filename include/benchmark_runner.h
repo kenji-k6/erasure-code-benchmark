@@ -2,6 +2,7 @@
 #define BENCHMARK_RUNNER_H
 
 #include "benchmark.h"
+#include "utils.h"
 #include "leopard_benchmark.h"
 
 #include <fstream>
@@ -11,6 +12,8 @@
 #include <cmath>
 #include <stdexcept>
 
+// TODO: make this a variable and implement correctly
+#define WARMUP_ITERATIONS 5
 
 /*
  * BenchmarkRunner: Main class that runs the benchmark

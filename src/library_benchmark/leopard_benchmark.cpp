@@ -4,7 +4,7 @@ int LeopardBenchmark::setup(const BenchmarkConfig& config) {
   config_ = config;
 
   // Assert that the block size is a multiple of 64 bytes
-  if (config_.computed.actual_block_size % LEOPARD_BLOCK_SIZE_ALIGNMENT != 0) {
+  if (config_.block_size % LEOPARD_BLOCK_SIZE_ALIGNMENT != 0) {
     std::cerr << "Leopard: Block size must be a multiple of " << LEOPARD_BLOCK_SIZE_ALIGNMENT << " bytes.\n";
     return -1;
   }
@@ -41,50 +41,49 @@ int LeopardBenchmark::setup(const BenchmarkConfig& config) {
   decode_work_ptrs_.resize(decode_work_count_);
 
   // Allocate memory for original data
-  const size_t block_size = config_.computed.actual_block_size;
   for (size_t i = 0; i < config_.computed.original_blocks; i++) {
-    original_ptrs_[i] = malloc(config_.computed.actual_block_size);
+    original_ptrs_[i] = malloc(config_.block_size);
     if (!original_ptrs_[i]) {
       std::cerr << "Leopard: Failed to allocate memory for original data block " << i << ".\n";
       teardown();
       return -1; 
     }
 
-    memset(original_ptrs_[i], 1, block_size); // Initialize to 1
+    memset(original_ptrs_[i], 1, config_.block_size); // Initialize to 1
   }
 
   // Allocate memory for encode work data
   for (size_t i = 0; i < encode_work_count_; i++) {
-    encode_work_ptrs_[i] = malloc(config_.computed.actual_block_size);
+    encode_work_ptrs_[i] = malloc(config_.block_size);
     if (!encode_work_ptrs_[i]) {
       std::cerr << "Leopard: Failed to allocate memory for work data block " << i << ".\n";
       teardown();
       return -1; 
     }
 
-    memset(encode_work_ptrs_[i], 0, block_size); // Initialize to 0
+    memset(encode_work_ptrs_[i], 0, config_.block_size); // Initialize to 0
   }
 
   // Allocate memory for decode work data
-  for (size_t i = 0; i < config_.computed.recovery_blocks; i++) {
-    decode_work_ptrs_[i] = malloc(config_.computed.actual_block_size);
+  for (size_t i = 0; i < decode_work_count_; i++) {
+    decode_work_ptrs_[i] = malloc(config_.block_size);
     if (!decode_work_ptrs_[i]) {
       std::cerr << "Leopard: Failed to allocate memory for recovery data block " << i << ".\n";
       teardown();
       return -1; 
     }
 
-    memset(decode_work_ptrs_[i], 0, block_size); // Initialize to 0
+    memset(decode_work_ptrs_[i], 0, config_.block_size); // Initialize to 0
   }
 
   // Calculate memory usage
   memory_used_ = (config_.computed.original_blocks
                   + encode_work_count_
                   + decode_work_count_
-                  ) * config_.computed.actual_block_size;
+                  ) * config_.block_size;
   
   // Calculate total data bytes
-  total_data_bytes_ = config_.computed.original_blocks * config_.computed.actual_block_size;                
+  total_data_bytes_ = config_.computed.original_blocks * config_.block_size;                
 
   return 0;
 }
@@ -96,7 +95,7 @@ int LeopardBenchmark::encode() {
 
   // Encode the data
   LeopardResult encode_result = leo_encode(
-    config_.computed.actual_block_size,
+    config_.block_size,
     config_.computed.original_blocks,
     config_.computed.recovery_blocks,
     encode_work_count_,
@@ -116,8 +115,9 @@ int LeopardBenchmark::encode() {
   // Calculate the time taken to encode
   encode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
 
-  // Calculate the throughput
-  encode_throughput_mbps_ = ((double) (total_data_bytes_ * 8) / encode_time_us_) / 1000000.0;
+  // Calculate the throughput(s)
+  encode_input_throughput_mbps_ = ((double) (total_data_bytes_ * 8)) / encode_time_us_; // throughput of (original) input data
+  encode_output_throughput_mbps_ = ((double) (config_.computed.recovery_blocks * config_.block_size * 8)) / encode_time_us_; // throughput of output data (recovery blocks)
 
   return 0;
 }
@@ -126,13 +126,12 @@ int LeopardBenchmark::encode() {
 int LeopardBenchmark::decode(double loss_rate) {
   // Start the timer
   auto start_time = std::chrono::high_resolution_clock::now();
-
   // Simulate data loss
   // TODO: Implement data loss simulation
 
   // Decode the data
   LeopardResult decode_result = leo_decode(
-    config_.computed.actual_block_size,
+    config_.block_size,
     config_.computed.original_blocks,
     config_.computed.recovery_blocks,
     decode_work_count_,
@@ -156,8 +155,9 @@ int LeopardBenchmark::decode(double loss_rate) {
   // Calculate the time taken to decode
   decode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
 
-  // Calculate the throughput
-  decode_throughput_mbps_ = ((double) (total_data_bytes_ * 8) / decode_time_us_) / 1000000.0;
+  // Calculate the throughput(s)
+  decode_input_throughput_mbps_ = ((double) (total_data_bytes_ * 8)) / decode_time_us_; // throughput of (original) input data
+  decode_output_throughput_mbps_ = ((double) (total_data_bytes_ * config_.loss_rate * 8)) / decode_time_us_; // throughput of lost bit recovery
 
   return 0;
 }
@@ -186,8 +186,10 @@ void LeopardBenchmark::teardown() {
   encode_time_us_ = 0;
   decode_time_us_ = 0;
   memory_used_ = 0;
-  encode_throughput_mbps_ = 0;
-  decode_throughput_mbps_ = 0;
+  encode_input_throughput_mbps_ = 0.0;
+  encode_output_throughput_mbps_ = 0.0;
+  decode_input_throughput_mbps_ = 0.0;
+  decode_output_throughput_mbps_ = 0.0;
 }
 
 
@@ -196,7 +198,9 @@ ECCBenchmark::Metrics LeopardBenchmark::get_metrics() const {
     encode_time_us_,
     decode_time_us_,
     memory_used_,
-    encode_throughput_mbps_,
-    decode_throughput_mbps_
+    encode_input_throughput_mbps_,
+    encode_output_throughput_mbps_,
+    decode_input_throughput_mbps_,
+    decode_output_throughput_mbps_
   };
 }
