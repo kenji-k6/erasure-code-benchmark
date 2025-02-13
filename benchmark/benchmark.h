@@ -63,7 +63,8 @@ public:
     long long encode_time_us;
     long long decode_time_us;
     size_t memory_usage;
-    double throughput_mbps;
+    double encode_throughput_mbps;
+    double decode_throughput_mbps;
   };
 
   // Get the metrics collected during the benchmark
@@ -107,6 +108,6 @@ private:
 
   // Collection of test cases
   std::vector<std::pair<Library, BenchmarkConfig>> test_cases_;
-};
+}; // class BenchmarkRunner
 
 #endif
