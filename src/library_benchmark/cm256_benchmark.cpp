@@ -140,6 +140,12 @@ void CM256Benchmark::teardown() {
 
 
 ECCBenchmark::Metrics CM256Benchmark::get_metrics() const {
-  // TODO: Implement
-  return {0,0,0,0,0,0};
+  return {
+    encode_time_us_,
+    decode_time_us_,
+    encode_input_throughput_mbps_,
+    encode_output_throughput_mbps_,
+    decode_input_throughput_mbps_,
+    decode_output_throughput_mbps_
+  };
 }
