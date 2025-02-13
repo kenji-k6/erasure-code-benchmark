@@ -3,11 +3,6 @@
 
 #include <cstddef>
 
-
-#define WIREHAIR_MIN_BLOCKS 2
-#define WIREHAIR_MAX_BLOCKS 64000
-
-
 /*
  * BenchmarkConfig: Configuration parameters for the benchmark
 */
