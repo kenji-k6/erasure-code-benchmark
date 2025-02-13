@@ -1,0 +1,4 @@
+#ifndef CM256_BENCHMARK_H
+#define CM256_BENCHMARK_H
+
+#endif // CM256_BENCHMARK_H

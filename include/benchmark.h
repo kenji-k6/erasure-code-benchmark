@@ -11,7 +11,7 @@ struct BenchmarkConfig {
   // Common parameters
   size_t data_size;             // Total size of original data
   size_t block_size;            // Size of each block
-  double redudancy_ratio;       // Recovery blocks / original blocks ratio
+  double redundancy_ratio;       // Recovery blocks / original blocks ratio
   double loss_rate;             // Simulated data loss rate
   int iterations;               // Number of iterations to run the benchmark
 

@@ -9,7 +9,7 @@ int main() {
   BenchmarkConfig config;
   config.data_size = 1'073'741'824; // 8 GiB
   config.block_size = 131'072; // 128 KiB
-  config.redudandy_ratio = 0.4;
+  config.redundancy_ratio = 0.4;
   config.loss_rate = 0.0;
   config.iterations = 10;
 

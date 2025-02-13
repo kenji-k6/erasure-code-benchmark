@@ -103,5 +103,5 @@ void BenchmarkRunner::save_results(Library lib, const BenchmarkConfig& config, c
 
 void BenchmarkRunner::compute_config(BenchmarkConfig& config) {
   config.computed.original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
-  config.computed.recovery_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.redudandy_ratio));
+  config.computed.recovery_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.redundancy_ratio));
 }
