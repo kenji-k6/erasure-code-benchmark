@@ -23,6 +23,11 @@ public:
   Metrics get_metrics() const override;
 
 private:
+  cm256_encoder_params params_; // Encoder parameters
+  uint8_t* original_data_;
+  uint8_t* recovery_data_;
+  cm256_block blocks_[256];
+
   long long encode_time_us_ = 0;
   long long decode_time_us_ = 0;
   double encode_input_throughput_mbps_ = 0.0;
