@@ -1,8 +1,6 @@
 #include "wirehair_benchmark.h"
 
 int WirehairBenchmark::setup(const BenchmarkConfig& config) {
-  // TODO: Implement
-
   config_ = config;
 
   // 64 byte alignment not needed for wirehair
@@ -13,9 +11,18 @@ int WirehairBenchmark::setup(const BenchmarkConfig& config) {
 
   // Original data
   original_data_.resize(config_.data_size);
-  
   // Fill with constant 1 data
   memset(&original_data_[0], 1, config_.data_size);
+
+  // Encoded data
+  encoded_data_.resize(config_.data_size);
+  // Fill with constant 0 data
+  memset(&encoded_data_[0], 0, config_.data_size);
+
+  // Decoded data
+  decoded_data_.resize(config_.data_size);
+  // Fill with constant 0 data
+  memset(&decoded_data_[0], 0, config_.data_size);
 
   // Initialize the encoder
   encoder_ = wirehair_encoder_create(nullptr, &original_data_[0], config.data_size, config.block_size);
@@ -37,6 +44,7 @@ int WirehairBenchmark::setup(const BenchmarkConfig& config) {
 
 
 int WirehairBenchmark::encode() {
+  // redundancy is irrelevant for wirehair, since it always does fully recovery
   // TODO: Implement
   return -1;
 }
