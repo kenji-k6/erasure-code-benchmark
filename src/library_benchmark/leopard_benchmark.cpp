@@ -11,7 +11,7 @@ int LeopardBenchmark::setup(const BenchmarkConfig& config) {
 
   // Assert that the number of blocks is within the valid range
   if (config_.computed.original_blocks < LEOPARD_MIN_BLOCKS || config_.computed.original_blocks > LEOPARD_MAX_BLOCKS) {
-    std::cerr << "Leopard: Original blocks must be between " << LEOPARD_MIN_BLOCKS << " and " << LEOPARD_MAX_BLOCKS << ".\n";
+    std::cerr << "Leopard: Original blocks must be between " << LEOPARD_MIN_BLOCKS << " and " << LEOPARD_MAX_BLOCKS << " (is " << config_.computed.original_blocks << ").\n";
     return -1;
   }
 
@@ -76,15 +76,6 @@ int LeopardBenchmark::setup(const BenchmarkConfig& config) {
     memset(decode_work_ptrs_[i], 0, config_.block_size); // Initialize to 0
   }
 
-  // Calculate memory usage
-  memory_used_ = (config_.computed.original_blocks
-                  + encode_work_count_
-                  + decode_work_count_
-                  ) * config_.block_size;
-  
-  // Calculate total data bytes
-  total_data_bytes_ = config_.computed.original_blocks * config_.block_size;                
-
   return 0;
 }
 
@@ -116,7 +107,7 @@ int LeopardBenchmark::encode() {
   encode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
 
   // Calculate the throughput(s)
-  encode_input_throughput_mbps_ = ((double) (total_data_bytes_ * 8)) / encode_time_us_; // throughput of (original) input data
+  encode_input_throughput_mbps_ = ((double) (config_.data_size * 8)) / encode_time_us_; // throughput of (original) input data
   encode_output_throughput_mbps_ = ((double) (config_.computed.recovery_blocks * config_.block_size * 8)) / encode_time_us_; // throughput of output data (recovery blocks)
 
   return 0;
@@ -156,8 +147,8 @@ int LeopardBenchmark::decode(double loss_rate) {
   decode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
 
   // Calculate the throughput(s)
-  decode_input_throughput_mbps_ = ((double) (total_data_bytes_ * 8)) / decode_time_us_; // throughput of (original) input data
-  decode_output_throughput_mbps_ = ((double) (total_data_bytes_ * config_.loss_rate * 8)) / decode_time_us_; // throughput of lost bit recovery
+  decode_input_throughput_mbps_ = ((double) (config_.data_size * 8)) / decode_time_us_; // throughput of (original) input data
+  decode_output_throughput_mbps_ = ((double) (config_.data_size * config_.loss_rate * 8)) / decode_time_us_; // throughput of lost bit recovery
 
   return 0;
 }
@@ -185,7 +176,6 @@ void LeopardBenchmark::teardown() {
   // Reset the benchmark state
   encode_time_us_ = 0;
   decode_time_us_ = 0;
-  memory_used_ = 0;
   encode_input_throughput_mbps_ = 0.0;
   encode_output_throughput_mbps_ = 0.0;
   decode_input_throughput_mbps_ = 0.0;
@@ -197,7 +187,6 @@ ECCBenchmark::Metrics LeopardBenchmark::get_metrics() const {
   return {
     encode_time_us_,
     decode_time_us_,
-    memory_used_,
     encode_input_throughput_mbps_,
     encode_output_throughput_mbps_,
     decode_input_throughput_mbps_,

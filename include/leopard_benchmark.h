@@ -29,15 +29,13 @@ private:
   std::vector<void*> original_ptrs_;
   std::vector<void*> encode_work_ptrs_;
   std::vector<void*> decode_work_ptrs_;
-  
+
   long long encode_time_us_ = 0;
   long long decode_time_us_ = 0;
   double encode_input_throughput_mbps_ = 0.0;
   double encode_output_throughput_mbps_ = 0.0;
   double decode_input_throughput_mbps_ = 0.0;
   double decode_output_throughput_mbps_ = 0.0;
-  size_t memory_used_ = 0;
-  size_t total_data_bytes_ = 0;
   BenchmarkConfig config_;
 };
 
