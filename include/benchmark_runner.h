@@ -3,7 +3,10 @@
 
 #include "benchmark.h"
 #include "utils.h"
+
+#include "cm256_benchmark.h"
 #include "leopard_benchmark.h"
+#include "wirehair_benchmark.h"
 
 #include <fstream>
 #include <iostream>

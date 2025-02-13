@@ -7,14 +7,17 @@ int main() {
 
   // Define a test case
   BenchmarkConfig config;
-  config.data_size = 1'073'741'824; // 8 GiB
-  config.block_size = 131'072; // 128 KiB
-  config.redundancy_ratio = 0.4;
+  config.data_size = 1073736320; // ~~1.0737 GB
+  config.block_size = 6'316'096; // 6316.096 KB
+  config.redundancy_ratio = 0.5;
   config.loss_rate = 0.0;
   config.iterations = 10;
 
+  //original count should be 170, recovery should be 85
+
   // Add the test case to the runner
   runner.add_test_case(BenchmarkRunner::Library::leopard, config);
+  runner.add_test_case(BenchmarkRunner::Library::cm256, config);
 
   runner.run_all();
 

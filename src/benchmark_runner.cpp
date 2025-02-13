@@ -43,8 +43,7 @@ std::unique_ptr<ECCBenchmark> BenchmarkRunner::create_benchmark(Library lib) {
       throw std::runtime_error("Wirehair benchmark not implemented.");
     
     case Library::cm256:
-      // TODO
-      throw std::runtime_error("cm256 benchmark not implemented.");
+      return std::make_unique<CM256Benchmark>();
     
     case Library::isa_l:
       // TODO
@@ -78,16 +77,16 @@ void BenchmarkRunner::run_single(ECCBenchmark& bench, const BenchmarkConfig& com
 
     ECCBenchmark::Metrics metrics = bench.get_metrics();
 
-    // total data size in MiB (power of 2)
-    double total_mib = (computed_config.computed.original_blocks * computed_config.block_size) / MEGABYTE_TO_BYTE_FACTOR;
+    // total data size in MB (power of 10)
+    double total_mb = (computed_config.computed.original_blocks * computed_config.block_size) / MEGABYTE_TO_BYTE_FACTOR;
 
     std::cout << "Iteration " << i << ":\n"
-              << "Encoder(" << total_mib << " MiB in "
+              << "Encoder(" << total_mb << " MB in "
               << computed_config.computed.original_blocks << " blocks): Input="
               << metrics.encode_input_throughput_mbps << " Mbps, Output="
               << metrics.encode_output_throughput_mbps << " Mbps\n";
     
-    std::cout << "Decoder(" << total_mib << " MiB in "
+    std::cout << "Decoder(" << total_mb << " MB in "
               << computed_config.computed.original_blocks << " blocks): Input="
               << metrics.decode_input_throughput_mbps << " Mbps, Output="
               << metrics.decode_output_throughput_mbps << " Mbps\n";
