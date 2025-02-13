@@ -48,15 +48,39 @@ int CM256Benchmark::setup(const BenchmarkConfig& config) {
     teardown();
     return -1;
   }
-  
+
   return 0;
 }
 
 
 int CM256Benchmark::encode() {
-  // TODO: Implement
+  // Start the timer
+  auto start_time = std::chrono::high_resolution_clock::now();
 
-  return -1;
+  // Encode the data
+  int encode_result = cm256_encode(
+    params_,
+    blocks_,
+    (void*)recovery_data_
+  );
+
+  // Stop the timer
+  auto end_time = std::chrono::high_resolution_clock::now();
+
+  // Check for errors
+  if (encode_result) {
+    std::cerr << "CM256: Encode failed with error " << encode_result << ".\n";
+    return -1;
+  }
+
+  // Calculate the time taken to encode
+  encode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+
+  // Calculate the throughput(s)
+  encode_input_throughput_mbps_ = ((double) (config_.data_size * 8)) / encode_time_us_; // throughput of (original) input data
+  encode_output_throughput_mbps_ = ((double) (config_.computed.recovery_blocks * config_.block_size * 8)) / encode_time_us_; // throughput of output data (recovery blocks)
+
+  return 0;
 }
 
 
