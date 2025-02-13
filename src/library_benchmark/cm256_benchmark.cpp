@@ -3,8 +3,8 @@
 int CM256Benchmark::setup(const BenchmarkConfig& config) {
   config_ = config;
 
-  if (config_.block_size < CM256_MIN_BLOCKS || config.block_size > CM256_MAX_BLOCKS) {
-    std::cerr << "CM256: Block size must be between " << CM256_MIN_BLOCKS << " and " << CM256_MAX_BLOCKS << " (is " << config_.block_size << ").\n";
+  if (config_.computed.original_blocks < CM256_MIN_BLOCKS || config.computed.original_blocks > CM256_MAX_BLOCKS) {
+    std::cerr << "CM256: Number of original blocks must be between " << CM256_MIN_BLOCKS << " and " << CM256_MAX_BLOCKS << " (is " << config_.computed.original_blocks << ").\n";
     return -1;
   }
 

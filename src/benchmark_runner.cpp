@@ -66,7 +66,7 @@ void BenchmarkRunner::run_single(ECCBenchmark& bench, const BenchmarkConfig& com
     bench.decode(computed_config.loss_rate);
   }
 
-  for (int i = 0; i < computed_config.iterations; i++) {
+  for (int i = 1; i <= computed_config.iterations; i++) {
     if (bench.encode()) {
       std::cerr << "Encode failed for iteration " << i << ".\n";
     }
