@@ -119,8 +119,23 @@ int CM256Benchmark::decode(double loss_rate) {
 
 
 void CM256Benchmark::teardown() {
-  // TODO: Implement
-  return;
+  if (original_data_) {
+    free(original_data_);
+    original_data_ = nullptr;
+  }
+
+  if (recovery_data_) {
+    free(recovery_data_);
+    recovery_data_ = nullptr;
+  }
+
+  // Reset the metrics
+  encode_time_us_ = 0;
+  decode_time_us_ = 0;
+  encode_input_throughput_mbps_ = 0;
+  encode_output_throughput_mbps_ = 0;
+  decode_input_throughput_mbps_ = 0;
+  decode_output_throughput_mbps_ = 0;
 }
 
 
