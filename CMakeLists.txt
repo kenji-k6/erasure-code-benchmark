@@ -14,9 +14,10 @@ find_package(OpenMP REQUIRED) # needed for leopard
 
 # Add source files
 set (SOURCES
-  benchmark/main.cpp
-  benchmark/benchmark.cpp
-  benchmark/utils.cpp
+  src/main.cpp
+  src/benchmark_runner.cpp
+  src/utils.cpp
+  src/library_benchmark/leopard_benchmark.cpp
 )
 
 
@@ -41,10 +42,10 @@ add_subdirectory(libraries/wirehair)
 
 
 # aff3ct (have to set AFF3CT_COMPILE_EXE, AFF3CT_COMPILE_SHARED_LIB to OFF and AFF3CT_COMPILE_STATIC_LIB to ON)
-set(AFF3CT_COMPILE_EXE OFF)
-set(AFF3CT_COMPILE_SHARED_LIB OFF)
-set(AFF3CT_COMPILE_STATIC_LIB ON)
-add_subdirectory(libraries/aff3ct)
+# set(AFF3CT_COMPILE_EXE OFF)
+# set(AFF3CT_COMPILE_SHARED_LIB OFF)
+# set(AFF3CT_COMPILE_STATIC_LIB ON)
+# add_subdirectory(libraries/aff3ct)
 
 
 add_library(isal STATIC IMPORTED)
@@ -56,6 +57,7 @@ set_target_properties(isal PROPERTIES
 
 # Include directories
 target_include_directories(ecc-benchmark PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/libraries/leopard
   ${CMAKE_SOURCE_DIR}/libraries/isa-l/include
 )
@@ -65,7 +67,7 @@ target_link_libraries(ecc-benchmark PRIVATE
   libleopard
   cm256
   wirehair
-  aff3ct-static-lib
+  # aff3ct-static-lib
   isal
   OpenMP::OpenMP_CXX
 )

@@ -1,20 +1,8 @@
 #ifndef BENCHMARK_H
 #define BENCHMARK_H
 
-#include "aff3ct.hpp"
-#include "cm256.h"
-#include "erasure_code.h" // ISA-L
-#include "leopard.h"
-#include "wirehair/wirehair.h"
+#include <cstddef>
 
-#include "utils.h"
-
-#include <iostream>
-
-
-#define LEOPARD_MIN_BLOCKS 2
-#define LEOPARD_MAX_BLOCKS 65536
-#define LEOPARD_BLOCK_SIZE_ALIGNMENT 64
 
 #define WIREHAIR_MIN_BLOCKS 2
 #define WIREHAIR_MAX_BLOCKS 64000
@@ -53,7 +41,7 @@ public:
   virtual int encode() = 0;
 
   // Run the decoding process (with simulated data loss)
-  virtual int decode(float loss_rate) = 0;
+  virtual int decode(double loss_rate) = 0;
 
   // Cleanup the benchmark
   virtual void teardown() = 0;
@@ -62,52 +50,13 @@ public:
   struct Metrics {
     long long encode_time_us;
     long long decode_time_us;
-    size_t memory_usage;
+    size_t memory_used;
     double encode_throughput_mbps;
     double decode_throughput_mbps;
   };
 
   // Get the metrics collected during the benchmark
-  virtual Metrics get_metrics() = 0;
+  virtual Metrics get_metrics() const = 0;
 }; // class ECCBenchmark
 
-
-
-
-/*
- * BenchmarkRunner: Main class that runs the benchmark
-*/
-class BenchmarkRunner {
-public:
-  enum class Library {
-    aff3ct,
-    cm256,
-    isa_l,
-    leopard,
-    wirehair
-  };
-
-  // Add a test case to the runner
-  void add_test_case(Library lib, const BenchmarkConfig& config);
-
-  // Run all the test cases
-  void run_all();
-
-private:
-  // Helper to create a benchmark instance for a specific library
-  std::unique_ptr<ECCBenchmark> create_benchmark(Library lib);
-
-  // Run a single test case
-  void run_single(ECCBenchmark& bench, const BenchmarkConfig& config);
-
-  // Save results to a CSV file
-  void save_results(Library lib, const BenchmarkConfig& config, const ECCBenchmark::Metrics& metrics);
-
-  // Computes the left over configuration parameters 
-  void compute_config(BenchmarkConfig& config);
-
-  // Collection of test cases
-  std::vector<std::pair<Library, BenchmarkConfig>> test_cases_;
-}; // class BenchmarkRunner
-
-#endif
+#endif // BENCHMARK_H
