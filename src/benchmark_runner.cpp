@@ -31,6 +31,7 @@ void BenchmarkRunner::run_all() {
     bench->teardown();
 
     save_results(lib, computed_config, bench->get_metrics());
+    std::cout << "\n\n";
   }
 }
 
@@ -78,7 +79,7 @@ void BenchmarkRunner::run_single(ECCBenchmark& bench, const BenchmarkConfig& com
     ECCBenchmark::Metrics metrics = bench.get_metrics();
 
     // total data size in MB (power of 10)
-    double total_mb = (computed_config.computed.original_blocks * computed_config.block_size) / MEGABYTE_TO_BYTE_FACTOR;
+    double total_mb = (computed_config.computed.original_blocks * computed_config.block_size) / ((double) MEGABYTE_TO_BYTE_FACTOR);
 
     std::cout << "Iteration " << i << ":\n"
               << "Encoder(" << total_mb << " MB in "
