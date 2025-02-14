@@ -1,5 +1,5 @@
-#ifndef BENCHMARK_H
-#define BENCHMARK_H
+#ifndef ABSTRACT_BENCHMARK_H
+#define ABSTRACT_BENCHMARK_H
 
 #include <cstddef>
 
@@ -55,4 +55,4 @@ public:
   virtual Metrics get_metrics() const = 0;
 }; // class ECCBenchmark
 
-#endif // BENCHMARK_H
+#endif // ABSTRACT_BENCHMARK_H

@@ -33,6 +33,7 @@ set_target_properties(ecc-benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_
 
 # Google benchmarking library
 set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
+set(CMAKE_BUILD_TYPE Release)
 add_subdirectory(libraries/google_benchmark)
 
 # leopard
