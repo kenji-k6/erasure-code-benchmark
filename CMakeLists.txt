@@ -31,6 +31,9 @@ add_executable(ecc-benchmark ${SOURCES})
 # Maybe in the future: link necessary libraries / check if submodules are initialized
 set_target_properties(ecc-benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 
+# Google benchmarking library
+set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
+add_subdirectory(libraries/google_benchmark)
 
 # leopard
 add_subdirectory(libraries/leopard)
@@ -71,6 +74,7 @@ target_link_libraries(ecc-benchmark PRIVATE
   wirehair
   # aff3ct-static-lib
   isal
+  benchmark::benchmark
   OpenMP::OpenMP_CXX
 )
 

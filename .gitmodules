@@ -13,3 +13,6 @@
 [submodule "libraries/isa-l"]
 	path = libraries/isa-l
 	url = https://github.com/intel/isa-l.git
+[submodule "libraries/google_benchmark"]
+	path = libraries/google_benchmark
+	url = https://github.com/google/benchmark.git
