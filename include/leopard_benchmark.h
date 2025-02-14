@@ -31,6 +31,6 @@ private:
   void** original_ptrs_;
   void** encode_work_ptrs_;
   void** decode_work_ptrs_;
-};
+}; // class LeopardBenchmark
 
 #endif // LEOPARD_BENCHMARK_H

@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <chrono>
 
-
-#define ALIGNMENT_BYTES 16 // This ensures that allocs are 16-byte aligned, to allow SIMD instructions
+// This ensures that allocs are 64-byte aligned, to allow SIMD instructions, also needed by ISA-L
+#define ALIGNMENT_BYTES 64
 
 // Compiler-specific force inline keyword
 #ifdef _MSC_VER
