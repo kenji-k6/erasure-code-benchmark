@@ -3,17 +3,9 @@
 
 #include "abstract_benchmark.h"
 #include "utils.h"
-#include "cm256_benchmark.h"
-#include "leopard_benchmark.h"
 #include "benchmark/benchmark.h"
 
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <vector>
-#include <cmath>
-#include <stdexcept>
-
+//TODO: comments below
 
 // // Assert that the block size is a multiple of 64 bytes
 // if (config_.block_size % LEOPARD_BLOCK_SIZE_ALIGNMENT != 0) {
@@ -37,8 +29,30 @@
 //   return -1;
 // }
 
-static void BM_cm256(benchmark::State& state) {
-  
+template <typename BenchmarkType>
+static void BM_generic(benchmark::State& state) {
+  BenchmarkType bench;
+  bench.setup();
+  for (auto _ : state) {
+    bench.encode();
+
+    // state.PauseTiming();
+    // bench.simulate_data_loss();
+    // bench.flush_cache();
+    // state.ResumeTiming();
+
+    bench.decode();
+
+    // state.PauseTiming();
+    // bench.check_for_corruption();
+    // state.ResumeTiming();
+  }
 }
+
+
+// static void BM_cm256(benchmark::State& state);
+
+
+// static void BM_leopard(benchmark::State& state);
 
 #endif // BENCHMARK_RUNNER_H

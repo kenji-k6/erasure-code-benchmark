@@ -4,6 +4,7 @@
 #include "abstract_benchmark.h"
 #include "cm256.h"
 #include "utils.h"
+#include "benchmark/benchmark.h"
 
 #include <iostream>
 #include <vector>

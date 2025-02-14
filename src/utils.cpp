@@ -22,22 +22,22 @@ uint32_t PCGRandom::next() {
 
 
 
-static UTIL_FORCE_INLINE void* simd_safe_allocate(size_t size) {
-  uint8_t* data = (uint8_t *) calloc(1, ALIGNMENT_BYTES + size);
+// static UTIL_FORCE_INLINE void* simd_safe_allocate(size_t size) {
+//   uint8_t* data = (uint8_t *) calloc(1, ALIGNMENT_BYTES + size);
 
-  if (!data) return nullptr;
+//   if (!data) return nullptr;
   
-  unsigned offset = (unsigned)((uintptr_t)data % ALIGNMENT_BYTES);
-  data += ALIGNMENT_BYTES - offset;
-  data[-1] = (uint8_t)offset;
-  return (void*)data;
-}
+//   unsigned offset = (unsigned)((uintptr_t)data % ALIGNMENT_BYTES);
+//   data += ALIGNMENT_BYTES - offset;
+//   data[-1] = (uint8_t)offset;
+//   return (void*)data;
+// }
 
-static UTIL_FORCE_INLINE void simd_safe_free(void* ptr) {
-  if (!ptr) return;
-  uint8_t* data = (uint8_t*)ptr;
-  unsigned offset = data[-1];
-  if (offset >= ALIGNMENT_BYTES) exit(1); // should never happen
-  data -= ALIGNMENT_BYTES - offset;
-  free(data);
-}
+// static UTIL_FORCE_INLINE void simd_safe_free(void* ptr) {
+//   if (!ptr) return;
+//   uint8_t* data = (uint8_t*)ptr;
+//   unsigned offset = data[-1];
+//   if (offset >= ALIGNMENT_BYTES) exit(1); // should never happen
+//   data -= ALIGNMENT_BYTES - offset;
+//   free(data);
+// }

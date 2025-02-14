@@ -1,27 +1,35 @@
 #include "benchmark_runner.h"
 #include "leopard_benchmark.h"
+#include "cm256_benchmark.h"
 #include "benchmark/benchmark.h"
-#include "leopard.h"
 #include "utils.h"
 #include <memory>
 #include <iostream>
-#include <functional>
+#include <cmath>
 
 BenchmarkConfig kConfig;
-
+//TODO: check if input config is valid and for which libraries it is valid
 
 // TODO: Pass arguments
 BenchmarkConfig get_config() {
   BenchmarkConfig config;
-  config.data_size = 10880000; //1073736320; // ~~1.0737 GB
-  config.block_size = 64000; //6'316'096; // 6316.096 KB
+  config.data_size = 108800000; //1073736320; // ~~1.0737 GB
+  config.block_size = 640000; //6'316'096; // 6316.096 KB
   config.redundancy_ratio = 0.5;
   config.loss_rate = 0.0;
   config.iterations = 4;
   config.computed.original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
+  config.computed.recovery_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.redundancy_ratio));
   return config;
 }
 
+static void BM_cm256(benchmark::State& state) {
+  BM_generic<CM256Benchmark>(state);
+}
+
+static void BM_leopard(benchmark::State& state) {
+  BM_generic<LeopardBenchmark>(state);
+}
 
 
 
@@ -30,7 +38,8 @@ int main(int argc, char** argv) {
   kConfig = get_config();
 
   // Register Benchmarks
-  std::cout << "Success!!\n";
+  BENCHMARK(BM_cm256)->Iterations(10);
+  BENCHMARK(BM_leopard)->Iterations(10);
 
 
   // Default argument if no arguments are passed
