@@ -12,7 +12,7 @@ public:
   virtual ~ECCBenchmark() = default;
 
   // Initialize the benchmark with the given configuration
-  virtual int setup(const BenchmarkConfig& config) = 0;
+  virtual int setup() = 0;
 
   // Cleanup the benchmark
   virtual void teardown() = 0;

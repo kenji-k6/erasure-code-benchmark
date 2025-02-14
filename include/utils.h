@@ -29,6 +29,27 @@
 #define WIREHAIR_MAX_BLOCKS 64000
 
 
+/*
+ * BenchmarkConfig: Configuration parameters for the benchmark
+*/
+
+struct BenchmarkConfig {
+  // Common parameters
+  size_t data_size;             // Total size of original data
+  size_t block_size;            // Size of each block
+  double redundancy_ratio;       // Recovery blocks / original blocks ratio
+  double loss_rate;             // Simulated data loss rate
+  int iterations;               // Number of iterations to run the benchmark
+
+  struct {                      // Derived value (calculated during setup)
+    size_t original_blocks;
+    size_t recovery_blocks;
+  } computed;
+}; // struct BenchmarkConfig
+
+extern BenchmarkConfig kConfig;
+
+
 
 /*
  * PCGRandom number generator, used to generate random data for benchmarking
@@ -59,23 +80,6 @@ inline long long get_current_time_us() {
   return duration.count();
 }
 
-/*
- * BenchmarkConfig: Configuration parameters for the benchmark
-*/
-
-struct BenchmarkConfig {
-  // Common parameters
-  size_t data_size;             // Total size of original data
-  size_t block_size;            // Size of each block
-  double redundancy_ratio;       // Recovery blocks / original blocks ratio
-  double loss_rate;             // Simulated data loss rate
-  int iterations;               // Number of iterations to run the benchmark
-
-  struct {                      // Derived value (calculated during setup)
-    size_t original_blocks;
-    size_t recovery_blocks;
-  } computed;
-}; // struct BenchmarkConfig
 
 /*
  * Functions to allocate and free aligned memory (to allow SIMD instructions)

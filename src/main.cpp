@@ -7,6 +7,8 @@
 #include <iostream>
 #include <functional>
 
+BenchmarkConfig kConfig;
+
 
 // TODO: Pass arguments
 BenchmarkConfig get_config() {
@@ -23,12 +25,9 @@ BenchmarkConfig get_config() {
 
 
 
-
-
-
 int main(int argc, char** argv) {
 
-  BenchmarkConfig config = get_config();
+  kConfig = get_config();
 
   // Register Benchmarks
   std::cout << "Success!!\n";

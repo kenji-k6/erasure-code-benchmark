@@ -13,7 +13,7 @@
 
 class CM256Benchmark : public ECCBenchmark {
 public:
-  int setup(const BenchmarkConfig& config) override;
+  int setup() override;
   void teardown() override;
   int encode() override;
   int decode() override;
@@ -26,7 +26,6 @@ private:
   uint8_t* original_buffer_;
   uint8_t* recovery_buffer_;
   cm256_block blocks_[256];
-  BenchmarkConfig config_;
 };
 
 #endif // CM256_BENCHMARK_H

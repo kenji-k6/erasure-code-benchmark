@@ -1,8 +1,6 @@
 #include "cm256_benchmark.h"
 
-int CM256Benchmark::setup(const BenchmarkConfig& config) {
-  config_ = config;
-
+int CM256Benchmark::setup() {
   // Initialize cm256
   if (cm256_init()) {
     std::cerr << "CM256: Initialization failed.\n";
@@ -10,20 +8,20 @@ int CM256Benchmark::setup(const BenchmarkConfig& config) {
   }
 
   // Initialize cm256 parameter struct
-  params_.BlockBytes = config_.block_size;
-  params_.OriginalCount = config_.computed.original_blocks;
-  params_.RecoveryCount = config_.computed.recovery_blocks;
+  params_.BlockBytes = kConfig.block_size;
+  params_.OriginalCount = kConfig.computed.original_blocks;
+  params_.RecoveryCount = kConfig.computed.recovery_blocks;
 
 
   // Allocate buffers
-  original_buffer_ = (uint8_t*) simd_safe_allocate(config_.data_size);
+  original_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.data_size);
   if (!original_buffer_) {
     teardown();
     std::cerr << "CM256: Failed to allocate original buffer.\n";
     return -1;
   }
 
-  recovery_buffer_ = (uint8_t*) simd_safe_allocate(config_.block_size * config_.computed.recovery_blocks);
+  recovery_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.block_size * kConfig.computed.recovery_blocks);
   if (!recovery_buffer_) {
     teardown();
     std::cerr << "CM256: Failed to allocate recovery buffer.\n";
@@ -31,12 +29,12 @@ int CM256Benchmark::setup(const BenchmarkConfig& config) {
   }
 
   // Initialze original data to 1s, recovery data to 0s
-  memset(original_buffer_, 0xFF, config_.data_size);
-  memset(recovery_buffer_, 0, config_.block_size * config_.computed.recovery_blocks);
+  memset(original_buffer_, 0xFF, kConfig.data_size);
+  memset(recovery_buffer_, 0, kConfig.block_size * kConfig.computed.recovery_blocks);
 
   // Initialize blocks
-  for (unsigned i = 0; i < config_.computed.original_blocks; i++) {
-    blocks_[i].Block = original_buffer_ + (i * config_.block_size);
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+    blocks_[i].Block = original_buffer_ + (i * kConfig.block_size);
     blocks_[i].Index = cm256_get_original_block_index(params_, i);
   }
 

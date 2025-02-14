@@ -13,7 +13,7 @@
 
 class LeopardBenchmark : public ECCBenchmark {
 public:
-  int setup(const BenchmarkConfig& config) override;
+  int setup() override;
   void teardown() override;
   int encode() override;
   int decode() override;
@@ -31,7 +31,6 @@ private:
   void** original_ptrs_;
   void** encode_work_ptrs_;
   void** decode_work_ptrs_;
-  BenchmarkConfig config_;
 };
 
 #endif // LEOPARD_BENCHMARK_H
