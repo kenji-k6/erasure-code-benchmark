@@ -19,6 +19,7 @@ set (SOURCES
   src/utils.cpp
   src/library_benchmark/leopard_benchmark.cpp
   src/library_benchmark/cm256_benchmark.cpp
+  src/library_benchmark/wirehair_benchmark.cpp
 )
 
 

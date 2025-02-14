@@ -1,6 +1,7 @@
 #include "benchmark_runner.h"
 #include "leopard_benchmark.h"
 #include "cm256_benchmark.h"
+#include "wirehair_benchmark.h"
 #include "benchmark/benchmark.h"
 #include "utils.h"
 #include <memory>
@@ -31,6 +32,14 @@ static void BM_leopard(benchmark::State& state) {
   BM_generic<LeopardBenchmark>(state);
 }
 
+/*
+ * Important: Wirehair does not accept a specified no. of recovery blocks
+ * It keeps sending blocks until the decoder has enough to recover the original data
+*/
+static void BM_wirehair(benchmark::State& state) {
+  BM_generic<WirehairBenchmark>(state);
+}
+
 
 
 int main(int argc, char** argv) {
@@ -38,8 +47,9 @@ int main(int argc, char** argv) {
   kConfig = get_config();
 
   // Register Benchmarks
-  BENCHMARK(BM_cm256)->Iterations(10);
-  BENCHMARK(BM_leopard)->Iterations(10);
+  BENCHMARK(BM_cm256)->Iterations(1);
+  BENCHMARK(BM_leopard)->Iterations(1);
+  BENCHMARK(BM_wirehair)->Iterations(1);
 
 
   // Default argument if no arguments are passed

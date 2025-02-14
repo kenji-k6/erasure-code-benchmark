@@ -81,9 +81,9 @@ int WirehairBenchmark::encode() {
       &write_len
     );
 
-    if (needed > kConfig.computed.recovery_blocks || encode_result != Wirehair_Success) {
+    if (/*needed > kConfig.computed.recovery_blocks ||*/ encode_result != Wirehair_Success) {
       teardown();
-      std::cerr << "Wirehair: Failed to encode data, too many recovery blocks needed.\n";
+      std::cerr << "Wirehair: Failed to encode data, too many recovery blocks needed. (" << wirehair_result_string(encode_result) << ")\n";
       return -1;
     }
 
