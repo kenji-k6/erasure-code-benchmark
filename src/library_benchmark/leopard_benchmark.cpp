@@ -40,6 +40,11 @@ int LeopardBenchmark::setup(const BenchmarkConfig& config) {
     return -1;
   }
 
+  // Initialize original data to 1s, work data to 0s
+  memset(original_buffer_, 0xFF, config_.data_size);
+  memset(encode_work_buffer_, 0, config_.block_size * encode_work_count_);
+  memset(decode_work_buffer_, 0, config_.block_size * decode_work_count_);
+
   // Allocate pointers
   original_ptrs_ = new void*[config_.computed.original_blocks];
   encode_work_ptrs_ = new void*[encode_work_count_];
@@ -63,11 +68,6 @@ int LeopardBenchmark::setup(const BenchmarkConfig& config) {
   for (unsigned i = 0; i < decode_work_count_; i++) {
     decode_work_ptrs_[i] = (void*) (((uint8_t*)decode_work_buffer_) + i * config_.block_size);
   }
-
-  // Initialize original data to 1s, work data to 0s
-  memset(original_buffer_, 0xFF, config_.data_size);
-  memset(encode_work_buffer_, 0, config_.block_size * encode_work_count_);
-  memset(decode_work_buffer_, 0, config_.block_size * decode_work_count_);
   return 0;
 }
 

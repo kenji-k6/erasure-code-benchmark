@@ -28,6 +28,16 @@
 //   return -1;
 // }
 
+// if (config_.computed.original_blocks < CM256_MIN_BLOCKS || config.computed.original_blocks > CM256_MAX_BLOCKS) {
+//   std::cerr << "CM256: Number of original blocks must be between " << CM256_MIN_BLOCKS << " and " << CM256_MAX_BLOCKS << " (is " << config_.computed.original_blocks << ").\n";
+//   return -1;
+// }
+
+// if (config_.computed.recovery_blocks > CM256_MAX_BLOCKS-config_.computed.original_blocks) {
+//   std::cerr << "CM256: Recovery blocks must be between 0 and " << CM256_MAX_BLOCKS-config_.computed.original_blocks << " (is " << config_.computed.recovery_blocks << ").\n";
+//   return -1;
+// }
+
 
 
 

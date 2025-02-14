@@ -18,6 +18,14 @@
 #define MEGABYTE_TO_BYTE_FACTOR 1000000
 
 
+#define LEOPARD_MIN_BLOCKS 2
+#define LEOPARD_MAX_BLOCKS 65536
+#define LEOPARD_BLOCK_SIZE_ALIGNMENT 64
+
+#define CM256_MIN_BLOCKS 1
+#define CM256_MAX_BLOCKS 256
+
+
 
 /*
  * PCGRandom number generator, used to generate random data for benchmarking

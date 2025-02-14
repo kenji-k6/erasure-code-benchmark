@@ -10,9 +10,6 @@
 #include <memory>
 #include <cstring>
 
-#define LEOPARD_MIN_BLOCKS 2
-#define LEOPARD_MAX_BLOCKS 65536
-#define LEOPARD_BLOCK_SIZE_ALIGNMENT 64
 
 class LeopardBenchmark : public ECCBenchmark {
 public:

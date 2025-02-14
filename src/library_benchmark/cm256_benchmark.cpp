@@ -3,16 +3,7 @@
 int CM256Benchmark::setup(const BenchmarkConfig& config) {
   config_ = config;
 
-  if (config_.computed.original_blocks < CM256_MIN_BLOCKS || config.computed.original_blocks > CM256_MAX_BLOCKS) {
-    std::cerr << "CM256: Number of original blocks must be between " << CM256_MIN_BLOCKS << " and " << CM256_MAX_BLOCKS << " (is " << config_.computed.original_blocks << ").\n";
-    return -1;
-  }
-
-  if (config_.computed.recovery_blocks > CM256_MAX_BLOCKS-config_.computed.original_blocks) {
-    std::cerr << "CM256: Recovery blocks must be between 0 and " << CM256_MAX_BLOCKS-config_.computed.original_blocks << " (is " << config_.computed.recovery_blocks << ").\n";
-    return -1;
-  }
-
+  // Initialize cm256
   if (cm256_init()) {
     std::cerr << "CM256: Initialization failed.\n";
     return -1;
@@ -24,128 +15,69 @@ int CM256Benchmark::setup(const BenchmarkConfig& config) {
   params_.RecoveryCount = config_.computed.recovery_blocks;
 
 
-  // Initialize original data
-  original_data_ = (uint8_t*) malloc(config_.data_size);
-  if (!original_data_) {
-    std::cerr << "CM256: Failed to allocate memory for original data.\n";
+  // Allocate buffers
+  original_buffer_ = (uint8_t*) simd_safe_allocate(config_.data_size);
+  if (!original_buffer_) {
     teardown();
+    std::cerr << "CM256: Failed to allocate original buffer.\n";
     return -1;
   }
 
-  // Initialize to 1
-  memset(original_data_, 1, config_.data_size);
+  recovery_buffer_ = (uint8_t*) simd_safe_allocate(config_.block_size * config_.computed.recovery_blocks);
+  if (!recovery_buffer_) {
+    teardown();
+    std::cerr << "CM256: Failed to allocate recovery buffer.\n";
+    return -1;
+  }
 
-  // Initialize original block pointers
-  for (int i = 0; i < config_.computed.original_blocks; i++) {
-    blocks_[i].Block = original_data_ + (i * config_.block_size);
+  // Initialze original data to 1s, recovery data to 0s
+  memset(original_buffer_, 0xFF, config_.data_size);
+  memset(recovery_buffer_, 0, config_.block_size * config_.computed.recovery_blocks);
+
+  // Initialize blocks
+  for (unsigned i = 0; i < config_.computed.original_blocks; i++) {
+    blocks_[i].Block = original_buffer_ + (i * config_.block_size);
     blocks_[i].Index = cm256_get_original_block_index(params_, i);
   }
 
-  // Allocate memory recovery data
-  recovery_data_ = (uint8_t*) malloc(config_.block_size * config_.computed.recovery_blocks);
-  if (!recovery_data_) {
-    std::cerr << "CM256: Failed to allocate memory for recovery data.\n";
-    teardown();
-    return -1;
-  }
-
   return 0;
 }
 
-
-int CM256Benchmark::encode() {
-  // Start the timer
-  auto start_time = std::chrono::high_resolution_clock::now();
-
-  // Encode the data
-  int encode_result = cm256_encode(
-    params_,
-    blocks_,
-    (void*)recovery_data_
-  );
-
-  // Stop the timer
-  auto end_time = std::chrono::high_resolution_clock::now();
-
-  // Check for errors
-  if (encode_result) {
-    std::cerr << "CM256: Encode failed with error " << encode_result << ".\n";
-    return -1;
-  }
-
-  // Calculate the time taken to encode
-  encode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-
-  // Calculate the throughput(s)
-  encode_input_throughput_mbps_ = ((double) (config_.data_size * 8)) / encode_time_us_; // throughput of (original) input data
-  encode_output_throughput_mbps_ = ((double) (config_.computed.recovery_blocks * config_.block_size * 8)) / encode_time_us_; // throughput of output data (recovery blocks)
-
-  return 0;
-}
-
-
-int CM256Benchmark::decode(double loss_rate) {
-  // Start the timer
-  auto start_time = std::chrono::high_resolution_clock::now();
-  // TODO: Implement data loss simulation
-
-  // Decode the data
-  int decode_result = cm256_decode(
-    params_,
-    blocks_
-  );
-
-  // Stop the timer
-  auto end_time = std::chrono::high_resolution_clock::now();
-
-  // Check for errors in decoding
-  if (decode_result) {
-    std::cerr << "CM256: Decode failed with error " << decode_result << ".\n";
-    return -1;
-  }
-
-  // Check for corruption
-  // TODO: Implement data corruption check
-
-  // Calculate the time taken to decode
-  decode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-
-  // Calculate the throughput(s)
-  decode_input_throughput_mbps_ = ((double) (config_.data_size * 8)) / decode_time_us_; // throughput of (original) input data
-  decode_output_throughput_mbps_ = ((double) (config_.computed.recovery_blocks * config_.block_size * 8)) / decode_time_us_; // throughput of output data (recovery blocks)
-
-  return 0;
-}
 
 
 void CM256Benchmark::teardown() {
-  if (original_data_) {
-    free(original_data_);
-    original_data_ = nullptr;
-  }
-
-  if (recovery_data_) {
-    free(recovery_data_);
-    recovery_data_ = nullptr;
-  }
-
-  // Reset the metrics
-  encode_time_us_ = 0;
-  decode_time_us_ = 0;
-  encode_input_throughput_mbps_ = 0;
-  encode_output_throughput_mbps_ = 0;
-  decode_input_throughput_mbps_ = 0;
-  decode_output_throughput_mbps_ = 0;
+  if (original_buffer_) simd_safe_free(original_buffer_);
+  if (recovery_buffer_) simd_safe_free(recovery_buffer_);
 }
 
 
-ECCBenchmark::Metrics CM256Benchmark::get_metrics() const {
-  return {
-    encode_time_us_,
-    decode_time_us_,
-    encode_input_throughput_mbps_,
-    encode_output_throughput_mbps_,
-    decode_input_throughput_mbps_,
-    decode_output_throughput_mbps_
-  };
+
+int CM256Benchmark::encode() {
+  // Encode the data
+  return cm256_encode(params_, blocks_, (void*) recovery_buffer_);
+}
+
+
+
+int CM256Benchmark::decode() {
+  // Decode the data
+  return cm256_decode(params_, blocks_);
+}
+
+
+
+void CM256Benchmark::flush_cache() {
+  // TODO: Implement cache flushing
+}
+
+
+
+void CM256Benchmark::check_for_corruption() {
+  // TODO: Implement corruption checking
+}
+
+
+
+void CM256Benchmark::simulate_data_loss() {
+  // TODO: Implement data loss simulation
 }
