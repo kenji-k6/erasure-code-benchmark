@@ -20,7 +20,9 @@ public:
   void simulate_data_loss() override;
 
 private:
-  uint8_t* original_data_;
+  uint8_t* original_buffer_;
+  uint8_t* encoded_buffer_;
+  uint8_t* decoded_buffer_;
   WirehairCodec encoder_;
   WirehairCodec decoder_;
 }; // class WirehairBenchmark

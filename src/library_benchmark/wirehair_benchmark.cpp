@@ -7,19 +7,35 @@ int WirehairBenchmark::setup() {
     return -1; 
   }
 
-  // Allocate memory for the original data
-  original_data_ = (uint8_t*) simd_safe_allocate(kConfig.data_size);
-  if (!original_data_) {
+  // Allocate memory for the buffers
+  original_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.data_size);
+  if (!original_buffer_) {
     teardown();
     std::cerr << "Wirehair: Failed to allocate memory for original data.\n";
     return -1;
   }
 
-  // Initialize data with 1s
-  memset(original_data_, 1, kConfig.data_size);
+  encoded_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.block_size * (kConfig.computed.original_blocks+kConfig.computed.recovery_blocks));
+  if (!encoded_buffer_) {
+    teardown();
+    std::cerr << "Wirehair: Failed to allocate memory for output data.\n";
+    return -1;
+  }
+
+  decoded_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.data_size);
+  if (!decoded_buffer_) {
+    teardown();
+    std::cerr << "Wirehair: Failed to allocate memory for decoded data.\n";
+    return -1;
+  }
+
+  // Initialize original data with 1s, encoded/decoded data with 0s
+  memset(original_buffer_, 1, kConfig.data_size);
+  memset(encoded_buffer_, 0, kConfig.block_size * (kConfig.computed.original_blocks+kConfig.computed.recovery_blocks));
+  memset(decoded_buffer_, 0, kConfig.data_size);
 
   // Create the encoder
-  encoder_ = wirehair_encoder_create(nullptr, original_data_, kConfig.data_size, kConfig.block_size);
+  encoder_ = wirehair_encoder_create(nullptr, original_buffer_, kConfig.data_size, kConfig.block_size);
   if (!encoder_) {
     teardown();
     std::cerr << "Wirehair: Failed to create encoder.\n";
@@ -37,8 +53,86 @@ int WirehairBenchmark::setup() {
   return 0;
 }
 
+
+
 void WirehairBenchmark::teardown() {
-  if (original_data_) simd_safe_free(original_data_);
+  if (original_buffer_) simd_safe_free(original_buffer_);
+  if (encoded_buffer_) simd_safe_free(encoded_buffer_);
   if (encoder_) wirehair_free(encoder_);
   if (decoder_) wirehair_free(decoder_);
+}
+
+
+
+int WirehairBenchmark::encode() {
+  unsigned i = 0, block_id = 0, needed = 0;
+  uint32_t write_len = 0;
+
+  for (;;) {
+    block_id++;
+    needed++;
+
+    // Encode the block
+    WirehairResult encode_result = wirehair_encode(
+      encoder_,
+      block_id,
+      encoded_buffer_ + i,
+      kConfig.block_size,
+      &write_len
+    );
+
+    if (needed > kConfig.computed.recovery_blocks || encode_result != Wirehair_Success) {
+      teardown();
+      std::cerr << "Wirehair: Failed to encode data, too many recovery blocks needed.\n";
+      return -1;
+    }
+
+    WirehairResult decode_result = wirehair_decode(
+      decoder_,
+      block_id,
+      encoded_buffer_ + i,
+      write_len
+    );
+
+    i += kConfig.block_size;
+
+    if (decode_result == Wirehair_Success) {
+      break;
+    }
+
+    if (decode_result != Wirehair_NeedMore) {
+      teardown();
+      std::cerr << "Wirehair: Failed to encode data. \n";
+      return -1;
+    }
+  }
+  return 0;
+}
+
+
+
+int WirehairBenchmark::decode() {
+  return wirehair_recover(
+    decoder_,
+    decoded_buffer_,
+    kConfig.data_size
+  );
+}
+
+
+
+void WirehairBenchmark::flush_cache() {
+  // TODO: Implement cache flushing
+}
+
+
+
+void WirehairBenchmark::check_for_corruption() {
+  // TODO: Implement corruption checking
+}
+
+
+
+void WirehairBenchmark::simulate_data_loss() {
+  // TODO: Implement data loss simulation
 }
