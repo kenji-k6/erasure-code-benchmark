@@ -1,7 +1,7 @@
 #ifndef LEOPARD_BENCHMARK_H
 #define LEOPARD_BENCHMARK_H
 
-#include "benchmark.h"
+#include "abstract_benchmark.h"
 #include "leopard.h"
 
 #include <iostream>

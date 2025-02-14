@@ -1,7 +1,7 @@
 #ifndef BENCHMARK_RUNNER_H
 #define BENCHMARK_RUNNER_H
 
-#include "benchmark.h"
+#include "abstract_benchmark.h"
 #include "utils.h"
 
 #include "cm256_benchmark.h"

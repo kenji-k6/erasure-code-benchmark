@@ -1,7 +1,7 @@
 #ifndef WIREHAIR_BENCHMARK_H
 #define WIREHAIR_BENCHMARK_H
 
-#include "benchmark.h"
+#include "abstract_benchmark.h"
 #include "wirehair/wirehair.h"
 
 #include <iostream>

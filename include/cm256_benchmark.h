@@ -1,7 +1,7 @@
 #ifndef CM256_BENCHMARK_H
 #define CM256_BENCHMARK_H
 
-#include "benchmark.h"
+#include "abstract_benchmark.h"
 #include "cm256.h"
 
 #include <iostream>
