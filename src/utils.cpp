@@ -1,8 +1,5 @@
 #include "utils.h"
 
-
-
-
 /*
  * PCGRandom number generator, used to generate random data for benchmarking
 */
@@ -25,12 +22,22 @@ uint32_t PCGRandom::next() {
 
 
 
-/*
- * Timer utility functions
-*/
-// inline long long get_current_time_us() {
-//   auto now = std::chrono::high_resolution_clock::now();
-//   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
-//   return duration.count();
-// }
+static UTIL_FORCE_INLINE void* simd_safe_allocate(size_t size) {
+  uint8_t* data = (uint8_t *) calloc(1, ALIGNMENT_BYTES + size);
 
+  if (!data) return nullptr;
+  
+  unsigned offset = (unsigned)((uintptr_t)data % ALIGNMENT_BYTES);
+  data += ALIGNMENT_BYTES - offset;
+  data[-1] = (uint8_t)offset;
+  return (void*)data;
+}
+
+static UTIL_FORCE_INLINE void simd_safe_free(void* ptr) {
+  if (!ptr) return;
+  uint8_t* data = (uint8_t*)ptr;
+  unsigned offset = data[-1];
+  if (offset >= ALIGNMENT_BYTES) exit(1); // should never happen
+  data -= ALIGNMENT_BYTES - offset;
+  free(data);
+}

@@ -3,24 +3,6 @@
 
 #include <cstddef>
 
-/*
- * BenchmarkConfig: Configuration parameters for the benchmark
-*/
-
-struct BenchmarkConfig {
-  // Common parameters
-  size_t data_size;             // Total size of original data
-  size_t block_size;            // Size of each block
-  double redundancy_ratio;       // Recovery blocks / original blocks ratio
-  double loss_rate;             // Simulated data loss rate
-  int iterations;               // Number of iterations to run the benchmark
-
-  struct {                      // Derived value (calculated during setup)
-    size_t original_blocks;
-    size_t recovery_blocks;
-  } computed;
-}; // struct BenchmarkConfig
-
 
 /*
  * ECCBenchmark: Interface that all ECC libraries will implement
@@ -32,27 +14,24 @@ public:
   // Initialize the benchmark with the given configuration
   virtual int setup(const BenchmarkConfig& config) = 0;
 
+  // Cleanup the benchmark
+  virtual void teardown() = 0;
+
   // Run the encoding process
   virtual int encode() = 0;
 
   // Run the decoding process (with simulated data loss)
-  virtual int decode(double loss_rate) = 0;
+  virtual int decode() = 0;
 
-  // Cleanup the benchmark
-  virtual void teardown() = 0;
+  // Simulate a cold cache
+  virtual void flush_cache() = 0;
 
-  // Metrics collected during the benchmark
-  struct Metrics {
-    long long encode_time_us;
-    long long decode_time_us;
-    double encode_input_throughput_mbps;
-    double encode_output_throughput_mbps;
-    double decode_input_throughput_mbps;
-    double decode_output_throughput_mbps;
-  };
+  // Check for corruption in the decoded data
+  virtual void check_for_corruption() = 0;
 
-  // Get the metrics collected during the benchmark
-  virtual Metrics get_metrics() const = 0;
+  // Simulate data loss / corruption
+  virtual void simulate_data_loss() = 0;
+
 }; // class ECCBenchmark
 
 #endif // ABSTRACT_BENCHMARK_H

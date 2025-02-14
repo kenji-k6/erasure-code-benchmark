@@ -2,6 +2,7 @@
 #include "leopard_benchmark.h"
 #include "benchmark/benchmark.h"
 #include "leopard.h"
+#include "utils.h"
 #include <memory>
 #include <iostream>
 #include <functional>
@@ -19,11 +20,18 @@ BenchmarkConfig get_config() {
   return config;
 }
 
+
+
+
+
+
+
 int main(int argc, char** argv) {
 
   BenchmarkConfig config = get_config();
 
   // Register Benchmarks
+  std::cout << "Success!!\n";
 
 
   // Default argument if no arguments are passed
@@ -50,6 +58,4 @@ int main(int argc, char** argv) {
 
   // Shutdown Google Benchmark
   ::benchmark::Shutdown();
-
-
 }

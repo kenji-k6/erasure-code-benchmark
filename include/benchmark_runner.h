@@ -15,6 +15,23 @@
 #include <cmath>
 #include <stdexcept>
 
+
+// // Assert that the block size is a multiple of 64 bytes
+// if (config_.block_size % LEOPARD_BLOCK_SIZE_ALIGNMENT != 0) {
+//   std::cerr << "Leopard: Block size must be a multiple of " << LEOPARD_BLOCK_SIZE_ALIGNMENT << " bytes.\n";
+//   return -1;
+// }
+
+// // Assert that the number of blocks is within the valid range
+// if (config_.computed.original_blocks < LEOPARD_MIN_BLOCKS || config_.computed.original_blocks > LEOPARD_MAX_BLOCKS) {
+//   std::cerr << "Leopard: Original blocks must be between " << LEOPARD_MIN_BLOCKS << " and " << LEOPARD_MAX_BLOCKS << " (is " << config_.computed.original_blocks << ").\n";
+//   return -1;
+// }
+
+
+
+
+
 // TODO: make this a variable and implement correctly
 #define WARMUP_ITERATIONS 5
 

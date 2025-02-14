@@ -3,193 +3,128 @@
 int LeopardBenchmark::setup(const BenchmarkConfig& config) {
   config_ = config;
 
-  // Assert that the block size is a multiple of 64 bytes
-  if (config_.block_size % LEOPARD_BLOCK_SIZE_ALIGNMENT != 0) {
-    std::cerr << "Leopard: Block size must be a multiple of " << LEOPARD_BLOCK_SIZE_ALIGNMENT << " bytes.\n";
-    return -1;
-  }
-
-  // Assert that the number of blocks is within the valid range
-  if (config_.computed.original_blocks < LEOPARD_MIN_BLOCKS || config_.computed.original_blocks > LEOPARD_MAX_BLOCKS) {
-    std::cerr << "Leopard: Original blocks must be between " << LEOPARD_MIN_BLOCKS << " and " << LEOPARD_MAX_BLOCKS << " (is " << config_.computed.original_blocks << ").\n";
-    return -1;
-  }
-
   // Initialize Leopard
   if (leo_init()) {
     std::cerr << "Leopard: Initialization failed.\n";
     return -1;
   }
 
-  // Compute encode work count
+  // Compute encode/decode work counts
   encode_work_count_ = leo_encode_work_count(config_.computed.original_blocks, config_.computed.recovery_blocks);
-  if (encode_work_count_ == 0) {
-    std::cerr << "Leopard: Invalid encode work count.\n";
-    return -1;
-  }
-
-  // Compute decode work count
   decode_work_count_ = leo_decode_work_count(config_.computed.original_blocks, config_.computed.recovery_blocks);
-  if (decode_work_count_ == 0) {
-    std::cerr << "Leopard: Invalid decode work count.\n";
+
+  if (encode_work_count_ == 0 || decode_work_count_ == 0) {
+    std::cerr << "Leopard: Invalid work count(s): encode=" << encode_work_count_ << ", decode=" << decode_work_count_ << "\n";
     return -1;
   }
 
-  // Allocate memory for buffers
-  original_ptrs_.resize(config_.computed.original_blocks);
-  encode_work_ptrs_.resize(encode_work_count_);
-  decode_work_ptrs_.resize(decode_work_count_);
-
-  // Allocate memory for original data
-  for (size_t i = 0; i < config_.computed.original_blocks; i++) {
-    original_ptrs_[i] = malloc(config_.block_size);
-    if (!original_ptrs_[i]) {
-      std::cerr << "Leopard: Failed to allocate memory for original data block " << i << ".\n";
-      teardown();
-      return -1; 
-    }
-
-    memset(original_ptrs_[i], 1, config_.block_size); // Initialize to 1
+  // Allocate buffers
+  original_buffer_ = simd_safe_allocate(config_.data_size);
+  if (!original_buffer_) {
+    teardown();
+    std::cerr << "Leopard: Failed to allocate original buffer.\n";
+    return -1;
   }
 
-  // Allocate memory for encode work data
-  for (size_t i = 0; i < encode_work_count_; i++) {
-    encode_work_ptrs_[i] = malloc(config_.block_size);
-    if (!encode_work_ptrs_[i]) {
-      std::cerr << "Leopard: Failed to allocate memory for work data block " << i << ".\n";
-      teardown();
-      return -1; 
-    }
-
-    memset(encode_work_ptrs_[i], 0, config_.block_size); // Initialize to 0
+  encode_work_buffer_ = simd_safe_allocate(config_.block_size * encode_work_count_);
+  if (!encode_work_buffer_) {
+    teardown();
+    std::cerr << "Leopard: Failed to allocate encode work buffer.\n";
+    return -1;
   }
 
-  // Allocate memory for decode work data
-  for (size_t i = 0; i < decode_work_count_; i++) {
-    decode_work_ptrs_[i] = malloc(config_.block_size);
-    if (!decode_work_ptrs_[i]) {
-      std::cerr << "Leopard: Failed to allocate memory for recovery data block " << i << ".\n";
-      teardown();
-      return -1; 
-    }
-
-    memset(decode_work_ptrs_[i], 0, config_.block_size); // Initialize to 0
+  decode_work_buffer_ = simd_safe_allocate(config_.block_size * decode_work_count_);
+  if (!decode_work_buffer_) {
+    teardown();
+    std::cerr << "Leopard: Failed to allocate decode work buffer.\n";
+    return -1;
   }
 
+  // Allocate pointers
+  original_ptrs_ = new void*[config_.computed.original_blocks];
+  encode_work_ptrs_ = new void*[encode_work_count_];
+  decode_work_ptrs_ = new void*[decode_work_count_];
+
+  if (!original_ptrs_ || !encode_work_ptrs_ || !decode_work_ptrs_) {
+    teardown();
+    std::cerr << "Leopard: Failed to allocate pointer arrays.\n";
+    return -1;
+  }
+
+  // Initialize pointers
+  for (unsigned i = 0; i < config_.computed.original_blocks; i++) {
+    original_ptrs_[i] = (void*) (((uint8_t*)original_buffer_) + i * config_.block_size);
+  }
+
+  for (unsigned i = 0; i < encode_work_count_; i++) {
+    encode_work_ptrs_[i] = (void*) (((uint8_t*)encode_work_buffer_) + i * config_.block_size);
+  }
+
+  for (unsigned i = 0; i < decode_work_count_; i++) {
+    decode_work_ptrs_[i] = (void*) (((uint8_t*)decode_work_buffer_) + i * config_.block_size);
+  }
+
+  // Initialize original data to 1s, work data to 0s
+  memset(original_buffer_, 0xFF, config_.data_size);
+  memset(encode_work_buffer_, 0, config_.block_size * encode_work_count_);
+  memset(decode_work_buffer_, 0, config_.block_size * decode_work_count_);
   return 0;
 }
 
 
-int LeopardBenchmark::encode() {
-  // Start the timer
-  auto start_time = std::chrono::high_resolution_clock::now();
 
+void LeopardBenchmark::teardown() {
+  if (original_buffer_) simd_safe_free(original_buffer_);
+  if (encode_work_buffer_) simd_safe_free(encode_work_buffer_);
+  if (decode_work_buffer_) simd_safe_free(decode_work_buffer_);
+  if (original_ptrs_) delete[] original_ptrs_;
+  if (encode_work_ptrs_) delete[] encode_work_ptrs_;
+  if (decode_work_ptrs_) delete[] decode_work_ptrs_;
+}
+
+
+
+int LeopardBenchmark::encode() {
   // Encode the data
-  LeopardResult encode_result = leo_encode(
+  return leo_encode(
     config_.block_size,
     config_.computed.original_blocks,
     config_.computed.recovery_blocks,
     encode_work_count_,
-    (void**) &original_ptrs_[0],
-    (void**) &encode_work_ptrs_[0]
+    original_ptrs_,
+    encode_work_ptrs_
   );
-
-  // Stop the timer
-  auto end_time = std::chrono::high_resolution_clock::now();
-
-  // Check for errors
-  if (encode_result != Leopard_Success) {
-    std::cerr << "Leopard: Encode failed with error " << encode_result << ".\n";
-    return -1;
-  }
-
-  // Calculate the time taken to encode
-  encode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-
-  // Calculate the throughput(s)
-  encode_input_throughput_mbps_ = ((double) (config_.data_size * 8)) / encode_time_us_; // throughput of (original) input data
-  encode_output_throughput_mbps_ = ((double) (config_.computed.recovery_blocks * config_.block_size * 8)) / encode_time_us_; // throughput of output data (recovery blocks)
-
-  return 0;
 }
 
 
-int LeopardBenchmark::decode(double loss_rate) {
-  // Start the timer
-  auto start_time = std::chrono::high_resolution_clock::now();
-  // Simulate data loss
-  // TODO: Implement data loss simulation
 
+int LeopardBenchmark::decode() {
   // Decode the data
-  LeopardResult decode_result = leo_decode(
+  return leo_decode(
     config_.block_size,
     config_.computed.original_blocks,
     config_.computed.recovery_blocks,
     decode_work_count_,
-    (void**) &original_ptrs_[0],
-    (void**) &encode_work_ptrs_[0],
-    (void**) &decode_work_ptrs_[0]
+    original_ptrs_,
+    encode_work_ptrs_,
+    decode_work_ptrs_
   );
-
-  // Stop the timer
-  auto end_time = std::chrono::high_resolution_clock::now();
-
-  // Check for errors in decoding
-  if (decode_result != Leopard_Success) {
-    std::cerr << "Leopard: Decode failed with error " << decode_result << ".\n";
-    return -1;
-  }
-
-  // Check for corruption
-  // TODO: Implement data corruption check
-
-  // Calculate the time taken to decode
-  decode_time_us_ = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-
-  // Calculate the throughput(s)
-  decode_input_throughput_mbps_ = ((double) (config_.data_size * 8)) / decode_time_us_; // throughput of (original) input data
-  decode_output_throughput_mbps_ = ((double) (config_.data_size * config_.loss_rate * 8)) / decode_time_us_; // throughput of lost bit recovery
-
-  return 0;
 }
 
 
-void LeopardBenchmark::teardown() {
-  // Free allocated memory
-  for (auto ptr : original_ptrs_) {
-    if (ptr) free(ptr);
-  }
 
-  for (auto ptr : encode_work_ptrs_) {
-    if (ptr) free(ptr);
-  }
-
-  for (auto ptr : decode_work_ptrs_) {
-    if (ptr) free(ptr);
-  }
-
-  // TODO: Check if these clears are needed
-  original_ptrs_.clear();
-  encode_work_ptrs_.clear();
-  decode_work_ptrs_.clear();
-
-  // Reset the benchmark state
-  encode_time_us_ = 0;
-  decode_time_us_ = 0;
-  encode_input_throughput_mbps_ = 0.0;
-  encode_output_throughput_mbps_ = 0.0;
-  decode_input_throughput_mbps_ = 0.0;
-  decode_output_throughput_mbps_ = 0.0;
+void LeopardBenchmark::flush_cache() {
+  // TODO: Implement cache flushing
 }
 
 
-ECCBenchmark::Metrics LeopardBenchmark::get_metrics() const {
-  return {
-    encode_time_us_,
-    decode_time_us_,
-    encode_input_throughput_mbps_,
-    encode_output_throughput_mbps_,
-    decode_input_throughput_mbps_,
-    decode_output_throughput_mbps_
-  };
+
+void LeopardBenchmark::check_for_corruption() {
+  // TODO: Implement corruption checking
+}
+
+
+
+void LeopardBenchmark::simulate_data_loss() {
+  // TODO: Implement data loss simulation
 }
