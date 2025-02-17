@@ -22,12 +22,18 @@ public:
   
 
 private:
-  uint8_t* original_data_;
-  uint8_t* recovery_data_;
-  uint8_t** original_data_ptrs_;
-  uint8_t** recovery_data_ptrs_;
+  // Fragment / block buffer pointers
+  uint8_t* original_ptrs_[ISAL_MAX_TOT_BLOCKS];
+  uint8_t* recovery_src_ptrs_[ISAL_MAX_ORIG_BLOCKS];
+  uint8_t* recovery_dest_ptrs_[ISAL_MAX_TOT_BLOCKS];
+  uint8_t block_err_list[ISAL_MAX_TOT_BLOCKS];
+
+  // Coefficient matrices
   uint8_t* encode_matrix_;
   uint8_t* decode_matrix_;
-  uint8_t* table_;
+  uint8_t* invert_matrix_;
+  uint8_t* temp_matrix;
+  uint8_t* g_tblts_;
+  uint8_t decode_index[ISAL_MAX_TOT_BLOCKS];
 }; // class ISALBenchmark
 #endif // ISAL_BENCHMARK_H
