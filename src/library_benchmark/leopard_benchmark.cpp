@@ -38,11 +38,6 @@ int LeopardBenchmark::setup() {
     return -1;
   }
 
-  // Initialize original data to 1s, work data to 0s
-  memset(original_buffer_, 0xFF, kConfig.data_size);
-  memset(encode_work_buffer_, 0xF1, kConfig.block_size * encode_work_count_);
-  memset(decode_work_buffer_, 0xF1, kConfig.block_size * decode_work_count_);
-
   // Allocate pointers
   original_ptrs_ = new uint8_t* [kConfig.computed.original_blocks];
   encode_work_ptrs_ = new uint8_t*[encode_work_count_];
@@ -68,10 +63,13 @@ int LeopardBenchmark::setup() {
   }
 
 
-  // Set certain data for later checking:
-  for (unsigned i = 0; i < kConfig.block_size; i++) {
-    original_ptrs_[5][i] = i%256;
-    original_ptrs_[6][i] = i%256;
+  // Initialize original data to random values
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+    set_block_check_values(
+      original_ptrs_[i],
+      kConfig.block_size,
+      i
+    );
   }
 
   return 0;
@@ -126,35 +124,32 @@ void LeopardBenchmark::flush_cache() {
 
 
 bool LeopardBenchmark::check_for_corruption() {
-  // TODO: Implement corruption checking
- 
   for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
-    for (unsigned j = 0; j < kConfig.block_size; j++) {
-      if (i == 5 || i == 6) {
-        if (decode_work_ptrs_[i][j] != j%256) {
-          std::cout << "Corruption detected at block " << i << ", byte " << j << "( " << (int)decode_work_ptrs_[i][j] << " != " << j << ")\n";
-          return true;
-        }
-      } else {
-        if (original_ptrs_[i][j] != 0xFF) {
-          return true;
-        }
+    if (i < kConfig.computed.num_lost_data_blocks) {
+      if (check_block_for_corruption(decode_work_ptrs_[i], kConfig.block_size, i)) {
+        return true;
+      }
+
+    } else {
+      if (check_block_for_corruption(original_ptrs_[i], kConfig.block_size, i)) {
+        return true;
       }
     }
   }
-
   return false;
 }
 
 
 
 void LeopardBenchmark::simulate_data_loss() {
-  // TODO: Implement data loss simulation
-  
-  for (unsigned i = 5; i < 7; i++) {
+  // TODO: Allow for general lost block indices, right now we always start at block 0
+  for (unsigned i = 0; i < kConfig.computed.num_lost_data_blocks; i++) {
     // Simulate data loss
-    memset(&original_buffer_[i*kConfig.block_size], 0, kConfig.block_size);
     original_ptrs_[i] = nullptr;
   }
 
+  for (unsigned i = 0; i < kConfig.computed.num_lost_recovery_blocks; i++) {
+    // Simulate recovery block loss
+    encode_work_ptrs_[i] = nullptr;
+  }
 }

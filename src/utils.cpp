@@ -21,23 +21,28 @@ uint32_t PCGRandom::next() {
 }
 
 
+void set_block_check_values(
+  uint8_t* block_ptr,
+  size_t block_size,
+  size_t block_index
+) {
+  PCGRandom rng(RNG_SEED+block_index, 1);
+  for (unsigned i = 0; i < block_size; i++) {
+    block_ptr[i] = rng.next() % 256;
+  }
+}
 
-// static UTIL_FORCE_INLINE void* simd_safe_allocate(size_t size) {
-//   uint8_t* data = (uint8_t *) calloc(1, ALIGNMENT_BYTES + size);
 
-//   if (!data) return nullptr;
-  
-//   unsigned offset = (unsigned)((uintptr_t)data % ALIGNMENT_BYTES);
-//   data += ALIGNMENT_BYTES - offset;
-//   data[-1] = (uint8_t)offset;
-//   return (void*)data;
-// }
-
-// static UTIL_FORCE_INLINE void simd_safe_free(void* ptr) {
-//   if (!ptr) return;
-//   uint8_t* data = (uint8_t*)ptr;
-//   unsigned offset = data[-1];
-//   if (offset >= ALIGNMENT_BYTES) exit(1); // should never happen
-//   data -= ALIGNMENT_BYTES - offset;
-//   free(data);
-// }
+bool check_block_for_corruption(
+  uint8_t* block_ptr,
+  size_t block_size,
+  size_t block_index
+) {
+  PCGRandom rng(RNG_SEED+block_index, 1);
+  for (unsigned i = 0; i < block_size; i++) {
+    if (block_ptr[i] != (rng.next() % 256)) {
+      return true;
+    }
+  }
+  return false;
+}

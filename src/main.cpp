@@ -19,10 +19,12 @@ BenchmarkConfig get_config() {
   config.data_size = 108800000; //1073736320; // ~~1.0737 GB
   config.block_size = 640000; //6'316'096; // 6316.096 KB
   config.redundancy_ratio = 0.5;
-  config.loss_rate = 0.0;
+  config.loss_rate = 0.1;
   config.iterations = 4;
   config.computed.original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
   config.computed.recovery_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.redundancy_ratio));
+  config.computed.num_lost_data_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.loss_rate));
+  config.computed.num_lost_recovery_blocks = static_cast<size_t>(std::ceil(config.computed.recovery_blocks * config.loss_rate));
   return config;
 }
 

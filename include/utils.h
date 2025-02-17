@@ -34,7 +34,7 @@
 
 #define BASELINE_ECC_BLOCK_SIZE_ALIGNMENT 64
 
-#define TESTING_SEED 1896
+#define RNG_SEED 1896
 
 
 /*
@@ -45,13 +45,15 @@ struct BenchmarkConfig {
   // Common parameters
   size_t data_size;             // Total size of original data
   size_t block_size;            // Size of each block
-  double redundancy_ratio;       // Recovery blocks / original blocks ratio
+  double redundancy_ratio;      // Recovery blocks / original blocks ratio
   double loss_rate;             // Simulated data loss rate
   int iterations;               // Number of iterations to run the benchmark
 
   struct {                      // Derived value (calculated during setup)
     size_t original_blocks;
     size_t recovery_blocks;
+    size_t num_lost_data_blocks;
+    size_t num_lost_recovery_blocks;
   } computed;
 }; // struct BenchmarkConfig
 
@@ -111,5 +113,23 @@ static UTIL_FORCE_INLINE void simd_safe_free(void* ptr) {
   data -= ALIGNMENT_BYTES - offset;
   free(data);
 }
+
+
+/* 
+ * Sets data to specific values, to allow for corruption checking 
+*/
+void set_block_check_values(
+  uint8_t* block_ptr,
+  size_t block_size,
+  size_t block_index
+);
+
+bool check_block_for_corruption(
+  uint8_t* block_ptr,
+  size_t block_size,
+  size_t block_index
+);
+
+
 
 #endif // UTILS_H
