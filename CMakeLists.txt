@@ -20,6 +20,7 @@ set (SOURCES
   src/library_benchmark/leopard_benchmark.cpp
   src/library_benchmark/cm256_benchmark.cpp
   src/library_benchmark/wirehair_benchmark.cpp
+  src/library_benchmark/isal_benchmark.cpp
 )
 
 

@@ -22,18 +22,26 @@ public:
   
 
 private:
+  int nerrs_;
+
+  // Buffers
+  uint8_t* original_data_;
+  uint8_t* recovery_outp_data_;
   // Fragment / block buffer pointers
   uint8_t* original_ptrs_[ISAL_MAX_TOT_BLOCKS];
   uint8_t* recovery_src_ptrs_[ISAL_MAX_ORIG_BLOCKS];
-  uint8_t* recovery_dest_ptrs_[ISAL_MAX_TOT_BLOCKS];
-  uint8_t block_err_list[ISAL_MAX_TOT_BLOCKS];
+  uint8_t* recovery_outp_ptrs_[ISAL_MAX_ORIG_BLOCKS];
+  uint8_t block_err_list_[ISAL_MAX_TOT_BLOCKS];
 
   // Coefficient matrices
   uint8_t* encode_matrix_;
   uint8_t* decode_matrix_;
   uint8_t* invert_matrix_;
-  uint8_t* temp_matrix;
-  uint8_t* g_tblts_;
+  uint8_t* temp_matrix_;
+  uint8_t* g_tbls_;
   uint8_t decode_index[ISAL_MAX_TOT_BLOCKS];
 }; // class ISALBenchmark
+
+
+static int gf_gen_decode_matrix_simple(uint8_t *encode_matrix, uint8_t *decode_matrix, uint8_t *invert_matrix, uint8_t *temp_matrix, uint8_t *decode_index, uint8_t *frag_err_list, int nerrs, int k, int m);
 #endif // ISAL_BENCHMARK_H
