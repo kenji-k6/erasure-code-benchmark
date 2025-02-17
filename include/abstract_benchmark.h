@@ -27,7 +27,7 @@ public:
   virtual void flush_cache() = 0;
 
   // Check for corruption in the decoded data
-  virtual void check_for_corruption() = 0;
+  virtual bool check_for_corruption() = 0;
 
   // Simulate data loss / corruption
   virtual void simulate_data_loss() = 0;

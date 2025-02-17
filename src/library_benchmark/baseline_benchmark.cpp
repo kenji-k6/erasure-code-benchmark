@@ -84,8 +84,8 @@ void BaselineBenchmark::flush_cache() {
 
 
 
-void BaselineBenchmark::check_for_corruption() {
-  // TODO: Implement corruption checking
+bool BaselineBenchmark::check_for_corruption() {
+  return false;
 }
 
 

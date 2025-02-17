@@ -36,16 +36,18 @@ static void BM_generic(benchmark::State& state) {
   for (auto _ : state) {
     bench.encode();
 
-    // state.PauseTiming();
-    // bench.simulate_data_loss();
+    state.PauseTiming();
+    bench.simulate_data_loss();
     // bench.flush_cache();
-    // state.ResumeTiming();
+    state.ResumeTiming();
 
     bench.decode();
 
-    // state.PauseTiming();
-    // bench.check_for_corruption();
-    // state.ResumeTiming();
+    state.PauseTiming();
+    if (bench.check_for_corruption()) {
+      state.SkipWithError("Corruption detected");
+    }
+    state.ResumeTiming();
   }
 }
 

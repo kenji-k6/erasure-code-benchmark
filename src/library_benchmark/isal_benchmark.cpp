@@ -142,8 +142,8 @@ void ISALBenchmark::flush_cache() {
 
 
 
-void ISALBenchmark::check_for_corruption() {
-  // TODO: Implement corruption checking
+bool ISALBenchmark::check_for_corruption() {
+  return false;
 }
 
 

@@ -23,7 +23,7 @@ public:
   int encode() override;
   int decode() override;
   void flush_cache() override;
-  void check_for_corruption() override;
+  bool check_for_corruption() override;
   void simulate_data_loss() override;
   
 

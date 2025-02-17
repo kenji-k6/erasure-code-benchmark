@@ -34,6 +34,8 @@
 
 #define BASELINE_ECC_BLOCK_SIZE_ALIGNMENT 64
 
+#define TESTING_SEED 1896
+
 
 /*
  * BenchmarkConfig: Configuration parameters for the benchmark
