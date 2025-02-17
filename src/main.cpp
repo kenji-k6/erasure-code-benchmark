@@ -3,6 +3,7 @@
 #include "cm256_benchmark.h"
 #include "wirehair_benchmark.h"
 #include "isal_benchmark.h"
+#include "baseline_benchmark.h"
 #include "benchmark/benchmark.h"
 #include "utils.h"
 #include <memory>
@@ -45,6 +46,10 @@ static void BM_isal(benchmark::State& state) {
   BM_generic<ISALBenchmark>(state);
 }
 
+static void BM_baseline(benchmark::State& state) {
+  BM_generic<BaselineBenchmark>(state);
+}
+
 
 
 int main(int argc, char** argv) {
@@ -56,6 +61,7 @@ int main(int argc, char** argv) {
   BENCHMARK(BM_leopard)->Iterations(1);
   BENCHMARK(BM_wirehair)->Iterations(1);
   BENCHMARK(BM_isal)->Iterations(1);
+  BENCHMARK(BM_baseline)->Iterations(1);
 
 
   // Default argument if no arguments are passed

@@ -4,7 +4,10 @@
 #include "abstract_benchmark.h"
 #include "utils.h"
 
+#ifdef __AVX2__
 #include <immintrin.h> // AVX2
+#endif
+
 #include <cstdint>
 #include <cstddef>
 #include <iostream>
@@ -25,38 +28,30 @@ public:
   
 
 private:
-  int temp;
+  uint8_t* data_; // recovery data will be after original data
+  uint8_t** original_blocks_;
+  uint8_t** recovery_blocks_;
+  std::vector<size_t> lost_indices_;
 }; // class BaselineBenchmark
 
 
 
 /*
  * Custom ECC implementation, used as a baseline for comparison
- * Uses a variation of Hamming Codes to encode and decode data
- * Can correct only a single error
+ *
 */
 namespace BaselineECC{
 
-  typedef enum BaselineECCResultT {
-    BaselineECC_Success = 0,            // Operation succeeded
-    BaselineECC_NeedMoreData = -1,      // Not enough recovery data received
-    BaselineECC_TooMuchData = -2,       // Buffer counts are too high
-    BaselineECC_InvalidSize = -3,       // Buffer size must be a multiple of 64 bytes
-    BaselineECC_InvalidCounts = -4,     // Invalid counts provided
-    BaselineECC_InvalidInput = -5,      // A function parameter was invalid
-  } BaselineECCResult;
-
-
-  BaselineECCResult encode(
-    size_t buffer_size,                 // Number of bytes in each data buffer
+  int encode(
+    size_t block_size,                  // Number of bytes in each data block
     size_t original_count,              // Number of original_data[] buffer pointers
     size_t recovery_count,              // Number of recovery_data[] buffer pointers
     const uint8_t** original_data,      // Array of original data buffers
     uint8_t** recovery_data             // Array of recovery data buffers
   );
 
-  BaselineECCResult decode(
-    size_t buffer_size,                       // Number of bytes in each data buffer
+  int decode(
+    size_t block_size,                        // Number of bytes in each data block
     size_t original_count,                    // Number of original_data[] buffer pointers
     size_t recovery_count,                    // Number of recovery_data[] buffer pointers
     uint8_t** output_data,                    // Array of original data buffers (this is where output will go to)
