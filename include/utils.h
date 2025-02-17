@@ -32,6 +32,8 @@
 #define ISAL_MAX_ORIG_BLOCKS 255
 #define ISAL_MAX_TOT_BLOCKS 255
 
+#define BASELINE_ECC_BLOCK_SIZE_ALIGNMENT 64
+
 
 /*
  * BenchmarkConfig: Configuration parameters for the benchmark
