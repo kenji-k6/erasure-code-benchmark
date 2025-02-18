@@ -32,21 +32,23 @@
 template <typename BenchmarkType>
 static void BM_generic(benchmark::State& state) {
   BenchmarkType bench;
-  bench.setup();
   for (auto _ : state) {
-    bench.encode();
+    state.PauseTiming();
+    bench.setup();
+    state.ResumeTiming();
 
+    bench.encode();
     state.PauseTiming();
     bench.simulate_data_loss();
     // bench.flush_cache();
     state.ResumeTiming();
-
     bench.decode();
 
     state.PauseTiming();
     if (!bench.check_for_corruption()) {
       state.SkipWithError("Corruption detected");
     }
+    bench.teardown();
     state.ResumeTiming();
   }
 }

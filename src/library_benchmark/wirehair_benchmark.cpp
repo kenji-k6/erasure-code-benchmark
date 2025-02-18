@@ -29,22 +29,6 @@ int WirehairBenchmark::setup() {
     return -1;
   }
 
-  // Create the encoder
-  encoder_ = wirehair_encoder_create(nullptr, original_buffer_, kConfig.data_size, kConfig.block_size);
-  if (!encoder_) {
-    teardown();
-    std::cerr << "Wirehair: Failed to create encoder.\n";
-    return -1;
-  }
-
-  // Create the decoder
-  decoder_ = wirehair_decoder_create(nullptr, kConfig.data_size, kConfig.block_size);
-  if (!decoder_) {
-    teardown();
-    std::cerr << "Wirehair: Failed to create decoder.\n";
-    return -1;
-  }
-
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
     int write_res = write_random_checking_packet(
@@ -77,6 +61,23 @@ void WirehairBenchmark::teardown() {
 int WirehairBenchmark::encode() {
   unsigned i = 0, block_id = 0, needed = 0;
   uint32_t write_len = 0;
+
+  // Create the encoder
+  encoder_ = wirehair_encoder_create(
+    nullptr,
+    original_buffer_,
+    kConfig.data_size,
+    kConfig.block_size
+  );
+  if (!encoder_) return -1;
+
+  // Create the decoder
+  decoder_ = wirehair_decoder_create(
+    nullptr,
+    kConfig.data_size,
+    kConfig.block_size
+  );
+  if (!decoder_) return -1;
 
   for (;;) {
     block_id++;
@@ -138,19 +139,20 @@ void WirehairBenchmark::flush_cache() {
 
 
 bool WirehairBenchmark::check_for_corruption() {
-  // for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
-  //   if (!check_packet(decoded_buffer_ + (i * kConfig.block_size), kConfig.block_size)) {
-  //     return false;
-  //   }
-  // }
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+    if (!check_packet(decoded_buffer_ + (i * kConfig.block_size), kConfig.block_size)) {
+      return false;
+    }
+  }
   return true;
 }
 
 
 
 void WirehairBenchmark::simulate_data_loss() {
-  // for (unsigned i = 0; i < kConfig.num_lost_blocks; i++) {
-  //   uint32_t idx = kLost_block_idxs[i];
-  //   memset(original_buffer_ + idx * kConfig.block_size, 0, kConfig.block_size);
-  // }
+
+  for (unsigned i = 0; i < kConfig.num_lost_blocks; i++) {
+    uint32_t idx = kLost_block_idxs[i];
+    // memset(encoded_buffer_ + (idx * kConfig.block_size), 0, kConfig.block_size);
+  }
 }
