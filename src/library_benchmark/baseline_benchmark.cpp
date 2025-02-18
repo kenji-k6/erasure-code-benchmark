@@ -2,7 +2,7 @@
 
 int BaselineBenchmark::setup() {
   // Allocate buffers
-  data_ = (uint8_t*) simd_safe_allocate((kConfig.computed.original_blocks + kConfig.computed.recovery_blocks) * kConfig.block_size);
+  data_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, (benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks) * benchmark_config.block_size);
 
   if (!data_) {
     teardown();
@@ -11,8 +11,8 @@ int BaselineBenchmark::setup() {
   }
   
   // Allocate pointers
-  original_blocks_ = new uint8_t*[kConfig.computed.original_blocks];
-  recovery_blocks_ = new uint8_t*[kConfig.computed.recovery_blocks];
+  original_blocks_ = new uint8_t*[benchmark_config.computed.num_original_blocks];
+  recovery_blocks_ = new uint8_t*[benchmark_config.computed.num_recovery_blocks];
 
   if (!original_blocks_ || !recovery_blocks_) {
     teardown();
@@ -23,20 +23,20 @@ int BaselineBenchmark::setup() {
   
 
   // Initialize pointers
-  for (size_t i = 0; i < kConfig.computed.original_blocks; i++) {
-    original_blocks_[i] = data_ + i * kConfig.block_size;
+  for (size_t i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
+    original_blocks_[i] = data_ + i * benchmark_config.block_size;
   }
   
-  for (size_t i = 0; i < kConfig.computed.recovery_blocks; i++) {
-    recovery_blocks_[i] = data_ + (kConfig.computed.original_blocks + i) * kConfig.block_size;
+  for (size_t i = 0; i < benchmark_config.computed.num_recovery_blocks; i++) {
+    recovery_blocks_[i] = data_ + (benchmark_config.computed.num_original_blocks + i) * benchmark_config.block_size;
   }
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
-    int write_res = write_random_checking_packet(
+  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
+    int write_res = write_validation_pattern(
       i,
       original_blocks_[i],
-      kConfig.block_size
+      benchmark_config.block_size
     );
 
     if (write_res) {
@@ -57,7 +57,7 @@ int BaselineBenchmark::setup() {
 
 
 void BaselineBenchmark::teardown() {
-  if (data_) simd_safe_free(data_);
+  if (data_) free(data_);
   if (original_blocks_) delete[] original_blocks_;
   if (recovery_blocks_) delete[] recovery_blocks_;
 }
@@ -66,9 +66,9 @@ void BaselineBenchmark::teardown() {
 
 int BaselineBenchmark::encode() {
   return BaselineECC::encode(
-    kConfig.block_size,
-    kConfig.computed.original_blocks,
-    kConfig.computed.recovery_blocks,
+    benchmark_config.block_size,
+    benchmark_config.computed.num_original_blocks,
+    benchmark_config.computed.num_recovery_blocks,
     (const_cast<const uint8_t**>(original_blocks_)),
     recovery_blocks_
   );
@@ -78,9 +78,9 @@ int BaselineBenchmark::encode() {
 
 int BaselineBenchmark::decode() {
   return BaselineECC::decode(
-    kConfig.block_size,
-    kConfig.computed.original_blocks,
-    kConfig.computed.recovery_blocks,
+    benchmark_config.block_size,
+    benchmark_config.computed.num_original_blocks,
+    benchmark_config.computed.num_recovery_blocks,
     original_blocks_,
     (const_cast<const uint8_t**>(recovery_blocks_)),
     lost_indices_
@@ -113,7 +113,7 @@ int BaselineECC::encode(
   const uint8_t** original_data,
   uint8_t** recovery_data
 ) {
-  if (block_size <= 0 || block_size % BASELINE_ECC_BLOCK_SIZE_ALIGNMENT != 0) {
+  if (block_size <= 0 || block_size % ECCLimits::BASELINE_BLOCK_ALIGNMENT != 0) {
     return -1;
   }
 
@@ -151,7 +151,7 @@ int BaselineECC::decode(
   const uint8_t** recovery_data,
   const std::vector<size_t>& lost_indices
 ) {
-  if (block_size <= 0 || block_size % BASELINE_ECC_BLOCK_SIZE_ALIGNMENT != 0) {
+  if (block_size <= 0 || block_size % ECCLimits::BASELINE_BLOCK_ALIGNMENT != 0) {
     return -1;
   }
 

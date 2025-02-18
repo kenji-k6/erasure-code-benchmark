@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 
 // Constants
@@ -51,7 +52,7 @@ struct BenchmarkConfig {
 
 
 extern BenchmarkConfig benchmark_config;
-extern std::vector<uint32_t> lost_block_indices;
+extern std::vector<uint32_t> lost_block_idxs;
 
 
 /**

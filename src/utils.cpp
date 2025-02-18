@@ -87,7 +87,7 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size) {
 }
 
 
-void get_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<uint32_t>& lost_block_idxs) {
+void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<uint32_t>& lost_block_idxs) {
   uint32_t i;
   PCGRandom rng(RANDOM_SEED, 1); 
   

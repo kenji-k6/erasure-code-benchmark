@@ -6,12 +6,13 @@
 #include "baseline_benchmark.h"
 #include "benchmark/benchmark.h"
 #include "utils.h"
+
 #include <memory>
 #include <iostream>
 #include <cmath>
 
-BenchmarkConfig kConfig;
-uint32_t *kLost_block_idxs;
+BenchmarkConfig benchmark_config;
+std::vector<uint32_t> lost_block_idxs = {};
 
 
 
@@ -23,11 +24,11 @@ BenchmarkConfig get_config() {
   BenchmarkConfig config;
   config.data_size = 81'280'000; //1073736320; // ~~1.0737 GB
   config.block_size = 640000; //6'316'096; // 6316.096 KB
-  config.redundancy_ratio = 1;
   config.num_lost_blocks = 127;
-  config.iterations = 4;
-  config.computed.original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
-  config.computed.recovery_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.redundancy_ratio));
+  config.redundancy_ratio = 1;
+  config.num_iterations = 1;
+  config.computed.num_original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
+  config.computed.num_recovery_blocks = static_cast<size_t>(std::ceil(config.computed.num_original_blocks * config.redundancy_ratio));
   return config;
 }
 
@@ -60,28 +61,21 @@ static void BM_baseline(benchmark::State& state) {
 int main(int argc, char** argv) {
 
   // Get and compute the configuration
-  kConfig = get_config();
-
-  // Allocate memory for lost block indexes
-  kLost_block_idxs = (uint32_t *) malloc(kConfig.num_lost_blocks * sizeof(uint32_t));
-  if (kLost_block_idxs == nullptr) {
-    std::cerr << "Failed to allocate memory for lost block indexes\n";
-    return -1;
-  }
+  benchmark_config = get_config();
 
   // Get the lost block indexes
-  get_lost_block_idxs(
-    kConfig.num_lost_blocks,
-    kConfig.computed.original_blocks + kConfig.computed.recovery_blocks,
-    kLost_block_idxs
+  select_lost_block_idxs(
+    benchmark_config.num_lost_blocks,
+    benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks,
+    lost_block_idxs
   );
 
   // Register Benchmarks
-  BENCHMARK(BM_cm256)->Iterations(1);
-  BENCHMARK(BM_leopard)->Iterations(1);
-  BENCHMARK(BM_wirehair)->Iterations(1);
-  BENCHMARK(BM_isal)->Iterations(1);
-  BENCHMARK(BM_baseline)->Iterations(1);
+  BENCHMARK(BM_cm256)->Iterations(benchmark_config.num_iterations);
+  BENCHMARK(BM_leopard)->Iterations(benchmark_config.num_iterations);
+  BENCHMARK(BM_wirehair)->Iterations(benchmark_config.num_iterations);
+  BENCHMARK(BM_isal)->Iterations(benchmark_config.num_iterations);
+  BENCHMARK(BM_baseline)->Iterations(benchmark_config.num_iterations);
 
 
   // Default argument if no arguments are passed
@@ -108,5 +102,4 @@ int main(int argc, char** argv) {
 
   // Shutdown Google Benchmark
   ::benchmark::Shutdown();
-  free(kLost_block_idxs);
 }
