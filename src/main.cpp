@@ -16,6 +16,7 @@ uint32_t *kLost_block_idxs;
 
 
 //TODO: check if input config is valid and for which libraries it is valid
+//TODO: check that lost_blocks <= original_blocks + recovery_blocks
 
 // TODO: Pass arguments
 BenchmarkConfig get_config() {
@@ -23,7 +24,7 @@ BenchmarkConfig get_config() {
   config.data_size = 108800000; //1073736320; // ~~1.0737 GB
   config.block_size = 640000; //6'316'096; // 6316.096 KB
   config.redundancy_ratio = 0.5;
-  config.num_lost_blocks = 2000;
+  config.num_lost_blocks = 50;
   config.iterations = 4;
   config.computed.original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
   config.computed.recovery_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.redundancy_ratio));

@@ -136,5 +136,25 @@ bool LeopardBenchmark::check_for_corruption() {
 
 
 void LeopardBenchmark::simulate_data_loss() {
-  // TODO: Simulate data loss
+  // Lost block indices are already computed
+  // They can be found in kLost_block_idxs
+
+  for (unsigned i = 0; i < kConfig.num_lost_blocks; i++) {
+    uint32_t idx = kLost_block_idxs[i];
+    // if idx >= kConfig.computed.original_blocks, then it is a recovery block
+    // else it's a data block
+
+    if (idx < kConfig.computed.original_blocks) {
+      // Zero out the block
+      memset(original_ptrs_[idx], 0, kConfig.block_size);
+      // Set corresponding block ptr to a nullptr
+      original_ptrs_[idx] = nullptr;
+    } else {
+      idx -= kConfig.computed.original_blocks;
+      // Zero out the block
+      memset(encode_work_ptrs_[idx], 0, kConfig.block_size);
+      // Set corresponding block ptr to a nullptr
+      encode_work_ptrs_[idx] = nullptr;
+    }
+  }
 }
