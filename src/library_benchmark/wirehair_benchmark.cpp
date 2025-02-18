@@ -44,6 +44,15 @@ int WirehairBenchmark::setup() {
     }
   }
 
+
+  // Create the decoder
+  decoder_ = wirehair_decoder_create(
+    nullptr,
+    kConfig.data_size,
+    kConfig.block_size
+  );
+  if (!decoder_) return -1;
+
   return 0;
 }
 
@@ -59,9 +68,9 @@ void WirehairBenchmark::teardown() {
 
 
 int WirehairBenchmark::encode() {
-  unsigned i = 0, block_id = 0, needed = 0;
+  
   uint32_t write_len = 0;
-
+  WirehairResult encode_result;
   // Create the encoder
   encoder_ = wirehair_encoder_create(
     nullptr,
@@ -71,51 +80,17 @@ int WirehairBenchmark::encode() {
   );
   if (!encoder_) return -1;
 
-  // Create the decoder
-  decoder_ = wirehair_decoder_create(
-    nullptr,
-    kConfig.data_size,
-    kConfig.block_size
-  );
-  if (!decoder_) return -1;
+  for (unsigned i = 0; i < kConfig.computed.original_blocks + kConfig.computed.recovery_blocks; i++) {
 
-  for (;;) {
-    block_id++;
-    needed++;
-
-    // Encode the block
-    WirehairResult encode_result = wirehair_encode(
+    encode_result = wirehair_encode(
       encoder_,
-      block_id,
-      encoded_buffer_ + i,
+      i,
+      encoded_buffer_ + (i * kConfig.block_size),
       kConfig.block_size,
       &write_len
     );
 
-    if (/*needed > kConfig.computed.recovery_blocks ||*/ encode_result != Wirehair_Success) {
-      teardown();
-      std::cerr << "Wirehair: Failed to encode data, too many recovery blocks needed. (" << wirehair_result_string(encode_result) << ")\n";
-      return -1;
-    }
-
-    WirehairResult decode_result = wirehair_decode(
-      decoder_,
-      block_id,
-      encoded_buffer_ + i,
-      write_len
-    );
-
-    i += kConfig.block_size;
-
-    if (decode_result == Wirehair_Success) {
-      break;
-    }
-
-    if (decode_result != Wirehair_NeedMore) {
-      teardown();
-      std::cerr << "Wirehair: Failed to encode data. \n";
-      return -1;
-    }
+    if (encode_result != Wirehair_Success) return -1;
   }
   return 0;
 }
@@ -123,10 +98,30 @@ int WirehairBenchmark::encode() {
 
 
 int WirehairBenchmark::decode() {
+  WirehairResult decode_result = Wirehair_NeedMore;
+  unsigned loss_idx = 0;
+
+  for (unsigned i = 0; i < kConfig.computed.original_blocks + kConfig.computed.recovery_blocks; i++) {
+
+    if (i == kLost_block_idxs[loss_idx]) {
+      loss_idx++;
+      continue;
+    }
+
+    decode_result = wirehair_decode(
+      decoder_,
+      i,
+      encoded_buffer_ + (i * kConfig.block_size),
+      kConfig.block_size
+    );
+
+    if (decode_result == Wirehair_Success) break;
+  }
+
   return wirehair_recover(
     decoder_,
     decoded_buffer_,
-    kConfig.data_size
+    kConfig.computed.original_blocks * kConfig.block_size
   );
 }
 
@@ -148,11 +143,10 @@ bool WirehairBenchmark::check_for_corruption() {
 }
 
 
-
 void WirehairBenchmark::simulate_data_loss() {
-
+  /* Loss logic is also part of decode function!!! */
   for (unsigned i = 0; i < kConfig.num_lost_blocks; i++) {
     uint32_t idx = kLost_block_idxs[i];
-    // memset(encoded_buffer_ + (idx * kConfig.block_size), 0, kConfig.block_size);
+    memset(encoded_buffer_ + (idx * kConfig.block_size), 0, kConfig.block_size);
   }
 }
