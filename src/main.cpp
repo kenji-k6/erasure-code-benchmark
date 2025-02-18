@@ -11,6 +11,10 @@
 #include <cmath>
 
 BenchmarkConfig kConfig;
+uint32_t *kLost_block_idxs;
+
+
+
 //TODO: check if input config is valid and for which libraries it is valid
 
 // TODO: Pass arguments
@@ -19,12 +23,10 @@ BenchmarkConfig get_config() {
   config.data_size = 108800000; //1073736320; // ~~1.0737 GB
   config.block_size = 640000; //6'316'096; // 6316.096 KB
   config.redundancy_ratio = 0.5;
-  config.loss_rate = 0.1;
+  config.num_lost_blocks = 2000;
   config.iterations = 4;
   config.computed.original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
   config.computed.recovery_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.redundancy_ratio));
-  config.computed.num_lost_data_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.loss_rate));
-  config.computed.num_lost_recovery_blocks = static_cast<size_t>(std::ceil(config.computed.recovery_blocks * config.loss_rate));
   return config;
 }
 
@@ -56,7 +58,22 @@ static void BM_baseline(benchmark::State& state) {
 
 int main(int argc, char** argv) {
 
+  // Get and compute the configuration
   kConfig = get_config();
+
+  // Allocate memory for lost block indexes
+  kLost_block_idxs = (uint32_t *) malloc(kConfig.num_lost_blocks * sizeof(uint32_t));
+  if (kLost_block_idxs == nullptr) {
+    std::cerr << "Failed to allocate memory for lost block indexes\n";
+    return -1;
+  }
+
+  // Get the lost block indexes
+  get_lost_block_idxs(
+    kConfig.num_lost_blocks,
+    kConfig.computed.original_blocks + kConfig.computed.recovery_blocks,
+    kLost_block_idxs
+  );
 
   // Register Benchmarks
   BENCHMARK(BM_cm256)->Iterations(1);

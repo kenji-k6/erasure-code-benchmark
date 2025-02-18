@@ -57,7 +57,7 @@ struct BenchmarkConfig {
 }; // struct BenchmarkConfig
 
 extern BenchmarkConfig kConfig;
-
+extern uint32_t *kLost_block_idxs;
 
 
 /*
