@@ -1,81 +1,78 @@
 #include "isal_benchmark.h"
 
+#include "erasure_code.h"
+#include <cstring>
+#include <iostream>
+
+
+
+/**
+ * @file isal_benchmark.cpp
+ * @brief Benchmark implementation for the Intel ISA-L library's ECC implementation
+ * 
+ * Documentation can be found in isal_benchmark.h
+ */
+
 
 int ISALBenchmark::setup() noexcept {
-  // Allocate matrices
-  size_t tot_blocks = benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks;
+  // Store frequently used variables / variables used in performance-critical areas locally
+  num_original_blocks_ = benchmark_config.computed.num_original_blocks;
+  num_recovery_blocks_ = benchmark_config.computed.num_recovery_blocks;
+  num_total_blocks_ = num_original_blocks_ + num_recovery_blocks_;
+  block_size_ = benchmark_config.block_size;
+  num_lost_blocks_ = benchmark_config.num_lost_blocks;
 
-  encode_matrix_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, tot_blocks * benchmark_config.computed.num_original_blocks);
-  decode_matrix_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, tot_blocks * benchmark_config.computed.num_original_blocks);
-  invert_matrix_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, tot_blocks * benchmark_config.computed.num_original_blocks);
-  temp_matrix_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, tot_blocks * benchmark_config.computed.num_original_blocks);
-  g_tbls_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, tot_blocks * benchmark_config.computed.num_original_blocks * 32);
+  // Allocate matrices with aligned memory
+  encode_matrix_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, num_total_blocks_ * num_original_blocks_));
+  decode_matrix_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, num_total_blocks_ * num_original_blocks_));
+  invert_matrix_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, num_total_blocks_ * num_original_blocks_));
+  temp_matrix_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, num_total_blocks_ * num_original_blocks_));
+  g_tbls_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, num_total_blocks_ * num_original_blocks_ * 32));
 
   if (!encode_matrix_ || !decode_matrix_ || !invert_matrix_ || !temp_matrix_ || !g_tbls_) {
-    teardown();
     std::cerr << "ISAL: Failed to allocate matrices.\n";
-    return -1;
-  }
-
-  // copy lost block indices to frag err list
-  for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
-    block_err_list_[i] = (uint8_t) lost_block_idxs[i];
-  }
-
-  // Allocate buffers
-  original_data_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * tot_blocks);
-  recovery_outp_data_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * benchmark_config.computed.num_recovery_blocks);
-
-  if (!original_data_ || !recovery_outp_data_) {
     teardown();
-    std::cerr << "ISAL: Failed to allocate buffers.\n";
     return -1;
   }
 
-  // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-    int write_res = write_validation_pattern(
-      i,
-      (uint8_t *) original_data_ + (i * benchmark_config.block_size),
-      benchmark_config.block_size
-    );
+  // Allocate aligned buffers for data
+  original_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_total_blocks_));
+  recovery_outp_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_recovery_blocks_));
 
+  if (!original_buffer_ || !recovery_outp_buffer_) {
+    std::cerr << "ISAL: Failed to allocate data buffers.\n";
+    teardown();
+    return -1;
+  }
+
+  // Allocate pointers to the data blocks
+  for (unsigned i = 0; i < num_total_blocks_; i++) {
+    original_ptrs_[i] = original_buffer_ + i * block_size_;
+  }
+
+  for (unsigned i = 0; i < num_recovery_blocks_; i++) {
+    recovery_outp_ptrs_[i] = recovery_outp_buffer_ + i * block_size_;
+  }
+
+  // Generate encode matrix, can be precomputed as it is fixed for a given num_original_blocks_
+  gf_gen_cauchy1_matrix(encode_matrix_, num_total_blocks_, num_original_blocks_);
+
+  // Initialize generator tables for encoding, can be precomputed as it is fixed for a given num_original_blocks_
+  ec_init_tables(num_original_blocks_, num_recovery_blocks_,
+                 &encode_matrix_[num_original_blocks_ * num_original_blocks_], g_tbls_);
+  
+  // Initialize data buffer with CRC blocks
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
+    int write_res = write_validation_pattern(i, original_ptrs_[i], block_size_);
     if (write_res) {
-      teardown();
       std::cerr << "ISAL: Failed to write random checking packet.\n";
+      teardown();
       return -1;
     }
   }
-
-  // Initialize pointers
-  for (unsigned i = 0; i < tot_blocks; i++) {
-    original_ptrs_[i] = (uint8_t*) original_data_ + (i * benchmark_config.block_size);
-  }
-
-  for (unsigned i = 0; i < benchmark_config.computed.num_recovery_blocks; i++) {
-    recovery_outp_ptrs_[i] = (uint8_t*) recovery_outp_data_ + (i * benchmark_config.block_size);
-  }
-
-
-  // Generate encode matrix
-  // A Cauchy matrix is a good choice as even large k are alrways inverable, keeping the recovery rule simple
-  gf_gen_cauchy1_matrix(
-    encode_matrix_,
-    tot_blocks,
-    benchmark_config.computed.num_original_blocks
-  );
-
-  // Initialize g_tbls_ from encode matrix
-  ec_init_tables(
-    benchmark_config.computed.num_original_blocks,
-    benchmark_config.computed.num_recovery_blocks,
-    &encode_matrix_[benchmark_config.computed.num_original_blocks * benchmark_config.computed.num_original_blocks],
-    g_tbls_
-  );
-
+  
   return 0;
 }
-
 
 
 void ISALBenchmark::teardown() noexcept {
@@ -84,70 +81,74 @@ void ISALBenchmark::teardown() noexcept {
   if (invert_matrix_) free(invert_matrix_);
   if (temp_matrix_) free(temp_matrix_);
   if (g_tbls_) free(g_tbls_);
-  if (original_data_) free(original_data_);
-  if (recovery_outp_data_) free(recovery_outp_data_);
+  if (original_buffer_) free(original_buffer_);
+  if (recovery_outp_buffer_) free(recovery_outp_buffer_);
 }
-
 
 
 int ISALBenchmark::encode() noexcept {
-  ec_encode_data(
-    benchmark_config.block_size,
-    benchmark_config.computed.num_original_blocks,
-    benchmark_config.computed.num_recovery_blocks,
-    g_tbls_,
-    original_ptrs_,
-    &original_ptrs_[benchmark_config.computed.num_original_blocks]
-  );
-
+  ec_encode_data(block_size_, num_original_blocks_, num_recovery_blocks_, g_tbls_,
+                 original_ptrs_, &original_ptrs_[num_original_blocks_]);
   return 0;
 }
-
 
 
 int ISALBenchmark::decode() noexcept {
-  size_t tot_blocks = benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks;
-  // Generate a decode metrix
-  int decode_matrix_result = gf_gen_decode_matrix_simple(
-    encode_matrix_,
-    decode_matrix_,
-    invert_matrix_,
-    temp_matrix_,
-    decode_index,
-    block_err_list_,
-    benchmark_config.num_lost_blocks,
-    benchmark_config.computed.num_original_blocks,
-    tot_blocks
-  );
+  // Copy lost block indices (in reality this would be done by iterating and checking for lost blocks)
+  for (unsigned i = 0; i < num_lost_blocks_; i++) {
+    block_err_list_[i] = static_cast<uint8_t>(lost_block_idxs[i]);
+  }
 
-  if (decode_matrix_result) {
+  // Generate decoding matrix
+  if (gf_gen_decode_matrix_simple(encode_matrix_, decode_matrix_, invert_matrix_,
+                                  temp_matrix_, decode_index_, block_err_list_,
+                                  num_lost_blocks_, num_original_blocks_, num_total_blocks_)) {
     return -1;
   }
 
-  // Pack recovry array pointers as list of valid fragments
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-    recovery_src_ptrs_[i] = original_ptrs_[decode_index[i]];
+  // Set up recovery pointers
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
+    recovery_src_ptrs_[i] = original_ptrs_[decode_index_[i]];
   }
 
-  ec_init_tables(
-    benchmark_config.computed.num_original_blocks,
-    benchmark_config.num_lost_blocks,
-    decode_matrix_,
-    g_tbls_
-  );
-
-  ec_encode_data(
-    benchmark_config.block_size,
-    benchmark_config.computed.num_original_blocks,
-    benchmark_config.num_lost_blocks,
-    g_tbls_,
-    recovery_src_ptrs_,
-    recovery_outp_ptrs_
-  );
-
+  // Initialize tables and perform recovery
+  ec_init_tables(num_original_blocks_, num_lost_blocks_, decode_matrix_, g_tbls_);
+  ec_encode_data(block_size_, num_original_blocks_, num_lost_blocks_, g_tbls_,
+                 recovery_src_ptrs_, recovery_outp_ptrs_);
+  
   return 0;
 }
 
+
+void ISALBenchmark::simulate_data_loss() noexcept {
+  for (unsigned i = 0; i < num_lost_blocks_; i++) {
+    uint32_t idx = lost_block_idxs[i];
+    // Zero out the lost block, set the corresponding block pointer to nullptr
+    memset(original_ptrs_[idx], 0, block_size_);
+    original_ptrs_[idx] = nullptr;
+
+    if (idx > num_original_blocks_) { // If the lost block is a recovery block, zero out the recovery output as well
+      memset(recovery_outp_ptrs_[idx - num_original_blocks_], 0, block_size_);
+    }
+  }
+}
+
+
+bool ISALBenchmark::check_for_corruption() const noexcept {
+  unsigned loss_idx = 0;
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
+    bool res = false;
+    if (i == lost_block_idxs[loss_idx]) {
+      res = validate_block(recovery_outp_ptrs_[loss_idx], block_size_);
+      loss_idx++;
+    } else {
+      res = validate_block(original_ptrs_[i], block_size_);
+    }
+
+    if (!res) return false;
+  }
+  return true;
+}
 
 
 void ISALBenchmark::flush_cache() noexcept {
@@ -155,42 +156,9 @@ void ISALBenchmark::flush_cache() noexcept {
 }
 
 
-
-bool ISALBenchmark::check_for_corruption() const noexcept {
-  unsigned loss_idx = 0;
-
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-
-    if (i == lost_block_idxs[loss_idx]) {
-       if (!(validate_block(recovery_outp_ptrs_[loss_idx], benchmark_config.block_size))) return false;
-       loss_idx++;
-    } else {
-      if (!validate_block(original_ptrs_[i], benchmark_config.block_size)) return false;
-    }
-  }
-  return true;
-}
-
-
-
-void ISALBenchmark::simulate_data_loss() noexcept {
-  // TODO: Implement data loss simulation
-  for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
-    uint32_t idx = lost_block_idxs[i];
-    // Zero out the lost block
-    memset(original_ptrs_[idx], 0, benchmark_config.block_size);
-    original_ptrs_[idx] = nullptr;
-
-    if (idx > benchmark_config.computed.num_original_blocks) {
-      memset(recovery_outp_ptrs_[idx - benchmark_config.computed.num_original_blocks], 0, benchmark_config.block_size);
-    }
-  }
-}
-
-
-
-
-static int gf_gen_decode_matrix_simple(uint8_t *encode_matrix, uint8_t *decode_matrix, uint8_t *invert_matrix, uint8_t *temp_matrix, uint8_t *decode_index, uint8_t *frag_err_list, int nerrs, int k, int m) {
+static int gf_gen_decode_matrix_simple(uint8_t *encode_matrix, uint8_t *decode_matrix, uint8_t *invert_matrix,
+                                       uint8_t *temp_matrix, uint8_t *decode_index, uint8_t *frag_err_list,
+                                       int nerrs, int k, int m) {
   int i, j, p, r;
   int nsrcerrs = 0;
   uint8_t s, *b = temp_matrix;
@@ -204,7 +172,7 @@ static int gf_gen_decode_matrix_simple(uint8_t *encode_matrix, uint8_t *decode_m
           frag_in_err[frag_err_list[i]] = 1;
   }
   
-  // Construct b (matrix that encoded remaining frags) by removing erased rows
+  // Construct b (matrix that encoded remaining blocks) by removing erased rows
   for (i = 0, r = 0; i < k; i++, r++) {
           while (frag_in_err[r])
                   r++;

@@ -1,5 +1,6 @@
-#include "leopard.h"
 #include "leopard_benchmark.h"
+
+#include "leopard.h"
 #include "utils.h"
 #include <cstring>
 #include <iostream>
@@ -84,27 +85,19 @@ void LeopardBenchmark::teardown() noexcept {
 
 
 int LeopardBenchmark::encode() noexcept {
-  return leo_encode(
-    block_size_,
-    num_original_blocks_,
-    num_recovery_blocks_,
-    encode_work_count_,
-    reinterpret_cast<void**>(original_ptrs_.data()),
-    reinterpret_cast<void**>(encode_work_ptrs_.data())
-  );
+  return leo_encode(block_size_, num_original_blocks_,
+                    num_recovery_blocks_, encode_work_count_,
+                    reinterpret_cast<void**>(original_ptrs_.data()),
+                    reinterpret_cast<void**>(encode_work_ptrs_.data()));
 }
 
 
 int LeopardBenchmark::decode() noexcept {
-  return leo_decode(
-    block_size_,
-    num_original_blocks_,
-    num_recovery_blocks_,
-    decode_work_count_,
-    reinterpret_cast<void**>(original_ptrs_.data()),
-    reinterpret_cast<void**>(encode_work_ptrs_.data()),
-    reinterpret_cast<void**>(decode_work_ptrs_.data())
-  );
+  return leo_decode(block_size_, num_original_blocks_,
+                    num_recovery_blocks_, decode_work_count_,
+                    reinterpret_cast<void**>(original_ptrs_.data()),
+                    reinterpret_cast<void**>(encode_work_ptrs_.data()),
+                    reinterpret_cast<void**>(decode_work_ptrs_.data()));
 }
 
 
@@ -112,12 +105,14 @@ void LeopardBenchmark::simulate_data_loss() noexcept {
   for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
     uint32_t idx = lost_block_idxs[i];
     if (idx < num_original_blocks_) {
-      memset(original_ptrs_[idx], 0, block_size_); // Zero out the block in the original data array
-      original_ptrs_[idx] = nullptr; // Set the corresponding block pointer to nullptr
+      // Zero out the block in the original data array, set the corresponding block pointer to nullptr
+      memset(original_ptrs_[idx], 0, block_size_);
+      original_ptrs_[idx] = nullptr;
     } else {
       idx -= num_original_blocks_;
-      memset(encode_work_ptrs_[idx], 0, block_size_); // Zero out the block in the encoded data array
-      encode_work_ptrs_[idx] = nullptr; // Set the corresponding block pointer to nullptr
+      // Zero out the block in the encoded data array, set the corresponding block pointer to nullptr
+      memset(encode_work_ptrs_[idx], 0, block_size_);
+      encode_work_ptrs_[idx] = nullptr;
     }
   }
 }
