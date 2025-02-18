@@ -46,3 +46,80 @@ bool check_block_for_corruption(
   }
   return false;
 }
+
+
+
+
+static int write_random_checking_packet(
+  size_t block_idx,
+  uint8_t* block_ptr,
+  uint32_t num_bytes 
+) {
+  PCGRandom rng(block_idx, 1);
+
+  if (num_bytes < 16) { // not enough room for crc check
+    if (num_bytes < 2) {
+      std::cerr << "write_random_checking_packet: num_bytes must be at least 2\n";
+      return -1;
+    }
+    // Fill all bytes with same random number
+    block_ptr[0] = (uint8_t) rng.next();
+
+    for (unsigned i = 1; i < num_bytes; i++) {
+      block_ptr[i] = (uint8_t) rng.next();
+    }
+  } else {
+    // if we have >= 16 bytes we use a cyclic redundancy check
+    uint32_t crc = num_bytes;
+    *(uint32_t*)(block_ptr+4) = num_bytes;
+
+    for (unsigned i = 8; i < num_bytes; i++) {
+      uint8_t val = (uint8_t) rng.next();
+      block_ptr[i] = val;
+      crc = (crc << 3) | (crc >> (32 - 3)); // shifting to spread entropy
+      crc += val;
+    }
+
+    *(uint32_t *) block_ptr = crc;
+  }
+  return 0;
+}
+
+
+static bool check_packet(
+  uint8_t* block_ptr,
+  uint32_t num_bytes
+) {
+  if (num_bytes < 16) { // We didn't compute a crc
+    if (num_bytes < 2) return false;
+    uint8_t val = block_ptr[0];
+    for (unsigned i = 1; i < num_bytes; i++) {
+      if (block_ptr[i] != val) {
+        return false;
+      }
+    }
+  } else {
+    uint32_t crc = num_bytes;
+    uint32_t read_bytes = *(uint32_t *)(block_ptr+4);
+
+    if (read_bytes != num_bytes) {
+      return false;
+    }
+
+    // Recompute CRC
+    for (unsigned i = 8; i < num_bytes; i++) {
+      uint8_t val = block_ptr[i];
+      crc = (crc << 3) | (crc >> (32 - 3));
+      crc += val;
+    }
+
+    uint32_t block_crc = *(uint32_t *) block_ptr; // the actual stored crc
+
+    // check if CRC's match
+    if (block_crc != crc) {
+      return false;
+    }
+  }
+
+  return true;
+}

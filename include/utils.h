@@ -4,6 +4,7 @@
 #include <cstddef> // for size_t
 #include <cstdint>
 #include <chrono>
+#include <iostream>
 
 // This ensures that allocs are 64-byte aligned, to allow SIMD instructions, also needed by ISA-L
 #define ALIGNMENT_BYTES 64
@@ -46,14 +47,12 @@ struct BenchmarkConfig {
   size_t data_size;             // Total size of original data
   size_t block_size;            // Size of each block
   double redundancy_ratio;      // Recovery blocks / original blocks ratio
-  double loss_rate;             // Simulated data loss rate
+  size_t num_lost_blocks;       // Number of total blocks lost (recovery + original)
   int iterations;               // Number of iterations to run the benchmark
 
   struct {                      // Derived value (calculated during setup)
     size_t original_blocks;
     size_t recovery_blocks;
-    size_t num_lost_data_blocks;
-    size_t num_lost_recovery_blocks;
   } computed;
 }; // struct BenchmarkConfig
 
@@ -75,8 +74,6 @@ public:
   PCGRandom(uint64_t seed, uint64_t seq); // Constructor: provide a seed and a sequence number
   uint32_t next(); // Generate a random 32-bit number
 }; // class PCGRandom
-
-
 
 
 
@@ -128,6 +125,33 @@ bool check_block_for_corruption(
   uint8_t* block_ptr,
   size_t block_size,
   size_t block_index
+);
+
+
+
+
+/*
+ * Writes data to a block in a predetermined pattern,
+ * to allow for corruption checking
+ * The block_idx is used as a seed for the RNG, to ensure reproducibility
+ * returns 0 on success
+*/
+static int write_random_checking_packet(
+  size_t block_idx,
+  uint8_t* block_ptr,
+  uint32_t num_bytes // this is uint32_t to guarantee it is 4 bytes
+);
+
+
+
+/* 
+ * Checks if a block's content (created by function above)
+ * has been corrupted
+ * returns true if not corrupted, false if corrupted
+*/
+static bool check_packet(
+  uint8_t* block_ptr,
+  size_t num_bytes
 );
 
 
