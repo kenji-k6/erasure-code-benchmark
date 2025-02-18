@@ -117,4 +117,7 @@ void get_lost_block_idxs(
       lost_block_idxs[j] = i;
     }
   }
+
+  // Sort the indices
+  std::sort(lost_block_idxs, lost_block_idxs + num_lost_blocks);
 }

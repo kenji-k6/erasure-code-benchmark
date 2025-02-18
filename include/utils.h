@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <chrono>
 #include <iostream>
+#include <algorithm>
 
 // This ensures that allocs are 64-byte aligned, to allow SIMD instructions, also needed by ISA-L
 #define ALIGNMENT_BYTES 64
@@ -142,6 +143,7 @@ bool check_packet(
 /*
  * Selects k unique indices from a range [0, n)
  * This is used to select k blocks that will be dropped
+ * The indexes are stored in the array lost_block_idxs in a sorted fashion
 */
 void get_lost_block_idxs(
   size_t num_lost_blocks,
