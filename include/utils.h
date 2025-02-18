@@ -3,12 +3,12 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <algorithm>
 
 
 // Constants
 constexpr size_t ALIGNMENT_BYTES = 64;
 constexpr size_t RANDOM_SEED = 1896;
+constexpr size_t MIN_DATA_BLOCK_SIZE = 2;
 
 
 // Error Correction Code (ECC) constraints
@@ -42,7 +42,6 @@ struct BenchmarkConfig {
   double redundancy_ratio;        ///< Recovery blocks / original blocks ratio
 
   int num_iterations;             ///< Number of benchmark iterations
-  size_t random_seed;             ///< Seed for the random number generator
 
   struct ComputedValues {
     size_t num_original_blocks;   ///< Number of original data blocks
@@ -65,7 +64,7 @@ private:
   uint64_t inc;   ///< Increment value (must be odd)
 
 public:
-  PCGRandom(uint64_t seed, uint64_t sequence);
+  PCGRandom(uint64_t seed, uint64_t seq);
   uint32_t next();  ///< Generate a random 32-bit number
 };
 

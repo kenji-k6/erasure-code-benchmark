@@ -1,123 +1,109 @@
 #include "utils.h"
+#include <iostream>
+#include <algorithm>
+#include <vector>
 
-/*
- * PCGRandom number generator, used to generate random data for benchmarking
-*/
 
+
+/**
+ * @file utils.cpp
+ * @brief Implements utility functions for benchmarking, random number generation, and data corruption detection.
+ * 
+ * Documentation can be found in utils.h
+ */
+
+
+// PCGRandom class implementation
 PCGRandom::PCGRandom(uint64_t seed, uint64_t seq) {
   state = 0;
-  inc = (seq << 1) | 1; // Ensure inc is odd
-  next();
-  state += seed;
-  next();
+  inc = (seq << 1) | 1; // Ensure increment is odd
+  next();               // Generate initial state
+  state += seed;        // Apply seed
+  next();               // Generate another random value after seeding
 }
+
 
 uint32_t PCGRandom::next() {
   uint64_t prev_state = state;
-  state = (prev_state * 6364136223846793005ull) + inc;
-  uint32_t xorshifted = static_cast<uint32_t>(((prev_state >> 18u) ^ prev_state) >> 27u);
-  uint32_t rotated = static_cast<uint32_t>(prev_state >> 59u);
+  state = (prev_state * 6364136223846793005ULL) + inc; // Linear congruential formula
+  uint32_t xorshifted = static_cast<uint32_t>(((prev_state >> 18U) ^ prev_state) >> 27U);
+  uint32_t rotated = static_cast<uint32_t>(prev_state >> 59U);
   return (xorshifted >> rotated) | (xorshifted << ((-rotated) & 31));
 }
 
 
 
-int write_random_checking_packet(
-  size_t block_idx,
-  uint8_t* block_ptr,
-  uint32_t num_bytes 
-) {
+// Utility functions
+int write_validation_pattern(size_t block_idx, uint8_t* block_ptr, uint32_t size) {
+  if (size < 2) {
+    std::cerr << "write_validation_pattern: num_bytes must be at least 2\n";
+    return -1;
+  }
+
   PCGRandom rng(block_idx, 1);
 
-  if (num_bytes < 16) { // not enough room for crc check
-    if (num_bytes < 2) {
-      std::cerr << "write_random_checking_packet: num_bytes must be at least 2\n";
-      return -1;
-    }
-    // Fill all bytes with same random number
-    block_ptr[0] = (uint8_t) rng.next();
-
-    for (unsigned i = 1; i < num_bytes; i++) {
-      block_ptr[i] = (uint8_t) rng.next();
-    }
+  if (size < 16) { // CRC check not viable
+    uint8_t val = static_cast<uint8_t>(rng.next());
+    std::fill(block_ptr, block_ptr + size, val);
   } else {
-    // if we have >= 16 bytes we use a cyclic redundancy check
-    uint32_t crc = num_bytes;
-    *(uint32_t*)(block_ptr+4) = num_bytes;
+    // Apply CRC to the block if it is large enough
+    uint32_t crc = size;
+    *reinterpret_cast<uint32_t*>(block_ptr + 4) = size;
 
-    for (unsigned i = 8; i < num_bytes; i++) {
-      uint8_t val = (uint8_t) rng.next();
+    for (unsigned i = 8; i < size; i++) {
+      uint8_t val = static_cast<uint8_t>(rng.next());
       block_ptr[i] = val;
-      crc = (crc << 3) | (crc >> (32 - 3)); // shifting to spread entropy
+      crc = (crc << 3) | (crc >> (32 - 3)); // Spread entropy
       crc += val;
     }
 
-    *(uint32_t *) block_ptr = crc;
+    *reinterpret_cast<uint32_t*>(block_ptr) = crc;
   }
   return 0;
 }
 
 
-bool check_packet(
-  uint8_t* block_ptr,
-  uint32_t num_bytes
-) {
-  if (num_bytes < 16) { // We didn't compute a crc
-    if (num_bytes < 2) return false;
-    uint8_t val = block_ptr[0];
-    for (unsigned i = 1; i < num_bytes; i++) {
-      if (block_ptr[i] != val) {
-        return false;
-      }
-    }
-  } else {
-    uint32_t crc = num_bytes;
-    uint32_t read_bytes = *(uint32_t*)(block_ptr+4);
+bool validate_block(const uint8_t* block_ptr, uint32_t size) {
+  if (size < 2) return false; // Invalid block size
 
-    if (read_bytes != num_bytes) {
-      return false;
-    }
+  if (size < 16) { // No CRC, check for uniform data
+    uint8_t val = block_ptr[0];
+    return std::all_of(block_ptr + 1, block_ptr + size, [val](uint8_t b) { return b == val; });
+  }else {
+    uint32_t crc = size;
+    uint32_t read_bytes = *reinterpret_cast<const uint32_t*>(block_ptr + 4);
+    if (read_bytes != size) return false;
 
     // Recompute CRC
-    for (unsigned i = 8; i < num_bytes; i++) {
+    for (unsigned i = 8; i < size; i++) {
       uint8_t val = block_ptr[i];
       crc = (crc << 3) | (crc >> (32 - 3));
       crc += val;
     }
 
-    uint32_t block_crc = *(uint32_t*) block_ptr; // the actual stored crc
-
-    // check if CRC's match
-    if (block_crc != crc) {
-      return false;
-    }
+    uint32_t block_crc = *reinterpret_cast<const uint32_t*>(block_ptr); // the actual stored CRC
+    return block_crc == crc;
   }
-
-  return true;
 }
 
 
-
-
-void get_lost_block_idxs(
-  size_t num_lost_blocks,
-  size_t tot_num_blocks,
-  uint32_t *lost_block_idxs
-) {
-  uint32_t i; // current index we're processing
-  PCGRandom rng(RNG_SEED, 1); // TODO: Allow to input custom RNG seed
+void get_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<uint32_t>& lost_block_idxs) {
+  uint32_t i;
+  PCGRandom rng(RANDOM_SEED, 1); 
+  
+  lost_block_idxs.resize(num_lost_blocks);
 
   for (i = 0; i < num_lost_blocks; i++) {
     lost_block_idxs[i] = i;
   }
 
-  for (; i < tot_num_blocks; i++) {
+  for (; i < max_idx; i++) {
     uint32_t j = rng.next() % (i + 1);
     if (j < num_lost_blocks) {
       lost_block_idxs[j] = i;
     }
   }
 
-  // Sort the indices
-  std::sort(lost_block_idxs, lost_block_idxs + num_lost_blocks);
+  // Sort the indices (needed for Wirehair)
+  std::sort(lost_block_idxs.begin(), lost_block_idxs.end());
 }
