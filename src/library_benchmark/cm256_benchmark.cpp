@@ -17,7 +17,7 @@ int CM256Benchmark::setup() {
   original_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.block_size * kConfig.computed.original_blocks);
 
   if (!original_buffer_) {
-    teardown();
+    teardown(); 
     std::cerr << "CM256: Failed to allocate original buffer.\n";
     return -1;
   }
@@ -83,11 +83,45 @@ void CM256Benchmark::flush_cache() {
 
 
 bool CM256Benchmark::check_for_corruption() {
+  for (int i = 0; i < kConfig.computed.original_blocks; i++) {
+    if (!check_packet((uint8_t *)blocks_[i].Block, kConfig.block_size)) return false;
+  }
   return true;
 }
 
 
-
+// TODO: Check recovery block loss again
 void CM256Benchmark::simulate_data_loss() {
-  // TODO: Implement data loss simulation
+  for (unsigned i = 0; i < kConfig.num_lost_blocks; i++) {
+    uint32_t idx = kLost_block_idxs[i];
+    // if idx >= kConfig.computed.original_blocks, then it is a recovery block
+    // else it's a data block
+
+    if (idx < kConfig.computed.original_blocks) {
+      // Zero out memory
+      memset(blocks_[idx].Block, 0, kConfig.block_size);
+
+      // Replace block pointer and index with that of corresponding recovery block
+      // The if statement is a work-around to detect the case were both the corresponding recovery block AND the data block are lost
+      // In this case, the data block is not replaced with the recovery block
+      if (blocks_[cm256_get_recovery_block_index(params_, idx)].Index == idx) { // both blocks are lost
+        blocks_[idx].Block = original_buffer_ + (i * kConfig.block_size);
+        blocks_[idx].Index = cm256_get_original_block_index(params_, idx);
+      } else {
+        blocks_[idx].Block = recovery_buffer_ + (kConfig.block_size * idx);
+        blocks_[idx].Index = cm256_get_recovery_block_index(params_, idx);
+      }
+    } else {
+      uint32_t orig_idx = cm256_get_original_block_index(params_, idx-kConfig.computed.original_blocks);
+      uint32_t rec_idx = cm256_get_recovery_block_index(params_, idx-kConfig.computed.original_blocks);
+
+      if (blocks_[orig_idx].Index == rec_idx) {
+        blocks_[orig_idx].Block = original_buffer_ + (orig_idx * kConfig.block_size);
+        blocks_[orig_idx].Index = orig_idx;
+      } else {
+        blocks_[rec_idx].Block = original_buffer_ + (orig_idx * kConfig.block_size);
+        blocks_[rec_idx].Index = orig_idx;
+      }
+    }
+  }
 }

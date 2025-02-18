@@ -21,10 +21,10 @@ uint32_t *kLost_block_idxs;
 // TODO: Pass arguments
 BenchmarkConfig get_config() {
   BenchmarkConfig config;
-  config.data_size = 108800000; //1073736320; // ~~1.0737 GB
+  config.data_size = 81'920'000; //1073736320; // ~~1.0737 GB
   config.block_size = 640000; //6'316'096; // 6316.096 KB
-  config.redundancy_ratio = 0.5;
-  config.num_lost_blocks = 50;
+  config.redundancy_ratio = 1;
+  config.num_lost_blocks = 100;
   config.iterations = 4;
   config.computed.original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
   config.computed.recovery_blocks = static_cast<size_t>(std::ceil(config.computed.original_blocks * config.redundancy_ratio));
@@ -108,4 +108,5 @@ int main(int argc, char** argv) {
 
   // Shutdown Google Benchmark
   ::benchmark::Shutdown();
+  free(kLost_block_idxs);
 }
