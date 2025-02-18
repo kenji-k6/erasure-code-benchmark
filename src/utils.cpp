@@ -22,7 +22,7 @@ uint32_t PCGRandom::next() {
 
 
 
-static int write_random_checking_packet(
+int write_random_checking_packet(
   size_t block_idx,
   uint8_t* block_ptr,
   uint32_t num_bytes 
@@ -58,7 +58,7 @@ static int write_random_checking_packet(
 }
 
 
-static bool check_packet(
+bool check_packet(
   uint8_t* block_ptr,
   uint32_t num_bytes
 ) {

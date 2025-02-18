@@ -120,7 +120,7 @@ static UTIL_FORCE_INLINE void simd_safe_free(void* ptr) {
  * The block_idx is used as a seed for the RNG, to ensure reproducibility
  * returns 0 on success
 */
-static int write_random_checking_packet(
+int write_random_checking_packet(
   size_t block_idx,
   uint8_t* block_ptr,
   uint32_t num_bytes // this is uint32_t to guarantee it is 4 bytes
@@ -133,7 +133,7 @@ static int write_random_checking_packet(
  * has been corrupted
  * returns true if not corrupted, false if corrupted
 */
-static bool check_packet(
+bool check_packet(
   uint8_t* block_ptr,
   uint32_t num_bytes
 );

@@ -14,9 +14,9 @@ find_package(OpenMP REQUIRED) # needed for leopard
 
 # Add source files
 set (SOURCES
+  src/utils.cpp
   src/main.cpp
   src/benchmark_runner.cpp
-  src/utils.cpp
   src/library_benchmark/leopard_benchmark.cpp
   src/library_benchmark/cm256_benchmark.cpp
   src/library_benchmark/wirehair_benchmark.cpp
