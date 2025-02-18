@@ -2,37 +2,95 @@
 #define ABSTRACT_BENCHMARK_H
 
 #include <cstddef>
+#include <iostream>
 
-
-/*
- * ECCBenchmark: Interface that all ECC libraries will implement
-*/
+/**
+ * @class ECCBenchmark
+ * @brief Abstract base class for Error Correction Code (ECC) benchmarking
+ * 
+ * This class defines the interface that all ECC libraries should implement for benchmarking
+ * their encoding, decoding and error-checking capabilities.
+ * The class provides a clean and standardized way to set up, run and clean up ECC benchmark tests.
+ */
 class ECCBenchmark {
 public:
-  virtual ~ECCBenchmark() = default;
+  virtual ~ECCBenchmark() noexcept = default; ///< Default virtual destructor
 
-  // Initialize the benchmark with the given configuration
-  virtual int setup() = 0;
 
-  // Cleanup the benchmark
-  virtual void teardown() = 0;
+  /**
+   * @brief Initialize the benchmark with the given (global) configuration.
+   * 
+   * Derived classes should implement the specific setup logic for their benchmark.
+   * This can include allocating memory, preparing input data, etc.
+   * 
+   * @return 0 on success, non-zero on failure.
+   */
+  virtual int setup() noexcept = 0;
 
-  // Run the encoding process
-  virtual int encode() = 0;
 
-  // Run the decoding process (with simulated data loss)
-  virtual int decode() = 0;
+  /**
+   * @brief Cleanup after the benchmark has completed.
+   * 
+   * This function is intended for deallocating resources, closing files and cleaning up
+   * any memory that was allocated during the benchmark.
+   */
+  virtual void teardown() noexcept = 0;
 
-  // Simulate a cold cache
-  virtual void flush_cache() = 0;
 
-  // Check for corruption in the decoded data
-  // Returns true if no corruption detected
-  virtual bool check_for_corruption() = 0;
+  /**
+   * @brief Run the encoding process.
+   * 
+   * Derived classes should implement the encoding process for their specific ECC algorithm
+   * This should include the actual error-correction encoding process.
+   * 
+   * @return 0 on success, non-zero on failure.
+   */
+  virtual int encode() noexcept = 0;
 
-  // Simulate data loss / corruption
-  virtual void simulate_data_loss() = 0;
 
-}; // class ECCBenchmark
+  /**
+   * @brief Run the decoding process (with simulated data loss).
+   * 
+   * Derived classes should implement the decoding process, considering the possibility of
+   * data loss or corruption, as part of the benchmark testing.
+   * 
+   * @attention Unless absolutely necesseary, this function should not be responsible for
+   * simulating the actual data loss.
+   * 
+   * @return 0 on success, non-zero on failure.
+   */
+  virtual int decode() noexcept = 0;
+
+
+  /**
+   * @brief Simulate data loss during transmission.
+   * 
+   * This function introduces data loss (and/or corruption) to the dataset to simulate
+   * erroneous data transmission. The actual implementation of this function will vary
+   * a lot based on the ECC algorithm/library being tested.
+   */
+  virtual void simulate_data_loss() noexcept = 0;
+
+
+  /**
+   * @brief Check if there is any corruption in the decoded data.
+   * 
+   * This method should validate the integrity of the decoded data post-decoding
+   * Refer to the validating block implementation in utils.h for an approach to do this.
+   * 
+   * @return True if the data is not corrupted, false otherwise.
+   */
+  virtual bool check_for_corruption() const noexcept = 0;
+
+
+  /**
+   * @brief Simulate a cold cache to evaluate performance under the assumption that 
+   * the data is not in the cache.
+   * 
+   * This can be used to measure the ECC algorithm's performance when cache misses are introduced
+   * to the system (e.g. the decoding happens on a different core or machine).
+   */
+  virtual void flush_cache() noexcept = 0;
+};
 
 #endif // ABSTRACT_BENCHMARK_H
