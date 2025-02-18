@@ -46,8 +46,8 @@ struct BenchmarkConfig {
   // Common parameters
   size_t data_size;             // Total size of original data
   size_t block_size;            // Size of each block
-  double redundancy_ratio;      // Recovery blocks / original blocks ratio
   size_t num_lost_blocks;       // Number of total blocks lost (recovery + original)
+  double redundancy_ratio;      // Recovery blocks / original blocks ratio
   int iterations;               // Number of iterations to run the benchmark
 
   struct {                      // Derived value (calculated during setup)
@@ -112,22 +112,6 @@ static UTIL_FORCE_INLINE void simd_safe_free(void* ptr) {
 }
 
 
-/* 
- * Sets data to specific values, to allow for corruption checking 
-*/
-void set_block_check_values(
-  uint8_t* block_ptr,
-  size_t block_size,
-  size_t block_index
-);
-
-bool check_block_for_corruption(
-  uint8_t* block_ptr,
-  size_t block_size,
-  size_t block_index
-);
-
-
 
 
 /*
@@ -151,9 +135,18 @@ static int write_random_checking_packet(
 */
 static bool check_packet(
   uint8_t* block_ptr,
-  size_t num_bytes
+  uint32_t num_bytes
 );
 
 
+/*
+ * Selects k unique indices from a range [0, n)
+ * This is used to select k blocks that will be dropped
+*/
+void get_lost_block_idxs(
+  size_t num_lost_blocks,
+  size_t max_index,
+  uint32_t* lost_block_idxs // used to store the result
+);
 
 #endif // UTILS_H

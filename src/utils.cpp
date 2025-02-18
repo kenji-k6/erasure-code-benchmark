@@ -21,34 +21,6 @@ uint32_t PCGRandom::next() {
 }
 
 
-void set_block_check_values(
-  uint8_t* block_ptr,
-  size_t block_size,
-  size_t block_index
-) {
-  PCGRandom rng(RNG_SEED+block_index, 1);
-  for (unsigned i = 0; i < block_size; i++) {
-    block_ptr[i] = rng.next() % 256;
-  }
-}
-
-
-bool check_block_for_corruption(
-  uint8_t* block_ptr,
-  size_t block_size,
-  size_t block_index
-) {
-  PCGRandom rng(RNG_SEED+block_index, 1);
-  for (unsigned i = 0; i < block_size; i++) {
-    if (block_ptr[i] != (rng.next() % 256)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-
-
 
 static int write_random_checking_packet(
   size_t block_idx,
@@ -100,7 +72,7 @@ static bool check_packet(
     }
   } else {
     uint32_t crc = num_bytes;
-    uint32_t read_bytes = *(uint32_t *)(block_ptr+4);
+    uint32_t read_bytes = *(uint32_t*)(block_ptr+4);
 
     if (read_bytes != num_bytes) {
       return false;
@@ -113,7 +85,7 @@ static bool check_packet(
       crc += val;
     }
 
-    uint32_t block_crc = *(uint32_t *) block_ptr; // the actual stored crc
+    uint32_t block_crc = *(uint32_t*) block_ptr; // the actual stored crc
 
     // check if CRC's match
     if (block_crc != crc) {
@@ -122,4 +94,27 @@ static bool check_packet(
   }
 
   return true;
+}
+
+
+
+
+void get_lost_block_idxs(
+  size_t num_lost_blocks,
+  size_t tot_num_blocks,
+  uint32_t *lost_block_idxs
+) {
+  uint32_t i; // current index we're processing
+  PCGRandom rng(RNG_SEED, 1); // TODO: Allow to input custom RNG seed
+
+  for (i = 0; i < num_lost_blocks; i++) {
+    lost_block_idxs[i] = i;
+  }
+
+  for (; i <= tot_num_blocks; i++) {
+    uint32_t j = rng.next() % (i + 1);
+    if (j < num_lost_blocks) {
+      lost_block_idxs[j] = i;
+    }
+  }
 }
