@@ -1,154 +1,100 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <cstddef> // for size_t
+#include <cstddef>
 #include <cstdint>
-#include <chrono>
-#include <iostream>
 #include <algorithm>
 
-// This ensures that allocs are 64-byte aligned, to allow SIMD instructions, also needed by ISA-L
-#define ALIGNMENT_BYTES 64
 
-// Compiler-specific force inline keyword
-#ifdef _MSC_VER
-    #define UTIL_FORCE_INLINE inline __forceinline
-#else
-    #define UTIL_FORCE_INLINE inline __attribute__((always_inline))
-#endif
-
-#define MEGABYTE_TO_BYTE_FACTOR 1000000
+// Constants
+constexpr size_t ALIGNMENT_BYTES = 64;
+constexpr size_t RANDOM_SEED = 1896;
 
 
-#define LEOPARD_MIN_ORIG_BLOCKS 2
-#define LEOPARD_MAX_ORIG_BLOCKS 65536
-#define LEOPARD_BLOCK_SIZE_ALIGNMENT 64
+// Error Correction Code (ECC) constraints
+namespace ECCLimits {
+  constexpr size_t BASELINE_BLOCK_ALIGNMENT = 64;
 
-#define CM256_MIN_ORIG_BLOCKS 1
-#define CM256_MAX_ORIG_BLOCKS 256
+  constexpr size_t CM256_MIN_DATA_BLOCKS = 1;
+  constexpr size_t CM256_MAX_DATA_BLOCKS = 256;
 
-#define WIREHAIR_MIN_ORIG_BLOCKS 2
-#define WIREHAIR_MAX_ORIG_BLOCKS 64000
+  constexpr size_t ISAL_MIN_BLOCK_SIZE = 64;
+  constexpr size_t ISAL_MAX_DATA_BLOCKS = 255;
+  constexpr size_t ISAL_MAX_TOT_BLOCKS = 255;
 
-#define ISAL_MIN_BLOCK_SIZE 64
-#define ISAL_MAX_ORIG_BLOCKS 255
-#define ISAL_MAX_TOT_BLOCKS 255
+  constexpr size_t LEOPARD_MIN_DATA_BLOCKS = 2;
+  constexpr size_t LEOPARD_MAX_DATA_BLOCKS = 65'536;
+  constexpr size_t LEOPARD_BLOCK_ALIGNMENT = 64;
 
-#define BASELINE_ECC_BLOCK_SIZE_ALIGNMENT 64
+  constexpr size_t WIREHAIR_MIN_DATA_BLOCKS = 2;
+  constexpr size_t WIREHAIR_MAX_DATA_BLOCKS = 64'000;
+}
 
-#define RNG_SEED 1896
 
-
-/*
- * BenchmarkConfig: Configuration parameters for the benchmark
-*/
-
+/**
+ * @struct BenchmarkConfig
+ * @brief Configuration parameters for the benchmark
+ */
 struct BenchmarkConfig {
-  // Common parameters
-  size_t data_size;             // Total size of original data
-  size_t block_size;            // Size of each block
-  size_t num_lost_blocks;       // Number of total blocks lost (recovery + original)
-  double redundancy_ratio;      // Recovery blocks / original blocks ratio
-  int iterations;               // Number of iterations to run the benchmark
+  size_t data_size;               ///< Total size of original data
+  size_t block_size;              ///< Size of each block
+  size_t num_lost_blocks;         ///< Number of total blocks lost (recovery + original)
+  double redundancy_ratio;        ///< Recovery blocks / original blocks ratio
 
-  struct {                      // Derived value (calculated during setup)
-    size_t original_blocks;
-    size_t recovery_blocks;
+  int num_iterations;             ///< Number of benchmark iterations
+  size_t random_seed;             ///< Seed for the random number generator
+
+  struct ComputedValues {
+    size_t num_original_blocks;   ///< Number of original data blocks
+    size_t num_recovery_blocks;   ///< Number of recovery blocks
   } computed;
-}; // struct BenchmarkConfig
-
-extern BenchmarkConfig kConfig;
-extern uint32_t *kLost_block_idxs;
+};
 
 
-/*
- * PCGRandom number generator, used to generate random data for benchmarking
- * Implemented according to https://www.pcg-random.org/
-*/
+extern BenchmarkConfig benchmark_config;
+extern std::vector<uint32_t> lost_block_indices;
 
+
+/**
+ * @class PCGRandom
+ * @brief Implements the PCG random number generator for benchmarking.
+ */
 class PCGRandom {
 private:
-  uint64_t state; // Internal state
-  uint64_t inc;   // Increment, *must be odd*
+  uint64_t state; ///< Internal RNG state
+  uint64_t inc;   ///< Increment value (must be odd)
 
 public:
-  PCGRandom(uint64_t seed, uint64_t seq); // Constructor: provide a seed and a sequence number
-  uint32_t next(); // Generate a random 32-bit number
-}; // class PCGRandom
+  PCGRandom(uint64_t seed, uint64_t sequence);
+  uint32_t next();  ///< Generate a random 32-bit number
+};
 
 
-
-/*
- * Timer utility functions
-*/
-// Get the current time in microseconds
-inline long long get_current_time_us() {
-  auto now = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
-  return duration.count();
-}
+/**
+ * @brief Writes a data pattern to a block for corruption detection.
+ * @param block_idx Index of the block (used as a seed for reproducibility)
+ * @param block_ptr Pointer to the block memory.
+ * @param size Size of the block in bytes.
+ * @return 0 on success, nonzero on failure.
+ */
+int write_validation_pattern(size_t block_idx, uint8_t* block_ptr, uint32_t size);
 
 
-/*
- * Functions to allocate and free aligned memory (to allow SIMD instructions)
-*/
-static UTIL_FORCE_INLINE void* simd_safe_allocate(size_t size) {
-  uint8_t* data = (uint8_t *) calloc(1, ALIGNMENT_BYTES + size);
-
-  if (!data) return nullptr;
-  
-  unsigned offset = (unsigned)((uintptr_t)data % ALIGNMENT_BYTES);
-  data += ALIGNMENT_BYTES - offset;
-  data[-1] = (uint8_t)offset;
-  return (void*)data;
-}
-
-static UTIL_FORCE_INLINE void simd_safe_free(void* ptr) {
-  if (!ptr) return;
-  uint8_t* data = (uint8_t*)ptr;
-  unsigned offset = data[-1];
-  if (offset >= ALIGNMENT_BYTES) exit(1); // should never happen
-  data -= ALIGNMENT_BYTES - offset;
-  free(data);
-}
+/**
+ * @brief Check's if a block's content has been corrupted.
+ * @param block_ptr Pointer to the block memory.
+ * @param size Size of the block in bytes.
+ * @return True if the block is not corrupted, false otherwise.
+ */
+bool validate_block(const uint8_t* block_ptr, uint32_t size);
 
 
-
-
-/*
- * Writes data to a block in a predetermined pattern,
- * to allow for corruption checking
- * The block_idx is used as a seed for the RNG, to ensure reproducibility
- * returns 0 on success
-*/
-int write_random_checking_packet(
-  size_t block_idx,
-  uint8_t* block_ptr,
-  uint32_t num_bytes // this is uint32_t to guarantee it is 4 bytes
-);
-
-
-
-/* 
- * Checks if a block's content (created by function above)
- * has been corrupted
- * returns true if not corrupted, false if corrupted
-*/
-bool check_packet(
-  uint8_t* block_ptr,
-  uint32_t num_bytes
-);
-
-
-/*
- * Selects k unique indices from a range [0, n)
- * This is used to select k blocks that will be dropped
- * The indexes are stored in the array lost_block_idxs in a sorted fashion
-*/
-void get_lost_block_idxs(
-  size_t num_lost_blocks,
-  size_t max_index,
-  uint32_t* lost_block_idxs // used to store the result
-);
+/**
+ * @brief Selects k unique indices from range [0, maxIndex) to determine lost blocks.
+ * @param num_lost_blocks Number of blocks to select.
+ * @param max_index Upper limit of the index range.
+ * @param lost_block_idxs Vector to store the selected lost block indices.
+ */
+void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<uint32_t>& lost_block_idxs);
 
 #endif // UTILS_H
