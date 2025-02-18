@@ -28,9 +28,20 @@ int ISALBenchmark::setup() {
     return -1;
   }
 
-  // Initialize original data to 1s, recovery data to 0s
-  memset(original_data_, 0xFF, kConfig.block_size * tot_blocks);
-  memset(recovery_outp_data_, 0, kConfig.block_size * kConfig.computed.recovery_blocks);
+  // Initialize data buffer with CRC blocks
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+    int write_res = write_random_checking_packet(
+      i,
+      (uint8_t *) original_data_ + (i * kConfig.block_size),
+      kConfig.block_size
+    );
+
+    if (write_res) {
+      teardown();
+      std::cerr << "ISAL: Failed to write random checking packet.\n";
+      return -1;
+    }
+  }
 
   // Initialize pointers
   for (unsigned i = 0; i < tot_blocks; i++) {
@@ -143,7 +154,7 @@ void ISALBenchmark::flush_cache() {
 
 
 bool ISALBenchmark::check_for_corruption() {
-  return false;
+  return true;
 }
 
 

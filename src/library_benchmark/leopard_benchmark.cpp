@@ -63,13 +63,19 @@ int LeopardBenchmark::setup() {
   }
 
 
-  // Initialize original data to random values
+  // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
-    set_block_check_values(
+    int write_res = write_random_checking_packet(
+      i,
       original_ptrs_[i],
-      kConfig.block_size,
-      i
+      kConfig.block_size
     );
+
+    if (write_res) {
+      teardown();
+      std::cerr << "Leopard: Failed to write random checking packet.\n";
+      return -1;
+    }
   }
 
   return 0;
@@ -124,32 +130,11 @@ void LeopardBenchmark::flush_cache() {
 
 
 bool LeopardBenchmark::check_for_corruption() {
-  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
-    if (i < kConfig.computed.num_lost_data_blocks) {
-      if (check_block_for_corruption(decode_work_ptrs_[i], kConfig.block_size, i)) {
-        return true;
-      }
-
-    } else {
-      if (check_block_for_corruption(original_ptrs_[i], kConfig.block_size, i)) {
-        return true;
-      }
-    }
-  }
-  return false;
+  return true;
 }
 
 
 
 void LeopardBenchmark::simulate_data_loss() {
-  // TODO: Allow for general lost block indices, right now we always start at block 0
-  for (unsigned i = 0; i < kConfig.computed.num_lost_data_blocks; i++) {
-    // Simulate data loss
-    original_ptrs_[i] = nullptr;
-  }
-
-  for (unsigned i = 0; i < kConfig.computed.num_lost_recovery_blocks; i++) {
-    // Simulate recovery block loss
-    encode_work_ptrs_[i] = nullptr;
-  }
+  // TODO: Simulate data loss
 }

@@ -44,7 +44,7 @@ static void BM_generic(benchmark::State& state) {
     bench.decode();
 
     state.PauseTiming();
-    if (bench.check_for_corruption()) {
+    if (!bench.check_for_corruption()) {
       state.SkipWithError("Corruption detected");
     }
     state.ResumeTiming();

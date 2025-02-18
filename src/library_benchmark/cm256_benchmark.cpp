@@ -14,7 +14,8 @@ int CM256Benchmark::setup() {
 
 
   // Allocate buffers
-  original_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.data_size);
+  original_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.block_size * kConfig.computed.original_blocks);
+
   if (!original_buffer_) {
     teardown();
     std::cerr << "CM256: Failed to allocate original buffer.\n";
@@ -28,14 +29,25 @@ int CM256Benchmark::setup() {
     return -1;
   }
 
-  // Initialze original data to 1s, recovery data to 0s
-  memset(original_buffer_, 0xFF, kConfig.data_size);
-  memset(recovery_buffer_, 0, kConfig.block_size * kConfig.computed.recovery_blocks);
-
   // Initialize blocks
   for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
     blocks_[i].Block = original_buffer_ + (i * kConfig.block_size);
     blocks_[i].Index = cm256_get_original_block_index(params_, i);
+  }
+
+  // Initialize data buffer with CRC blocks
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+    int write_res = write_random_checking_packet(
+      i,
+      (uint8_t *) blocks_[i].Block,
+      kConfig.block_size
+    );
+
+    if (write_res) {
+      teardown();
+      std::cerr << "CM256: Failed to write random checking packet.\n";
+      return -1;
+    }
   }
 
   return 0;
@@ -71,7 +83,7 @@ void CM256Benchmark::flush_cache() {
 
 
 bool CM256Benchmark::check_for_corruption() {
-  return false;
+  return true;
 }
 
 

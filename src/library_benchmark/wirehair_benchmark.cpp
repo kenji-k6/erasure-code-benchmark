@@ -8,7 +8,7 @@ int WirehairBenchmark::setup() {
   }
 
   // Allocate memory for the buffers
-  original_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.data_size);
+  original_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.block_size * kConfig.computed.original_blocks);
   if (!original_buffer_) {
     teardown();
     std::cerr << "Wirehair: Failed to allocate memory for original data.\n";
@@ -29,11 +29,6 @@ int WirehairBenchmark::setup() {
     return -1;
   }
 
-  // Initialize original data with 1s, encoded/decoded data with 0s
-  memset(original_buffer_, 1, kConfig.data_size);
-  memset(encoded_buffer_, 0, kConfig.block_size * (kConfig.computed.original_blocks+kConfig.computed.recovery_blocks));
-  memset(decoded_buffer_, 0, kConfig.data_size);
-
   // Create the encoder
   encoder_ = wirehair_encoder_create(nullptr, original_buffer_, kConfig.data_size, kConfig.block_size);
   if (!encoder_) {
@@ -48,6 +43,21 @@ int WirehairBenchmark::setup() {
     teardown();
     std::cerr << "Wirehair: Failed to create decoder.\n";
     return -1;
+  }
+
+  // Initialize data buffer with CRC blocks
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+    int write_res = write_random_checking_packet(
+      i,
+      original_buffer_ + i * kConfig.block_size,
+      kConfig.block_size
+    );
+
+    if (write_res) {
+      teardown();
+      std::cerr << "Wirehair: Failed to write random checking packet.\n";
+      return -1;
+    }
   }
 
   return 0;
@@ -128,7 +138,7 @@ void WirehairBenchmark::flush_cache() {
 
 
 bool WirehairBenchmark::check_for_corruption() {
-  return false;
+  return true;
 }
 
 

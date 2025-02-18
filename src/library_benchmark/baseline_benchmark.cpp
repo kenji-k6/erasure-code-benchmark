@@ -10,10 +10,6 @@ int BaselineBenchmark::setup() {
     return -1;
   }
   
-  // Initialize data to 1s, recovery data to 0s
-  memset(data_, 0xFF, kConfig.computed.original_blocks*kConfig.block_size);
-  memset(data_ + (kConfig.computed.original_blocks * kConfig.block_size), 0, kConfig.computed.recovery_blocks*kConfig.block_size);
-  
   // Allocate pointers
   original_blocks_ = new uint8_t*[kConfig.computed.original_blocks];
   recovery_blocks_ = new uint8_t*[kConfig.computed.recovery_blocks];
@@ -35,10 +31,25 @@ int BaselineBenchmark::setup() {
     recovery_blocks_[i] = data_ + (kConfig.computed.original_blocks + i) * kConfig.block_size;
   }
 
+  // Initialize data buffer with CRC blocks
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+    int write_res = write_random_checking_packet(
+      i,
+      original_blocks_[i],
+      kConfig.block_size
+    );
+
+    if (write_res) {
+      teardown();
+      std::cerr << "Baseline: Failed to write random checking packet.\n";
+      return -1;
+    }
+  }
+
   // TODO: Change the lost indices appropriately
-  lost_indices_.resize(2);
-  lost_indices_[0] = 0;
-  lost_indices_[1] = 1;
+  // lost_indices_.resize(2);
+  // lost_indices_[0] = 0;
+  // lost_indices_[1] = 1;
 
   return 0;
 }
@@ -85,7 +96,7 @@ void BaselineBenchmark::flush_cache() {
 
 
 bool BaselineBenchmark::check_for_corruption() {
-  return false;
+  return true;
 }
 
 
