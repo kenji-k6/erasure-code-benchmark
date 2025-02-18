@@ -111,7 +111,7 @@ void get_lost_block_idxs(
     lost_block_idxs[i] = i;
   }
 
-  for (; i <= tot_num_blocks; i++) {
+  for (; i < tot_num_blocks; i++) {
     uint32_t j = rng.next() % (i + 1);
     if (j < num_lost_blocks) {
       lost_block_idxs[j] = i;

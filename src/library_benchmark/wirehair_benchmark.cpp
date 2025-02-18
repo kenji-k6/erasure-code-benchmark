@@ -22,7 +22,7 @@ int WirehairBenchmark::setup() {
     return -1;
   }
 
-  decoded_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.data_size);
+  decoded_buffer_ = (uint8_t*) simd_safe_allocate(kConfig.block_size * kConfig.computed.original_blocks);
   if (!decoded_buffer_) {
     teardown();
     std::cerr << "Wirehair: Failed to allocate memory for decoded data.\n";
@@ -138,11 +138,19 @@ void WirehairBenchmark::flush_cache() {
 
 
 bool WirehairBenchmark::check_for_corruption() {
+  // for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+  //   if (!check_packet(decoded_buffer_ + (i * kConfig.block_size), kConfig.block_size)) {
+  //     return false;
+  //   }
+  // }
   return true;
 }
 
 
 
 void WirehairBenchmark::simulate_data_loss() {
-  // TODO: Implement data loss simulation
+  // for (unsigned i = 0; i < kConfig.num_lost_blocks; i++) {
+  //   uint32_t idx = kLost_block_idxs[i];
+  //   memset(original_buffer_ + idx * kConfig.block_size, 0, kConfig.block_size);
+  // }
 }
