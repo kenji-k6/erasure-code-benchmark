@@ -130,6 +130,16 @@ void LeopardBenchmark::flush_cache() {
 
 
 bool LeopardBenchmark::check_for_corruption() {
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+    bool res = false;
+    if (!original_ptrs_[i]) { // lost block
+      res = check_packet(decode_work_ptrs_[i], kConfig.block_size);
+    } else { // did not lose block
+      res = check_packet(original_ptrs_[i], kConfig.block_size);
+    }
+
+    if (!res) return false;
+  }
   return true;
 }
 
