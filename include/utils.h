@@ -6,12 +6,10 @@
 #include <vector>
 
 
-
 // Constants
 constexpr size_t ALIGNMENT_BYTES = 64;
 constexpr size_t RANDOM_SEED = 1896;
 constexpr size_t MIN_DATA_BLOCK_SIZE = 2;
-
 
 
 // Error Correction Code (ECC) constraints
@@ -34,7 +32,6 @@ namespace ECCLimits {
 }
 
 
-
 /**
  * @struct BenchmarkConfig
  * @brief Configuration parameters for the benchmark
@@ -54,10 +51,8 @@ struct BenchmarkConfig {
 };
 
 
-
 extern BenchmarkConfig benchmark_config;
 extern std::vector<uint32_t> lost_block_idxs;
-
 
 
 /**
@@ -75,7 +70,6 @@ public:
 };
 
 
-
 /**
  * @brief Writes a data pattern to a block for corruption detection.
  * @param block_idx Index of the block (used as a seed for reproducibility)
@@ -86,7 +80,6 @@ public:
 int write_validation_pattern(size_t block_idx, uint8_t* block_ptr, uint32_t size);
 
 
-
 /**
  * @brief Check's if a block's content has been corrupted.
  * @param block_ptr Pointer to the block memory.
@@ -94,7 +87,6 @@ int write_validation_pattern(size_t block_idx, uint8_t* block_ptr, uint32_t size
  * @return True if the block is not corrupted, false otherwise.
  */
 bool validate_block(const uint8_t* block_ptr, uint32_t size);
-
 
 
 /**

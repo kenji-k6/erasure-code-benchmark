@@ -4,7 +4,6 @@
 #include <vector>
 
 
-
 /**
  * @file utils.cpp
  * @brief Implements utility functions for benchmarking, random number generation, and data corruption detection.
@@ -30,7 +29,6 @@ uint32_t PCGRandom::next() {
   uint32_t rotated = static_cast<uint32_t>(prev_state >> 59U);
   return (xorshifted >> rotated) | (xorshifted << ((-rotated) & 31));
 }
-
 
 
 // Utility functions

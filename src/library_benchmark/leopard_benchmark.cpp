@@ -1,6 +1,24 @@
+#include "leopard.h"
 #include "leopard_benchmark.h"
+#include "utils.h"
+#include <cstring>
+#include <iostream>
+
+
+/**
+ * @file leopard_benchmark.cpp
+ * @brief Benchmark implementation for the Leopard ECC library
+ * 
+ * Documentation can be found in leopard_benchmark.h
+ */
+
 
 int LeopardBenchmark::setup() noexcept {
+  // Store variables used in performance-critical areas locally
+  num_original_blocks_ = benchmark_config.computed.num_original_blocks;
+  num_recovery_blocks_ = benchmark_config.computed.num_recovery_blocks;
+  block_size_ = benchmark_config.block_size;
+  
   // Initialize Leopard
   if (leo_init()) {
     std::cerr << "Leopard: Initialization failed.\n";
@@ -8,72 +26,47 @@ int LeopardBenchmark::setup() noexcept {
   }
 
   // Compute encode/decode work counts
-  encode_work_count_ = leo_encode_work_count(benchmark_config.computed.num_original_blocks, benchmark_config.computed.num_recovery_blocks);
-  decode_work_count_ = leo_decode_work_count(benchmark_config.computed.num_original_blocks, benchmark_config.computed.num_recovery_blocks);
+  encode_work_count_ = leo_encode_work_count(num_original_blocks_, num_recovery_blocks_);
+  decode_work_count_ = leo_decode_work_count(num_original_blocks_, num_recovery_blocks_);
 
   if (encode_work_count_ == 0 || decode_work_count_ == 0) {
     std::cerr << "Leopard: Invalid work count(s): encode=" << encode_work_count_ << ", decode=" << decode_work_count_ << "\n";
     return -1;
   }
 
-  // Allocate buffers
-  original_buffer_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * benchmark_config.computed.num_original_blocks);
-  if (!original_buffer_) {
+  // Allocate buffer with proper alignment for SIMD
+  original_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_original_blocks_));
+  encode_work_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * encode_work_count_));
+  decode_work_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * decode_work_count_));
+
+  if (!original_buffer_ || !encode_work_buffer_ || !decode_work_buffer_) {
+    std::cerr << "Leopard: Failed to allocate buffer(s).\n";
     teardown();
-    std::cerr << "Leopard: Failed to allocate original buffer.\n";
     return -1;
   }
 
-  encode_work_buffer_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * encode_work_count_);
-  if (!encode_work_buffer_) {
-    teardown();
-    std::cerr << "Leopard: Failed to allocate encode work buffer.\n";
-    return -1;
+  // Allocate pointers to the data blocks
+  original_ptrs_.resize(num_original_blocks_);
+  encode_work_ptrs_.resize(encode_work_count_);
+  decode_work_ptrs_.resize(decode_work_count_);
+
+  // Initialize pointers to appropriate memory locations in the buffer
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
+    original_ptrs_[i] = original_buffer_ + i * block_size_;
   }
-
-  decode_work_buffer_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * decode_work_count_);
-  if (!decode_work_buffer_) {
-    teardown();
-    std::cerr << "Leopard: Failed to allocate decode work buffer.\n";
-    return -1;
-  }
-
-  // Allocate pointers
-  original_ptrs_ = new uint8_t* [benchmark_config.computed.num_original_blocks];
-  encode_work_ptrs_ = new uint8_t*[encode_work_count_];
-  decode_work_ptrs_ = new uint8_t*[decode_work_count_];
-
-  if (!original_ptrs_ || !encode_work_ptrs_ || !decode_work_ptrs_) {
-    teardown();
-    std::cerr << "Leopard: Failed to allocate pointer arrays.\n";
-    return -1;
-  }
-
-  // Initialize pointers
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-    original_ptrs_[i] = (uint8_t*) (((uint8_t*)original_buffer_) + i * benchmark_config.block_size);
-  }
-
   for (unsigned i = 0; i < encode_work_count_; i++) {
-    encode_work_ptrs_[i] = (uint8_t*) (((uint8_t*)encode_work_buffer_) + i * benchmark_config.block_size);
+    encode_work_ptrs_[i] = encode_work_buffer_ + i * block_size_;
   }
-
   for (unsigned i = 0; i < decode_work_count_; i++) {
-    decode_work_ptrs_[i] = (uint8_t*) (((uint8_t*)decode_work_buffer_) + i * benchmark_config.block_size);
+    decode_work_ptrs_[i] = decode_work_buffer_ + i * block_size_;
   }
-
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-    int write_res = write_validation_pattern(
-      i,
-      original_ptrs_[i],
-      benchmark_config.block_size
-    );
-
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
+    int write_res = write_validation_pattern(i, original_ptrs_[i], block_size_);
     if (write_res) {
-      teardown();
       std::cerr << "Leopard: Failed to write random checking packet.\n";
+      teardown();
       return -1;
     }
   }
@@ -82,89 +75,70 @@ int LeopardBenchmark::setup() noexcept {
 }
 
 
-
 void LeopardBenchmark::teardown() noexcept {
+  // Free manually allocated memory
   if (original_buffer_) free(original_buffer_);
   if (encode_work_buffer_) free(encode_work_buffer_);
   if (decode_work_buffer_) free(decode_work_buffer_);
-  if (original_ptrs_) delete[] original_ptrs_;
-  if (encode_work_ptrs_) delete[] encode_work_ptrs_;
-  if (decode_work_ptrs_) delete[] decode_work_ptrs_;
 }
-
 
 
 int LeopardBenchmark::encode() noexcept {
-  // Encode the data
   return leo_encode(
-    benchmark_config.block_size,
-    benchmark_config.computed.num_original_blocks,
-    benchmark_config.computed.num_recovery_blocks,
+    block_size_,
+    num_original_blocks_,
+    num_recovery_blocks_,
     encode_work_count_,
-    (void**)original_ptrs_,
-    (void**)encode_work_ptrs_
+    reinterpret_cast<void**>(original_ptrs_.data()),
+    reinterpret_cast<void**>(encode_work_ptrs_.data())
   );
 }
-
 
 
 int LeopardBenchmark::decode() noexcept {
-  // Decode the data
   return leo_decode(
-    benchmark_config.block_size,
-    benchmark_config.computed.num_original_blocks,
-    benchmark_config.computed.num_recovery_blocks,
+    block_size_,
+    num_original_blocks_,
+    num_recovery_blocks_,
     decode_work_count_,
-    (void**)original_ptrs_,
-    (void**)encode_work_ptrs_,
-    (void**)decode_work_ptrs_
+    reinterpret_cast<void**>(original_ptrs_.data()),
+    reinterpret_cast<void**>(encode_work_ptrs_.data()),
+    reinterpret_cast<void**>(decode_work_ptrs_.data())
   );
 }
 
 
-
-void LeopardBenchmark::flush_cache() noexcept {
-  // TODO: Implement cache flushing
+void LeopardBenchmark::simulate_data_loss() noexcept {
+  for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
+    uint32_t idx = lost_block_idxs[i];
+    if (idx < num_original_blocks_) {
+      memset(original_ptrs_[idx], 0, block_size_); // Zero out the block in the original data array
+      original_ptrs_[idx] = nullptr; // Set the corresponding block pointer to nullptr
+    } else {
+      idx -= num_original_blocks_;
+      memset(encode_work_ptrs_[idx], 0, block_size_); // Zero out the block in the encoded data array
+      encode_work_ptrs_[idx] = nullptr; // Set the corresponding block pointer to nullptr
+    }
+  }
 }
 
 
-
 bool LeopardBenchmark::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
     bool res = false;
     if (!original_ptrs_[i]) { // lost block
-      res = validate_block(decode_work_ptrs_[i], benchmark_config.block_size);
-    } else { // did not lose block
-      res = validate_block(original_ptrs_[i], benchmark_config.block_size);
+      res = validate_block(decode_work_ptrs_[i], block_size_);
+    } else { // block is intact
+      res = validate_block(original_ptrs_[i], block_size_);
     }
 
     if (!res) return false;
   }
+
   return true;
 }
 
 
-
-void LeopardBenchmark::simulate_data_loss() noexcept {
-  // Lost block indices are already computed
-  // They can be found in lost_block_idxs
-
-  for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
-    uint32_t idx = lost_block_idxs[i];
-    // if idx >= benchmark_config.computed.num_original_blocks, then it is a recovery block
-    // else it's a data block
-
-    if (idx < benchmark_config.computed.num_original_blocks) {
-      // Zero out the block
-      memset(original_ptrs_[idx], 0, benchmark_config.block_size);
-      // Set corresponding block ptr to a nullptr
-      original_ptrs_[idx] = nullptr;
-    } else {
-      idx -= benchmark_config.computed.num_original_blocks;
-      // Zero out the block
-      memset(encode_work_ptrs_[idx], 0, benchmark_config.block_size);
-      // Set corresponding block ptr to a nullptr
-      encode_work_ptrs_[idx] = nullptr;
-    }
-  }
+void LeopardBenchmark::flush_cache() noexcept {
+  // TODO: Implement cache flushing
 }
