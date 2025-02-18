@@ -26,7 +26,7 @@ BenchmarkConfig get_config() {
   config.block_size = 640000; //6'316'096; // 6316.096 KB
   config.num_lost_blocks = 127;
   config.redundancy_ratio = 1;
-  config.num_iterations = 1;
+  config.num_iterations = 5;
   config.computed.num_original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
   config.computed.num_recovery_blocks = static_cast<size_t>(std::ceil(config.computed.num_original_blocks * config.redundancy_ratio));
   return config;

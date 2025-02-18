@@ -1,6 +1,6 @@
 #include "cm256_benchmark.h"
 
-int CM256Benchmark::setup() {
+int CM256Benchmark::setup() noexcept {
   // Initialize cm256
   if (cm256_init()) {
     std::cerr << "CM256: Initialization failed.\n";
@@ -55,34 +55,34 @@ int CM256Benchmark::setup() {
 
 
 
-void CM256Benchmark::teardown() {
+void CM256Benchmark::teardown() noexcept {
   if (original_buffer_) free(original_buffer_);
   if (recovery_buffer_) free(recovery_buffer_);
 }
 
 
 
-int CM256Benchmark::encode() {
+int CM256Benchmark::encode() noexcept {
   // Encode the data
   return cm256_encode(params_, blocks_, (void*) recovery_buffer_);
 }
 
 
 
-int CM256Benchmark::decode() {
+int CM256Benchmark::decode() noexcept {
   // Decode the data
   return cm256_decode(params_, blocks_);
 }
 
 
 
-void CM256Benchmark::flush_cache() {
+void CM256Benchmark::flush_cache() noexcept {
   // TODO: Implement cache flushing
 }
 
 
 
-bool CM256Benchmark::check_for_corruption() {
+bool CM256Benchmark::check_for_corruption() const noexcept {
   for (int i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
     if (!validate_block((uint8_t *)blocks_[i].Block, benchmark_config.block_size)) return false;
   }
@@ -91,7 +91,7 @@ bool CM256Benchmark::check_for_corruption() {
 
 
 
-void CM256Benchmark::simulate_data_loss() {
+void CM256Benchmark::simulate_data_loss() noexcept {
   
   for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
     uint32_t idx = lost_block_idxs[i];

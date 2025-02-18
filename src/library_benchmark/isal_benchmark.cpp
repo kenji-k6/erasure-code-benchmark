@@ -1,7 +1,7 @@
 #include "isal_benchmark.h"
 
 
-int ISALBenchmark::setup() {
+int ISALBenchmark::setup() noexcept {
   // Allocate matrices
   size_t tot_blocks = benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks;
 
@@ -78,7 +78,7 @@ int ISALBenchmark::setup() {
 
 
 
-void ISALBenchmark::teardown() {
+void ISALBenchmark::teardown() noexcept {
   if (encode_matrix_) free(encode_matrix_);
   if (decode_matrix_) free(decode_matrix_);
   if (invert_matrix_) free(invert_matrix_);
@@ -90,7 +90,7 @@ void ISALBenchmark::teardown() {
 
 
 
-int ISALBenchmark::encode() {
+int ISALBenchmark::encode() noexcept {
   ec_encode_data(
     benchmark_config.block_size,
     benchmark_config.computed.num_original_blocks,
@@ -105,7 +105,7 @@ int ISALBenchmark::encode() {
 
 
 
-int ISALBenchmark::decode() {
+int ISALBenchmark::decode() noexcept {
   size_t tot_blocks = benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks;
   // Generate a decode metrix
   int decode_matrix_result = gf_gen_decode_matrix_simple(
@@ -150,13 +150,13 @@ int ISALBenchmark::decode() {
 
 
 
-void ISALBenchmark::flush_cache() {
+void ISALBenchmark::flush_cache() noexcept {
   // TODO: Implement cache flushing
 }
 
 
 
-bool ISALBenchmark::check_for_corruption() {
+bool ISALBenchmark::check_for_corruption() const noexcept {
   unsigned loss_idx = 0;
 
   for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
@@ -173,7 +173,7 @@ bool ISALBenchmark::check_for_corruption() {
 
 
 
-void ISALBenchmark::simulate_data_loss() {
+void ISALBenchmark::simulate_data_loss() noexcept {
   // TODO: Implement data loss simulation
   for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
     uint32_t idx = lost_block_idxs[i];

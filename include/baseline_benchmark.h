@@ -18,13 +18,13 @@
 
 class BaselineBenchmark : public ECCBenchmark {
 public:
-  int setup() override;
-  void teardown() override;
-  int encode() override;
-  int decode() override;
-  void flush_cache() override;
-  bool check_for_corruption() override;
-  void simulate_data_loss() override;
+  int setup() noexcept override;
+  void teardown() noexcept override;
+  int encode() noexcept override;
+  int decode() noexcept override;
+  void simulate_data_loss() noexcept override;
+  bool check_for_corruption() const noexcept override;
+  void flush_cache() noexcept override;
   
 
 private:

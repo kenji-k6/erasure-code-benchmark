@@ -3,34 +3,39 @@
 
 #include "abstract_benchmark.h"
 #include "leopard.h"
-#include "utils.h"
 
-#include <iostream>
-#include <vector>
-#include <memory>
-#include <cstring>
-
-
+/**
+ * @class LeopardBenchmark
+ * @brief Benchmark implementation for the Leopard ECC library https://github.com/catid/leopard
+ * 
+ * This class implements the ECCBenchmark interface, providing specific functionality
+ * for benchmarking the Leopard library. It supports setup, teardown, encoding, decoding,
+ * data loss simulation, corruption checking and cache flushing.
+ */
 class LeopardBenchmark : public ECCBenchmark {
 public:
-  int setup() override;
-  void teardown() override;
-  int encode() override;
-  int decode() override;
-  void flush_cache() override;
-  bool check_for_corruption() override;
-  void simulate_data_loss() override;
-  
+  LeopardBenchmark() = default;
+  ~LeopardBenchmark() noexcept = default;
+
+  int setup() noexcept override;
+  void teardown() noexcept override;
+  int encode() noexcept override;
+  int decode() noexcept override;
+  void simulate_data_loss() noexcept override;
+  bool check_for_corruption() const noexcept override;
+  void flush_cache() noexcept override;
 
 private:
   unsigned encode_work_count_ = 0;
   unsigned decode_work_count_ = 0;
-  uint8_t* original_buffer_; 
-  uint8_t* encode_work_buffer_;
-  uint8_t* decode_work_buffer_;
-  uint8_t** original_ptrs_;
-  uint8_t** encode_work_ptrs_;
-  uint8_t** decode_work_ptrs_;
-}; // class LeopardBenchmark
+
+  std::unique_ptr<uint8_t[]> original_buffer_;      /// Buffer for the original data we want to transmit
+  std::unique_ptr<uint8_t[]> encode_work_buffer_;   /// Buffer for the encoded data
+  std::unique_ptr<uint8_t[]> decode_work_buffer_;   /// Buffer for the decoded data
+
+  std::vector<uint8_t*> original_ptrs_;             /// Pointers to the original data blocks
+  std::vector<uint8_t*> encode_work_ptrs_;          /// Pointers to the encoded data blocks
+  std::vector<uint8_t*> decode_work_ptrs_;          /// Pointers to the decoded data blocks
+};
 
 #endif // LEOPARD_BENCHMARK_H

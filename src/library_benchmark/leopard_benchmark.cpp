@@ -1,6 +1,6 @@
 #include "leopard_benchmark.h"
 
-int LeopardBenchmark::setup() {
+int LeopardBenchmark::setup() noexcept {
   // Initialize Leopard
   if (leo_init()) {
     std::cerr << "Leopard: Initialization failed.\n";
@@ -83,7 +83,7 @@ int LeopardBenchmark::setup() {
 
 
 
-void LeopardBenchmark::teardown() {
+void LeopardBenchmark::teardown() noexcept {
   if (original_buffer_) free(original_buffer_);
   if (encode_work_buffer_) free(encode_work_buffer_);
   if (decode_work_buffer_) free(decode_work_buffer_);
@@ -94,7 +94,7 @@ void LeopardBenchmark::teardown() {
 
 
 
-int LeopardBenchmark::encode() {
+int LeopardBenchmark::encode() noexcept {
   // Encode the data
   return leo_encode(
     benchmark_config.block_size,
@@ -108,7 +108,7 @@ int LeopardBenchmark::encode() {
 
 
 
-int LeopardBenchmark::decode() {
+int LeopardBenchmark::decode() noexcept {
   // Decode the data
   return leo_decode(
     benchmark_config.block_size,
@@ -123,13 +123,13 @@ int LeopardBenchmark::decode() {
 
 
 
-void LeopardBenchmark::flush_cache() {
+void LeopardBenchmark::flush_cache() noexcept {
   // TODO: Implement cache flushing
 }
 
 
 
-bool LeopardBenchmark::check_for_corruption() {
+bool LeopardBenchmark::check_for_corruption() const noexcept {
   for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
     bool res = false;
     if (!original_ptrs_[i]) { // lost block
@@ -145,7 +145,7 @@ bool LeopardBenchmark::check_for_corruption() {
 
 
 
-void LeopardBenchmark::simulate_data_loss() {
+void LeopardBenchmark::simulate_data_loss() noexcept {
   // Lost block indices are already computed
   // They can be found in lost_block_idxs
 

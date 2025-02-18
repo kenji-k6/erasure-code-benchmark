@@ -1,6 +1,6 @@
 #include "wirehair_benchmark.h"
 
-int WirehairBenchmark::setup() {
+int WirehairBenchmark::setup() noexcept {
   // Initialize Wirehair
   if (wirehair_init()) {
     std::cerr << "Wirehair: Initialization failed.\n";
@@ -58,7 +58,7 @@ int WirehairBenchmark::setup() {
 
 
 
-void WirehairBenchmark::teardown() {
+void WirehairBenchmark::teardown() noexcept {
   if (original_buffer_) free(original_buffer_);
   if (encoded_buffer_) free(encoded_buffer_);
   if (encoder_) wirehair_free(encoder_);
@@ -67,7 +67,7 @@ void WirehairBenchmark::teardown() {
 
 
 
-int WirehairBenchmark::encode() {
+int WirehairBenchmark::encode() noexcept {
   
   uint32_t write_len = 0;
   WirehairResult encode_result;
@@ -97,7 +97,7 @@ int WirehairBenchmark::encode() {
 
 
 
-int WirehairBenchmark::decode() {
+int WirehairBenchmark::decode() noexcept {
   WirehairResult decode_result = Wirehair_NeedMore;
   unsigned loss_idx = 0;
 
@@ -127,13 +127,13 @@ int WirehairBenchmark::decode() {
 
 
 
-void WirehairBenchmark::flush_cache() {
+void WirehairBenchmark::flush_cache() noexcept {
   // TODO: Implement cache flushing
 }
 
 
 
-bool WirehairBenchmark::check_for_corruption() {
+bool WirehairBenchmark::check_for_corruption() const noexcept {
   for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
     if (!validate_block(decoded_buffer_ + (i * benchmark_config.block_size), benchmark_config.block_size)) {
       return false;
@@ -143,7 +143,7 @@ bool WirehairBenchmark::check_for_corruption() {
 }
 
 
-void WirehairBenchmark::simulate_data_loss() {
+void WirehairBenchmark::simulate_data_loss() noexcept {
   /* Loss logic is also part of decode function!!! */
   for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
     uint32_t idx = lost_block_idxs[i];

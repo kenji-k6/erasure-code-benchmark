@@ -1,6 +1,6 @@
 #include "baseline_benchmark.h"
 
-int BaselineBenchmark::setup() {
+int BaselineBenchmark::setup() noexcept {
   // Allocate buffers
   data_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, (benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks) * benchmark_config.block_size);
 
@@ -56,7 +56,7 @@ int BaselineBenchmark::setup() {
 
 
 
-void BaselineBenchmark::teardown() {
+void BaselineBenchmark::teardown() noexcept {
   if (data_) free(data_);
   if (original_blocks_) delete[] original_blocks_;
   if (recovery_blocks_) delete[] recovery_blocks_;
@@ -64,7 +64,7 @@ void BaselineBenchmark::teardown() {
 
 
 
-int BaselineBenchmark::encode() {
+int BaselineBenchmark::encode() noexcept {
   return BaselineECC::encode(
     benchmark_config.block_size,
     benchmark_config.computed.num_original_blocks,
@@ -76,7 +76,7 @@ int BaselineBenchmark::encode() {
 
 
 
-int BaselineBenchmark::decode() {
+int BaselineBenchmark::decode() noexcept {
   return BaselineECC::decode(
     benchmark_config.block_size,
     benchmark_config.computed.num_original_blocks,
@@ -89,19 +89,19 @@ int BaselineBenchmark::decode() {
 
 
 
-void BaselineBenchmark::flush_cache() {
+void BaselineBenchmark::flush_cache() noexcept {
   // TODO: Implement cache flushing
 }
 
 
 
-bool BaselineBenchmark::check_for_corruption() {
+bool BaselineBenchmark::check_for_corruption() const noexcept {
   return true;
 }
 
 
 
-void BaselineBenchmark::simulate_data_loss() {
+void BaselineBenchmark::simulate_data_loss() noexcept {
   // TODO: Implement data loss simulation
 }
 
