@@ -4,7 +4,6 @@
 int ISALBenchmark::setup() {
   // Allocate matrices
   size_t tot_blocks = kConfig.computed.original_blocks + kConfig.computed.recovery_blocks;
-  nerrs_ = 5; // TODO: adjust this accordingly
 
   encode_matrix_ = (uint8_t*) simd_safe_allocate(tot_blocks * kConfig.computed.original_blocks);
   decode_matrix_ = (uint8_t*) simd_safe_allocate(tot_blocks * kConfig.computed.original_blocks);
@@ -16,6 +15,11 @@ int ISALBenchmark::setup() {
     teardown();
     std::cerr << "ISAL: Failed to allocate matrices.\n";
     return -1;
+  }
+
+  // copy lost block indices to frag err list
+  for (unsigned i = 0; i < kConfig.num_lost_blocks; i++) {
+    block_err_list_[i] = (uint8_t) kLost_block_idxs[i];
   }
 
   // Allocate buffers
@@ -69,30 +73,6 @@ int ISALBenchmark::setup() {
     g_tbls_
   );
 
-  // Generate a decode metrix
-  int decode_matrix_result = gf_gen_decode_matrix_simple(
-    encode_matrix_,
-    decode_matrix_,
-    invert_matrix_,
-    temp_matrix_,
-    decode_index,
-    block_err_list_,
-    nerrs_,
-    kConfig.computed.original_blocks,
-    tot_blocks
-  );
-
-  if (decode_matrix_result) {
-    std::cerr << "ISAL: Failed to generate decode matrix.\n";
-    return -1;
-  }
-
-  // Pack recovry array pointers as list of valid fragments
-  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
-    recovery_src_ptrs_[i] = original_ptrs_[decode_index[i]];
-  }
-
-
   return 0;
 }
 
@@ -126,9 +106,32 @@ int ISALBenchmark::encode() {
 
 
 int ISALBenchmark::decode() {
+  size_t tot_blocks = kConfig.computed.original_blocks + kConfig.computed.recovery_blocks;
+  // Generate a decode metrix
+  int decode_matrix_result = gf_gen_decode_matrix_simple(
+    encode_matrix_,
+    decode_matrix_,
+    invert_matrix_,
+    temp_matrix_,
+    decode_index,
+    block_err_list_,
+    kConfig.num_lost_blocks,
+    kConfig.computed.original_blocks,
+    tot_blocks
+  );
+
+  if (decode_matrix_result) {
+    return -1;
+  }
+
+  // Pack recovry array pointers as list of valid fragments
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+    recovery_src_ptrs_[i] = original_ptrs_[decode_index[i]];
+  }
+
   ec_init_tables(
     kConfig.computed.original_blocks,
-    nerrs_,
+    kConfig.num_lost_blocks,
     decode_matrix_,
     g_tbls_
   );
@@ -136,7 +139,7 @@ int ISALBenchmark::decode() {
   ec_encode_data(
     kConfig.block_size,
     kConfig.computed.original_blocks,
-    nerrs_,
+    kConfig.num_lost_blocks,
     g_tbls_,
     recovery_src_ptrs_,
     recovery_outp_ptrs_
@@ -154,6 +157,17 @@ void ISALBenchmark::flush_cache() {
 
 
 bool ISALBenchmark::check_for_corruption() {
+  unsigned loss_idx = 0;
+
+  for (unsigned i = 0; i < kConfig.computed.original_blocks; i++) {
+
+    if (i == kLost_block_idxs[loss_idx]) {
+       if (!(check_packet(recovery_outp_ptrs_[loss_idx], kConfig.block_size))) return false;
+       loss_idx++;
+    } else {
+      if (!check_packet(original_ptrs_[i], kConfig.block_size)) return false;
+    }
+  }
   return true;
 }
 
@@ -161,6 +175,16 @@ bool ISALBenchmark::check_for_corruption() {
 
 void ISALBenchmark::simulate_data_loss() {
   // TODO: Implement data loss simulation
+  for (unsigned i = 0; i < kConfig.num_lost_blocks; i++) {
+    uint32_t idx = kLost_block_idxs[i];
+    // Zero out the lost block
+    memset(original_ptrs_[idx], 0, kConfig.block_size);
+    original_ptrs_[idx] = nullptr;
+
+    if (idx > kConfig.computed.original_blocks) {
+      memset(recovery_outp_ptrs_[idx - kConfig.computed.original_blocks], 0, kConfig.block_size);
+    }
+  }
 }
 
 

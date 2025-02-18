@@ -22,16 +22,16 @@ public:
   
 
 private:
-  int nerrs_;
-
   // Buffers
   uint8_t* original_data_;
   uint8_t* recovery_outp_data_;
+
   // Fragment / block buffer pointers
   uint8_t* original_ptrs_[ISAL_MAX_TOT_BLOCKS];
   uint8_t* recovery_src_ptrs_[ISAL_MAX_ORIG_BLOCKS];
   uint8_t* recovery_outp_ptrs_[ISAL_MAX_ORIG_BLOCKS];
   uint8_t block_err_list_[ISAL_MAX_TOT_BLOCKS];
+
 
   // Coefficient matrices
   uint8_t* encode_matrix_;
