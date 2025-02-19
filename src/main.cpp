@@ -46,7 +46,8 @@ void usage() {
   exit(0);
 }
 
-int check_args(size_t s, size_t b, size_t l, double r, int i) {
+
+void check_args(size_t s, size_t b, size_t l, double r, int i) {
   size_t num_orig_blocks = (s + (b - 1)) / b;
   size_t num_rec_blocks = static_cast<size_t>(std::ceil(num_orig_blocks * r));
   //TODO: check that lost_blocks <= recovery_blocks (maybe)
@@ -54,27 +55,27 @@ int check_args(size_t s, size_t b, size_t l, double r, int i) {
   // General checks
   if (s < 1) {
     std::cerr << "Error: Total data size must be greater than 0. (-s)\n";
-    return -1;
+    exit(0);
   }
 
   if (b < 1 || b > s) {
     std::cerr << "Error: Block size must be greater than 0 and less than the total data size. (-b)\n";
-    return -1;
+    exit(0);
   }
 
   if (l < 0 || l > num_orig_blocks + num_rec_blocks) {
     std::cerr << "Error: Number of lost blocks must be between 0 and the total number of blocks. (-l)\n";
-    return -1;
+    exit(0);
   }
 
   if (r < 0) {
     std::cerr << "Error: Redundancy ratio must be at least 0. (-r)\n";
-    return -1;
+    exit(0);
   }
 
   if (i < 1) {
     std::cerr << "Error: Number of iterations must be at least 1. (-i)\n";
-    return -1;
+    exit(0);
   }
 
   // Library Specific checks
@@ -88,10 +89,27 @@ int check_args(size_t s, size_t b, size_t l, double r, int i) {
                 << "Condition: #(original blocks) + #(recovery blocks) <= " << ECCLimits::CM256_MAX_TOT_BLOCKS << "\n"
                 << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
     }
-    return -1;
+    exit(0);
   }
 
-  return 0;
+  // ISA-L Checks
+  if (selected_benchmarks.contains("isal")) {
+    if (num_orig_blocks + num_rec_blocks > ECCLimits::ISAL_MAX_TOT_BLOCKS) {
+      std::cerr << "Error: Total number of blocks exceeds the maximum allowed by ISA-L.\n"
+                << "Condition: #(original blocks) + #(recovery blocks) <= " << ECCLimits::ISAL_MAX_TOT_BLOCKS << "\n"
+                << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
+    }
+
+    if (l > num_rec_blocks) {
+      std::cerr << "Error: Number of lost blocks can't exceed the number of recovery blocks for ISA-L.\n"
+                << "Condition: #(lost blocks) <= #(recovery blocks)\n"
+                << "(#lost blocks) = " << l << ", (#recovery blocks) = " << num_rec_blocks << "\n";
+    }
+  }
+
+
+  // 
+
 } 
 
 
