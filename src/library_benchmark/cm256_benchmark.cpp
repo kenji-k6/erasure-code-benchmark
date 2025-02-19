@@ -34,7 +34,7 @@ int CM256Benchmark::setup() noexcept {
   decode_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_recovery_blocks_));
 
   // Resize block vector
-  blocks_.resize(ECCLimits::CM256_MAX_DATA_BLOCKS);
+  blocks_.resize(ECCLimits::CM256_MAX_TOT_BLOCKS);
 
   if (!original_buffer_ || !decode_buffer_) {
     std::cerr << "CM256: Failed to allocate buffer(s).\n";
