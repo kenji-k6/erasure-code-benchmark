@@ -17,7 +17,7 @@
 BenchmarkConfig benchmark_config;
 std::vector<uint32_t> lost_block_idxs = {};
 const std::unordered_map<std::string, void(*)(benchmark::State&)> available_benchmarks = {
-  { "baseline", BM_generic<BaselineBenchmark>> },
+  { "baseline", BM_generic<BaselineBenchmark> },
   { "cm256", BM_generic<CM256Benchmark> },
   { "isal", BM_generic<ISALBenchmark> },
   { "leopard", BM_generic<LeopardBenchmark> },
@@ -47,10 +47,12 @@ void usage() {
 }
 
 
-void check_args(size_t s, size_t b, size_t l, double r, int i) {
-  size_t num_orig_blocks = (s + (b - 1)) / b;
-  size_t num_rec_blocks = static_cast<size_t>(std::ceil(num_orig_blocks * r));
-  //TODO: check that lost_blocks <= recovery_blocks (maybe)
+void check_args(size_t s, size_t b, size_t l, double r, int i, size_t num_orig_blocks, size_t num_rec_blocks) {
+  if (num_orig_blocks < 1 || num_rec_blocks < 0) {
+    std::cerr << "Error: Number of original blocks must be at least 1 and number of recovery blocks must be at least 0.\n"
+              << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
+    exit(0);
+  }
 
   // General checks
   if (s < 1) {
@@ -63,8 +65,8 @@ void check_args(size_t s, size_t b, size_t l, double r, int i) {
     exit(0);
   }
 
-  if (l < 0 || l > num_orig_blocks + num_rec_blocks) {
-    std::cerr << "Error: Number of lost blocks must be between 0 and the total number of blocks. (-l)\n";
+  if (l < 0 || l > num_rec_blocks) {
+    std::cerr << "Error: Number of lost blocks must be between 0 and the number of recovery blocks. (-l)\n";
     exit(0);
   }
 
@@ -78,8 +80,6 @@ void check_args(size_t s, size_t b, size_t l, double r, int i) {
     exit(0);
   }
 
-  // Library Specific checks
-
   // TODO: Baseline Checks
   
   // CM256 Checks
@@ -88,8 +88,8 @@ void check_args(size_t s, size_t b, size_t l, double r, int i) {
       std::cerr << "Error: Total number of blocks exceeds the maximum allowed by CM256.\n"
                 << "Condition: #(original blocks) + #(recovery blocks) <= " << ECCLimits::CM256_MAX_TOT_BLOCKS << "\n"
                 << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
+      exit(0);
     }
-    exit(0);
   }
 
   // ISA-L Checks
@@ -98,18 +98,41 @@ void check_args(size_t s, size_t b, size_t l, double r, int i) {
       std::cerr << "Error: Total number of blocks exceeds the maximum allowed by ISA-L.\n"
                 << "Condition: #(original blocks) + #(recovery blocks) <= " << ECCLimits::ISAL_MAX_TOT_BLOCKS << "\n"
                 << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
-    }
-
-    if (l > num_rec_blocks) {
-      std::cerr << "Error: Number of lost blocks can't exceed the number of recovery blocks for ISA-L.\n"
-                << "Condition: #(lost blocks) <= #(recovery blocks)\n"
-                << "(#lost blocks) = " << l << ", (#recovery blocks) = " << num_rec_blocks << "\n";
+      exit(0);
     }
   }
 
 
-  // 
+  // Leopard Checks
+  if (selected_benchmarks.contains("leopard")) {
+    if (num_orig_blocks + num_rec_blocks > ECCLimits::LEOPARD_MAX_TOT_BLOCKS) {
+      std::cerr << "Error: Total number of blocks exceeds the maximum allowed by Leopard.\n"
+                << "Condition: #(original blocks) + #(recovery blocks) <= " << ECCLimits::LEOPARD_MAX_TOT_BLOCKS << "\n"
+                << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
+      exit(0);
+    }
 
+    if (num_rec_blocks > num_orig_blocks) {
+      std::cerr << "Error: Number of recovery blocks can't exceed the number of original blocks for Leopard.\n"
+                << "Condition: #(recovery blocks) <= #(original blocks)\n"
+                << "(#recovery blocks) = " << num_rec_blocks << ", (#original blocks) = " << num_orig_blocks << "\n";
+      exit(0);
+    }
+
+    if (b % ECCLimits::LEOPARD_BLOCK_ALIGNMENT != 0) {
+      std::cerr << "Error: Block size must be a multiple of " << ECCLimits::LEOPARD_BLOCK_ALIGNMENT << " for Leopard.\n";
+      exit(0);
+    } 
+  }
+
+  // Wirehair Checks
+  if (selected_benchmarks.contains("wirehair")) {
+    if (num_orig_blocks < ECCLimits::WIREHAIR_MIN_DATA_BLOCKS || num_orig_blocks > ECCLimits::WIREHAIR_MAX_DATA_BLOCKS) {
+      std::cerr << "Error: Number of original blocks must be between " << ECCLimits::WIREHAIR_MIN_DATA_BLOCKS << " and " << ECCLimits::WIREHAIR_MAX_DATA_BLOCKS << " for Wirehair.\n"
+                << "(#original blocks) = " << num_orig_blocks << "\n";
+      exit(0);
+    }
+  }
 } 
 
 
@@ -167,6 +190,36 @@ int parse_args(int argc, char** argv) {
         return -1;
     }
   }
+
+  // If no benchmarks are specified, run all benchmarks
+  if (selected_benchmarks.empty()) {
+    for (const auto& [name, func] : available_benchmarks) {
+      selected_benchmarks.insert(name);
+    }
+  }
+
+  // Compute the number of original and recovery blocks
+  size_t num_orig_blocks = (s + (b - 1)) / b;
+  size_t num_rec_blocks = static_cast<size_t>(std::ceil(num_orig_blocks * r));
+
+  // Check validity of passed arguments
+  check_args(s, b, l, r, i, num_orig_blocks, num_rec_blocks);
+
+  // Update the benchmark configuration
+  benchmark_config.data_size = s;
+  benchmark_config.block_size = b;
+  benchmark_config.num_lost_blocks = l;
+  benchmark_config.redundancy_ratio = r;
+  benchmark_config.num_iterations = i;
+  benchmark_config.computed.num_original_blocks = num_orig_blocks;
+  benchmark_config.computed.num_recovery_blocks = num_rec_blocks;
+
+  // Generate lost block indices
+  select_lost_block_idxs(
+    l,
+    num_orig_blocks + num_rec_blocks,
+    lost_block_idxs
+  );
   return 0;
 }
 
@@ -197,31 +250,11 @@ static void BM_baseline(benchmark::State& state) {
 }
 
 
-
-// TODO: Pass arguments
-BenchmarkConfig get_config() {
-  BenchmarkConfig config;
-  config.data_size = 81'280'000; //1073736320; // ~~1.0737 GB
-  config.block_size = 640000; //6'316'096; // 6316.096 KB
-  config.num_lost_blocks = 10;
-  config.redundancy_ratio = 1;
-  config.num_iterations = 1;
-  config.computed.num_original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
-  config.computed.num_recovery_blocks = static_cast<size_t>(std::ceil(config.computed.num_original_blocks * config.redundancy_ratio));
-  return config;
-}
-
 int main(int argc, char** argv) {
-  std::cout << argc << std::endl;
-  // Get and compute the configuration
-  benchmark_config = get_config();
+  // Parse command line arguments
+  if (parse_args(argc, argv)) exit(0);
 
-  // Get the lost block indexes
-  select_lost_block_idxs(
-    benchmark_config.num_lost_blocks,
-    benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks,
-    lost_block_idxs
-  );
+
 
   // Register Benchmarks
   BENCHMARK(BM_cm256)->Iterations(benchmark_config.num_iterations);
