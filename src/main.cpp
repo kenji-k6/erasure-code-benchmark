@@ -14,17 +14,40 @@
 #include <unordered_set>
 #include <getopt.h>
 
+
+static void BM_Baseline(benchmark::State& state) {
+  BM_generic<BaselineBenchmark>(state);
+}
+
+static void BM_CM256(benchmark::State& state) {
+  BM_generic<CM256Benchmark>(state);
+}
+
+static void BM_ISAL(benchmark::State& state) {
+  BM_generic<ISALBenchmark>(state);
+}
+
+static void BM_Leopard(benchmark::State& state) {
+  BM_generic<LeopardBenchmark>(state);
+}
+
+static void BM_Wirehair(benchmark::State& state) {
+  BM_generic<WirehairBenchmark>(state);
+}
+
 BenchmarkConfig benchmark_config;
 std::vector<uint32_t> lost_block_idxs = {};
 const std::unordered_map<std::string, void(*)(benchmark::State&)> available_benchmarks = {
-  { "baseline", BM_generic<BaselineBenchmark> },
-  { "cm256", BM_generic<CM256Benchmark> },
-  { "isal", BM_generic<ISALBenchmark> },
-  { "leopard", BM_generic<LeopardBenchmark> },
-  { "wirehair", BM_generic<WirehairBenchmark> }
+  { "baseline", BM_Baseline },
+  { "cm256", BM_CM256 },
+  { "isal", BM_ISAL },
+  { "leopard", BM_Leopard },
+  { "wirehair", BM_Wirehair }
 };
 
 std::unordered_set<std::string> selected_benchmarks;
+
+
 
 
 void usage() {
@@ -155,7 +178,8 @@ int parse_args(int argc, char** argv) {
   };
 
   int c;
-  while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, nullptr)) != -1) {
+  int option_index = 0;
+  while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, &option_index)) != -1) {
     switch (c) {
       case 'h':
         usage();
@@ -182,7 +206,10 @@ int parse_args(int argc, char** argv) {
         break;
 
       case 0: // Long options
-        if (available_benchmarks.count(optarg)) selected_benchmarks.insert(optarg);
+        if (long_options[option_index].name) {
+          std::cout << long_options[option_index].name << std::endl;
+          selected_benchmarks.insert(long_options[option_index].name);
+        }
         break;
 
       default:
@@ -225,53 +252,34 @@ int parse_args(int argc, char** argv) {
 
 
 
-static void BM_cm256(benchmark::State& state) {
-  BM_generic<CM256Benchmark>(state);
-}
-
-static void BM_leopard(benchmark::State& state) {
-  BM_generic<LeopardBenchmark>(state);
-}
-
-/*
- * Important: Wirehair does not accept a specified no. of recovery blocks
- * It keeps sending blocks until the decoder has enough to recover the original data
-*/
-static void BM_wirehair(benchmark::State& state) {
-  BM_generic<WirehairBenchmark>(state);
-}
-
-static void BM_isal(benchmark::State& state) {
-  BM_generic<ISALBenchmark>(state);
-}
-
-static void BM_baseline(benchmark::State& state) {
-  BM_generic<BaselineBenchmark>(state);
-}
-
-
 int main(int argc, char** argv) {
   // Parse command line arguments
   if (parse_args(argc, argv)) exit(0);
 
 
-
-  // Register Benchmarks
-  BENCHMARK(BM_cm256)->Iterations(benchmark_config.num_iterations);
-  BENCHMARK(BM_leopard)->Iterations(benchmark_config.num_iterations);
-  BENCHMARK(BM_wirehair)->Iterations(benchmark_config.num_iterations);
-  BENCHMARK(BM_isal)->Iterations(benchmark_config.num_iterations);
-  BENCHMARK(BM_baseline)->Iterations(benchmark_config.num_iterations);
-
-
   // Default argument if no arguments are passed
   char arg0_default[] = "benchmark";  
   char* args_default = arg0_default;
+  argc = 1;
+  argv = &args_default;
 
-  // If no arguments are passed, set argc to 1 and argv to point to the default argument
-  if (argc == 0 || argv == nullptr) {
-    argc = 1;
-    argv = &args_default;
+  // Register benchmarks
+
+
+  if (selected_benchmarks.contains("baseline")) {
+    BENCHMARK(BM_Baseline)->Iterations(benchmark_config.num_iterations);
+  }
+  if (selected_benchmarks.contains("cm256")) {
+    BENCHMARK(BM_CM256)->Iterations(benchmark_config.num_iterations);
+  }
+  if (selected_benchmarks.contains("isal")) {
+    BENCHMARK(BM_ISAL)->Iterations(benchmark_config.num_iterations);
+  }
+  if (selected_benchmarks.contains("leopard")) {
+    BENCHMARK(BM_Leopard)->Iterations(benchmark_config.num_iterations);
+  }
+  if (selected_benchmarks.contains("wirehair")) {
+    BENCHMARK(BM_Wirehair)->Iterations(benchmark_config.num_iterations);
   }
 
   // Initialize Google Benchmark
@@ -281,7 +289,6 @@ int main(int argc, char** argv) {
   if (::benchmark::ReportUnrecognizedArguments(argc, argv)) {
       return 1; // Return error code if there are unrecognized arguments
   }
-
 
   // Run all specified benchmarks
   ::benchmark::RunSpecifiedBenchmarks();
