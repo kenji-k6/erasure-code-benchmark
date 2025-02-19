@@ -3,6 +3,15 @@
 #include "utils.h"
 #include <iostream>
 
+
+/**
+ * @file cm256_benchmark.cpp
+ * @brief Benchmark implementation for the CM256 ECC Library
+ * 
+ * Documentation can be found in cm256_benchmark.h and abstract_benchmark.h
+ */
+
+
 int CM256Benchmark::setup() noexcept {
   // Store variables used in performance-critical areas locally
   num_original_blocks_ = benchmark_config.computed.num_original_blocks;
