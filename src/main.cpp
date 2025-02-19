@@ -10,27 +10,149 @@
 #include <memory>
 #include <iostream>
 #include <cmath>
+#include <unordered_map>
+#include <unordered_set>
+#include <getopt.h>
 
 BenchmarkConfig benchmark_config;
 std::vector<uint32_t> lost_block_idxs = {};
+const std::unordered_map<std::string, void(*)(benchmark::State&)> available_benchmarks = {
+  { "baseline", BM_generic<BaselineBenchmark>> },
+  { "cm256", BM_generic<CM256Benchmark> },
+  { "isal", BM_generic<ISALBenchmark> },
+  { "leopard", BM_generic<LeopardBenchmark> },
+  { "wirehair", BM_generic<WirehairBenchmark> }
+};
+
+std::unordered_set<std::string> selected_benchmarks;
 
 
+void usage() {
+  std::cerr << "Usage: ecc-benchmark [options]\n"
+            << "  -h | --help       Help\n"
+            << "  -s <size>         Total size of original data in bytes (default 520'192B)\n"
+            << "  -b <size>         Size of each block in bytes (default 4'096B)\n"
+            << "  -l <num>          Number of lost blocks (default 64)\n"
+            << "  -r <ratio>        Redundancy ratio (#recovery blocks / #original blocks) (default 1.0)\n"
+            << "  -i <num>          Number of benchmark iterations (default 1)\n\n"
 
-//TODO: check if input config is valid and for which libraries it is valid
-//TODO: check that lost_blocks <= recovery_blocks
-
-// TODO: Pass arguments
-BenchmarkConfig get_config() {
-  BenchmarkConfig config;
-  config.data_size = 81'280'000; //1073736320; // ~~1.0737 GB
-  config.block_size = 640000; //6'316'096; // 6316.096 KB
-  config.num_lost_blocks = 10;
-  config.redundancy_ratio = 1;
-  config.num_iterations = 1;
-  config.computed.num_original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
-  config.computed.num_recovery_blocks = static_cast<size_t>(std::ceil(config.computed.num_original_blocks * config.redundancy_ratio));
-  return config;
+            << " The following flags are used to specify which benchmarks to run. \n"
+            << " If no flags are specified, all benchmarks will be run.\n"
+            << "  --baseline        Run the baseline benchmark\n"
+            << "  --cm256           Run the CM256 benchmark\n"
+            << "  --isal            Run the ISA-L benchmark\n"
+            << "  --leopard         Run the Leopard benchmark\n"
+            << "  --wirehair        Run the Wirehair benchmark\n";
+  exit(0);
 }
+
+int check_args(size_t s, size_t b, size_t l, double r, int i) {
+  size_t num_orig_blocks = (s + (b - 1)) / b;
+  size_t num_rec_blocks = static_cast<size_t>(std::ceil(num_orig_blocks * r));
+  //TODO: check that lost_blocks <= recovery_blocks (maybe)
+
+  // General checks
+  if (s < 1) {
+    std::cerr << "Error: Total data size must be greater than 0. (-s)\n";
+    return -1;
+  }
+
+  if (b < 1 || b > s) {
+    std::cerr << "Error: Block size must be greater than 0 and less than the total data size. (-b)\n";
+    return -1;
+  }
+
+  if (l < 0 || l > num_orig_blocks + num_rec_blocks) {
+    std::cerr << "Error: Number of lost blocks must be between 0 and the total number of blocks. (-l)\n";
+    return -1;
+  }
+
+  if (r < 0) {
+    std::cerr << "Error: Redundancy ratio must be at least 0. (-r)\n";
+    return -1;
+  }
+
+  if (i < 1) {
+    std::cerr << "Error: Number of iterations must be at least 1. (-i)\n";
+    return -1;
+  }
+
+  // Library Specific checks
+
+  // TODO: Baseline Checks
+  
+  // CM256 Checks
+  if (selected_benchmarks.contains("cm256")) {
+    if (num_orig_blocks + num_rec_blocks > ECCLimits::CM256_MAX_TOT_BLOCKS) {
+      std::cerr << "Error: Total number of blocks exceeds the maximum allowed by CM256.\n"
+                << "Condition: #(original blocks) + #(recovery blocks) <= " << ECCLimits::CM256_MAX_TOT_BLOCKS << "\n"
+                << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
+    }
+    return -1;
+  }
+
+  return 0;
+} 
+
+
+
+int parse_args(int argc, char** argv) {
+  size_t s = 520'192;
+  size_t b = 4'096;
+  size_t l = 64;
+  double r = 1.0;
+  int i = 1;
+
+  struct option long_options[] = {
+    { "help",     no_argument, nullptr, 'h' },
+    { "baseline", no_argument, nullptr, 0 },
+    { "cm256",    no_argument, nullptr, 0 },
+    { "isal",     no_argument, nullptr, 0 },
+    { "leopard",  no_argument, nullptr, 0 },
+    { "wirehair", no_argument, nullptr, 0},
+    { nullptr,    0,           nullptr, 0 }
+  };
+
+  int c;
+  while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, nullptr)) != -1) {
+    switch (c) {
+      case 'h':
+        usage();
+        break;
+
+      case 's':
+        s = std::stoull(optarg);
+        break;
+
+      case 'b':
+        b = std::stoull(optarg);
+        break;
+      
+      case 'l':
+        l = std::stoull(optarg);
+        break;
+
+      case 'r':
+        r = std::stod(optarg);
+        break;
+      
+      case 'i':
+        i = std::stoi(optarg);
+        break;
+
+      case 0: // Long options
+        if (available_benchmarks.count(optarg)) selected_benchmarks.insert(optarg);
+        break;
+
+      default:
+        usage();
+        return -1;
+    }
+  }
+  return 0;
+}
+
+
 
 static void BM_cm256(benchmark::State& state) {
   BM_generic<CM256Benchmark>(state);
@@ -58,8 +180,21 @@ static void BM_baseline(benchmark::State& state) {
 
 
 
-int main(int argc, char** argv) {
+// TODO: Pass arguments
+BenchmarkConfig get_config() {
+  BenchmarkConfig config;
+  config.data_size = 81'280'000; //1073736320; // ~~1.0737 GB
+  config.block_size = 640000; //6'316'096; // 6316.096 KB
+  config.num_lost_blocks = 10;
+  config.redundancy_ratio = 1;
+  config.num_iterations = 1;
+  config.computed.num_original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;
+  config.computed.num_recovery_blocks = static_cast<size_t>(std::ceil(config.computed.num_original_blocks * config.redundancy_ratio));
+  return config;
+}
 
+int main(int argc, char** argv) {
+  std::cout << argc << std::endl;
   // Get and compute the configuration
   benchmark_config = get_config();
 

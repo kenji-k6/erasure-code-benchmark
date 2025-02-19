@@ -16,8 +16,7 @@ constexpr size_t MIN_DATA_BLOCK_SIZE = 2;
 namespace ECCLimits {
   constexpr size_t BASELINE_BLOCK_ALIGNMENT = 64;
 
-  constexpr size_t CM256_MIN_DATA_BLOCKS = 1;
-  constexpr size_t CM256_MAX_DATA_BLOCKS = 256;
+  constexpr size_t CM256_MAX_TOT_BLOCKS = 256;
 
   constexpr size_t ISAL_MIN_BLOCK_SIZE = 64;
   constexpr size_t ISAL_MAX_DATA_BLOCKS = 255;
