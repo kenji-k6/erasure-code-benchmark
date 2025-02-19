@@ -24,7 +24,7 @@ BenchmarkConfig get_config() {
   BenchmarkConfig config;
   config.data_size = 81'280'000; //1073736320; // ~~1.0737 GB
   config.block_size = 640000; //6'316'096; // 6316.096 KB
-  config.num_lost_blocks = 127;
+  config.num_lost_blocks = 10;
   config.redundancy_ratio = 1;
   config.num_iterations = 1;
   config.computed.num_original_blocks = (config.data_size + (config.block_size - 1)) / config.block_size;

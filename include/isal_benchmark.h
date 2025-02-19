@@ -35,23 +35,23 @@ private:
   size_t num_lost_blocks_ = 0;
 
   // Data Buffers
-  uint8_t *original_buffer_ = nullptr; ///< Buffer for the original data we want to transmit
-  uint8_t *recovery_outp_buffer_ = nullptr; ///< Buffer for recovery of corrupted data
+  uint8_t *original_buffer_ = nullptr;        ///< Buffer for the original data we want to transmit
+  uint8_t *recovery_outp_buffer_ = nullptr;   ///< Buffer for recovery of corrupted data
 
   // Pointer Arrays
-  uint8_t *original_ptrs_[ECCLimits::ISAL_MAX_TOT_BLOCKS] = { nullptr }; ///< Pointers to the original data blocks
-  uint8_t *recovery_src_ptrs_[ECCLimits::ISAL_MAX_DATA_BLOCKS] = { nullptr }; ///< Pointers to the recovery source data blocks
-  uint8_t *recovery_outp_ptrs_[ECCLimits::ISAL_MAX_DATA_BLOCKS] = { nullptr }; ///< Pointers to the recovery output data blocks
+  uint8_t *original_ptrs_[ECCLimits::ISAL_MAX_TOT_BLOCKS] = { nullptr };        ///< Pointers to the original data blocks
+  uint8_t *recovery_src_ptrs_[ECCLimits::ISAL_MAX_DATA_BLOCKS] = { nullptr };   ///< Pointers to the recovery source data blocks
+  uint8_t *recovery_outp_ptrs_[ECCLimits::ISAL_MAX_DATA_BLOCKS] = { nullptr };  ///< Pointers to the recovery output data blocks
 
   // Erasure and Coefficient Matrices
   uint8_t *encode_matrix_ = nullptr;
   uint8_t *decode_matrix_ = nullptr;
   uint8_t *invert_matrix_ = nullptr;
   uint8_t *temp_matrix_ = nullptr;
-  uint8_t *g_tbls_ = nullptr; ///< Generator tables for encoding
+  uint8_t *g_tbls_ = nullptr;           ///< Generator tables for encoding
 
-  uint8_t block_err_list_[ECCLimits::ISAL_MAX_TOT_BLOCKS] = { 0 }; ///< Array containing the indices of lost blocks
-  uint8_t decode_index_[ECCLimits::ISAL_MAX_TOT_BLOCKS] = { 0 }; ///< Array containing the indices of the blocks to decode
+  uint8_t block_err_list_[ECCLimits::ISAL_MAX_TOT_BLOCKS] = { 0 };  ///< Array containing the indices of lost blocks
+  uint8_t decode_index_[ECCLimits::ISAL_MAX_TOT_BLOCKS] = { 0 };    ///< Array containing the indices of the blocks to decode
 };
 
 // Helper function for generating the decode matrix (simple version, implementation from ISA-L Github repository)

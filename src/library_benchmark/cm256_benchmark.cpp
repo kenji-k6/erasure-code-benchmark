@@ -1,114 +1,98 @@
 #include "cm256_benchmark.h"
 
+#include "utils.h"
+#include <iostream>
+
 int CM256Benchmark::setup() noexcept {
-  // Initialize cm256
+  // Store variables used in performance-critical areas locally
+  num_original_blocks_ = benchmark_config.computed.num_original_blocks;
+  num_recovery_blocks_ = benchmark_config.computed.num_recovery_blocks;
+  block_size_ = benchmark_config.block_size;
+
+  // Initialize CM256
   if (cm256_init()) {
     std::cerr << "CM256: Initialization failed.\n";
     return -1;
   }
 
-  // Initialize cm256 parameter struct
-  params_.BlockBytes = benchmark_config.block_size;
-  params_.OriginalCount = benchmark_config.computed.num_original_blocks;
-  params_.RecoveryCount = benchmark_config.computed.num_recovery_blocks;
+  // Initialize CM256 parameters
+  params_.BlockBytes = block_size_;
+  params_.OriginalCount = num_original_blocks_;
+  params_.RecoveryCount = num_recovery_blocks_;
 
+  // Allocate  buffers with proper alignment for SIMD
+  original_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_original_blocks_));
+  decode_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_recovery_blocks_));
 
-  // Allocate buffers
-  original_buffer_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * benchmark_config.computed.num_original_blocks);
+  // Resize block vector
+  blocks_.resize(ECCLimits::CM256_MAX_DATA_BLOCKS);
 
-  if (!original_buffer_) {
-    teardown(); 
-    std::cerr << "CM256: Failed to allocate original buffer.\n";
-    return -1;
-  }
-
-  recovery_buffer_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * benchmark_config.computed.num_recovery_blocks);
-  if (!recovery_buffer_) {
+  if (!original_buffer_ || !decode_buffer_) {
+    std::cerr << "CM256: Failed to allocate buffer(s).\n";
     teardown();
-    std::cerr << "CM256: Failed to allocate recovery buffer.\n";
     return -1;
   }
 
-  // Initialize blocks
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-    blocks_[i].Block = original_buffer_ + (i * benchmark_config.block_size);
+  // Initialize block array content
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
+    blocks_[i].Block = original_buffer_ + i * block_size_;
     blocks_[i].Index = cm256_get_original_block_index(params_, i);
   }
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-    int write_res = write_validation_pattern(
-      i,
-      (uint8_t *) blocks_[i].Block,
-      benchmark_config.block_size
-    );
-
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
+    int write_res = write_validation_pattern(i, static_cast<uint8_t*>(blocks_[i].Block), block_size_);
     if (write_res) {
-      teardown();
       std::cerr << "CM256: Failed to write random checking packet.\n";
+      teardown();
       return -1;
     }
   }
-
+  
   return 0;
 }
 
 
-
 void CM256Benchmark::teardown() noexcept {
   if (original_buffer_) free(original_buffer_);
-  if (recovery_buffer_) free(recovery_buffer_);
+  if (decode_buffer_) free(decode_buffer_);
 }
-
 
 
 int CM256Benchmark::encode() noexcept {
-  // Encode the data
-  return cm256_encode(params_, blocks_, (void*) recovery_buffer_);
+  return cm256_encode(params_, blocks_.data(), static_cast<void*>(decode_buffer_));
 }
-
 
 
 int CM256Benchmark::decode() noexcept {
-  // Decode the data
-  return cm256_decode(params_, blocks_);
+  return cm256_decode(params_, blocks_.data());
 }
 
 
-
-void CM256Benchmark::flush_cache() noexcept {
-  // TODO: Implement cache flushing
+void CM256Benchmark::simulate_data_loss() noexcept {
+  for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
+    uint32_t idx = lost_block_idxs[i];
+    if (idx < num_original_blocks_) { // dropped block is original block
+      idx = cm256_get_original_block_index(params_, idx);
+      memset(original_buffer_ + idx * block_size_, 0, block_size_);
+      blocks_[idx].Block = decode_buffer_ + idx * block_size_;
+      blocks_[idx].Index = cm256_get_recovery_block_index(params_, idx);
+    } else { // dropped block is recovery block
+      uint32_t orig_idx = idx - num_original_blocks_;
+      memset(decode_buffer_ + orig_idx * block_size_, 0, block_size_);
+    }
+  }
 }
-
 
 
 bool CM256Benchmark::check_for_corruption() const noexcept {
-  for (int i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-    if (!validate_block((uint8_t *)blocks_[i].Block, benchmark_config.block_size)) return false;
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
+    if (!validate_block(static_cast<uint8_t*>(blocks_[i].Block), block_size_)) return false;
   }
   return true;
 }
 
 
-
-void CM256Benchmark::simulate_data_loss() noexcept {
-  
-  for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
-    uint32_t idx = lost_block_idxs[i];
-    // if idx >= benchmark_config.computed.num_original_blocks, then it is a recovery block
-    // else it's a data block
-
-    if (idx < benchmark_config.computed.num_original_blocks) {
-      // Zero out memory
-      memset(original_buffer_ + (idx * benchmark_config.block_size), 0, benchmark_config.block_size);
-      blocks_[idx].Block = recovery_buffer_ + (benchmark_config.block_size * idx);
-      blocks_[idx].Index = cm256_get_recovery_block_index(params_, idx);
-      
-
-
-    } else {
-      uint32_t orig_idx = idx-benchmark_config.computed.num_original_blocks;
-      memset(recovery_buffer_ + (orig_idx * benchmark_config.block_size), 0, benchmark_config.block_size);
-    }
-  }
+void CM256Benchmark::flush_cache() noexcept {
+  // TODO: Implement cache flushing
 }

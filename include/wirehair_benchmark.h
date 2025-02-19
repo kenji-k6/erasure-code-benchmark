@@ -18,7 +18,6 @@
  * benchmark will limit the number of recovery blocks that Wirehair is allowed to generate.
  * For the same reason, part of the loss simulation has to be done in the decode function unfortunately.
  */
-
 class WirehairBenchmark : public ECCBenchmark {
 public:
   WirehairBenchmark() = default;
@@ -39,8 +38,8 @@ private:
   size_t num_lost_blocks_ = 0;
 
   uint8_t *original_buffer_ = nullptr;    ///< Buffer for the original data we want to transmit
-  uint8_t *encode_buffer_ = nullptr;     ///< Buffer for the encoded data
-  uint8_t *decode_buffer_ = nullptr;     ///< Buffer for the decoded data
+  uint8_t *encode_buffer_ = nullptr;      ///< Buffer for the encoded data
+  uint8_t *decode_buffer_ = nullptr;      ///< Buffer for the decoded data
 
   WirehairCodec encoder_ = nullptr;       ///< Wirehair encoder instance
   WirehairCodec decoder_ = nullptr;       ///< Wirehair decoder instance
