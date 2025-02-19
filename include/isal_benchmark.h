@@ -27,7 +27,6 @@ public:
   bool check_for_corruption() const noexcept override;
   void flush_cache() noexcept override;
   
-
 private:
   size_t num_original_blocks_ = 0;
   size_t num_recovery_blocks_ = 0;

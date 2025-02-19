@@ -10,7 +10,7 @@
  * @file leopard_benchmark.cpp
  * @brief Benchmark implementation for the Leopard ECC library
  * 
- * Documentation can be found in leopard_benchmark.h
+ * Documentation can be found in leopard_benchmark.h and abstract_benchmark.h
  */
 
 
@@ -37,10 +37,10 @@ int LeopardBenchmark::setup() noexcept {
 
   // Allocate buffer with proper alignment for SIMD
   original_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_original_blocks_));
-  encode_work_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * encode_work_count_));
-  decode_work_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * decode_work_count_));
+  encode_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * encode_work_count_));
+  decode_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * decode_work_count_));
 
-  if (!original_buffer_ || !encode_work_buffer_ || !decode_work_buffer_) {
+  if (!original_buffer_ || !encode_buffer_ || !decode_buffer_) {
     std::cerr << "Leopard: Failed to allocate buffer(s).\n";
     teardown();
     return -1;
@@ -56,10 +56,10 @@ int LeopardBenchmark::setup() noexcept {
     original_ptrs_[i] = original_buffer_ + i * block_size_;
   }
   for (unsigned i = 0; i < encode_work_count_; i++) {
-    encode_work_ptrs_[i] = encode_work_buffer_ + i * block_size_;
+    encode_work_ptrs_[i] = encode_buffer_ + i * block_size_;
   }
   for (unsigned i = 0; i < decode_work_count_; i++) {
-    decode_work_ptrs_[i] = decode_work_buffer_ + i * block_size_;
+    decode_work_ptrs_[i] = decode_buffer_ + i * block_size_;
   }
 
   // Initialize data buffer with CRC blocks
@@ -79,8 +79,8 @@ int LeopardBenchmark::setup() noexcept {
 void LeopardBenchmark::teardown() noexcept {
   // Free manually allocated memory
   if (original_buffer_) free(original_buffer_);
-  if (encode_work_buffer_) free(encode_work_buffer_);
-  if (decode_work_buffer_) free(decode_work_buffer_);
+  if (encode_buffer_) free(encode_buffer_);
+  if (decode_buffer_) free(decode_buffer_);
 }
 
 

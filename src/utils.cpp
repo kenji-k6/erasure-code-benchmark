@@ -102,6 +102,6 @@ void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<
     }
   }
 
-  // Sort the indices (needed for Wirehair)
+  // Sort the indices (needed for Wirehair and ISA-L)
   std::sort(lost_block_idxs.begin(), lost_block_idxs.end());
 }

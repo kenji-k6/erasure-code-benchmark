@@ -1,152 +1,120 @@
 #include "wirehair_benchmark.h"
 
+#include "utils.h"
+#include <cstring>
+#include <iostream>
+
+
+/**
+ * @file wirehair_benchmark.cpp
+ * @brief Benchmark implementation for the Wirehair ECC library
+ * 
+ * Documentation can be found in wirehair_benchmark.h and abstract_benchmark.h
+ */
+
+
 int WirehairBenchmark::setup() noexcept {
+  // Store variables used in performance-critical areas locally
+  num_original_blocks_ = benchmark_config.computed.num_original_blocks;
+  num_recovery_blocks_ = benchmark_config.computed.num_recovery_blocks;
+  block_size_ = benchmark_config.block_size;
+  num_lost_blocks_ = benchmark_config.num_lost_blocks;
+
   // Initialize Wirehair
   if (wirehair_init()) {
     std::cerr << "Wirehair: Initialization failed.\n";
-    return -1; 
-  }
-
-  // Allocate memory for the buffers
-  original_buffer_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * benchmark_config.computed.num_original_blocks);
-  if (!original_buffer_) {
-    teardown();
-    std::cerr << "Wirehair: Failed to allocate memory for original data.\n";
     return -1;
   }
 
-  encoded_buffer_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * (benchmark_config.computed.num_original_blocks+benchmark_config.computed.num_recovery_blocks));
-  if (!encoded_buffer_) {
+  // Allocate buffer with proper alignment for SIMD
+  original_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_original_blocks_));
+  encode_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * (num_original_blocks_ + num_recovery_blocks_)));
+  decode_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_original_blocks_));
+
+  if (!original_buffer_ || !encode_buffer_ || !decode_buffer_) {
+    std::cerr << "Wirehair: Failed to allocate buffer(s).\n";
     teardown();
-    std::cerr << "Wirehair: Failed to allocate memory for output data.\n";
     return -1;
   }
 
-  decoded_buffer_ = (uint8_t*) aligned_alloc(ALIGNMENT_BYTES, benchmark_config.block_size * benchmark_config.computed.num_original_blocks);
-  if (!decoded_buffer_) {
+  // Create the decoder instance
+  decoder_ = wirehair_decoder_create(nullptr, block_size_ * num_original_blocks_, block_size_);
+
+  if (!decoder_) {
+    std::cerr << "Wirehair: Failed to create decoder instance.\n";
     teardown();
-    std::cerr << "Wirehair: Failed to allocate memory for decoded data.\n";
     return -1;
   }
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-    int write_res = write_validation_pattern(
-      i,
-      original_buffer_ + i * benchmark_config.block_size,
-      benchmark_config.block_size
-    );
-
+  for (unsigned i = 0; i < num_original_blocks_; i++) {
+    int write_res = write_validation_pattern(i, original_buffer_ + i * block_size_, block_size_);
     if (write_res) {
-      teardown();
       std::cerr << "Wirehair: Failed to write random checking packet.\n";
+      teardown();
       return -1;
     }
   }
-
-
-  // Create the decoder
-  decoder_ = wirehair_decoder_create(
-    nullptr,
-    benchmark_config.data_size,
-    benchmark_config.block_size
-  );
-  if (!decoder_) return -1;
 
   return 0;
 }
 
 
-
 void WirehairBenchmark::teardown() noexcept {
   if (original_buffer_) free(original_buffer_);
-  if (encoded_buffer_) free(encoded_buffer_);
+  if (encode_buffer_) free(encode_buffer_);
+  if (decode_buffer_) free(decode_buffer_);
   if (encoder_) wirehair_free(encoder_);
   if (decoder_) wirehair_free(decoder_);
 }
 
 
-
 int WirehairBenchmark::encode() noexcept {
-  
-  uint32_t write_len = 0;
-  WirehairResult encode_result;
-  // Create the encoder
-  encoder_ = wirehair_encoder_create(
-    nullptr,
-    original_buffer_,
-    benchmark_config.data_size,
-    benchmark_config.block_size
-  );
+  encoder_ = wirehair_encoder_create(nullptr, original_buffer_, num_original_blocks_ * block_size_, block_size_);
   if (!encoder_) return -1;
 
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks; i++) {
-
-    encode_result = wirehair_encode(
-      encoder_,
-      i,
-      encoded_buffer_ + (i * benchmark_config.block_size),
-      benchmark_config.block_size,
-      &write_len
-    );
-
-    if (encode_result != Wirehair_Success) return -1;
+  uint32_t write_len = 0;
+  for (size_t i = 0; i < num_original_blocks_ + num_recovery_blocks_; i++) {
+    if (wirehair_encode(encoder_, i, encode_buffer_ + i * block_size_,
+                        block_size_, &write_len) != Wirehair_Success) return -1;
   }
   return 0;
 }
-
 
 
 int WirehairBenchmark::decode() noexcept {
   WirehairResult decode_result = Wirehair_NeedMore;
   unsigned loss_idx = 0;
 
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks; i++) {
-
-    if (i == lost_block_idxs[loss_idx]) {
+  for (unsigned i = 0; i < num_original_blocks_ + num_recovery_blocks_; i++) {
+    if (loss_idx < num_lost_blocks_ && i == lost_block_idxs[loss_idx]) {
       loss_idx++;
       continue;
     }
 
-    decode_result = wirehair_decode(
-      decoder_,
-      i,
-      encoded_buffer_ + (i * benchmark_config.block_size),
-      benchmark_config.block_size
-    );
-
+    decode_result = wirehair_decode(decoder_, i, encode_buffer_ + i * block_size_, block_size_);
     if (decode_result == Wirehair_Success) break;
   }
 
-  return wirehair_recover(
-    decoder_,
-    decoded_buffer_,
-    benchmark_config.computed.num_original_blocks * benchmark_config.block_size
-  );
+  return wirehair_recover(decoder_, decode_buffer_, block_size_ * num_original_blocks_);
 }
 
 
-
-void WirehairBenchmark::flush_cache() noexcept {
-  // TODO: Implement cache flushing
+void WirehairBenchmark::simulate_data_loss() noexcept {
+  for (unsigned i = 0; i < num_lost_blocks_; i++) {
+    memset(encode_buffer_ + (lost_block_idxs[i] * block_size_), 0, block_size_);
+  }
 }
-
 
 
 bool WirehairBenchmark::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < benchmark_config.computed.num_original_blocks; i++) {
-    if (!validate_block(decoded_buffer_ + (i * benchmark_config.block_size), benchmark_config.block_size)) {
-      return false;
-    }
+  for (unsigned i = 0; i <num_original_blocks_; i++) {
+    if (!validate_block(decode_buffer_ + i * block_size_, block_size_)) return false;
   }
   return true;
 }
 
 
-void WirehairBenchmark::simulate_data_loss() noexcept {
-  /* Loss logic is also part of decode function!!! */
-  for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
-    uint32_t idx = lost_block_idxs[i];
-    memset(encoded_buffer_ + (idx * benchmark_config.block_size), 0, benchmark_config.block_size);
-  }
+void WirehairBenchmark::flush_cache() noexcept {
+  // TODO: Implement cache flushing
 }

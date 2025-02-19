@@ -10,7 +10,7 @@
  * @file isal_benchmark.cpp
  * @brief Benchmark implementation for the Intel ISA-L library's ECC implementation
  * 
- * Documentation can be found in isal_benchmark.h
+ * Documentation can be found in isal_benchmark.h and abstract_benchmark.h
  */
 
 

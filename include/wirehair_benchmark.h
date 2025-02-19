@@ -1,16 +1,29 @@
 #ifndef WIREHAIR_BENCHMARK_H
 #define WIREHAIR_BENCHMARK_H
+
 #include "abstract_benchmark.h"
 #include "wirehair/wirehair.h"
-#include "utils.h"
 
-#include <iostream>
-#include <vector>
-#include <memory>
-#include <cstring>
+
+/**
+ * @class WirehairBenchmark
+ * @brief Benchmark implementation for the Wirehair ECC library https://github.com/catid/wirehair
+ * 
+ * This class implements the ECCBenchmark interface, providing specific functionality
+ * for benchmarking the Wirehair library. It supports setup, teardown, encoding, decoding,
+ * data loss simulation, corruption checking and cache flushing.
+ * 
+ * @attention Since Wirehair uses a fountain code approach, this means that recovery blocks are generated
+ * until the data can be restored. To still have an adequate comparison with the other libraries, the
+ * benchmark will limit the number of recovery blocks that Wirehair is allowed to generate.
+ * For the same reason, part of the loss simulation has to be done in the decode function unfortunately.
+ */
 
 class WirehairBenchmark : public ECCBenchmark {
 public:
+  WirehairBenchmark() = default;
+  ~WirehairBenchmark() noexcept = default;
+
   int setup() noexcept override;
   void teardown() noexcept override;
   int encode() noexcept override;
@@ -20,11 +33,17 @@ public:
   void flush_cache() noexcept override;
 
 private:
-  uint8_t* original_buffer_;
-  uint8_t* encoded_buffer_;
-  uint8_t* decoded_buffer_;
-  WirehairCodec encoder_;
-  WirehairCodec decoder_;
-}; // class WirehairBenchmark
+  size_t num_original_blocks_ = 0;
+  size_t num_recovery_blocks_ = 0;
+  size_t block_size_ = 0;
+  size_t num_lost_blocks_ = 0;
+
+  uint8_t *original_buffer_ = nullptr;    ///< Buffer for the original data we want to transmit
+  uint8_t *encode_buffer_ = nullptr;     ///< Buffer for the encoded data
+  uint8_t *decode_buffer_ = nullptr;     ///< Buffer for the decoded data
+
+  WirehairCodec encoder_ = nullptr;       ///< Wirehair encoder instance
+  WirehairCodec decoder_ = nullptr;       ///< Wirehair decoder instance
+};
 
 #endif // WIREHAIR_BENCHMARK_H
