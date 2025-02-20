@@ -1,5 +1,5 @@
-#ifndef BENCHMARK_RUNNER_H
-#define BENCHMARK_RUNNER_H
+#ifndef GENERIC_BENCHMARK_RUNNER_H
+#define GENERIC_BENCHMARK_RUNNER_H
 
 #include "abstract_benchmark.h"
 #include "benchmark/benchmark.h"
@@ -47,4 +47,4 @@ static void BM_generic(benchmark::State& state) {
   }
 }
 
-#endif // BENCHMARK_RUNNER_H
+#endif // GENERIC_BENCHMARK_RUNNER_H

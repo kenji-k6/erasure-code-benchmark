@@ -1,4 +1,4 @@
-#include "benchmark_runner.h"
+#include "generic_benchmark_runner.h"
 #include "leopard_benchmark.h"
 #include "cm256_benchmark.h"
 #include "wirehair_benchmark.h"
