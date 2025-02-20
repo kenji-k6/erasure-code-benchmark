@@ -1,1 +1,1 @@
-#include "benchmark_runner.h"
+#include "generic_benchmark_runner.h"

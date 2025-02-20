@@ -20,6 +20,9 @@
  * If data corruption is detected after decoding, the benchmark run is skipped
  * with an error message
  * 
+ * @attention Pausing and stopping in each iteration incurs some overhead, however it is rouglhy 200-300ns and therefore negligible
+ * Manual Timing as specified in the Google Benchmark documentation does not change this, since then the timings lose accuracy
+ * 
  * @tparam BenchmarkType A class implementing the `ECCBenchmark` interface
  * @param state The Google Benchmark state object
  */
