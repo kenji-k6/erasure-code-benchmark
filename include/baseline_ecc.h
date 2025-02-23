@@ -7,17 +7,7 @@
  * Custom ECC implementation, used as a baseline for comparison
  *
 */
-const int L = 8;
-const int MultField = (1 << L) - 1; // The size of the multiplicative group of the finite field. This is 2^L - 1
-int ExpToFieldElt[MultField + 1];   // A table that goes from the exponent of an element, in
-                                    // terms of a previously chosen generator of the
-                                    // multiplicative group, to its representation as a
-                                    // vector over GF[2]
-int FieldEltToExp[MultField + 1];   // The table that goes from the vector representation of
-                                    // an element to its exponent of the generator.
-int Bit[L];                         // An array of integers that is used to select individual bits:
-                                    // (A & Bit[i]) is equal to 1 if the i-th bit of A is 1, and 0
-                                    // otherwise.
+
 
 struct Encoder {
   int Mpackets;
@@ -40,5 +30,8 @@ Encoder rs_create_encoder(int Mpackets, int Rpackets, size_t packet_size);
 Decoder rs_create_decoder(int Mpackets, int Rpackets, size_t packet_size, int num_packets_received);
 
 void rs_encode(Encoder &enc, uint8_t *orig_data, uint8_t *redundant_data);
+void rs_decode(Decoder &dec, const uint8_t *inp_recv_orig_data, const uint8_t *inp_recv_redund_data, uint8_t *outp_data, uint32_t *recv_idx, uint32_t *inv_mat);
+
+void rs_invert_cauchy_matrix(uint32_t *inv_mat, int Nextra, std::vector<int> &RowInd, std::vector<int> &ColInd);
 
 #endif // BASELINE_ECC_H

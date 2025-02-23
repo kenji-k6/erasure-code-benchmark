@@ -1,6 +1,18 @@
 #include "baseline_ecc.h"
+#include <cstdlib>
+#include <cstring>
 
-
+const int L = 8;
+const int MultField = (1 << L) - 1; // The size of the multiplicative group of the finite field. This is 2^L - 1
+int ExpToFieldElt[MultField + 1];   // A table that goes from the exponent of an element, in
+                                    // terms of a previously chosen generator of the
+                                    // multiplicative group, to its representation as a
+                                    // vector over GF[2]
+int FieldEltToExp[MultField + 1];   // The table that goes from the vector representation of
+                                    // an element to its exponent of the generator.
+int Bit[L];                         // An array of integers that is used to select individual bits:
+                                    // (A & Bit[i]) is equal to 1 if the i-th bit of A is 1, and 0
+                                    // otherwise.
 
 void rs_init_tables() {
   for (int i = 0; i < L; i++) {
@@ -62,6 +74,101 @@ void rs_encode(Encoder &enc, uint8_t *orig_data, uint8_t *redundant_data) {
             }
           }
         }
+      }
+    }
+  }
+}
+
+
+
+void rs_decode(Decoder &dec, const uint8_t *inp_recv_orig_data, const uint8_t *inp_recv_redund_data, uint8_t *outp_data, uint32_t *recv_idx, uint32_t *inv_mat) {
+  // Step 1: Collect RowInd and ColInd
+  std::vector<int> RowInd;
+  std::vector<int> ColInd;
+  int i = 0;
+  for (; i < dec.Mpackets; i++) {
+    if (recv_idx[i]) {
+      ColInd.push_back(i);
+    }
+  }
+
+  for (; i < dec.Mpackets + dec.Rpackets; i++) {
+    if (recv_idx[i]) {
+      RowInd.push_back(i - dec.Mpackets);
+    }
+  }
+
+  // Step 2: Invert the Cauchy matrix
+  rs_invert_cauchy_matrix(inv_mat, dec.Nextra, RowInd, ColInd);
+
+  ///////////// TO FIX
+  uint8_t *M = static_cast<uint8_t*>(malloc(dec.Nextra * dec.Nsegs * L));
+  memset(M, 0, dec.Nextra * dec.Nsegs * L);
+
+
+  // Step 3: Decode the message using the inverted matrix
+  // The data that was received is already stored in outp_data beforehand
+  for (int row = 0; row < dec.Nextra; row++) {
+    for (int col = 0; col < dec.Mpackets; col++) {
+      // if the message packet was received, then process it
+      if (recv_idx[col]) {
+        int exponent = (MultField - FieldEltToExp[RowInd[row] ^ col ^ MultField]) % MultField;
+        for (int row_bit = 0; row_bit < L; row_bit++) {
+          for (int col_bit = 0; col_bit < L; col_bit++) {
+            if (ExpToFieldElt[exponent + row_bit] & Bit[col_bit]) {
+              for (int segment = 0; segment < dec.Nsegs; segment++) {
+                // Todo: check M access
+                M[(row_bit + row*L)*dec.Nsegs + segment] ^= inp_recv_orig_data[(col_bit+col*L) * dec.Nsegs + segment];
+              }
+            }
+          }
+        }
+
+      }
+    }
+  }
+
+  // Step 4: Multiply the inverted matrix with the received data
+  for (int row = 0; row < dec.Nextra; row++) {
+    for (int col = 0; col < dec.Nextra; col++) {
+      uint32_t exponent = inv_mat[row * dec.Nextra + col];
+
+      for (int row_bit = 0; row_bit < L; row_bit++) {
+        for (int col_bit = 0; col_bit < L; col_bit++) {
+          if (ExpToFieldElt[exponent + row_bit] & Bit[col_bit]) {
+            for (int segment = 0; segment < dec.Nsegs; segment++) {
+              outp_data[row_bit * dec.Nsegs + ColInd[row] * L * dec.Nsegs + segment] ^= M[(col_bit + col * L)*dec.Nsegs + segment];
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void rs_invert_cauchy_matrix(uint32_t *inv_mat, int Nextra, std::vector<int> &RowInd, std::vector<int> &ColInd) {
+  std::vector<int> C(Nextra, 0), D(Nextra, 0), E(Nextra, 0), F(Nextra, 0);
+  for (int row = 0; row < Nextra; row++) {
+    for (int col = 0; col < Nextra; col++) {
+
+      if (col != row) {
+        C[row] += FieldEltToExp[RowInd[row] ^ RowInd[col]];
+        D[col] += FieldEltToExp[ColInd[row] ^ ColInd[col]];
+      }
+
+      E[row] += FieldEltToExp[RowInd[row] ^ ColInd[col] ^ MultField];
+      F[col] += FieldEltToExp[RowInd[row] ^ ColInd[col] ^ MultField];
+    }
+  }
+
+  for (int row = 0; row < Nextra; row++) {
+    for (int col = 0; col < Nextra; col++) {
+      inv_mat[row * Nextra + col] = E[col] + F[row] - C[col] - D[row] - FieldEltToExp[RowInd[col] ^ ColInd[row] ^ MultField];
+
+      if (inv_mat[row*Nextra + col] >= 0) {
+        inv_mat[row*Nextra + col] %= MultField;
+      } else {
+        inv_mat[row*Nextra + col] = (MultField - ((-inv_mat[row*Nextra + col]) % MultField)) % MultField;
       }
     }
   }
