@@ -26,6 +26,6 @@ struct Encoder {
 };
   
 Encoder rs_create_encoder(int Mpackets, int Rpackets, size_t packet_size);
-void rs_encode(Encoder &encoder, uint8_t *orig_data, uint8_t *redundant_data);
+void rs_encode(Encoder &enc, uint8_t *orig_data, uint8_t *redundant_data);
 
 #endif // BASELINE_ECC_H
