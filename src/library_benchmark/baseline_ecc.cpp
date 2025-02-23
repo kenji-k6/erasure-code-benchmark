@@ -2,6 +2,24 @@
 
 
 
+void rs_init_tables() {
+  for (int i = 0; i < L; i++) {
+    Bit[i] = 1 << i;
+  }
+
+  int alpha = 2;
+  int current = 1;
+
+  for (int i = 0; i < MultField; i++) {
+    ExpToFieldElt[i] = current;
+    FieldEltToExp[current] = i;
+    current *= alpha;
+    if (current >= (1 << L)) {
+      current ^= 0x11D;
+    }
+  }
+}
+
 Encoder rs_create_encoder(int Mpackets, int Rpackets, size_t packet_size) {
   Encoder encoder;
   encoder.Mpackets = Mpackets;
