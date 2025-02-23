@@ -10,6 +10,17 @@ Encoder rs_create_encoder(int Mpackets, int Rpackets, size_t packet_size) {
   return encoder;
 }
 
+
+Decoder rs_create_decoder(int Mpackets, int Rpackets, size_t packet_size, int num_orig_packets_received) {
+  Decoder decoder;
+  decoder.Mpackets = Mpackets;
+  decoder.Rpackets = Rpackets;
+  decoder.Nsegs = packet_size / L;
+  decoder.Nextra = Mpackets - num_orig_packets_received;
+  return decoder;
+}
+
+
 void rs_encode(Encoder &enc, uint8_t *orig_data, uint8_t *redundant_data) {
   /// The number of rows in our Cauchy matrix is equal to the number of redundant packets
   for (int row = 0; row < enc.Rpackets; row++) {

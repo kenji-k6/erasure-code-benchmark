@@ -24,8 +24,21 @@ struct Encoder {
   int Rpackets;
   int Nsegs;
 };
+
+struct Decoder {
+  int Mpackets;
+  int Rpackets;
+  int Nsegs;
+  int Nextra; /// This is the number of extra packets needed to decode the message, which is equal
+              /// to the number of message packets that were not received. Nextra can range between
+              /// 0 and Rpackets (the total number of redundant packets sent on the encoding side).
+};
+
+void rs_init_tables();
   
 Encoder rs_create_encoder(int Mpackets, int Rpackets, size_t packet_size);
+Decoder rs_create_decoder(int Mpackets, int Rpackets, size_t packet_size, int num_packets_received);
+
 void rs_encode(Encoder &enc, uint8_t *orig_data, uint8_t *redundant_data);
 
 #endif // BASELINE_ECC_H
