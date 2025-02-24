@@ -16,18 +16,27 @@ uint32_t GF256_EXP_TABLE[512 * 2 + 1];
 uint32_t GF256_LOG_TABLE[256];
 uint32_t BIT_TABLE[32];
 
-struct RS_encoder_params {
+struct Baseline_Encoder_Params {
   uint32_t Mpackets;    ///< Number of message packets sent (original data)
   uint32_t Rpackets;    ///< Number of redundant packets sent (recovery data)
+
   uint32_t Nsegs;       ///< Number of segments in each packet
+                        ///< Since we use a wsize of 8 bits, the size of our packets
+                        ///< Is 8 * L * Nsegs bits
+
   uint8_t *orig_data;   ///< Original data TODO: specify size constraints
   uint8_t *redundant_data; ///< Redundant data TODO: specify size constraints
 };
 
-struct RS_decoder_params {
-  size_t Mpackets;
-  size_t Rpackets;
-};
+
+Baseline_Encoder_Params baseline_get_encode_params(
+  uint32_t num_original_blocks,
+  uint32_t num_recovery_blocks,
+  uint32_t block_size
+);
+
+void baseline_encode(Baseline_Encoder_Params params);
+
 
 
 

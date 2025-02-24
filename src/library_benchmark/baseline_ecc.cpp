@@ -11,17 +11,58 @@ uint32_t *ExpToFieldElt = GF256_EXP_TABLE;
 uint32_t *FieldEltToExp = GF256_LOG_TABLE;
 uint32_t *Bit = BIT_TABLE;
 
-RS_encoder_params rs_get_encode_params(uint32_t num_original_blocks, uint32_t num_recovery_blocks, uint32_t block_size) {
+Baseline_Encoder_Params baseline_get_encode_params(uint32_t num_original_blocks, uint32_t num_recovery_blocks, uint32_t block_size) {
   if (block_size % Lfield != 0) {
-    std::cerr << "Block Size (" << block_size << ") must be a multiple of " << Lfield ".\n";
+    std::cerr << "Block Size (" << block_size << ") must be a multiple of " << Lfield << ".\n";
     exit(0);
   }
 
-  RS_encoder_params params;
+  Baseline_Encoder_Params params;
   params.Mpackets = num_original_blocks;
   params.Rpackets = num_recovery_blocks;
   params.Nsegs = block_size / Lfield;
   return params;
+}
+
+void baseline_encode(Baseline_Encoder_Params params) {
+  uint32_t Mpackets = params.Mpackets;
+  uint32_t Rpackets = params.Rpackets;
+  uint32_t Nsegs = params.Nsegs;
+  uint8_t *orig_data = params.orig_data;
+  uint8_t *redundant_data = params.redundant_data;
+
+  uint32_t col; ///< The number of columns in our Cauchy matrix
+                ///< is equal to the number of information (original data) packets.
+  for (uint32_t row = 0; row < Rpackets; row++) { ///< The number of rows in our Cauchy matrix
+                                                  ///< is equal to the number of redundant packets.
+
+    uint8_t *packet = redundant_data + (row * Lfield * Nsegs); //< We are computing the "row"-th redundant packet
+
+    for (uint32_t col = 0; col < Mpackets; col++) { ///< The number of columns in our Cauchy matrix is equal to
+                                                    ///< the number of information (original data) packets.
+
+      uint32_t exponent = (MultField - FieldEltToExp[row ^ col ^ MultField]) % MultField; ///< exponent is the multiplicative exponent of the element
+                                                                                          ///< of the Cauchy matrix we are currently looking at.
+
+      for (uint32_t row_bit = 0; row_bit < Lfield; row_bit++) { ///< Each element of our finite field is now represented
+                                                                ///< as an Lfield * Lfield 0-1 matrix.
+        uint8_t *local_packet = packet + (row_bit * Nsegs);
+
+        for (uint32_t col_bit = 0; col_bit < Lfield; col_bit++) {
+
+          /// Check if the current bit of the matrix element is 1.
+          if (ExpToFieldElt[exponent+row_bit] & Bit[col_bit]) {
+            uint8_t *orig_packet = orig_data + (col * Lfield * Nsegs); // We are considering the "col"-th original packet
+            uint8_t *local_orig_packet = orig_packet + (col_bit * Nsegs);
+
+            for (uint32_t segment = 0; segment < Nsegs; segment++) {
+              local_packet[segment] ^= local_orig_packet[segment];
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 
