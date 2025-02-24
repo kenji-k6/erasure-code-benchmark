@@ -3,6 +3,9 @@
 
 // Macro to check whether the i-th bit of x is set
 #define BIT(x, i) (x & (1 << i))
+// Macro to access the "Cauchy submatrix" as described in the paper
+// TODO: Maybe adjust M macro
+#define M(i, j) ((*redundant_packets)[RowInd[i]][j])
 
 
 /// Constants
@@ -171,7 +174,34 @@ static void invert_cauchy_matrix(
   }
 }
 
-static void update_redundant_packets() {}
+static void update_redundant_packets(
+  Baseline_Params& params,
+  int Nextra
+) {
+  uint32_t Mpackets = params.Mpackets;
+  uint32_t Rpackets = params.Rpackets;
+  uint32_t Nsegs = params.Nsegs;
+  uint32_t *message = static_cast<uint32_t*>(params.orig_data);
+  auto redundant_packets = static_cast<uint32_t (*)[Rpackets][Nsegs*Lfield]>(params.redundant_data);
+
+  for (uint32_t row = 0; row < Nextra; ++row) {
+    for (uint32_t col = 0; col < Mpackets; ++col) {
+      if (RecIndex[col]) {
+        uint32_t exponent = (MultField - FieldEltToExp[ RowInd[row] ^ col ^ MultField ]) % MultField;
+
+        for (uint32_t row_bit = 0; row_bit < Lfield; ++row_bit) {
+          for (uint32_t col_bit = 0; col_bit < Lfield; ++col_bit) {
+            if (BIT(ExpToFieldElt[exponent + row_bit], col_bit)) {
+              for (uint32_t segment = 0; segment < Nsegs; segment++) {
+                M(row_bit + row*Lfield, segment) = message[segment + col_bit*Nsegs + col * Lfield * Nsegs];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 static void multiply_updated_redundant_packets() {}
 
