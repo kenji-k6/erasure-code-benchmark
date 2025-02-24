@@ -1,13 +1,6 @@
-#ifndef BASELINE_ECC_H
-#define BASELINE_ECC_H
-
+#ifndef BASELINE_H
+#define BASELINE_H
 #include <cstdint>
-#include <vector>
-
-/*
- * Custom ECC implementation, used as a baseline for comparison
- *
-*/
 
 
 struct Baseline_Params {
@@ -25,7 +18,6 @@ struct Baseline_Params {
 
 void init_tables();
 
-
 Baseline_Params baseline_get_params(
   uint32_t num_original_blocks,
   uint32_t num_recovery_blocks,
@@ -34,11 +26,4 @@ Baseline_Params baseline_get_params(
   void *redundant_data
 );
 
-void baseline_encode(Baseline_Params& params);
-
-void baseline_decode(Baseline_Params& params, uint32_t num_lost_blocks, uint32_t *lost_block_idxs);
-
-
-
-
-#endif // BASELINE_ECC_H
+#endif

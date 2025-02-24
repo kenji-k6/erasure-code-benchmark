@@ -91,15 +91,19 @@ void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<
   
   lost_block_idxs.resize(num_lost_blocks);
 
+  // for (i = 0; i < num_lost_blocks; i++) {
+  //   lost_block_idxs[i] = i;
+  // }
+
+  // for (; i < max_idx; i++) {
+  //   uint32_t j = rng.next() % (i + 1);
+  //   if (j < num_lost_blocks) {
+  //     lost_block_idxs[j] = i;
+  //   }
+  // }
+
   for (i = 0; i < num_lost_blocks; i++) {
     lost_block_idxs[i] = i;
-  }
-
-  for (; i < max_idx; i++) {
-    uint32_t j = rng.next() % (i + 1);
-    if (j < num_lost_blocks) {
-      lost_block_idxs[j] = i;
-    }
   }
 
   // Sort the indices (needed for Wirehair and ISA-L)

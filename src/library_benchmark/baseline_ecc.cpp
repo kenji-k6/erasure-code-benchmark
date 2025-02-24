@@ -187,13 +187,38 @@ void multiply_updated_redundant_packets(
   }
 }
 
-void init_decode_buffers() {
+void init_decode_buffers(Baseline_Params& params, uint32_t num_lost_blocks, uint32_t *lost_block_idxs) {
   memset(&Decode_Buffers.RowInd, 0, sizeof(int)*MAX_RPACKETS);
   memset(&Decode_Buffers.ColInd, 0, sizeof(int)*MAX_MPACKETS);
+  memset(&Decode_Buffers.RecIndex, 0, sizeof(int)*MAX_MPACKETS);
   memset(&Decode_Buffers.C, 0, sizeof(int)*MAX_RPACKETS);
   memset(&Decode_Buffers.D, 0, sizeof(int)*MAX_RPACKETS);
   memset(&Decode_Buffers.E, 0, sizeof(int)*MAX_RPACKETS);
   memset(&Decode_Buffers.F, 0, sizeof(int)*MAX_RPACKETS);
+
+  int lost_arr_idx = 0;
+  int recv_orig_idx = 0;
+  int recv_red_idx = 0;
+  int i;
+
+
+  for (i = 0; i < params.Mpackets; i++) {
+    if (lost_arr_idx < num_lost_blocks && lost_block_idxs[lost_arr_idx] == i) { // lost packet
+      lost_arr_idx++;
+      continue;
+    }
+
+    // packet arrived
+    Decode_Buffers.ColInd[recv_orig_idx++] = i;
+  }
+
+  for (; i < params.Mpackets+params.Rpackets; i++) {
+    if (lost_arr_idx < num_lost_blocks && lost_block_idxs[lost_arr_idx] == i) {
+      lost_arr_idx++;
+      continue;
+    }
+    Decode_Buffers.RowInd[recv_red_idx++] = i; // TODO: Maybe adjust this to i - Mpackets
+  }
 }
 
 void baseline_decode(Baseline_Params& params, uint32_t num_lost_blocks, uint32_t *lost_block_idxs, void *InvMat) {
@@ -204,7 +229,7 @@ void baseline_decode(Baseline_Params& params, uint32_t num_lost_blocks, uint32_t
     return;
   }
 
-  init_decode_buffers();
+  init_decode_buffers(params, num_lost_blocks, lost_block_idxs);
   invert_cauchy_matrix(Nextra, static_cast<int*>(InvMat));
   update_redundant_packets(params, Nextra);
   multiply_updated_redundant_packets(params, Nextra, static_cast<int*>(InvMat));
