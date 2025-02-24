@@ -47,6 +47,7 @@ int BaselineBenchmark::encode() noexcept {
 
 int BaselineBenchmark::decode() noexcept {
   baseline_decode(params_, reinterpret_cast<uint32_t*>(InvMatPtr_), benchmark_config.num_lost_blocks, lost_block_idxs.data());
+  return 0;
 }
 
 
