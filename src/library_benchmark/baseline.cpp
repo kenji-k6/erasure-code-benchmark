@@ -1,11 +1,11 @@
 #include "baseline.h"
-
+#include <iostream>
 /// Constants
 const uint8_t MAX_RPACKETS = 128;       ///< We can have up to 128 rpackets and 128 mpackets TODO: make this better
 const uint8_t MAX_MPACKETS = 128;       ///< We can have up to 128 rpackets and 128 mpackets TODO: make this better
 const uint8_t WSIZE = 32;               ///< The word size we use
-const uint8_t L = 8;                    ///< The field we use is GF(2^L) = GF(256)
-const uint16_t MultField = (1 << L) - 1; ///< Size of the multiplicative group of the finite field.
+const uint8_t Lfield = 8;                    ///< The field we use is GF(2^L) = GF(256)
+const uint16_t MultField = (1 << Lfield) - 1; ///< Size of the multiplicative group of the finite field.
                                     ///< The Multiplicative group doesn't include 1 => |GF(2^L)|-1
 
 const uint32_t GF256_POLYNOMIAL = 0x8e;        ///< Irreducible Polynomial for GF(256)
@@ -19,11 +19,13 @@ uint8_t ExpToFieldElt[512 * 2 + 1];     ///< A table that goes from the exponent
 uint16_t FieldEltToExp[256];             ///< The table that goes from the vector representation of
                                     ///< an element to its exponent of the generator.
 
-uint32_t Bit[32];                        ///< An array of integers that is used to select individual bits:
-                                    ///< (A & Bit[i]) is equal to 1 if the i-th bit of A is 1, and 0 otherwise.
+// Macro to check whether the i-th bit of x is set
+#define BIT(x, i) (x & (1 << i))
 
 
-void init_tables() {
+
+// TODO: Init the decoding stuff here aswell
+void baseline_init() {
   // Initialze exp and log tables
   FieldEltToExp[0] = 512;
   ExpToFieldElt[0] = 1;
@@ -44,19 +46,69 @@ void init_tables() {
   for (unsigned i = 2 * 255 + 1; i < 4 * 255; ++i) {
     ExpToFieldElt[i] = 0;
   }
+}
 
-  // Initialize Bit table
-  for (unsigned i = 0; i < 32; i++) {
-    Bit[i] = 1 << i;
+
+
+Baseline_Params baseline_get_params(uint32_t num_original_blocks, uint32_t num_recovery_blocks, uint32_t block_size, void *orig_data, void *redundant_data) {
+  if (block_size % WSIZE) {
+    std::cerr << "Block size (" << block_size << ") must be a multiple of " << WSIZE << ".\n";
+    exit(0);
+  }
+
+  if (num_original_blocks > MAX_MPACKETS || num_original_blocks > MAX_RPACKETS || num_original_blocks + num_recovery_blocks > MAX_MPACKETS) {
+    std::cerr << "Total blocks can't be more than " << MAX_MPACKETS << '\n';
+  }
+
+  Baseline_Params params;
+  params.Mpackets = num_original_blocks;
+  params.Rpackets = num_recovery_blocks;
+  params.Nsegs = block_size / WSIZE;
+  params.orig_data = orig_data;
+  params.redundant_data = redundant_data; // Usually interpreted as a matrix of 32bit words. The matrix has Rpacket rows
+                                          // and Nseg * L rows
+
+  return params;
+}
+
+
+
+
+void baseline_encode(Baseline_Params& params) {
+  uint32_t Mpackets = params.Mpackets;
+  uint32_t Rpackets = params.Rpackets;
+  uint32_t Nsegs = params.Nsegs;
+  uint32_t *message = static_cast<uint32_t*>(params.orig_data);
+  auto redundant_packets = static_cast<uint32_t (*)[Rpackets][Nsegs*Lfield]>(params.redundant_data);
+
+  for (uint32_t row = 0; row < Rpackets; ++row) { ///< The number of rows in our Cauchy matrix
+                                                  ///< is equal to the number of redundant packets.
+    auto packet = (*redundant_packets)[row];
+
+    for (uint32_t col = 0; col < params.Mpackets; ++col) {  ///< The number of columns in our Cauchy matrix is equal to
+                                                            ///< the number of information (original data) packets.
+      // TODO: Checked signed-ness
+      uint32_t exponent = (MultField - FieldEltToExp[row ^ col ^ MultField]) % MultField; ///< exponent is the multiplicative exponent of the element
+                                                                                          ///< of the Cauchy matrix we are currently looking at.
+                                                                      
+      for (uint32_t row_bit = 0; row_bit < Lfield; ++row_bit) { ///< Each element of our finite field is now represented
+                                                                ///< as an Lfield * Lfield 0-1 matrix.
+        uint32_t *local_packet = packet + row_bit*Nsegs;
+
+        for (uint32_t col_bit = 0; col_bit < Lfield; ++col_bit) {
+
+          if (BIT(ExpToFieldElt[exponent + row_bit], col_bit)) {
+            uint32_t *local_message = message + (col_bit * Nsegs) + (col * Lfield * Nsegs);
+            for (uint32_t segment = 0; segment < Nsegs; ++segment) {
+              local_packet[segment] ^= local_message[segment];
+            }
+          }
+        }
+      }
+    }
   }
 }
 
-Baseline_Params baseline_get_params(
-  uint32_t num_original_blocks,
-  uint32_t num_recovery_blocks,
-  uint32_t block_size,
-  void *orig_data,
-  void *redundant_data
-);
+
 
 
