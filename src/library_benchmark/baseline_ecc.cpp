@@ -5,8 +5,8 @@
 
 
 // Constants / Global stuff
-uint32_t Lfield = L;
-uint32_t MultField = GF256_MULT_FIELD;
+uint32_t Lfield = 0;
+uint32_t MultField = 0;
 int *ExpToFieldElt = GF256_EXP_TABLE;
 int *FieldEltToExp = GF256_LOG_TABLE;
 int *Bit = BIT_TABLE;

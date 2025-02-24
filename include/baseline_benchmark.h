@@ -2,8 +2,8 @@
 #define BASELINE_BENCHMARK_H
 
 #include "abstract_benchmark.h"
-#include "baseline_ecc.h"
 #include "utils.h"
+#include "baseline.h"
 
 
 #include <cstdint>
@@ -26,13 +26,8 @@ public:
   
 
 private:
-  Encoder encoder_;
-  Decoder decoder_;
-
-  uint32_t *inv_mat;
-  uint8_t *orig_data;
-  uint8_t *redundant_data;
-  uint32_t recv_idx[256];
+  Baseline_Params params_;
+  uint8_t *InvMatPtr_;
 }; // class BaselineBenchmark
 
 

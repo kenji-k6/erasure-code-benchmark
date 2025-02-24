@@ -29,4 +29,10 @@ Baseline_Params baseline_get_params(
 
 
 void baseline_encode(Baseline_Params& params);
+void baseline_decode(
+  Baseline_Params& params,
+  uint32_t *InvMatPtr,
+  uint32_t num_lost_blocks,
+  uint32_t *lost_block_idx
+);
 #endif

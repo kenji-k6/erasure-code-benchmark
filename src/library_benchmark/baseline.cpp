@@ -1,5 +1,6 @@
 #include "baseline.h"
 #include <iostream>
+#include <cstring>
 
 // Macro to check whether the i-th bit of x is set
 #define BIT(x, i) (x & (1 << i))
@@ -176,7 +177,7 @@ static void invert_cauchy_matrix(
 
 static void update_redundant_packets(
   Baseline_Params& params,
-  int Nextra
+  uint32_t Nextra
 ) {
   uint32_t Mpackets = params.Mpackets;
   uint32_t Rpackets = params.Rpackets;
@@ -203,11 +204,90 @@ static void update_redundant_packets(
   }
 }
 
-static void multiply_updated_redundant_packets() {}
+static void multiply_updated_redundant_packets(
+  Baseline_Params& params,
+  uint32_t Nextra,
+  uint32_t *InvMatPtr
+) {
+  auto InvMat = reinterpret_cast<uint32_t (*)[Nextra][Nextra]>(InvMatPtr);
+  uint32_t Nsegs = params.Nsegs;
+  uint32_t *message = static_cast<uint32_t*>(params.orig_data);
+  uint32_t Rpackets = params.Rpackets;
+  auto redundant_packets = static_cast<uint32_t (*)[Rpackets][Nsegs*Lfield]>(params.redundant_data);
 
-static void init_decode_buffers() {}
+  for (int row = 0; row < Nextra; row++) {
+    for (int col = 0; col < Nextra; col++) {
+      uint32_t exponent = (*InvMat)[row][col];
+      for (int row_bit = 0; row_bit < Lfield; row_bit++) {
+        for (int col_bit = 0; col_bit < Lfield; col_bit++) {
+          if (BIT(ExpToFieldElt[exponent + row_bit], col_bit)) {
+            for (int segment = 0; segment < Nsegs; segment++) {
+              message[(ColInd[row] * Lfield * Nsegs) + (row_bit * Nsegs) + segment] ^=
+                M(col_bit + col*Lfield, segment);
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
-void baseline_decode() {}
+static void zero_decode_buffers() {
+  memset(&RowInd, 0, MAX_RPACKETS*sizeof(uint32_t));
+  memset(&ColInd, 0, MAX_MPACKETS*sizeof(uint32_t));
+  memset(&RecIndex, 0, MAX_MPACKETS*sizeof(bool));
+  memset(&C, 0, MAX_RPACKETS*sizeof(uint32_t));
+  memset(&D, 0, MAX_RPACKETS*sizeof(uint32_t));
+  memset(&E, 0, MAX_RPACKETS*sizeof(uint32_t));
+  memset(&F, 0, MAX_RPACKETS*sizeof(uint32_t));
+}
+
+void baseline_decode(
+  Baseline_Params& params,
+  uint32_t *InvMatPtr,
+  uint32_t num_lost_blocks,
+  uint32_t *lost_block_idx
+) {
+
+  // Compute RowInd, ColInd, RecIndex
+  uint32_t Mpackets = params.Mpackets;
+  uint32_t Rpackets = params.Rpackets;
+
+  uint32_t row_idx = 0;
+  uint32_t col_idx = 0;
+  uint32_t lost_arr_idx = 0;
+  uint32_t Nextra = 0;
+  uint32_t i;
+
+  if (num_lost_blocks > Rpackets) return;
+  zero_decode_buffers();
+
+  for (; i < Mpackets; ++i) {
+    if (lost_arr_idx < num_lost_blocks && lost_block_idx[lost_arr_idx] == i) {
+      //lost data block
+      lost_arr_idx++;
+      RecIndex[i] = false;
+      ++Nextra;
+      continue;
+    }
+
+    ColInd[col_idx++] = i;
+    RecIndex[i] = true;
+  }
+
+  for (; i < Mpackets+Rpackets; ++i) {
+    if (lost_arr_idx < num_lost_blocks && lost_block_idx[lost_arr_idx] == i) {
+      //lost data block
+      lost_arr_idx++;
+      continue;
+    }
+    RowInd[row_idx++] = i; 
+  }
+
+  invert_cauchy_matrix(Nextra, InvMatPtr);
+  update_redundant_packets(params, Nextra);
+  multiply_updated_redundant_packets(params, Nextra, InvMatPtr);
+}
 
 
 
