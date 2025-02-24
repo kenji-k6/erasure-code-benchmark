@@ -207,7 +207,6 @@ int parse_args(int argc, char** argv) {
 
       case 0: // Long options
         if (long_options[option_index].name) {
-          std::cout << long_options[option_index].name << std::endl;
           selected_benchmarks.insert(long_options[option_index].name);
         }
         break;

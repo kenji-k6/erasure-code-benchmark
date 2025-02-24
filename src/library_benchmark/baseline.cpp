@@ -10,11 +10,11 @@
 
 
 /// Constants
-const uint8_t MAX_RPACKETS = 128;       ///< We can have up to 128 rpackets and 128 mpackets TODO: make this better
-const uint8_t MAX_MPACKETS = 128;       ///< We can have up to 128 rpackets and 128 mpackets TODO: make this better
-const uint8_t WSIZE = 32;               ///< The word size we use
-const uint8_t Lfield = 8;                    ///< The field we use is GF(2^L) = GF(256)
-const uint16_t MultField = (1 << Lfield) - 1; ///< Size of the multiplicative group of the finite field.
+const uint16_t MAX_RPACKETS = 256;       ///< We can have up to 128 rpackets and 128 mpackets TODO: make this better
+const uint16_t MAX_MPACKETS = 256;       ///< We can have up to 128 rpackets and 128 mpackets TODO: make this better
+const uint32_t WSIZE = 32;               ///< The word size we use
+const uint32_t Lfield = 8;                    ///< The field we use is GF(2^L) = GF(256)
+const uint32_t MultField = (1 << Lfield) - 1; ///< Size of the multiplicative group of the finite field.
                                     ///< The Multiplicative group doesn't include 1 => |GF(2^L)|-1
 
 const uint32_t GF256_POLYNOMIAL = 0x8e;        ///< Irreducible Polynomial for GF(256)
@@ -81,14 +81,14 @@ Baseline_Params baseline_get_params(uint32_t num_original_blocks, uint32_t num_r
     exit(0);
   }
 
-  if (num_original_blocks > MAX_MPACKETS || num_original_blocks > MAX_RPACKETS || num_original_blocks + num_recovery_blocks > MAX_MPACKETS) {
+  if (num_original_blocks > MAX_MPACKETS || num_original_blocks > MAX_RPACKETS || (num_original_blocks + num_recovery_blocks) > MAX_MPACKETS) {
     std::cerr << "Total blocks can't be more than " << MAX_MPACKETS << '\n';
   }
 
   Baseline_Params params;
   params.Mpackets = num_original_blocks;
   params.Rpackets = num_recovery_blocks;
-  params.Nsegs = block_size / WSIZE;
+  params.Nsegs = block_size / (4*Lfield);
   params.orig_data = orig_data;
   params.redundant_data = redundant_data; // Usually interpreted as a matrix of 32bit words. The matrix has Rpacket rows
                                           // and Nseg * L rows
@@ -150,7 +150,6 @@ static void invert_cauchy_matrix(
 ) {
   // cast invmat to allow for row/column accesses
   auto InvMat = reinterpret_cast<int32_t (*)[Nextra][Nextra]>(InvMatPtr);
-
   for (uint32_t row = 0; row < Nextra; ++row) {
     for (uint32_t col = 0; col < Nextra; ++col) {
       if (col != row) {
@@ -162,7 +161,6 @@ static void invert_cauchy_matrix(
       F[col] += FieldEltToExp[ RowInd[row] ^ ColInd[col] ^ MultField ];
     }
   }
-
   for (uint32_t row = 0; row < Nextra; ++row) {
     for (uint32_t col = 0; col < Nextra; ++col) {
       (*InvMat)[row][col] = E[col] + F[row] - C[col] - D[row] - FieldEltToExp[ RowInd[col] ^ ColInd[row] ^ MultField ];
@@ -175,6 +173,7 @@ static void invert_cauchy_matrix(
   }
 }
 
+
 static void update_redundant_packets(
   Baseline_Params& params,
   uint32_t Nextra
@@ -184,17 +183,17 @@ static void update_redundant_packets(
   uint32_t Nsegs = params.Nsegs;
   uint32_t *message = static_cast<uint32_t*>(params.orig_data);
   auto redundant_packets = static_cast<uint32_t (*)[Rpackets][Nsegs*Lfield]>(params.redundant_data);
-
   for (uint32_t row = 0; row < Nextra; ++row) {
     for (uint32_t col = 0; col < Mpackets; ++col) {
       if (RecIndex[col]) {
         uint32_t exponent = (MultField - FieldEltToExp[ RowInd[row] ^ col ^ MultField ]) % MultField;
-
         for (uint32_t row_bit = 0; row_bit < Lfield; ++row_bit) {
           for (uint32_t col_bit = 0; col_bit < Lfield; ++col_bit) {
             if (BIT(ExpToFieldElt[exponent + row_bit], col_bit)) {
               for (uint32_t segment = 0; segment < Nsegs; segment++) {
-                M(row_bit + row*Lfield, segment) = message[segment + col_bit*Nsegs + col * Lfield * Nsegs];
+                uint32_t *packet = (*redundant_packets)[row];
+                uint32_t *local_packet = packet + row_bit*Nsegs; // TODO: Check if we have to take RowInd here!!
+                local_packet[segment] /* M(row_bit + row*Lfield, segment)*/ ^= message[segment + col_bit*Nsegs + col * Lfield * Nsegs];
               }
             }
           }
@@ -204,6 +203,8 @@ static void update_redundant_packets(
   }
 }
 
+
+// Row Ind <-> Col Ind error
 static void multiply_updated_redundant_packets(
   Baseline_Params& params,
   uint32_t Nextra,
@@ -222,8 +223,10 @@ static void multiply_updated_redundant_packets(
         for (int col_bit = 0; col_bit < Lfield; col_bit++) {
           if (BIT(ExpToFieldElt[exponent + row_bit], col_bit)) {
             for (int segment = 0; segment < Nsegs; segment++) {
+              uint32_t *packet = (*redundant_packets)[col];
+              uint32_t *local_packet = packet + col_bit*Nsegs;
               message[(ColInd[row] * Lfield * Nsegs) + (row_bit * Nsegs) + segment] ^=
-                M(col_bit + col*Lfield, segment);
+                local_packet[segment];
             }
           }
         }
@@ -248,7 +251,6 @@ void baseline_decode(
   uint32_t num_lost_blocks,
   uint32_t *lost_block_idx
 ) {
-
   // Compute RowInd, ColInd, RecIndex
   uint32_t Mpackets = params.Mpackets;
   uint32_t Rpackets = params.Rpackets;
@@ -257,7 +259,7 @@ void baseline_decode(
   uint32_t col_idx = 0;
   uint32_t lost_arr_idx = 0;
   uint32_t Nextra = 0;
-  uint32_t i;
+  uint32_t i = 0;
 
   if (num_lost_blocks > Rpackets) return;
   zero_decode_buffers();
@@ -274,7 +276,6 @@ void baseline_decode(
     ColInd[col_idx++] = i;
     RecIndex[i] = true;
   }
-
   for (; i < Mpackets+Rpackets; ++i) {
     if (lost_arr_idx < num_lost_blocks && lost_block_idx[lost_arr_idx] == i) {
       //lost data block
@@ -286,6 +287,7 @@ void baseline_decode(
 
   invert_cauchy_matrix(Nextra, InvMatPtr);
   update_redundant_packets(params, Nextra);
+  std::cout << "hola1\n";
   multiply_updated_redundant_packets(params, Nextra, InvMatPtr);
 }
 
