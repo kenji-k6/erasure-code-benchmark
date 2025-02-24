@@ -1,5 +1,10 @@
 #include "baseline.h"
 #include <iostream>
+
+// Macro to check whether the i-th bit of x is set
+#define BIT(x, i) (x & (1 << i))
+
+
 /// Constants
 const uint8_t MAX_RPACKETS = 128;       ///< We can have up to 128 rpackets and 128 mpackets TODO: make this better
 const uint8_t MAX_MPACKETS = 128;       ///< We can have up to 128 rpackets and 128 mpackets TODO: make this better
@@ -19,8 +24,24 @@ uint8_t ExpToFieldElt[512 * 2 + 1];     ///< A table that goes from the exponent
 uint16_t FieldEltToExp[256];             ///< The table that goes from the vector representation of
                                     ///< an element to its exponent of the generator.
 
-// Macro to check whether the i-th bit of x is set
-#define BIT(x, i) (x & (1 << i))
+
+/// Buffers required for decoding, need to be zeroed before use
+uint32_t RowInd[MAX_RPACKETS];  ///< An array that keeps track of the extra (redundant)
+                                ///< packets received: RowInd[i] is the identifier (usually index)
+                                ///< of the i-th extra packet that was received.
+
+uint32_t ColInd[MAX_MPACKETS];  ///< An array that keeps track of the message (orig. data)
+                                ///< packets received: ColInd[i] is the identifier (usually index)
+                                ///< of the i-th message packet that was received.
+
+bool RecIndex[MAX_MPACKETS];    // TODO: Initialize and document properly
+
+// TODO: Add documentation
+uint32_t C[MAX_RPACKETS];
+uint32_t D[MAX_RPACKETS];
+uint32_t E[MAX_RPACKETS];
+uint32_t F[MAX_RPACKETS];
+
 
 
 
@@ -108,6 +129,55 @@ void baseline_encode(Baseline_Params& params) {
     }
   }
 }
+
+
+
+
+
+
+/// DECODING STUFF BELOW
+static void invert_cauchy_matrix(
+  uint32_t Nextra,  ///< No. of extra packets needed to decode the message,
+                    ///< which is equal to the no. of message (orig. data) packets
+                    ///< that were not received.
+                    ///< @attention 0 <= Nextra <= Rpackets must hold
+
+  uint32_t *InvMatPtr  ///< Preallocated memory of sizeof(uint32_t) * Nextra * Nextra bytes
+) {
+  // cast invmat to allow for row/column accesses
+  auto InvMat = reinterpret_cast<int32_t (*)[Nextra][Nextra]>(InvMatPtr);
+
+  for (uint32_t row = 0; row < Nextra; ++row) {
+    for (uint32_t col = 0; col < Nextra; ++col) {
+      if (col != row) {
+        C[row] += FieldEltToExp[ RowInd[row] ^ RowInd[col] ];
+        D[col] += FieldEltToExp[ ColInd[row] ^ ColInd[col] ];
+      }
+
+      E[row] += FieldEltToExp[ RowInd[row] ^ ColInd[col] ^ MultField ];
+      F[col] += FieldEltToExp[ RowInd[row] ^ ColInd[col] ^ MultField ];
+    }
+  }
+
+  for (uint32_t row = 0; row < Nextra; ++row) {
+    for (uint32_t col = 0; col < Nextra; ++col) {
+      (*InvMat)[row][col] = E[col] + F[row] - C[col] - D[row] - FieldEltToExp[ RowInd[col] ^ ColInd[row] ^ MultField ];
+      if ((*InvMat)[row][col] >= 0) {
+        (*InvMat)[row][col] = (*InvMat)[row][col] % MultField;
+      } else {
+        (*InvMat)[row][col] = (MultField - ((-(*InvMat)[row][col]) % MultField)) % MultField;
+      }
+    }
+  }
+}
+
+static void update_redundant_packets() {}
+
+static void multiply_updated_redundant_packets() {}
+
+static void init_decode_buffers() {}
+
+void baseline_decode() {}
 
 
 
