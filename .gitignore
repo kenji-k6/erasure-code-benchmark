@@ -37,5 +37,5 @@ build/*
 
 repository_tree.txt
 
-src/library_benchmark/baseline_ecc.cpp
-include/baseline_ecc.h
+src/library_benchmark/baseline.cpp
+include/baseline.h
