@@ -117,7 +117,7 @@ void BaselineBenchmark::simulate_data_loss() noexcept {
 
     if (idx < benchmark_config.computed.num_original_blocks) {
       // Zero out the block in the original data array, set the corresponding block pointer to nullptr
-      memset(static_cast<uint8_t*>(params_.orig_data) + idx * benchmark_config.block_size, 0xFF, benchmark_config.block_size);
+      memset(static_cast<uint8_t*>(params_.orig_data) + idx * benchmark_config.block_size, 0, benchmark_config.block_size);
     } else {
       idx -= 127;
       // Zero out the block in the encoded data array, set the corresponding block pointer to nullptr
