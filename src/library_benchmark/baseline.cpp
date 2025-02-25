@@ -287,7 +287,6 @@ void baseline_decode(
 
   invert_cauchy_matrix(Nextra, InvMatPtr);
   update_redundant_packets(params, Nextra);
-  std::cout << "hola1\n";
   multiply_updated_redundant_packets(params, Nextra, InvMatPtr);
 }
 
