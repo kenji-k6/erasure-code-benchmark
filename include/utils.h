@@ -35,9 +35,9 @@ namespace ECCLimits {
  * @brief Configuration parameters for the benchmark
  */
 struct BenchmarkConfig {
-  uint32_t data_size;               ///< Total size of original data
-  uint32_t block_size;              ///< Size of each block
-  uint32_t num_lost_blocks;         ///< Number of total blocks lost (recovery + original)
+  uint64_t data_size;               ///< Total size of original data
+  uint64_t block_size;              ///< Size of each block
+  uint64_t num_lost_blocks;         ///< Number of total blocks lost (recovery + original)
   double redundancy_ratio;          ///< Recovery blocks / original blocks ratio
 
   int num_iterations;               ///< Number of benchmark iterations
@@ -94,5 +94,11 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size);
  * @param lost_block_idxs Vector to store the selected lost block indices.
  */
 void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<uint32_t>& lost_block_idxs);
+
+enum class BenchmarkType {
+  Buffersize_vs_Time,
+  ParityRatio_vs_Time,
+  Buffersize_vs_Throughput
+};
 
 #endif // UTILS_H

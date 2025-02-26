@@ -41,7 +41,6 @@ int CM256Benchmark::setup() noexcept {
     teardown();
     return -1;
   }
-
   // Initialize block array content
   for (unsigned i = 0; i < num_original_blocks_; i++) {
     blocks_[i].Block = original_buffer_ + i * block_size_;
@@ -57,7 +56,6 @@ int CM256Benchmark::setup() noexcept {
       return -1;
     }
   }
-  
   return 0;
 }
 
@@ -74,6 +72,7 @@ int CM256Benchmark::encode() noexcept {
 
 
 int CM256Benchmark::decode() noexcept {
+  std::cerr << "HERE2\n";
   return cm256_decode(params_, blocks_.data());
 }
 

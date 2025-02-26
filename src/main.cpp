@@ -16,55 +16,49 @@
 #include <getopt.h>
 
 #define OUTPUT_FILE_PATH "../results/raw/"
+#define TAKE_CMD_LINE_ARGS false
+#define RUNNING_ON_DOCKER true
+
+#if RUNNING_ON_DOCKER
+
+  #define FIXED_NUM_ITERATIONS 50
+
+  // Fixed buffer size of 64 MiB
+  #define FIXED_BUFFER_SIZE 67108864
+
+  // Fixed num blocks
+  #define FIXED_NUM_ORIGINAL_BLOCKS 128
+  #define FIXED_NUM_RECOVERY_BLOCKS 4
+
+  #define FIXED_PARITY_RATIO 0.03125
+
+  #define FIXED_NUM_LOST_BLOCKS 1
+
+  // Variable buffer size(s) (1 MiB - 128 MiB)
+  #define VAR_BUFFER_SIZE { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728 }
+  #define VAR_NUM_RECOVERY_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
 
 
-#if 1 // Benchmark configurations for docker container (less performance)
-// Benchmarked total data size will be between 4 KiB and 64 MiB
-std::vector<uint32_t> config_data_size = { 4096,
-                                    8192, 
-                                    16384,
-                                    32768,
-                                    65536,
-                                    131072,
-                                    262144,
-                                    524288,
-                                    1048576,
-                                    2097152,
-                                    4194304,
-                                    8388608,
-                                    16777216,
-                                    33554432,
-                                    67108864
-                                  };
-                                
 #else
 
-// Benchmarked total data size will be between 4 KiB and 1 GiB
-std::vector<uint32_t> config_data_sizedata_size = { 4096,
-                                    8192, 
-                                    16384,
-                                    32768,
-                                    65536,
-                                    131072,
-                                    262144,
-                                    524288,
-                                    1048576,
-                                    2097152,
-                                    4194304,
-                                    8388608,
-                                    16777216,
-                                    33554432,
-                                    67108864,
-                                    134217728,
-                                    268435456,
-                                    536870912,
-                                    1073741824
-                                  };
+  #define FIXED_NUM_ITERATIONS 50
 
-// Benchmarked num lost blocks will be between 0 and 128
-std::vector<uint32_t> benchmark_num_lost_blocks = {0, 1, 2, 4, 8, 16, 32, 64, 128};
+  // Fixed buffer size of 1 GiB
+  #define FIXED_BUFFER_SIZE 1073741824
+
+  // Fixed num blocks
+  #define FIXED_NUM_ORIGINAL_BLOCKS 128
+  #define FIXED_NUM_RECOVERY_BLOCKS 4
+
+  #define FIXED_NUM_LOST_BLOCKS 1
+
+  // Variable buffer size(s) (1 MiB -  8 GiB)
+  #define VAR_BUFFER_SIZE { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648, 4294967296, 8589934592 }
+  #define VAR_NUM_RECOVERY_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
 
 #endif
+
+
 
 // static void BM_Baseline(benchmark::State& state) {
 //   BM_generic<BaselineBenchmark>(state);
@@ -302,7 +296,7 @@ int parse_args(int argc, char** argv) {
 }
 
 
-
+#if TAKE_CMD_LINE_ARGS
 int main(int argc, char** argv) {
   // Parse command line arguments
   if (parse_args(argc, argv)) exit(0);
@@ -355,3 +349,76 @@ int main(int argc, char** argv) {
   // Shutdown Google Benchmark
   ::benchmark::Shutdown();
 }
+
+#else
+
+int main (int argc, char** argv) {
+
+
+  std::vector<uint64_t> var_buffer_sizes = VAR_BUFFER_SIZE;
+  std::vector<uint64_t> var_num_recovery_blocks = VAR_NUM_RECOVERY_BLOCKS;
+
+  char* new_args[] = {
+    (char *)"benchmark",
+    (char *)"--benchmark_out=console"
+  };
+
+  argc = 2;
+  argv = new_args;
+
+
+  BenchmarkType benchmark_type = BenchmarkType::Buffersize_vs_Time;
+
+
+
+
+  if (benchmark_type == BenchmarkType::Buffersize_vs_Time) {
+    // Fixed number of original blocks and recovery blocks, varying buffer size
+    
+    std::string output_file = "buffersize_vs_time.csv";
+
+    benchmark_config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
+    benchmark_config.redundancy_ratio = FIXED_PARITY_RATIO;
+    benchmark_config.num_iterations = FIXED_NUM_ITERATIONS;
+    benchmark_config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
+    benchmark_config.computed.num_recovery_blocks = FIXED_NUM_RECOVERY_BLOCKS;
+    for (unsigned i = 0; i < var_buffer_sizes.size(); ++i) {
+      // Initialize reporter
+      BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file, (i==0));
+
+      select_lost_block_idxs(
+        FIXED_NUM_LOST_BLOCKS,
+        FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_RECOVERY_BLOCKS,
+        lost_block_idxs
+      );
+      
+      // Initialize config
+      benchmark_config.data_size = var_buffer_sizes[i];
+      benchmark_config.block_size = var_buffer_sizes[i] / FIXED_NUM_ORIGINAL_BLOCKS;
+
+
+      // BENCHMARK(BM_CM256)->Iterations(benchmark_config.num_iterations);
+      BENCHMARK(BM_ISAL)->Iterations(benchmark_config.num_iterations);
+      BENCHMARK(BM_Leopard)->Iterations(benchmark_config.num_iterations);
+      BENCHMARK(BM_Wirehair)->Iterations(benchmark_config.num_iterations);
+
+      // Initialize Google Benchmark
+      ::benchmark::Initialize(&argc, argv);
+
+      // Check and report unrecognized arguments
+      if (::benchmark::ReportUnrecognizedArguments(argc, argv)) {
+          return 1; // Return error code if there are unrecognized arguments
+      }
+    
+      // Run all specified benchmarks
+      ::benchmark::RunSpecifiedBenchmarks(nullptr, &reporter);
+    
+      // Shutdown Google Benchmark
+      ::benchmark::Shutdown();
+        }
+      }
+}
+
+
+
+#endif
