@@ -5,7 +5,7 @@
 
 1. Install C++ compiler and bechmarking dependencies:
 `sudo apt update `
-`sudo apt install -y build-essential cmake git clang libbenchmark-dev automake autoconf libtool build-essential`
+`sudo apt install -y build-essential cmake git clang libbenchmark-dev automake autoconf libtool build-essential python3 python3.12-venv`
 `sudo apt-get install libom-dev`
 
 2. Install Python tools (for results analysis)
