@@ -40,6 +40,7 @@ repository_tree.txt
 src/library_benchmark/baseline.cpp
 include/baseline.h
 results/raw/*
+results/processed/*
 
 # Ignore Python bytecode files
 __pycache__/
