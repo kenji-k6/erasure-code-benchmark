@@ -18,6 +18,54 @@
 #define OUTPUT_FILE_PATH "../results/raw/"
 
 
+#if 1 // Benchmark configurations for docker container (less performance)
+// Benchmarked total data size will be between 4 KiB and 64 MiB
+std::vector<uint32_t> config_data_size = { 4096,
+                                    8192, 
+                                    16384,
+                                    32768,
+                                    65536,
+                                    131072,
+                                    262144,
+                                    524288,
+                                    1048576,
+                                    2097152,
+                                    4194304,
+                                    8388608,
+                                    16777216,
+                                    33554432,
+                                    67108864
+                                  };
+                                
+#else
+
+// Benchmarked total data size will be between 4 KiB and 1 GiB
+std::vector<uint32_t> config_data_sizedata_size = { 4096,
+                                    8192, 
+                                    16384,
+                                    32768,
+                                    65536,
+                                    131072,
+                                    262144,
+                                    524288,
+                                    1048576,
+                                    2097152,
+                                    4194304,
+                                    8388608,
+                                    16777216,
+                                    33554432,
+                                    67108864,
+                                    134217728,
+                                    268435456,
+                                    536870912,
+                                    1073741824
+                                  };
+
+// Benchmarked num lost blocks will be between 0 and 128
+std::vector<uint32_t> benchmark_num_lost_blocks = {0, 1, 2, 4, 8, 16, 32, 64, 128};
+
+#endif
+
 // static void BM_Baseline(benchmark::State& state) {
 //   BM_generic<BaselineBenchmark>(state);
 // }
@@ -68,7 +116,8 @@ void usage() {
             << "  --cm256           Run the CM256 benchmark\n"
             << "  --isal            Run the ISA-L benchmark\n"
             << "  --leopard         Run the Leopard benchmark\n"
-            << "  --wirehair        Run the Wirehair benchmark\n";
+            << "  --wirehair        Run the Wirehair benchmark\n"
+            << " *If no arguments at all are specified, the full selection of benchmarks, over multiple configurations, will be run.\n";
   exit(0);
 }
 
@@ -263,7 +312,7 @@ int main(int argc, char** argv) {
   // Define CSV file name
   std::string output_file = "benchmark_results_test.csv";
   // Initialize the reporter
-  BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file);
+  BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file, false);
   
   char* new_args[] = {
     (char *)"benchmark",

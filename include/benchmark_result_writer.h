@@ -5,7 +5,7 @@
 #include <fstream>
 class BenchmarkCSVReporter : public benchmark::BenchmarkReporter {
 public:
-  explicit BenchmarkCSVReporter(const std::string& output_file);
+  explicit BenchmarkCSVReporter(const std::string& output_file, bool overwrite_file);
   ~BenchmarkCSVReporter() {
     if (file.is_open()) {
       file.close();

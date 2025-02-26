@@ -19,8 +19,8 @@ namespace ECCLimits {
   constexpr size_t CM256_MAX_TOT_BLOCKS = 256;
 
   constexpr size_t ISAL_MIN_BLOCK_SIZE = 64;
-  constexpr size_t ISAL_MAX_DATA_BLOCKS = 255;
-  constexpr size_t ISAL_MAX_TOT_BLOCKS = 255;
+  constexpr size_t ISAL_MAX_DATA_BLOCKS = 256;
+  constexpr size_t ISAL_MAX_TOT_BLOCKS = 256;
 
   constexpr size_t LEOPARD_MAX_TOT_BLOCKS = 65'536;
   constexpr size_t LEOPARD_BLOCK_ALIGNMENT = 64;

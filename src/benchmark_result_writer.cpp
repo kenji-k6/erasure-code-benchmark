@@ -4,14 +4,20 @@
 #include <iostream>
 
 
-BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file) : file(output_file) {
+BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool overwrite_file) {
+  if (overwrite_file) {
+    file.open(output_file, std::ios::out);
+  } else {
+    file.open(output_file, std::ios::app);
+  }
+
   if (!file.is_open()) {
-    std::cout << "test\n";
     throw std::runtime_error("Error opening file: " + output_file);
   }
 
-  // Define the custom header columns
-  file << "name,iterations,real_time,cpu_time,err_msg,tot_bytes,block_bytes,num_lost_blocks,redundancy_ratio\n";
+  if (overwrite_file) {
+    file << "name,iterations,real_time,cpu_time,time_unit,err_msg,tot_bytes,block_bytes,num_lost_blocks,redundancy_ratio\n";
+  }
 }
 
 void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
@@ -25,6 +31,7 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
          << run.iterations << ","
          << run.GetAdjustedRealTime() << ","
          << run.GetAdjustedCPUTime() << ","
+         << run.time_unit << ","
          << run.skip_message << ","
          << tot_bytes << ","
          << block_bytes << ","
