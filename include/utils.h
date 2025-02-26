@@ -35,16 +35,16 @@ namespace ECCLimits {
  * @brief Configuration parameters for the benchmark
  */
 struct BenchmarkConfig {
-  size_t data_size;               ///< Total size of original data
-  size_t block_size;              ///< Size of each block
-  size_t num_lost_blocks;         ///< Number of total blocks lost (recovery + original)
-  double redundancy_ratio;        ///< Recovery blocks / original blocks ratio
+  uint32_t data_size;               ///< Total size of original data
+  uint32_t block_size;              ///< Size of each block
+  uint32_t num_lost_blocks;         ///< Number of total blocks lost (recovery + original)
+  double redundancy_ratio;          ///< Recovery blocks / original blocks ratio
 
-  int num_iterations;             ///< Number of benchmark iterations
+  int num_iterations;               ///< Number of benchmark iterations
 
   struct ComputedValues {
-    size_t num_original_blocks;   ///< Number of original data blocks
-    size_t num_recovery_blocks;   ///< Number of recovery blocks
+    uint32_t num_original_blocks;   ///< Number of original data blocks
+    uint32_t num_recovery_blocks;   ///< Number of recovery blocks
   } computed;
 };
 

@@ -6,6 +6,7 @@
 #include "baseline_benchmark.h"
 #include "benchmark/benchmark.h"
 #include "utils.h"
+#include "benchmark_result_writer.h"
 
 #include <memory>
 #include <iostream>
@@ -14,10 +15,12 @@
 #include <unordered_set>
 #include <getopt.h>
 
+#define OUTPUT_FILE_PATH "../results/raw/"
 
-static void BM_Baseline(benchmark::State& state) {
-  BM_generic<BaselineBenchmark>(state);
-}
+
+// static void BM_Baseline(benchmark::State& state) {
+//   BM_generic<BaselineBenchmark>(state);
+// }
 
 static void BM_CM256(benchmark::State& state) {
   BM_generic<CM256Benchmark>(state);
@@ -38,7 +41,7 @@ static void BM_Wirehair(benchmark::State& state) {
 BenchmarkConfig benchmark_config;
 std::vector<uint32_t> lost_block_idxs = {};
 const std::unordered_map<std::string, void(*)(benchmark::State&)> available_benchmarks = {
-  { "baseline", BM_Baseline },
+  // { "baseline", BM_Baseline },
   { "cm256", BM_CM256 },
   { "isal", BM_ISAL },
   { "leopard", BM_Leopard },
@@ -61,7 +64,7 @@ void usage() {
 
             << " The following flags are used to specify which benchmarks to run. \n"
             << " If no flags are specified, all benchmarks will be run.\n"
-            << "  --baseline        Run the baseline benchmark\n"
+            // << "  --baseline        Run the baseline benchmark\n"
             << "  --cm256           Run the CM256 benchmark\n"
             << "  --isal            Run the ISA-L benchmark\n"
             << "  --leopard         Run the Leopard benchmark\n"
@@ -169,7 +172,7 @@ int parse_args(int argc, char** argv) {
 
   struct option long_options[] = {
     { "help",     no_argument, nullptr, 'h' },
-    { "baseline", no_argument, nullptr, 0 },
+    // { "baseline", no_argument, nullptr, 0 },
     { "cm256",    no_argument, nullptr, 0 },
     { "isal",     no_argument, nullptr, 0 },
     { "leopard",  no_argument, nullptr, 0 },
@@ -256,18 +259,26 @@ int main(int argc, char** argv) {
   if (parse_args(argc, argv)) exit(0);
 
 
-  // Default argument if no arguments are passed
-  char arg0_default[] = "benchmark";  
-  char* args_default = arg0_default;
-  argc = 1;
-  argv = &args_default;
+
+  // Define CSV file name
+  std::string output_file = "benchmark_results_test.csv";
+  // Initialize the reporter
+  BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file);
+  
+  char* new_args[] = {
+    (char *)"benchmark",
+    (char *)"--benchmark_out=console"
+  };
+
+  argc = 2;
+  argv = new_args;
 
   // Register benchmarks
 
 
-  if (selected_benchmarks.contains("baseline")) {
-    BENCHMARK(BM_Baseline)->Iterations(benchmark_config.num_iterations);
-  }
+  // if (selected_benchmarks.contains("baseline")) {
+  //   BENCHMARK(BM_Baseline)->Iterations(benchmark_config.num_iterations);
+  // }
   if (selected_benchmarks.contains("cm256")) {
     BENCHMARK(BM_CM256)->Iterations(benchmark_config.num_iterations);
   }
@@ -290,7 +301,7 @@ int main(int argc, char** argv) {
   }
 
   // Run all specified benchmarks
-  ::benchmark::RunSpecifiedBenchmarks();
+  ::benchmark::RunSpecifiedBenchmarks(nullptr, &reporter);
 
   // Shutdown Google Benchmark
   ::benchmark::Shutdown();

@@ -17,7 +17,7 @@ set (SOURCES
   src/library_benchmark/baseline.cpp
   src/utils.cpp
   src/main.cpp
-  src/benchmark_runner.cpp
+  src/benchmark_result_writer.cpp
   src/library_benchmark/leopard_benchmark.cpp
   src/library_benchmark/cm256_benchmark.cpp
   src/library_benchmark/wirehair_benchmark.cpp
