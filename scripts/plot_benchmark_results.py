@@ -91,7 +91,7 @@ def bufferSize_vs_throughput(df: pd.DataFrame):
 ##### VARYING BUFFER SIZE PLOTS #####
 
 
-##### FIXED BUFFER SIZE PLOTS #####
+##### VARYING REDUNDANCY RATIO PLOTS #####
 def redundancyRatio_vs_time(df: pd.DataFrame):
   file_name = 'redundancy_ratio_vs_time.png'
 
@@ -130,6 +130,45 @@ def redundancyRatio_vs_time(df: pd.DataFrame):
   plt.savefig(OUTPUT_DIR+file_name)
 
 
+def redundancyRatio_vs_time(df: pd.DataFrame):
+  file_name = 'redundancy_ratio_vs_throughput.png'
+
+  # Get the constant parameters to mention in plot title
+  buffer_size_mib = df.iloc[0]['tot_data_size_MiB']
+  num_data_blocks = df.iloc[0]['num_data_blocks']
+  num_lost_blocks = df.iloc[0]['num_lost_blocks']
+  num_iterations = df.iloc[0]['num_iterations']
+  title = f"Buffer Size: {buffer_size_mib} MiB, #Data Blocks: {num_data_blocks}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
+
+  recovery_blocks_ticks = sorted(df['num_recovery_blocks'].unique()); 
+
+  # Set plot style
+  sns.set_theme(style="whitegrid")
+
+  # Create the plot
+  plt.figure(figsize=(10,6))
+  
+  sns.scatterplot(data=df, x='num_recovery_blocks', y='throughput_Gbps', hue='name', palette='tab10')
+
+  # Customize the plot
+  plt.title(title, fontsize=12)
+  plt.xlabel("#Parity Blocks", fontsize=12)
+  plt.ylabel("Throughput (Gbps)", fontsize=12)
+  plt.xscale('log')
+  plt.yscale('linear')
+  plt.legend(title='Libraries', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+  # Properly set x-ticks
+  ax = plt.gca()
+  ax.set_xticks(recovery_blocks_ticks)
+  ax.set_xticklabels([str(sz) for sz in recovery_blocks_ticks])
+
+  # Save the plot to a file
+  plt.tight_layout()
+  plt.savefig(OUTPUT_DIR+file_name)
+
+##### VARYING REDUNDANCY RATIO PLOTS #####
+
 
 
 
@@ -165,6 +204,7 @@ if __name__ == "__main__":
   bufferSize_vs_time(dfs[0])
   bufferSize_vs_throughput(dfs[0])
   
+  redundancyRatio_vs_time(dfs[1])
   redundancyRatio_vs_time(dfs[1])
 
   # # compute the throughput
