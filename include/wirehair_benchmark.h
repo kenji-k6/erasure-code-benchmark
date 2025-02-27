@@ -20,7 +20,7 @@
  */
 class WirehairBenchmark : public ECCBenchmark {
 public:
-  WirehairBenchmark() = default;
+  explicit WirehairBenchmark(BenchmarkConfig config) noexcept;
   ~WirehairBenchmark() noexcept = default;
 
   int setup() noexcept override;
@@ -31,11 +31,6 @@ public:
   bool check_for_corruption() const noexcept override;
 
 private:
-  size_t num_original_blocks_ = 0;
-  size_t num_recovery_blocks_ = 0;
-  size_t block_size_ = 0;
-  size_t num_lost_blocks_ = 0;
-
   uint8_t *original_buffer_ = nullptr;    ///< Buffer for the original data we want to transmit
   uint8_t *encode_buffer_ = nullptr;      ///< Buffer for the encoded data
   uint8_t *decode_buffer_ = nullptr;      ///< Buffer for the decoded data

@@ -16,7 +16,7 @@
  */
 class LeopardBenchmark : public ECCBenchmark {
 public:
-  LeopardBenchmark() = default;
+  explicit LeopardBenchmark(BenchmarkConfig config) noexcept;
   ~LeopardBenchmark() noexcept = default;
 
   int setup() noexcept override;
@@ -27,10 +27,6 @@ public:
   bool check_for_corruption() const noexcept override;
 
 private:
-  size_t num_original_blocks_ = 0;
-  size_t num_recovery_blocks_ = 0;
-  size_t block_size_ = 0;
-
   unsigned encode_work_count_ = 0;
   unsigned decode_work_count_ = 0;
 

@@ -16,7 +16,7 @@
  */
 class CM256Benchmark : public ECCBenchmark {
 public:
-CM256Benchmark() = default;
+  explicit CM256Benchmark(BenchmarkConfig config) noexcept;
   ~CM256Benchmark() noexcept = default;
 
   int setup() noexcept override;
