@@ -14,7 +14,7 @@ find_package(OpenMP REQUIRED) # needed for leopard
 
 # Add source files
 set (SOURCES
-  src/library_benchmark/baseline.cpp
+  src/library_benchmark/baseline_benchmark.cpp
   src/utils.cpp
   src/main.cpp
   src/benchmark_result_writer.cpp

@@ -15,7 +15,7 @@ int BaselineBenchmark::setup() noexcept {
     teardown();
     return -1;
   }
-
+  
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < num_original_blocks_; ++i) {
     int write_res = write_validation_pattern(i, original_buffer_ + i * block_size_, block_size_);
@@ -25,7 +25,7 @@ int BaselineBenchmark::setup() noexcept {
       return -1;
     }
   }
-
+  
   return 0;
 }
 
@@ -45,6 +45,7 @@ int BaselineBenchmark::encode() noexcept {
       *((uint64_t*)(parity_block_ + j)) ^= *((uint64_t*)(original_buffer_ + i * block_size_ + j));
     }
   }
+  return 0;
 }
 
 int BaselineBenchmark::decode() noexcept {

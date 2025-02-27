@@ -3,6 +3,7 @@
 #include "cm256_benchmark.h"
 #include "wirehair_benchmark.h"
 #include "isal_benchmark.h"
+#include "baseline_benchmark.h"
 #include "benchmark/benchmark.h"
 #include "utils.h"
 #include "benchmark_result_writer.h"
@@ -64,6 +65,9 @@
 // static void BM_Baseline(benchmark::State& state) {
 //   BM_generic<BaselineBenchmark>(state);
 // }
+static void BM_Baseline(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<BaselineBenchmark>(state, config);
+}
 
 static void BM_CM256(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<CM256Benchmark>(state, config);
@@ -454,6 +458,7 @@ int main (int argc, char** argv) {
 
 
   for (auto& config : configs) {
+    benchmark::RegisterBenchmark("Baseline", BM_Baseline, config)->Iterations(config.num_iterations);
     benchmark::RegisterBenchmark("CM256", BM_CM256, config)->Iterations(config.num_iterations);
     benchmark::RegisterBenchmark("ISA-L", BM_ISAL, config)->Iterations(config.num_iterations);
     benchmark::RegisterBenchmark("Leopard", BM_Leopard, config)->Iterations(config.num_iterations);

@@ -2,8 +2,6 @@
 #define BASELINE_BENCHMARK_H
 
 #include "abstract_benchmark.h"
-#include "utils.h"
-
 
 
 /**
