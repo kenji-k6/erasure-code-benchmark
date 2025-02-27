@@ -84,9 +84,11 @@ int CM256Benchmark::decode() noexcept {
 
 
 void CM256Benchmark::simulate_data_loss() noexcept {
+  std::cout <<"Here 1" << std::endl;
   for (unsigned i = 0; i < num_lost_blocks_; i++) {
 
-    uint32_t idx = lost_block_idxs_[i];
+    uint32_t idx = *lost_block_idxs_[i];
+    std::cout << idx << '\n';
     if (idx < num_original_blocks_) { // dropped block is original block
       idx = cm256_get_original_block_index(params_, idx);
       memset(original_buffer_ + idx * block_size_, 0, block_size_);
@@ -101,6 +103,7 @@ void CM256Benchmark::simulate_data_loss() noexcept {
 
 
 bool CM256Benchmark::check_for_corruption() const noexcept {
+  std::cout <<"Here 2" << std::endl;
   for (unsigned i = 0; i < num_original_blocks_; i++) {
     if (!validate_block(static_cast<uint8_t*>(blocks_[i].Block), block_size_)) return false;
   }

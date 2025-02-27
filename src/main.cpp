@@ -368,65 +368,84 @@ int main (int argc, char** argv) {
   BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file, true);
   std::vector<BenchmarkConfig> configs;
 
-  /// @attention Configs for plotting buffer size vs time
-  std::vector<uint32_t>fixed_num_lost_block_idxs;
+  // /// @attention Configs for plotting buffer size vs time
+  // std::vector<uint32_t>fixed_num_lost_block_idxs;
 
-  select_lost_block_idxs(
-    FIXED_NUM_LOST_BLOCKS,
-    FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_RECOVERY_BLOCKS,
-    fixed_num_lost_block_idxs
-  );
+  // select_lost_block_idxs(
+  //   FIXED_NUM_LOST_BLOCKS,
+  //   FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_RECOVERY_BLOCKS,
+  //   fixed_num_lost_block_idxs
+  // );
 
 
-  for (auto buf_size : VAR_BUFFER_SIZE) {
-    BenchmarkConfig config;
-    config.data_size = buf_size;
-    config.block_size = buf_size / FIXED_NUM_ORIGINAL_BLOCKS;
+  // for (auto buf_size : VAR_BUFFER_SIZE) {
+  //   BenchmarkConfig config;
+  //   config.data_size = buf_size;
+  //   config.block_size = buf_size / FIXED_NUM_ORIGINAL_BLOCKS;
 
-    config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
-    config.lost_block_idxs = fixed_num_lost_block_idxs.data();
-    config.redundancy_ratio = FIXED_PARITY_RATIO;
+  //   config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
+  //   config.lost_block_idxs = fixed_num_lost_block_idxs.data();
+  //   config.redundancy_ratio = FIXED_PARITY_RATIO;
     
-    config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.computed.num_recovery_blocks = FIXED_NUM_RECOVERY_BLOCKS;
+  //   config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
+  //   config.computed.num_recovery_blocks = FIXED_NUM_RECOVERY_BLOCKS;
 
-    config.num_iterations = FIXED_NUM_ITERATIONS;
-    config.plot_id = 0;
-    configs.push_back(config);
-  }
+  //   config.num_iterations = FIXED_NUM_ITERATIONS;
+  //   config.plot_id = 0;
+  //   configs.push_back(config);
+  // }
 
 
-  /// @attention Configs for plotting redundancy ratio vs time
-  for (auto num_rec_blocks : VAR_NUM_RECOVERY_BLOCKS) {
-    BenchmarkConfig config;
-    config.data_size = FIXED_BUFFER_SIZE;
-    config.block_size = FIXED_BUFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
+  // /// @attention Configs for plotting redundancy ratio vs time
+  // for (auto num_rec_blocks : VAR_NUM_RECOVERY_BLOCKS) {
+  //   BenchmarkConfig config;
+  //   config.data_size = FIXED_BUFFER_SIZE;
+  //   config.block_size = FIXED_BUFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
 
-    config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
-    config.lost_block_idxs = fixed_num_lost_block_idxs.data();
-    config.redundancy_ratio = static_cast<double>(num_rec_blocks) / FIXED_NUM_ORIGINAL_BLOCKS;
+  //   config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
+  //   config.lost_block_idxs = fixed_num_lost_block_idxs.data();
+  //   config.redundancy_ratio = static_cast<double>(num_rec_blocks) / FIXED_NUM_ORIGINAL_BLOCKS;
 
-    config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.computed.num_recovery_blocks = num_rec_blocks;
+  //   config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
+  //   config.computed.num_recovery_blocks = num_rec_blocks;
 
-    config.num_iterations = FIXED_NUM_ITERATIONS;
-    config.plot_id = 1;
-    configs.push_back(config);
-  }
+  //   config.num_iterations = FIXED_NUM_ITERATIONS;
+  //   config.plot_id = 1;
+  //   configs.push_back(config);
+  // }
 
 
   /// @attention Configs for plotting lost blocks vs time, the no. of redundancy blocks is always == no. of lost blocks
-  
+  std::vector<std::vector<uint32_t>> var_num_lost_block_idxs;
+  for (auto num_lost_blocks : VAR_NUM_LOST_BLOCKS) {
+    std::vector<uint32_t> lost_block_idxs;
+    BenchmarkConfig config;
 
+    select_lost_block_idxs(
+      num_lost_blocks,
+      FIXED_NUM_ORIGINAL_BLOCKS + num_lost_blocks,
+      lost_block_idxs
+    );
+    var_num_lost_block_idxs.push_back(lost_block_idxs);
 
-  /**
-   * 
-   * Initialize the other configs here TODO
-   * Initialize the other configs here TODO
-   * Initialize the other configs here TODO
-   * 
-   */
+    std::cout << "Lost block idx1: " << lost_block_idxs[0] << std::endl;
 
+    config.data_size = FIXED_BUFFER_SIZE;
+    config.block_size = FIXED_BUFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
+
+    config.num_lost_blocks = num_lost_blocks;
+    config.lost_block_idxs = lost_block_idxs.data();
+    config.redundancy_ratio = static_cast<double>(num_lost_blocks) / FIXED_NUM_ORIGINAL_BLOCKS;
+
+    config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
+    config.computed.num_recovery_blocks = num_lost_blocks;
+
+    config.num_iterations = FIXED_NUM_ITERATIONS;
+    config.plot_id = 2;
+    configs.push_back(config);
+  }
+
+  std::cout << var_num_lost_block_idxs[0][0] << std::endl;
 
 
   for (auto& config : configs) {
@@ -435,8 +454,6 @@ int main (int argc, char** argv) {
     benchmark::RegisterBenchmark("Leopard", BM_Leopard, config)->Iterations(config.num_iterations);
     benchmark::RegisterBenchmark("Wirehair", BM_Wirehair, config)->Iterations(config.num_iterations);
   }
-
-  
 
 
   // Initialize Google Benchmark
