@@ -12,12 +12,11 @@
  */
 
 
-int CM256Benchmark::setup() noexcept {
-  // Store variables used in performance-critical areas locally
-  num_original_blocks_ = benchmark_config.computed.num_original_blocks;
-  num_recovery_blocks_ = benchmark_config.computed.num_recovery_blocks;
-  block_size_ = benchmark_config.block_size;
 
+CM256Benchmark::CM256Benchmark(BenchmarkConfig config) noexcept : ECCBenchmark(config) {}
+
+
+int CM256Benchmark::setup() noexcept {
   // Initialize CM256
   if (cm256_init()) {
     std::cerr << "CM256: Initialization failed.\n";
@@ -78,7 +77,7 @@ int CM256Benchmark::decode() noexcept {
 
 
 void CM256Benchmark::simulate_data_loss() noexcept {
-  for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
+  for (unsigned i = 0; i < num_lost_blocks_; i++) {
     uint32_t idx = lost_block_idxs[i];
     if (idx < num_original_blocks_) { // dropped block is original block
       idx = cm256_get_original_block_index(params_, idx);

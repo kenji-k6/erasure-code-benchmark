@@ -13,12 +13,9 @@
  */
 
 
+WirehairBenchmark::WirehairBenchmark(BenchmarkConfig config) noexcept : ECCBenchmark(config) {}
+
 int WirehairBenchmark::setup() noexcept {
-  // Store variables used in performance-critical areas locally
-  num_original_blocks_ = benchmark_config.computed.num_original_blocks;
-  num_recovery_blocks_ = benchmark_config.computed.num_recovery_blocks;
-  block_size_ = benchmark_config.block_size;
-  num_lost_blocks_ = benchmark_config.num_lost_blocks;
 
   // Initialize Wirehair
   if (wirehair_init()) {

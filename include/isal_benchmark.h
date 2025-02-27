@@ -27,11 +27,7 @@ public:
   bool check_for_corruption() const noexcept override;
   
 private:
-  size_t num_original_blocks_ = 0;
-  size_t num_recovery_blocks_ = 0;
-  size_t num_total_blocks_ = 0;
-  size_t block_size_ = 0;
-  size_t num_lost_blocks_ = 0;
+  uint32_t num_total_blocks_ = 0;
 
   // Data Buffers
   uint8_t *original_buffer_ = nullptr;        ///< Buffer for the original data we want to transmit

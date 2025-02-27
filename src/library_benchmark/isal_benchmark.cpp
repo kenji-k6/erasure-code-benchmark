@@ -14,13 +14,11 @@
  */
 
 
+ISALBenchmark::ISALBenchmark(BenchmarkConfig config) noexcept : ECCBenchmark(config) {}
+
 int ISALBenchmark::setup() noexcept {
   // Store frequently used variables / variables used in performance-critical areas locally
-  num_original_blocks_ = benchmark_config.computed.num_original_blocks;
-  num_recovery_blocks_ = benchmark_config.computed.num_recovery_blocks;
   num_total_blocks_ = num_original_blocks_ + num_recovery_blocks_;
-  block_size_ = benchmark_config.block_size;
-  num_lost_blocks_ = benchmark_config.num_lost_blocks;
 
   // Allocate matrices with aligned memory
   encode_matrix_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, num_total_blocks_ * num_original_blocks_));

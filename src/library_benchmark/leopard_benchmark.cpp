@@ -14,11 +14,9 @@
  */
 
 
+LeopardBenchmark::LeopardBenchmark(BenchmarkConfig config) noexcept : ECCBenchmark(config) {}
+
 int LeopardBenchmark::setup() noexcept {
-  // Store variables used in performance-critical areas locally
-  num_original_blocks_ = benchmark_config.computed.num_original_blocks;
-  num_recovery_blocks_ = benchmark_config.computed.num_recovery_blocks;
-  block_size_ = benchmark_config.block_size;
   
   // Initialize Leopard
   if (leo_init()) {
@@ -102,7 +100,7 @@ int LeopardBenchmark::decode() noexcept {
 
 
 void LeopardBenchmark::simulate_data_loss() noexcept {
-  for (unsigned i = 0; i < benchmark_config.num_lost_blocks; i++) {
+  for (unsigned i = 0; i < num_lost_blocks_; i++) {
     uint32_t idx = lost_block_idxs[i];
     if (idx < num_original_blocks_) {
       // Zero out the block in the original data array, set the corresponding block pointer to nullptr

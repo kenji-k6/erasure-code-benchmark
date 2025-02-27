@@ -89,12 +89,12 @@ public:
       : block_size_(config.block_size),
         num_lost_blocks_(config.num_lost_blocks),
         num_original_blocks_(config.computed.num_original_blocks),
-        num_recovery_blocks(config.computed.num_recovery_blocks) {};
+        num_recovery_blocks_(config.computed.num_recovery_blocks) {};
 
     uint64_t block_size_;
     uint64_t num_lost_blocks_;
     uint32_t num_original_blocks_;
-    uint32_t num_recovery_blocks;
+    uint32_t num_recovery_blocks_;
 };
 
 #endif // ABSTRACT_BENCHMARK_H
