@@ -20,7 +20,7 @@
 
 #if RUNNING_ON_DOCKER
 
-  #define FIXED_NUM_ITERATIONS 1
+  #define FIXED_NUM_ITERATIONS 50
 
   // Fixed buffer size of 64 MiB
   #define FIXED_BUFFER_SIZE 67108864
