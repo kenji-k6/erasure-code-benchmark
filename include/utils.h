@@ -92,6 +92,6 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size);
  * @param max_index Upper limit of the index range.
  * @param lost_block_idxs Vector to store the selected lost block indices.
  */
-void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<uint32_t>& lost_block_idxs);
+void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, uint32_t *lost_block_idxs);
 
 #endif // UTILS_H

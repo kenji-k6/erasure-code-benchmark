@@ -85,11 +85,9 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size) {
 }
 
 
-void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<uint32_t>& lost_block_idxs) {
+void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, uint32_t *lost_block_idxs) {
   uint32_t i;
   PCGRandom rng(RANDOM_SEED, 1); 
-  
-  lost_block_idxs.resize(num_lost_blocks);
 
   for (i = 0; i < num_lost_blocks; i++) {
     lost_block_idxs[i] = i;
@@ -102,10 +100,7 @@ void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, std::vector<
     }
   }
 
-  // for (i = 0; i < num_lost_blocks; i++) {
-  //   lost_block_idxs[i] = i;
-  // }
 
   // Sort the indices (needed for Wirehair and ISA-L)
-  std::sort(lost_block_idxs.begin(), lost_block_idxs.end());
+  std::sort(lost_block_idxs, lost_block_idxs + num_lost_blocks);
 }
