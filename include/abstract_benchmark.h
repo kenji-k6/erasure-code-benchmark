@@ -98,7 +98,7 @@ public:
     uint32_t num_recovery_blocks_;
 
     uint64_t num_lost_blocks_;
-    std::vector<uint32_t> *lost_block_idxs_;
+    uint32_t *lost_block_idxs_;
 };
 
 #endif // ABSTRACT_BENCHMARK_H

@@ -39,7 +39,7 @@ struct BenchmarkConfig {
   uint64_t block_size;              ///< Size of each block
 
   uint64_t num_lost_blocks;         ///< Number of total blocks lost (recovery + original)
-  std::vector<uint32_t> *lost_block_idxs;        ///< Pointer to the lost block indices array
+  uint32_t *lost_block_idxs;        ///< Pointer to the lost block indices array
   double redundancy_ratio;          ///< Recovery blocks / original blocks ratio
 
   struct ComputedValues {

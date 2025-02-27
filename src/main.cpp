@@ -445,7 +445,6 @@ int main (int argc, char** argv) {
     configs.push_back(config);
   }
 
-  std::cout << var_num_lost_block_idxs[0][0] << std::endl;
 
 
   for (auto& config : configs) {
