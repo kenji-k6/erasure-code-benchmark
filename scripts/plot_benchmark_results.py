@@ -51,7 +51,49 @@ def bufferSize_vs_time(df: pd.DataFrame):
 
 
 
-# def bufferSize_vs_throughput(df: pd.DataFrame):
+def bufferSize_vs_throughput(df: pd.DataFrame):
+  file_name = 'buffer_size_vs_throughput.png'
+
+  # Get the constant parameters to mention in plot title
+  num_data_blocks = df.iloc[0]['tot_data_size_B'] // df.iloc[0]['block_size_B']
+  redundancy_ratio = df.iloc[0]['redundancy_ratio']
+  num_lost_blocks = df.iloc[0]['num_lost_blocks']
+  num_iterations = df.iloc[0]['num_iterations']
+  title = f"#Data Blocks: {num_data_blocks}, #Redundancy Ratio: {redundancy_ratio}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
+
+  # Get buffer size in MB
+  df['tot_data_size_MiB'] = df['tot_data_size_B'] // (1024 * 1024)
+
+  # Get the throughput in Gbps
+  df['throughput_Gbps'] = (df['tot_data_size_B']*8) / (df['time_ns']) 
+
+  # Get the measured buffer sizes
+  buffer_sizes = sorted(df['tot_data_size_MiB'].unique())
+
+  # Set plot style
+  sns.set_theme(style="whitegrid")
+
+  # Create the plot
+  plt.figure(figsize=(10,6))
+  
+  sns.scatterplot(data=df, x='tot_data_size_MiB', y='throughput_Gbps', hue='name', palette='tab10')
+
+  # Customize the plot
+  plt.title(title, fontsize=12)
+  plt.xlabel("Buffer Size (MiB)", fontsize=12)
+  plt.ylabel("Throughput (Gbps)", fontsize=12)
+  plt.xscale('log')
+  plt.yscale('linear')
+  plt.legend(title='Libraries', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+  # Properly set x-ticks
+  ax = plt.gca()
+  ax.set_xticks(buffer_sizes)
+  ax.set_xticklabels([str(sz) + " MiB" for sz in buffer_sizes])
+
+  # Save the plot to a file
+  plt.tight_layout()
+  plt.savefig(OUTPUT_DIR+file_name)
 
   
 
@@ -82,6 +124,7 @@ if __name__ == "__main__":
   # print(dfs[2].head())
 
   bufferSize_vs_time(dfs[0])
+  bufferSize_vs_throughput(dfs[0])
   
 
   # # compute the throughput
