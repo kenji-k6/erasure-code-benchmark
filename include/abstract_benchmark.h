@@ -1,6 +1,7 @@
 #ifndef ABSTRACT_BENCHMARK_H
 #define ABSTRACT_BENCHMARK_H
 
+#include "utils.h"
 #include <cstddef>
 #include <iostream>
 
@@ -84,7 +85,16 @@ public:
   virtual bool check_for_corruption() const noexcept = 0;
 
   protected:
-    explicit ECCBenchmark(BenchmarkConfig config) noexcept {}; ///< Constructor with benchmark configuration
+    explicit ECCBenchmark(BenchmarkConfig config) noexcept
+      : block_size_(config.block_size),
+        num_lost_blocks_(config.num_lost_blocks),
+        num_original_blocks_(config.computed.num_original_blocks),
+        num_recovery_blocks(config.computed.num_recovery_blocks) {};
+
+    uint64_t block_size_;
+    uint64_t num_lost_blocks_;
+    uint32_t num_original_blocks_;
+    uint32_t num_recovery_blocks;
 };
 
 #endif // ABSTRACT_BENCHMARK_H
