@@ -114,7 +114,3 @@ bool WirehairBenchmark::check_for_corruption() const noexcept {
   return true;
 }
 
-
-void WirehairBenchmark::flush_cache() noexcept {
-  // TODO: Implement cache flushing
-}

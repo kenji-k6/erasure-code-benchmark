@@ -132,8 +132,3 @@ bool LeopardBenchmark::check_for_corruption() const noexcept {
 
   return true;
 }
-
-
-void LeopardBenchmark::flush_cache() noexcept {
-  // TODO: Implement cache flushing
-}

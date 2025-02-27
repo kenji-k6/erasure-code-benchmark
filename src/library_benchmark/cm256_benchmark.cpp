@@ -99,8 +99,3 @@ bool CM256Benchmark::check_for_corruption() const noexcept {
   }
   return true;
 }
-
-
-void CM256Benchmark::flush_cache() noexcept {
-  // TODO: Implement cache flushing
-}

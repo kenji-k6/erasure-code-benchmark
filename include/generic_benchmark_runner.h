@@ -27,8 +27,8 @@
  * @param state The Google Benchmark state object
  */
 template <typename BenchmarkType>
-static void BM_generic(benchmark::State& state) {
-  BenchmarkType bench;
+static void BM_generic(benchmark::State& state, auto config) {
+  BenchmarkType bench(config);
   for (auto _ : state) {
     state.PauseTiming();
     bench.setup();

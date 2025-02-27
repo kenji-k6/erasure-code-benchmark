@@ -14,6 +14,7 @@
  */
 class ECCBenchmark {
 public:
+
   virtual ~ECCBenchmark() noexcept = default; ///< Default virtual destructor
 
 
@@ -82,15 +83,8 @@ public:
    */
   virtual bool check_for_corruption() const noexcept = 0;
 
-
-  /**
-   * @brief Simulate a cold cache to evaluate performance under the assumption that 
-   * the data is not in the cache.
-   * 
-   * This can be used to measure the ECC algorithm's performance when cache misses are introduced
-   * to the system (e.g. the decoding happens on a different core or machine).
-   */
-  virtual void flush_cache() noexcept = 0;
+  protected:
+    explicit ECCBenchmark(BenchmarkConfig config) noexcept {}; ///< Constructor with benchmark configuration
 };
 
 #endif // ABSTRACT_BENCHMARK_H

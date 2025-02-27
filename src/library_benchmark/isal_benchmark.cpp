@@ -152,10 +152,6 @@ bool ISALBenchmark::check_for_corruption() const noexcept {
 }
 
 
-void ISALBenchmark::flush_cache() noexcept {
-  // TODO: Implement cache flushing
-}
-
 
 static int gf_gen_decode_matrix_simple(uint8_t *encode_matrix, uint8_t *decode_matrix, uint8_t *invert_matrix,
                                        uint8_t *temp_matrix, uint8_t *decode_index, uint8_t *frag_err_list,

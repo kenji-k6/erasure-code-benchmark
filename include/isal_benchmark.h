@@ -25,7 +25,6 @@ public:
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
   bool check_for_corruption() const noexcept override;
-  void flush_cache() noexcept override;
   
 private:
   size_t num_original_blocks_ = 0;
