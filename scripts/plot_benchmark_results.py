@@ -7,33 +7,6 @@ import seaborn as sns
 INPUT_FILE = './results/raw/benchmark_results.csv'
 OUTPUT_DIR = './results/processed/'
 
-  
-
-# def plot_x_buffer_size__y_throughout(df: pd.DataFrame):
-#   file_name = 'buffer_size_vs_throughput.png'
-
-#   # Set plot style
-#   sns.set_theme(style="whitegrid")
-
-#   # Create the plot
-#   plt.figure(figsize=(10,6))
-
-#   sns.scatterplot(data=df, x='total_MB', y='throughput_Gbps', hue='name', palette='tab10')
-
-#   # Customize the plot
-#   plt.title('Benchmark Results', fontsize=16)
-#   plt.xlabel('Total Buffer Size (MB)', fontsize=12)
-#   plt.ylabel('Throughput (Gbps)', fontsize=12)
-#   plt.xscale('log')  # If you want to use log scale for x-axis
-#   plt.yscale('log')  # If you want to use log scale for y-axis
-#   plt.legend(title='Benchmark Names', bbox_to_anchor=(1.05, 1), loc='upper left')
-
-#   # Save the plot to a file
-#   plt.tight_layout()
-#   plt.savefig(OUTPUT_DIR+file_name)
-
-#   # Show the plot
-#   plt.show()
 
 def bufferSize_vs_time(df: pd.DataFrame):
   file_name = 'buffer_size_vs_time.png'
@@ -46,7 +19,10 @@ def bufferSize_vs_time(df: pd.DataFrame):
   title = f"#Data Blocks: {num_data_blocks}, #Redundancy Ratio: {redundancy_ratio}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
 
   # Get buffer size in MB
-  df['tot_data_size_MB'] = df['tot_data_size_B'] / 1e6
+  df['tot_data_size_MiB'] = df['tot_data_size_B'] // (1024 * 1024)
+
+  # Get the measured buffer sizes
+  buffer_sizes = sorted(df['tot_data_size_MiB'].unique())
 
   # Set plot style
   sns.set_theme(style="whitegrid")
@@ -54,15 +30,20 @@ def bufferSize_vs_time(df: pd.DataFrame):
   # Create the plot
   plt.figure(figsize=(10,6))
   
-  sns.scatterplot(data=df, x='tot_data_size_MB', y='time_ms', hue='name', palette='tab10')
+  sns.scatterplot(data=df, x='tot_data_size_MiB', y='time_ms', hue='name', palette='tab10')
 
   # Customize the plot
   plt.title(title, fontsize=12)
-  plt.xlabel("Buffer Size (MB)", fontsize=12)
+  plt.xlabel("Buffer Size (MiB)", fontsize=12)
   plt.ylabel("Time (ms)", fontsize=12)
   plt.xscale('log')
   plt.yscale('log')
   plt.legend(title='Libraries', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+  # Properly set x-ticks
+  ax = plt.gca()
+  ax.set_xticks(buffer_sizes)
+  ax.set_xticklabels([str(sz) + " MiB" for sz in buffer_sizes])
 
   # Save the plot to a file
   plt.tight_layout()
