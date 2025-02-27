@@ -37,20 +37,19 @@ namespace ECCLimits {
 struct BenchmarkConfig {
   uint64_t data_size;               ///< Total size of original data
   uint64_t block_size;              ///< Size of each block
+
   uint64_t num_lost_blocks;         ///< Number of total blocks lost (recovery + original)
+  uint32_t *lost_block_idxs;        ///< Pointer to the lost block indices array
   double redundancy_ratio;          ///< Recovery blocks / original blocks ratio
-  uint32_t num_iterations;
-  uint8_t plot_id;          ///< Identifier for plotting 0
 
   struct ComputedValues {
     uint32_t num_original_blocks;   ///< Number of original data blocks
     uint32_t num_recovery_blocks;   ///< Number of recovery blocks
   } computed;
+
+  uint32_t num_iterations;
+  uint8_t plot_id;          ///< Identifier for plotting 0
 };
-
-
-// extern BenchmarkConfig benchmark_config;
-extern std::vector<uint32_t> lost_block_idxs;
 
 
 /**
