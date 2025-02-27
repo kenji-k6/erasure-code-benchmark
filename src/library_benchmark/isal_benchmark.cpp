@@ -14,7 +14,7 @@
  */
 
 
-ISALBenchmark::ISALBenchmark(BenchmarkConfig config) noexcept : ECCBenchmark(config) {}
+ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECCBenchmark(config) {}
 
 int ISALBenchmark::setup() noexcept {
   // Store frequently used variables / variables used in performance-critical areas locally

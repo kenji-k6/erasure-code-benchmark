@@ -16,27 +16,18 @@ BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool 
   }
 
   if (overwrite_file) {
-    file << "name,iterations,real_time,cpu_time,time_unit,err_msg,tot_bytes,block_bytes,num_lost_blocks,redundancy_ratio\n";
+    file << "name,err_msg,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio\n";
   }
 }
 
 void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
-  uint32_t tot_bytes = benchmark_config.data_size;
-  uint32_t block_bytes = benchmark_config.block_size;
-  uint32_t num_lost_blocks = benchmark_config.num_lost_blocks;
-  double redundancy_ratio = benchmark_config.redundancy_ratio;
-
   for (const auto& run : runs) {
     file << run.benchmark_name() << ","
-         << run.iterations << ","
-         << run.GetAdjustedRealTime() << ","
-         << run.GetAdjustedCPUTime() << ","
-         << run.time_unit << ","
          << run.skip_message << ","
-         << tot_bytes << ","
-         << block_bytes << ","
-         << num_lost_blocks << ","
-         << redundancy_ratio << "\n";
+         << static_cast<uint64_t>(run.counters.find("tot_data_size_B")->second.value) << ","
+         << static_cast<uint64_t>(run.counters.find("block_size_B")->second.value) << ","
+         << static_cast<uint32_t>(run.counters.find("num_lost_blocks")->second.value) << ","
+         << run.counters.find("redundancy_ratio")->second.value << '\n';
   }
 }
 

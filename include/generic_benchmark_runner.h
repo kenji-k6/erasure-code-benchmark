@@ -27,7 +27,7 @@
  * @param state The Google Benchmark state object
  */
 template <typename BenchmarkType>
-static void BM_generic(benchmark::State& state, auto config) {
+static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   BenchmarkType bench(config);
   for (auto _ : state) {
     state.PauseTiming();
@@ -35,12 +35,13 @@ static void BM_generic(benchmark::State& state, auto config) {
     state.ResumeTiming();
 
     bench.encode();
+
     state.PauseTiming();
     bench.simulate_data_loss();
-    // bench.flush_cache(); // Uncomment if cache flushing is required
     state.ResumeTiming();
+    
     bench.decode();
-
+    
     state.PauseTiming();
     if (!bench.check_for_corruption()) {
       state.SkipWithMessage("Corruption Detected");
@@ -48,6 +49,12 @@ static void BM_generic(benchmark::State& state, auto config) {
     bench.teardown();
     state.ResumeTiming();
   }
+
+  state.counters["tot_data_size_B"] = config.data_size;
+  state.counters["block_size_B"] = config.block_size;
+  state.counters["num_lost_blocks"] = config.num_lost_blocks;
+  state.counters["redundancy_ratio"] = config.redundancy_ratio;
+
 }
 
 #endif // GENERIC_BENCHMARK_RUNNER_H

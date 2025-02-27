@@ -20,7 +20,7 @@
  */
 class WirehairBenchmark : public ECCBenchmark {
 public:
-  explicit WirehairBenchmark(BenchmarkConfig config) noexcept;
+  explicit WirehairBenchmark(const BenchmarkConfig& config) noexcept;
   ~WirehairBenchmark() noexcept = default;
 
   int setup() noexcept override;

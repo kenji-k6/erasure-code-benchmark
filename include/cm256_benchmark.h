@@ -2,6 +2,7 @@
 #define CM256_BENCHMARK_H
 
 #include "abstract_benchmark.h"
+#include "utils.h"
 #include "cm256.h"
 #include <vector>
 
@@ -16,7 +17,7 @@
  */
 class CM256Benchmark : public ECCBenchmark {
 public:
-  explicit CM256Benchmark(BenchmarkConfig config) noexcept;
+  explicit CM256Benchmark(const BenchmarkConfig& config) noexcept;
   ~CM256Benchmark() noexcept = default;
 
   int setup() noexcept override;
@@ -33,7 +34,7 @@ private:
 
   // CM256 Internals
   cm256_encoder_params params_;       ///< cm256 internal parameters
-  std::vector<cm256_block> blocks_;   ///< vector of cm256 blocks (keeps track of pointers and indices)
+  cm256_block blocks_[ECCLimits::CM256_MAX_TOT_BLOCKS];   ///< vector of cm256 blocks (keeps track of pointers and indices)
 };
 
 #endif // CM256_BENCHMARK_H

@@ -16,7 +16,7 @@
  */
 class LeopardBenchmark : public ECCBenchmark {
 public:
-  explicit LeopardBenchmark(BenchmarkConfig config) noexcept;
+  explicit LeopardBenchmark(const BenchmarkConfig& config) noexcept;
   ~LeopardBenchmark() noexcept = default;
 
   int setup() noexcept override;

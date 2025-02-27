@@ -3,7 +3,6 @@
 #include "cm256_benchmark.h"
 #include "wirehair_benchmark.h"
 #include "isal_benchmark.h"
-#include "baseline_benchmark.h"
 #include "benchmark/benchmark.h"
 #include "utils.h"
 #include "benchmark_result_writer.h"
@@ -34,14 +33,14 @@
 
   #define FIXED_NUM_LOST_BLOCKS 1
 
-  // Variable buffer size(s) (1 MiB - 128 MiB)
-  #define VAR_BUFFER_SIZE { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728 }
+  // Variable buffer size(s) (1 MiB - 256 MiB)
+  #define VAR_BUFFER_SIZE { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456 }
   #define VAR_NUM_RECOVERY_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
 
 
 #else
 
-  #define FIXED_NUM_ITERATIONS 50
+  #define FIXED_NUM_ITERATIONS 2500
 
   // Fixed buffer size of 1 GiB
   #define FIXED_BUFFER_SIZE 1073741824
@@ -64,25 +63,25 @@
 //   BM_generic<BaselineBenchmark>(state);
 // }
 
-static void BM_CM256(benchmark::State& state) {
-  BM_generic<CM256Benchmark>(state);
+static void BM_CM256(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<CM256Benchmark>(state, config);
 }
 
-static void BM_ISAL(benchmark::State& state) {
-  BM_generic<ISALBenchmark>(state);
+static void BM_ISAL(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<ISALBenchmark>(state, config);
 }
 
-static void BM_Leopard(benchmark::State& state) {
-  BM_generic<LeopardBenchmark>(state);
+static void BM_Leopard(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<LeopardBenchmark>(state, config);
 }
 
-static void BM_Wirehair(benchmark::State& state) {
-  BM_generic<WirehairBenchmark>(state);
+static void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<WirehairBenchmark>(state, config);
 }
 
-BenchmarkConfig benchmark_config;
 std::vector<uint32_t> lost_block_idxs = {};
-const std::unordered_map<std::string, void(*)(benchmark::State&)> available_benchmarks = {
+
+const std::unordered_map<std::string, void(*)(benchmark::State&, const BenchmarkConfig&)> available_benchmarks = {
   // { "baseline", BM_Baseline },
   { "cm256", BM_CM256 },
   { "isal", BM_ISAL },
@@ -91,7 +90,7 @@ const std::unordered_map<std::string, void(*)(benchmark::State&)> available_benc
 };
 
 std::unordered_set<std::string> selected_benchmarks;
-
+BenchmarkConfig benchmark_config;
 
 
 
@@ -355,9 +354,6 @@ int main(int argc, char** argv) {
 int main (int argc, char** argv) {
 
 
-  std::vector<uint64_t> var_buffer_sizes = VAR_BUFFER_SIZE;
-  std::vector<uint64_t> var_num_recovery_blocks = VAR_NUM_RECOVERY_BLOCKS;
-
   char* new_args[] = {
     (char *)"benchmark",
     (char *)"--benchmark_out=console"
@@ -367,56 +363,69 @@ int main (int argc, char** argv) {
   argv = new_args;
 
 
-  BenchmarkType benchmark_type = BenchmarkType::Buffersize_vs_Time;
+  // Initialize reporter
+  std::string output_file = "benchmark_results.csv";
+  BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file, true);
+  std::vector<BenchmarkConfig> configs;
 
 
 
-
-  if (benchmark_type == BenchmarkType::Buffersize_vs_Time) {
-    // Fixed number of original blocks and recovery blocks, varying buffer size
-    
-    std::string output_file = "buffersize_vs_time.csv";
-
-    benchmark_config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
-    benchmark_config.redundancy_ratio = FIXED_PARITY_RATIO;
-    benchmark_config.num_iterations = FIXED_NUM_ITERATIONS;
-    benchmark_config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    benchmark_config.computed.num_recovery_blocks = FIXED_NUM_RECOVERY_BLOCKS;
-    for (unsigned i = 0; i < var_buffer_sizes.size(); ++i) {
-      // Initialize reporter
-      BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file, (i==0));
-
-      select_lost_block_idxs(
-        FIXED_NUM_LOST_BLOCKS,
-        FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_RECOVERY_BLOCKS,
-        lost_block_idxs
-      );
-      
-      // Initialize config
-      benchmark_config.data_size = var_buffer_sizes[i];
-      benchmark_config.block_size = var_buffer_sizes[i] / FIXED_NUM_ORIGINAL_BLOCKS;
+  std::vector<uint64_t> var_buffer_sizes = VAR_BUFFER_SIZE;
 
 
-      // BENCHMARK(BM_CM256)->Iterations(benchmark_config.num_iterations);
-      BENCHMARK(BM_ISAL)->Iterations(benchmark_config.num_iterations);
-      BENCHMARK(BM_Leopard)->Iterations(benchmark_config.num_iterations);
-      BENCHMARK(BM_Wirehair)->Iterations(benchmark_config.num_iterations);
+  for (auto buf_size : var_buffer_sizes) {
+    BenchmarkConfig config;
+    config.data_size = buf_size;
+    config.block_size = buf_size / FIXED_NUM_ORIGINAL_BLOCKS;
+    config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
+    config.redundancy_ratio = FIXED_PARITY_RATIO;
+    config.num_iterations = FIXED_NUM_ITERATIONS;
+    config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
+    config.computed.num_recovery_blocks = FIXED_NUM_RECOVERY_BLOCKS;
+    configs.push_back(config);
+  }
 
-      // Initialize Google Benchmark
-      ::benchmark::Initialize(&argc, argv);
 
-      // Check and report unrecognized arguments
-      if (::benchmark::ReportUnrecognizedArguments(argc, argv)) {
-          return 1; // Return error code if there are unrecognized arguments
-      }
-    
-      // Run all specified benchmarks
-      ::benchmark::RunSpecifiedBenchmarks(nullptr, &reporter);
-    
-      // Shutdown Google Benchmark
-      ::benchmark::Shutdown();
-        }
-      }
+  /**
+   * 
+   * Initialize the other configs here TODO
+   * Initialize the other configs here TODO
+   * Initialize the other configs here TODO
+   * 
+   */
+
+
+
+  // Select the lost blo
+  select_lost_block_idxs(
+    FIXED_NUM_LOST_BLOCKS,
+    FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_RECOVERY_BLOCKS,
+    lost_block_idxs
+  );
+
+  for (auto& config : configs) {
+    benchmark::RegisterBenchmark("CM256", BM_CM256, config)->Iterations(config.num_iterations);
+    benchmark::RegisterBenchmark("ISA-L", BM_ISAL, config)->Iterations(config.num_iterations);
+    benchmark::RegisterBenchmark("Leopard", BM_Leopard, config)->Iterations(config.num_iterations);
+    benchmark::RegisterBenchmark("Wirehair", BM_Wirehair, config)->Iterations(config.num_iterations);
+  }
+
+  
+
+
+  // Initialize Google Benchmark
+  benchmark::Initialize(&argc, argv);
+
+  // Check and report unrecognized arguments
+  if (benchmark::ReportUnrecognizedArguments(argc, argv)) {
+      return 1; // Return error code if there are unrecognized arguments
+  }
+
+  // Run all specified benchmarks
+  benchmark::RunSpecifiedBenchmarks(nullptr, &reporter);
+
+  // Shutdown Google Benchmark
+  benchmark::Shutdown();
 }
 
 

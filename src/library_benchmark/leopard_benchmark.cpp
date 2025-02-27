@@ -14,7 +14,7 @@
  */
 
 
-LeopardBenchmark::LeopardBenchmark(BenchmarkConfig config) noexcept : ECCBenchmark(config) {}
+LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECCBenchmark(config) {}
 
 int LeopardBenchmark::setup() noexcept {
   

@@ -13,7 +13,7 @@
  */
 
 
-WirehairBenchmark::WirehairBenchmark(BenchmarkConfig config) noexcept : ECCBenchmark(config) {}
+WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : ECCBenchmark(config) {}
 
 int WirehairBenchmark::setup() noexcept {
 
