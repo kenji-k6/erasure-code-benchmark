@@ -38,6 +38,13 @@ OUTPUT_DIR = './results/processed/'
 def bufferSize_vs_time(df: pd.DataFrame):
   file_name = 'buffer_size_vs_time.png'
 
+  # Get the constant parameters to mention in plot title
+  num_data_blocks = df.iloc[0]['tot_data_size_B'] // df.iloc[0]['block_size_B']
+  redundancy_ratio = df.iloc[0]['redundancy_ratio']
+  num_lost_blocks = df.iloc[0]['num_lost_blocks']
+  num_iterations = df.iloc[0]['num_iterations']
+  title = f"#Data Blocks: {num_data_blocks}, #Redundancy Ratio: {redundancy_ratio}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
+
   # Get buffer size in MB
   df['tot_data_size_MB'] = df['tot_data_size_B'] / 1e6
 
@@ -50,7 +57,7 @@ def bufferSize_vs_time(df: pd.DataFrame):
   sns.scatterplot(data=df, x='tot_data_size_MB', y='time_ms', hue='name', palette='tab10')
 
   # Customize the plot
-  plt.figtext(0.5, -0.05, "This is a small additional information about the plot", ha="center", va="top", fontsize=12)
+  plt.title(title, fontsize=12)
   plt.xlabel("Buffer Size (MB)", fontsize=12)
   plt.ylabel("Time (ms)", fontsize=12)
   plt.xscale('log')
@@ -61,7 +68,9 @@ def bufferSize_vs_time(df: pd.DataFrame):
   plt.tight_layout()
   plt.savefig(OUTPUT_DIR+file_name)
 
-  plt.show()
+
+
+# def bufferSize_vs_throughput(df: pd.DataFrame):
 
   
 

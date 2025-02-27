@@ -368,7 +368,7 @@ int main (int argc, char** argv) {
   BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file, true);
   std::vector<BenchmarkConfig> configs;
 
-  /// @attention Configs for plotting buffer size vs time
+  /// @attention Configs for varying buffer sizes
   std::vector<uint32_t>fixed_num_lost_block_idxs(FIXED_NUM_LOST_BLOCKS);
 
   select_lost_block_idxs(
@@ -396,7 +396,7 @@ int main (int argc, char** argv) {
   }
 
 
-  /// @attention Configs for plotting redundancy ratio vs time
+  /// @attention Configs for varying redundancy ratio
   for (auto num_rec_blocks : VAR_NUM_RECOVERY_BLOCKS) {
     BenchmarkConfig config;
     config.data_size = FIXED_BUFFER_SIZE;
@@ -415,7 +415,7 @@ int main (int argc, char** argv) {
   }
 
 
-  /// @attention Configs for plotting lost blocks vs time, the no. of redundancy blocks is always == no. of lost blocks
+  /// @attention Configs for varying no. of lost blocks the no. of redundancy blocks is always == no. of lost blocks
   uint32_t tot_num_lost_blocks = 0;
   for (auto num_lost_blocks : VAR_NUM_LOST_BLOCKS) {
     tot_num_lost_blocks += num_lost_blocks;
