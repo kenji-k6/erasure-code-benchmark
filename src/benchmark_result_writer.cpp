@@ -16,13 +16,14 @@ BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool 
   }
 
   if (overwrite_file) {
-    file << "name,err_msg,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio\n";
+    file << "plot_id,name,err_msg,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio\n";
   }
 }
 
 void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
   for (const auto& run : runs) {
-    file << run.benchmark_name() << ","
+    file << static_cast<uint32_t>(run.counters.find("plot_id")->second.value) << ","
+         << run.benchmark_name() << ","
          << run.skip_message << ","
          << static_cast<uint64_t>(run.counters.find("tot_data_size_B")->second.value) << ","
          << static_cast<uint64_t>(run.counters.find("block_size_B")->second.value) << ","

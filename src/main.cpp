@@ -20,7 +20,7 @@
 
 #if RUNNING_ON_DOCKER
 
-  #define FIXED_NUM_ITERATIONS 50
+  #define FIXED_NUM_ITERATIONS 1
 
   // Fixed buffer size of 64 MiB
   #define FIXED_BUFFER_SIZE 67108864
@@ -36,6 +36,7 @@
   // Variable buffer size(s) (1 MiB - 256 MiB)
   #define VAR_BUFFER_SIZE { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456 }
   #define VAR_NUM_RECOVERY_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
+  #define VAR_NUM_LOST_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
 
 
 #else
@@ -54,6 +55,7 @@
   // Variable buffer size(s) (1 MiB -  8 GiB)
   #define VAR_BUFFER_SIZE { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648, 4294967296, 8589934592 }
   #define VAR_NUM_RECOVERY_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
+  #define VAR_NUM_LOST_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
 
 #endif
 
@@ -369,11 +371,8 @@ int main (int argc, char** argv) {
   std::vector<BenchmarkConfig> configs;
 
 
-
-  std::vector<uint64_t> var_buffer_sizes = VAR_BUFFER_SIZE;
-
-
-  for (auto buf_size : var_buffer_sizes) {
+  /// @attention Configs for plotting buffer size vs time
+  for (auto buf_size : VAR_BUFFER_SIZE) {
     BenchmarkConfig config;
     config.data_size = buf_size;
     config.block_size = buf_size / FIXED_NUM_ORIGINAL_BLOCKS;
@@ -382,8 +381,30 @@ int main (int argc, char** argv) {
     config.num_iterations = FIXED_NUM_ITERATIONS;
     config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
     config.computed.num_recovery_blocks = FIXED_NUM_RECOVERY_BLOCKS;
+
+    config.plot_id = 0;
     configs.push_back(config);
   }
+
+
+  /// @attention Configs for plotting redundancy ratio vs time
+  for (auto num_rec_blocks : VAR_NUM_RECOVERY_BLOCKS) {
+    BenchmarkConfig config;
+    config.data_size = FIXED_BUFFER_SIZE;
+    config.block_size = FIXED_BUFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
+    config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
+    config.redundancy_ratio = static_cast<double>(num_rec_blocks) / FIXED_NUM_ORIGINAL_BLOCKS;
+    config.num_iterations = FIXED_NUM_ITERATIONS;
+    config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
+    config.computed.num_recovery_blocks = num_rec_blocks;
+
+    config.plot_id = 1;
+    configs.push_back(config);
+  }
+
+
+  /// @attention Configs for plotting lost blocks vs time, the no. of redundancy blocks is always == no. of lost blocks
+  
 
 
   /**

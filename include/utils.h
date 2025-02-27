@@ -40,6 +40,7 @@ struct BenchmarkConfig {
   uint64_t num_lost_blocks;         ///< Number of total blocks lost (recovery + original)
   double redundancy_ratio;          ///< Recovery blocks / original blocks ratio
   uint32_t num_iterations;
+  uint8_t plot_id;          ///< Identifier for plotting 0
 
   struct ComputedValues {
     uint32_t num_original_blocks;   ///< Number of original data blocks

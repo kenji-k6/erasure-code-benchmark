@@ -54,6 +54,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   state.counters["block_size_B"] = config.block_size;
   state.counters["num_lost_blocks"] = config.num_lost_blocks;
   state.counters["redundancy_ratio"] = config.redundancy_ratio;
+  state.counters["plot_id"] = config.plot_id;
 
 }
 
