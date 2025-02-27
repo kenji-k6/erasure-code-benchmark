@@ -86,7 +86,7 @@ int CM256Benchmark::decode() noexcept {
 void CM256Benchmark::simulate_data_loss() noexcept {
   for (unsigned i = 0; i < num_lost_blocks_; i++) {
 
-    uint32_t idx = lost_block_idxs[i];
+    uint32_t idx = lost_block_idxs_[i];
     if (idx < num_original_blocks_) { // dropped block is original block
       idx = cm256_get_original_block_index(params_, idx);
       memset(original_buffer_ + idx * block_size_, 0, block_size_);

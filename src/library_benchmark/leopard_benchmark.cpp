@@ -101,7 +101,7 @@ int LeopardBenchmark::decode() noexcept {
 
 void LeopardBenchmark::simulate_data_loss() noexcept {
   for (unsigned i = 0; i < num_lost_blocks_; i++) {
-    uint32_t idx = lost_block_idxs[i];
+    uint32_t idx = lost_block_idxs_[i];
     if (idx < num_original_blocks_) {
       // Zero out the block in the original data array, set the corresponding block pointer to nullptr
       memset(original_ptrs_[idx], 0, block_size_);

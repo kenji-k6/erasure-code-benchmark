@@ -95,7 +95,7 @@ int ISALBenchmark::decode() noexcept {
   if (num_lost_blocks_ == 0) return 0;
   // Copy lost block indices (in reality this would be done by iterating and checking for lost blocks)
   for (unsigned i = 0; i < num_lost_blocks_; i++) {
-    block_err_list_[i] = static_cast<uint8_t>(lost_block_idxs[i]);
+    block_err_list_[i] = static_cast<uint8_t>(lost_block_idxs_[i]);
   }
 
   // Generate decoding matrix
@@ -121,7 +121,7 @@ int ISALBenchmark::decode() noexcept {
 
 void ISALBenchmark::simulate_data_loss() noexcept {
   for (unsigned i = 0; i < num_lost_blocks_; i++) {
-    uint32_t idx = lost_block_idxs[i];
+    uint32_t idx = lost_block_idxs_[i];
     // Zero out the lost block, set the corresponding block pointer to nullptr
     memset(original_ptrs_[idx], 0, block_size_);
     original_ptrs_[idx] = nullptr;
@@ -137,7 +137,7 @@ bool ISALBenchmark::check_for_corruption() const noexcept {
   unsigned loss_idx = 0;
   for (unsigned i = 0; i < num_original_blocks_; i++) {
     bool res = false;
-    if (loss_idx < num_lost_blocks_ && i == lost_block_idxs[loss_idx]) {
+    if (loss_idx < num_lost_blocks_ && i == lost_block_idxs_[loss_idx]) {
       res = validate_block(recovery_outp_ptrs_[loss_idx], block_size_);
       loss_idx++;
     } else {

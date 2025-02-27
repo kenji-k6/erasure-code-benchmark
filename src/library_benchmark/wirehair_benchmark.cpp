@@ -84,7 +84,7 @@ int WirehairBenchmark::decode() noexcept {
   unsigned loss_idx = 0;
 
   for (unsigned i = 0; i < num_original_blocks_ + num_recovery_blocks_; i++) {
-    if (loss_idx < num_lost_blocks_ && i == lost_block_idxs[loss_idx]) {
+    if (loss_idx < num_lost_blocks_ && i == lost_block_idxs_[loss_idx]) {
       loss_idx++;
       continue;
     }
@@ -99,7 +99,7 @@ int WirehairBenchmark::decode() noexcept {
 
 void WirehairBenchmark::simulate_data_loss() noexcept {
   for (unsigned i = 0; i < num_lost_blocks_; i++) {
-    memset(encode_buffer_ + (lost_block_idxs[i] * block_size_), 0, block_size_);
+    memset(encode_buffer_ + (lost_block_idxs_[i] * block_size_), 0, block_size_);
   }
 }
 

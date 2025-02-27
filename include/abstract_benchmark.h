@@ -87,14 +87,18 @@ public:
   protected:
     explicit ECCBenchmark(const BenchmarkConfig& config) noexcept
       : block_size_(config.block_size),
-        num_lost_blocks_(config.num_lost_blocks),
         num_original_blocks_(config.computed.num_original_blocks),
-        num_recovery_blocks_(config.computed.num_recovery_blocks) {};
+        num_recovery_blocks_(config.computed.num_recovery_blocks),
+        num_lost_blocks_(config.num_lost_blocks),
+        lost_block_idxs_(config.lost_block_idxs) {};
 
     uint64_t block_size_;
-    uint64_t num_lost_blocks_;
+
     uint32_t num_original_blocks_;
     uint32_t num_recovery_blocks_;
+
+    uint64_t num_lost_blocks_;
+    uint32_t *lost_block_idxs_;
 };
 
 #endif // ABSTRACT_BENCHMARK_H
