@@ -441,7 +441,6 @@ int main (int argc, char** argv) {
     benchmark::RegisterBenchmark("ISA-L", BM_ISAL, config)->UseManualTime()->Iterations(config.num_iterations);
     benchmark::RegisterBenchmark("Leopard", BM_Leopard, config)->UseManualTime()->Iterations(config.num_iterations);
     benchmark::RegisterBenchmark("Wirehair", BM_Wirehair, config)->UseManualTime()->Iterations(config.num_iterations);
-    break;
   }
 
 
