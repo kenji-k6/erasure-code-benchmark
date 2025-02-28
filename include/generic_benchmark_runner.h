@@ -37,15 +37,15 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   for (auto _ : state) {
     bench.setup();
 
-    auto start_encode = std::chrono::high_resolution_clock::now();
+    auto start_encode = std::chrono::steady_clock::now();
     bench.encode();
-    auto end_encode = std::chrono::high_resolution_clock::now();
+    auto end_encode = std::chrono::steady_clock::now();
 
     bench.simulate_data_loss();
     
-    auto start_decode = std::chrono::high_resolution_clock::now();
+    auto start_decode = std::chrono::steady_clock::now();
     bench.decode();
-    auto end_decode = std::chrono::high_resolution_clock::now();
+    auto end_decode = std::chrono::steady_clock::now();
 
     if (!bench.check_for_corruption()) {
       state.SkipWithMessage("Corruption Detected");
