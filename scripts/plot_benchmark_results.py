@@ -1,296 +1,121 @@
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
 import seaborn as sns
 
 # File / directory paths
-INPUT_FILE = './results/raw/benchmark_results.csv'
-OUTPUT_DIR = './results/processed/'
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results.csv")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/")
+
+def ensure_output_directory():
+  """Ensure the output directory exists."""
+  os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-##### VARYING BUFFER SIZE PLOTS #####
-def bufferSize_vs_time(df: pd.DataFrame):
-  file_name = 'buffer_size_vs_time.png'
 
-  # Get the constant parameters to mention in plot title
-  num_data_blocks = df.iloc[0]['tot_data_size_B'] // df.iloc[0]['block_size_B']
-  redundancy_ratio = df.iloc[0]['redundancy_ratio']
-  num_lost_blocks = df.iloc[0]['num_lost_blocks']
-  num_iterations = df.iloc[0]['num_iterations']
-  title = f"#Data Blocks: {num_data_blocks}, #Redundancy Ratio: {redundancy_ratio}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
+def plot_scatter(dfs: dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: str, y_label: str, file_name: str, plot_id: int):
+  """Helper function to generate and save scatter plots."""
+  df = dfs[plot_id]
 
-
-  # Get the measured buffer sizes
-  buffer_sizes = sorted(df['tot_data_size_MiB'].unique())
-
-  # Set plot style
   sns.set_theme(style="whitegrid")
+  plt.figure(figsize=(10, 6))
 
-  # Create the plot
-  plt.figure(figsize=(10,6))
-  
-  sns.scatterplot(data=df, x='tot_data_size_MiB', y='time_ms', hue='name', palette='tab10')
+  sns.scatterplot(data=df, x=x_col, y=y_col, hue="name", palette="tab10")
+  plt.xlabel(x_label, fontsize=12)
+  plt.ylabel(y_label, fontsize=12)
+  plt.xscale("log")
+  plt.yscale("linear")
+  plt.legend(title="Libraries", bbox_to_anchor=(1.05, 1), loc="upper left")
+  plt.title(get_plot_title(dfs, plot_id), fontsize=12)
 
-  # Customize the plot
-  plt.title(title, fontsize=12)
-  plt.xlabel("Buffer Size (MiB)", fontsize=12)
-  plt.ylabel("Time (ms)", fontsize=12)
-  plt.xscale('log')
-  plt.yscale('linear')
-  plt.legend(title='Libraries', bbox_to_anchor=(1.05, 1), loc='upper left')
-
-  # Properly set x-ticks
   ax = plt.gca()
-  ax.set_xticks(buffer_sizes)
-  ax.set_xticklabels([str(sz) + " MiB" for sz in buffer_sizes])
+  x_ticks = sorted(df[x_col].unique())
+  ax.set_xticks(x_ticks)
+  ax.set_xticklabels([f"{x}" for x in x_ticks])
 
-  # Save the plot to a file
   plt.tight_layout()
-  plt.savefig(OUTPUT_DIR+file_name)
+  plt.savefig(os.path.join(OUTPUT_DIR, file_name))
+  plt.close()
 
 
 
-def bufferSize_vs_throughput(df: pd.DataFrame):
-  file_name = 'buffer_size_vs_throughput.png'
+def get_plot_title(dfs: dict[int, pd.DataFrame], plot_id:int):
+  """Generate a plot title containing all the constant parameters."""
+  df = dfs[plot_id]
+  num_data_blocks = df.iloc[0]["num_data_blocks"]
+  redundancy_ratio = df.iloc[0]["redundancy_ratio"]
+  num_lost_blocks = df.iloc[0]["num_lost_blocks"]
+  num_iterations = df.iloc[0]["num_iterations"]
+  buffer_size_mib = df.iloc[0]["tot_data_size_MiB"]
 
-  # Get the constant parameters to mention in plot title
-  num_data_blocks = df.iloc[0]['tot_data_size_B'] // df.iloc[0]['block_size_B']
-  redundancy_ratio = df.iloc[0]['redundancy_ratio']
-  num_lost_blocks = df.iloc[0]['num_lost_blocks']
-  num_iterations = df.iloc[0]['num_iterations']
-  title = f"#Data Blocks: {num_data_blocks}, #Redundancy Ratio: {redundancy_ratio}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
-
-
-  # Get the measured buffer sizes
-  var_buffer_sizes = sorted(df['tot_data_size_MiB'].unique())
-
-  # Set plot style
-  sns.set_theme(style="whitegrid")
-
-  # Create the plot
-  plt.figure(figsize=(10,6))
+  if plot_id == 0:
+    return f"#Data Blocks: {num_data_blocks}, #Redundancy Ratio: {redundancy_ratio}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
+  elif plot_id == 1:
+    return f"Buffer Size: {buffer_size_mib} MiB, #Data Blocks: {num_data_blocks}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}" 
+  elif plot_id == 2:
+    return f"Buffer Size: {buffer_size_mib} MiB, #Data Blocks: {num_data_blocks}, #Parity Blocks = {int(num_data_blocks*redundancy_ratio)}, #Iterations: {num_iterations}"
   
-  sns.scatterplot(data=df, x='tot_data_size_MiB', y='throughput_Gbps', hue='name', palette='tab10')
-
-  # Customize the plot
-  plt.title(title, fontsize=12)
-  plt.xlabel("Buffer Size (MiB)", fontsize=12)
-  plt.ylabel("Throughput (Gbps)", fontsize=12)
-  plt.xscale('log')
-  plt.yscale('linear')
-  plt.legend(title='Libraries', bbox_to_anchor=(1.05, 1), loc='upper left')
-
-  # Properly set x-ticks
-  ax = plt.gca()
-  ax.set_xticks(var_buffer_sizes)
-  ax.set_xticklabels([str(sz) + " MiB" for sz in var_buffer_sizes])
-
-  # Save the plot to a file
-  plt.tight_layout()
-  plt.savefig(OUTPUT_DIR+file_name)
-##### VARYING BUFFER SIZE PLOTS #####
+  return "ERROR: Invalid plot_id"
 
 
-##### VARYING REDUNDANCY RATIO PLOTS #####
-def redundancyRatio_vs_time(df: pd.DataFrame):
-  file_name = 'redundancy_ratio_vs_time.png'
 
-  # Get the constant parameters to mention in plot title
-  buffer_size_mib = df.iloc[0]['tot_data_size_MiB']
-  num_data_blocks = df.iloc[0]['num_data_blocks']
-  num_lost_blocks = df.iloc[0]['num_lost_blocks']
-  num_iterations = df.iloc[0]['num_iterations']
-  title = f"Buffer Size: {buffer_size_mib} MiB, #Data Blocks: {num_data_blocks}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
-
-  recovery_blocks_ticks = sorted(df['num_recovery_blocks'].unique()); 
-
-  # Set plot style
-  sns.set_theme(style="whitegrid")
-
-  # Create the plot
-  plt.figure(figsize=(10,6))
+def process_dataframe(df: pd.DataFrame):
+  """Process the raw DataFrame to generate the required columns. Returns a dictionary of DataFrames, grouped by plot_id."""
   
-  sns.scatterplot(data=df, x='num_recovery_blocks', y='time_ms', hue='name', palette='tab10')
+  # Clean up 'name' column by removing the '/iterations:...' part
+  df["name"] = df["name"].str.split("/", n=1).str[0]
 
-  # Customize the plot
-  plt.title(title, fontsize=12)
-  plt.xlabel("#Parity Blocks", fontsize=12)
-  plt.ylabel("Time (ms)", fontsize=12)
-  plt.xscale('log')
-  plt.yscale('linear')
-  plt.legend(title='Libraries', bbox_to_anchor=(1.05, 1), loc='upper left')
+  # Remove rows where corruption occured
+  df = df[df["err_msg"].isna()]
 
-  # Properly set x-ticks
-  ax = plt.gca()
-  ax.set_xticks(recovery_blocks_ticks)
-  ax.set_xticklabels([str(sz) for sz in recovery_blocks_ticks])
+  # Get additional columns (mainly different units of existing columns)
+  df["time_ms"] = df["time_ns"] / 1e6
+  df["tot_data_size_MiB"] = df["tot_data_size_B"] // (1024 * 1024)
+  df["throughput_Gbps"] = (df["tot_data_size_B"] * 8) / df["time_ns"]
+  df["num_data_blocks"] = df["tot_data_size_B"] // df["block_size_B"]
+  df["num_recovery_blocks"] = (df["redundancy_ratio"] * df["num_data_blocks"]).astype(int)
 
-  # Save the plot to a file
-  plt.tight_layout()
-  plt.savefig(OUTPUT_DIR+file_name)
-
-
-def redundancyRatio_vs_time(df: pd.DataFrame):
-  file_name = 'redundancy_ratio_vs_throughput.png'
-
-  # Get the constant parameters to mention in plot title
-  buffer_size_mib = df.iloc[0]['tot_data_size_MiB']
-  num_data_blocks = df.iloc[0]['num_data_blocks']
-  num_lost_blocks = df.iloc[0]['num_lost_blocks']
-  num_iterations = df.iloc[0]['num_iterations']
-  title = f"Buffer Size: {buffer_size_mib} MiB, #Data Blocks: {num_data_blocks}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
-
-  recovery_blocks_ticks = sorted(df['num_recovery_blocks'].unique()); 
-
-  # Set plot style
-  sns.set_theme(style="whitegrid")
-
-  # Create the plot
-  plt.figure(figsize=(10,6))
-  
-  sns.scatterplot(data=df, x='num_recovery_blocks', y='throughput_Gbps', hue='name', palette='tab10')
-
-  # Customize the plot
-  plt.title(title, fontsize=12)
-  plt.xlabel("#Parity Blocks", fontsize=12)
-  plt.ylabel("Throughput (Gbps)", fontsize=12)
-  plt.xscale('log')
-  plt.yscale('linear')
-  plt.legend(title='Libraries', bbox_to_anchor=(1.05, 1), loc='upper left')
-
-  # Properly set x-ticks
-  ax = plt.gca()
-  ax.set_xticks(recovery_blocks_ticks)
-  ax.set_xticklabels([str(sz) for sz in recovery_blocks_ticks])
-
-  # Save the plot to a file
-  plt.tight_layout()
-  plt.savefig(OUTPUT_DIR+file_name)
-
-##### VARYING REDUNDANCY RATIO PLOTS #####
-
-
-
-##### VARYING NO. LOST BLOCKS PLOTS #####
-def numLostBlocks_vs_time(df: pd.DataFrame):
-  file_name = 'num_lost_blocks_vs_time.png'
-
-  # Get the constant parameters to mention in plot title
-  buffer_size_mib = df.iloc[0]['tot_data_size_MiB']
-  num_data_blocks = df.iloc[0]['num_data_blocks']
-  num_iterations = df.iloc[0]['num_iterations']
-  title = f"Buffer Size: {buffer_size_mib} MiB, #Data Blocks: {num_data_blocks}, #Parity Blocks = #Lost Blocks, #Iterations: {num_iterations}"
-
-  lost_block_ticks = sorted(df['num_lost_blocks'].unique()); 
-
-  # Set plot style
-  sns.set_theme(style="whitegrid")
-
-  # Create the plot
-  plt.figure(figsize=(10,6))
-  
-  sns.scatterplot(data=df, x='num_lost_blocks', y='time_ms', hue='name', palette='tab10')
-
-  # Customize the plot
-  plt.title(title, fontsize=12)
-  plt.xlabel("#Lost Blocks", fontsize=12)
-  plt.ylabel("Time (ms)", fontsize=12)
-  plt.xscale('log')
-  plt.yscale('linear')
-  plt.legend(title='Libraries', bbox_to_anchor=(1.05, 1), loc='upper left')
-
-  # Properly set x-ticks
-  ax = plt.gca()
-  ax.set_xticks(lost_block_ticks)
-  ax.set_xticklabels([str(sz) for sz in lost_block_ticks])
-
-  # Save the plot to a file
-  plt.tight_layout()
-  plt.savefig(OUTPUT_DIR+file_name)
-
-
-
-def numLostBlocks_vs_time(df: pd.DataFrame):
-  file_name = 'num_lost_blocks_vs_throughput.png'
-
-  # Get the constant parameters to mention in plot title
-  buffer_size_mib = df.iloc[0]['tot_data_size_MiB']
-  num_data_blocks = df.iloc[0]['num_data_blocks']
-  num_lost_blocks = df.iloc[0]['num_lost_blocks']
-  num_iterations = df.iloc[0]['num_iterations']
-  title = f"Buffer Size: {buffer_size_mib} MiB, #Data Blocks: {num_data_blocks}, #Lost Blocks: {num_lost_blocks}, #Iterations: {num_iterations}"
-
-  lost_block_ticks = sorted(df['num_lost_blocks'].unique()); 
-
-  # Set plot style
-  sns.set_theme(style="whitegrid")
-
-  # Create the plot
-  plt.figure(figsize=(10,6))
-  
-  sns.scatterplot(data=df, x='num_recovery_blocks', y='throughput_Gbps', hue='name', palette='tab10')
-
-  # Customize the plot
-  plt.title(title, fontsize=12)
-  plt.xlabel("#Lost Blocks", fontsize=12)
-  plt.ylabel("Throughput (Gbps)", fontsize=12)
-  plt.xscale('log')
-  plt.yscale('linear')
-  plt.legend(title='Libraries', bbox_to_anchor=(1.05, 1), loc='upper left')
-
-  # Properly set x-ticks
-  ax = plt.gca()
-  ax.set_xticks(lost_block_ticks)
-  ax.set_xticklabels([str(sz) for sz in lost_block_ticks])
-
-  # Save the plot to a file
-  plt.tight_layout()
-  plt.savefig(OUTPUT_DIR+file_name)
-
-##### VARYING NO. LOST BLOCKS PLOTS #####
-
+  # Return DataFrame grouped by plot_id
+  # return {plot_id: group for plot_id, group in df.groupby("plot_id")}
 
 
 
 if __name__ == "__main__":
-  # Make sure output directory exists
-  os.makedirs(OUTPUT_DIR, exist_ok=True)
+  ensure_output_directory()
   df = pd.read_csv(INPUT_FILE)
 
-  # Remove "/iterations:..." from the end of the 'name' column
-  df['name'] = df['name'].str.split('/', n=1).str[0]
+  # Clean up 'name' column by removing the '/iterations:...' part
+  df["name"] = df["name"].str.split("/", n=1).str[0]
 
   # Remove rows where corruption occured
-  df = df[df['err_msg'].isna()]
+  df = df[df["err_msg"].isna()]
 
-  # Convert nanoseconds to milliseconds
-  df['time_ms'] = df['time_ns'] / 1e6
+  # Get additional columns (mainly different units of existing columns)
+  df["time_ms"] = df["time_ns"] / 1e6
+  df["tot_data_size_MiB"] = df["tot_data_size_B"] // (1024 * 1024)
+  df["throughput_Gbps"] = (df["tot_data_size_B"] * 8) / df["time_ns"]
+  df["num_data_blocks"] = df["tot_data_size_B"] // df["block_size_B"]
+  df["num_recovery_blocks"] = (df["redundancy_ratio"] * df["num_data_blocks"]).astype(int)
 
-  # Helper Columns
-  df['tot_data_size_MiB'] = df['tot_data_size_B'] // (1024 * 1024)
-  df['throughput_Gbps'] = (df['tot_data_size_B']*8) / (df['time_ns'])
-  df['num_data_blocks'] = df['tot_data_size_B'] // df['block_size_B']
-  df['num_recovery_blocks'] = (df['redundancy_ratio'] * df['num_data_blocks']).astype(int)
+  dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
 
-  # Group Dataframe by plot_id
-  dfs = {plot_id: group for plot_id, group in df.groupby('plot_id')}
+  # X: Buffer Size, Y: Time
+  plot_scatter(dfs, "tot_data_size_MiB", "time_ms", "Buffer Size (MiB)", "Time (ms)", "buffer_size_vs_time.png", 0)
 
-  # print(dfs[0].head())
-  # print(dfs[1].head())
-  # print(dfs[2].head())
+  # X: Buffer Size, Y: Throughput
+  plot_scatter(dfs, "tot_data_size_MiB", "throughput_Gbps", "Buffer Size (MiB)", "Throughput (Gbps)", "buffer_size_vs_throughput.png", 0)
 
-  bufferSize_vs_time(dfs[0])
-  bufferSize_vs_throughput(dfs[0])
-  
-  redundancyRatio_vs_time(dfs[1])
-  redundancyRatio_vs_time(dfs[1])
 
-  numLostBlocks_vs_time(dfs[2])
-  numLostBlocks_vs_time(dfs[2])
+  # X: Num Parity Blocks, Y: Time
+  plot_scatter(dfs, "num_recovery_blocks", "time_ms", "#Parity Blocks", "Time (ms)", "parity_blocks_vs_time.png", 1)
 
-  # # compute the throughput
-  # df['total_MB'] = df['tot_bytes'] / 1e6
-  # df['throughput_Gbps'] = (df['total_MB'] * 8) / (df['real_time_ms'] * 1e3)
+  # X: Num Parity Blocks, Y: Throughput
+  plot_scatter(dfs, "num_recovery_blocks", "throughput_Gbps", "#Parity Blocks", "Throughput (Gbps)", "parity_blocks_vs_throughput.png", 1)
 
-  # plot_x_buffer_size__y_time(df)
-  # plot_x_buffer_size__y_throughout(df)
+
+  # X: Num Lost Blocks, Y: Time
+  plot_scatter(dfs, "num_lost_blocks", "time_ms", "#Lost Blocks", "Time (ms)", "lost_blocks_vs_time.png", 2)
+
+  # X: Num Lost Blocks, Y: Throughput
+  plot_scatter(dfs, "num_lost_blocks", "throughput_Gbps", "#Lost Blocks", "Throughput (Gbps)", "lost_blocks_vs_throughput.png", 2)

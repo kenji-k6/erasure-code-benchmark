@@ -14,17 +14,16 @@
 #include <unordered_set>
 #include <getopt.h>
 
+#define TAKE_CMD_LINE_ARGS false
+#define RUNNING_ON_DOCKER true
+
 constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
-constexpr bool TAKE_CMD_LINE_ARGS = true;
-constexpr bool RUNNING_ON_DOCKER = true;
 
 #if RUNNING_ON_DOCKER
-  constexpr uint32_t FIXED_NUM_ITERATIONS = 50;
+  constexpr uint32_t FIXED_NUM_ITERATIONS = 3;
   constexpr uint64_t FIXED_BUFFER_SIZE = 67108864; ///< 64 MiB
 
   const std::vector<uint64_t> VAR_BUFFER_SIZE = { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456 };
-  constexpr std::vector<uint32_t> VAR_NUM_RECOVERY_BLOCKS = { 1, 2, 4, 8, 16, 32, 64, 128 };
-  constexpr std::vector<uint64_t> VAR_NUM_LOST_BLOCKS = { 1, 2, 4, 8, 16, 32, 64, 128 };
 #else
   constexpr uint32_t FIXED_NUM_ITERATIONS = 2500;
   constexpr uint64_t FIXED_BUFFER_SIZE = 1073741824; ///< 1 GiB
@@ -398,7 +397,7 @@ int main (int argc, char** argv) {
   }
 
 
-  /// @attention Configs for varying no. of lost blocks the no. of redundancy blocks is always == no. of lost blocks
+  /// @attention Configs for varying no. of lost blocks the no. of redundancy blocks is always = no. data blocks
   uint32_t tot_num_lost_blocks = 0;
   for (auto num_lost_blocks : VAR_NUM_LOST_BLOCKS) {
     tot_num_lost_blocks += num_lost_blocks;
@@ -422,10 +421,10 @@ int main (int argc, char** argv) {
 
     config.num_lost_blocks = num_lost_blocks;
     config.lost_block_idxs = curr;
-    config.redundancy_ratio = static_cast<double>(num_lost_blocks) / FIXED_NUM_ORIGINAL_BLOCKS;
+    config.redundancy_ratio = 1.0;
 
     config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.computed.num_recovery_blocks = num_lost_blocks;
+    config.computed.num_recovery_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
 
     config.num_iterations = FIXED_NUM_ITERATIONS;
     config.plot_id = 2;
