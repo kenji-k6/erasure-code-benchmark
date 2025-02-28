@@ -1,67 +1,47 @@
-#include "generic_benchmark_runner.h"
-#include "leopard_benchmark.h"
-#include "cm256_benchmark.h"
-#include "wirehair_benchmark.h"
-#include "isal_benchmark.h"
-#include "baseline_benchmark.h"
-#include "benchmark/benchmark.h"
-#include "utils.h"
 #include "benchmark_result_writer.h"
+#include "benchmark/benchmark.h"
+#include "generic_benchmark_runner.h"
+#include "utils.h"
 
-#include <memory>
-#include <iostream>
+#include "baseline_benchmark.h"
+#include "cm256_benchmark.h"
+#include "isal_benchmark.h"
+#include "leopard_benchmark.h"
+#include "wirehair_benchmark.h"
+
 #include <cmath>
 #include <unordered_map>
 #include <unordered_set>
 #include <getopt.h>
 
-#define OUTPUT_FILE_PATH "../results/raw/"
-#define TAKE_CMD_LINE_ARGS true
-#define RUNNING_ON_DOCKER true
+constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
+constexpr bool TAKE_CMD_LINE_ARGS = true;
+constexpr bool RUNNING_ON_DOCKER = true;
 
 #if RUNNING_ON_DOCKER
+  constexpr uint32_t FIXED_NUM_ITERATIONS = 50;
+  constexpr uint64_t FIXED_BUFFER_SIZE = 67108864; ///< 64 MiB
 
-  #define FIXED_NUM_ITERATIONS 50
-
-  // Fixed buffer size of 64 MiB
-  #define FIXED_BUFFER_SIZE 67108864
-
-  // Fixed num blocks
-  #define FIXED_NUM_ORIGINAL_BLOCKS 128
-  #define FIXED_NUM_RECOVERY_BLOCKS 4
-
-  #define FIXED_PARITY_RATIO 0.03125
-
-  #define FIXED_NUM_LOST_BLOCKS 1
-
-  // Variable buffer size(s) (1 MiB - 256 MiB)
-  #define VAR_BUFFER_SIZE { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456 }
-  #define VAR_NUM_RECOVERY_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
-  #define VAR_NUM_LOST_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
-
-
+  const std::vector<uint64_t> VAR_BUFFER_SIZE = { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456 };
+  constexpr std::vector<uint32_t> VAR_NUM_RECOVERY_BLOCKS = { 1, 2, 4, 8, 16, 32, 64, 128 };
+  constexpr std::vector<uint64_t> VAR_NUM_LOST_BLOCKS = { 1, 2, 4, 8, 16, 32, 64, 128 };
 #else
+  constexpr uint32_t FIXED_NUM_ITERATIONS = 2500;
+  constexpr uint64_t FIXED_BUFFER_SIZE = 1073741824; ///< 1 GiB
 
-  #define FIXED_NUM_ITERATIONS 2500
-
-  // Fixed buffer size of 1 GiB
-  #define FIXED_BUFFER_SIZE 1073741824
-
-  // Fixed num blocks
-  #define FIXED_NUM_ORIGINAL_BLOCKS 128
-  #define FIXED_NUM_RECOVERY_BLOCKS 4
-
-  #define FIXED_NUM_LOST_BLOCKS 1
-
-  // Variable buffer size(s) (1 MiB -  8 GiB)
-  #define VAR_BUFFER_SIZE { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648, 4294967296, 8589934592 }
-  #define VAR_NUM_RECOVERY_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
-  #define VAR_NUM_LOST_BLOCKS { 1, 2, 4, 8, 16, 32, 64, 128 }
-
+  const std::vector<uint64_t> VAR_BUFFER_SIZE = { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648, 4294967296, 8589934592 };
 #endif
 
+/// Constants that are the same regardless where the code is run
+constexpr uint32_t FIXED_NUM_ORIGINAL_BLOCKS = 128;
+constexpr uint32_t FIXED_NUM_RECOVERY_BLOCKS = 4;
+constexpr double FIXED_PARITY_RATIO = 0.03125;
+constexpr uint64_t FIXED_NUM_LOST_BLOCKS = 1;
+const std::vector<uint32_t> VAR_NUM_RECOVERY_BLOCKS = { 1, 2, 4, 8, 16, 32, 64, 128 };
+const std::vector<uint64_t> VAR_NUM_LOST_BLOCKS = { 1, 2, 4, 8, 16, 32, 64, 128 };
 
 
+/// Benchmark functions for different libraries/algorithms
 static void BM_Baseline(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<BaselineBenchmark>(state, config);
 }
@@ -82,6 +62,7 @@ static void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config) 
   BM_generic<WirehairBenchmark>(state, config);
 }
 
+/// @brief Map ov available benchmarks
 const std::unordered_map<std::string, void(*)(benchmark::State&, const BenchmarkConfig&)> available_benchmarks = {
   { "baseline", BM_Baseline },
   { "cm256", BM_CM256 },
@@ -92,8 +73,7 @@ const std::unordered_map<std::string, void(*)(benchmark::State&, const Benchmark
 
 std::unordered_set<std::string> selected_benchmarks;
 
-
-
+/// @brief Function to display usage information
 void usage() {
   std::cerr << "Usage: ecc-benchmark [options]\n"
             << "  -h | --help       Help\n"
@@ -114,7 +94,14 @@ void usage() {
   exit(0);
 }
 
-
+/// @brief Function to check the validity of command-line arguments
+/// @param s total data size
+/// @param b block size
+/// @param l Number of lost blocks
+/// @param r Redundancy ratio
+/// @param i Number of benchmark iterations
+/// @param num_orig_blocks Number of original blocks
+/// @param num_rec_blocks Number of parity/recovery blocks
 void check_args(size_t s, size_t b, size_t l, double r, int i, size_t num_orig_blocks, size_t num_rec_blocks) {
   if (num_orig_blocks < 1 || num_rec_blocks < 0) {
     std::cerr << "Error: Number of original blocks must be at least 1 and number of recovery blocks must be at least 0.\n"
