@@ -1,23 +1,24 @@
 #include "benchmark_result_writer.h"
-#include "utils.h"
-#include <benchmark/benchmark.h>
-#include <iostream>
+#include <stdexcept>
+
 
 
 BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool overwrite_file) {
-  if (overwrite_file) {
-    file.open(output_file, std::ios::out);
-  } else {
-    file.open(output_file, std::ios::app);
-  }
+  std::ios_base::openmode mode = overwrite_file ? std::ios::out : std::ios::app;
+  file.open(output_file, mode);
 
   if (!file.is_open()) {
     throw std::runtime_error("Error opening file: " + output_file);
   }
 
+  // Write CSV header only if overwriting the file
   if (overwrite_file) {
     file << "plot_id,name,err_msg,num_iterations,time_ns,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio\n";
   }
+}
+
+BenchmarkCSVReporter::~BenchmarkCSVReporter() {
+  if (file.is_open()) file.close();
 }
 
 void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
@@ -34,6 +35,4 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
   }
 }
 
-bool BenchmarkCSVReporter::ReportContext(const Context& context) {
-  return true;
-}
+bool BenchmarkCSVReporter::ReportContext(const Context& context) { return true; }
