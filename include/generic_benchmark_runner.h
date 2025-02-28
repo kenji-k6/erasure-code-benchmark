@@ -4,6 +4,8 @@
 #include "abstract_benchmark.h"
 #include "benchmark/benchmark.h"
 #include <chrono>
+#include <vector>
+#include <cmath>
 
 
 /**
@@ -30,9 +32,11 @@
 template <typename BenchmarkType>
 static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   BenchmarkType bench(config);
-  long enc_tot = 0;
-  long dec_tot = 0;
-
+  std::vector<int64_t> enc_times(config.num_iterations);
+  std::vector<int64_t> dec_times(config.num_iterations);
+  double enc_mean = 0;
+  double dec_mean = 0;
+  unsigned it = 0;
 
   for (auto _ : state) {
     bench.setup();
@@ -53,17 +57,65 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
     bench.teardown();
 
 
-    auto time_encode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_encode - start_encode).count();
-    auto time_decode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_decode - start_decode).count();
+    int64_t time_encode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_encode - start_encode).count();
+    int64_t time_decode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_decode - start_decode).count();
 
-    enc_tot += time_encode;
-    dec_tot += time_decode;
+    enc_mean += time_encode;
+    dec_mean += time_decode;
+
+    enc_times[it] = time_encode;
+    dec_times[it] = time_decode;
+    ++it;
     
     state.SetIterationTime(static_cast<double>(time_encode+time_decode)/1e9);
   }
 
-  state.counters["encode_time_ns"] = enc_tot/state.iterations();
-  state.counters["decode_time_ns"] = dec_tot/state.iterations();
+  // Compute the standard deviation of the encode, decode and total times aswell as the max and min times for encoding, decoding and total
+  enc_mean /= config.num_iterations;
+  dec_mean /= config.num_iterations;
+  double tot_mean = enc_mean + dec_mean;
+  double enc_stddev = 0;
+  double dec_stddev = 0;
+  double tot_stddev = 0;
+
+  long enc_max = enc_times[0];
+  long dec_max = dec_times[0];
+  long tot_max = enc_times[0] + dec_times[0];
+
+  long enc_min = enc_times[0];
+  long dec_min = dec_times[0];
+  long tot_min = enc_times[0] + dec_times[0];
+  for (unsigned i = 0; i < config.num_iterations; ++i) {
+    enc_stddev += std::pow(enc_times[i] - enc_mean, 2);
+    dec_stddev += std::pow(dec_times[i] - dec_mean, 2);
+    tot_stddev += std::pow((enc_times[i] + dec_times[i]) - tot_mean, 2);
+
+    enc_max = std::max(enc_max, enc_times[i]);
+    dec_max = std::max(dec_max, dec_times[i]);
+    tot_max = std::max(tot_max, enc_times[i] + dec_times[i]);
+
+    enc_min = std::min(enc_min, enc_times[i]);
+    dec_min = std::min(dec_min, dec_times[i]);
+    tot_min = std::min(tot_min, enc_times[i] + dec_times[i]);
+  }
+
+  enc_stddev = std::sqrt(enc_stddev / (config.num_iterations-1));
+  dec_stddev = std::sqrt(dec_stddev / (config.num_iterations-1));
+  tot_stddev = std::sqrt(tot_stddev / (config.num_iterations-1));
+
+
+  // Save results to counters
+  state.counters["encode_time_ns"] = enc_mean;
+  state.counters["decode_time_ns"] = dec_mean;
+  state.counters["encode_time_stddev_ns"] = enc_stddev;
+  state.counters["decode_time_stddev_ns"] = dec_stddev;
+  state.counters["tot_time_stddev_ns"] = tot_stddev;
+  state.counters["encode_time_max_ns"] = enc_max;
+  state.counters["decode_time_max_ns"] = dec_max;
+  state.counters["tot_time_max_ns"] = tot_max;
+  state.counters["encode_time_min_ns"] = enc_min;
+  state.counters["decode_time_min_ns"] = dec_min;
+  state.counters["tot_time_min_ns"] = tot_min;
 
   state.counters["tot_data_size_B"] = config.data_size;
   state.counters["block_size_B"] = config.block_size;

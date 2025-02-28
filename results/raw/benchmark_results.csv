@@ -1,6 +1,6 @@
-plot_id,name,err_msg,num_iterations,time_ns,encode_time_ns,decode_time_ns,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio
-0,Baseline/iterations:10/manual_time,,10,144175,66366,77808,1048576,8192,1,0.03125
-0,CM256/iterations:10/manual_time,,10,1.68351e+06,1251587,431924,1048576,8192,1,0.03125
-0,ISA-L/iterations:10/manual_time,,10,2.76357e+06,326075,2437495,1048576,8192,1,0.03125
-0,Leopard/iterations:10/manual_time,,10,3.6048e+06,301454,3303345,1048576,8192,1,0.03125
-0,Wirehair/iterations:10/manual_time,,10,1.99888e+07,9329912,10658933,1048576,8192,1,0.03125
+plot_id,name,err_msg,num_iterations,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio,time_ns,tot_time_stddev_ns,tot_time_min_ns,tot_time_max_ns,encode_time_ns,encode_time_stddev_ns,encode_time_min_ns,encode_time_max_ns,decode_time_ns,encode_time_stddev_ns,decode_time_min_ns,decode_time_max_ns
+0,Baseline/iterations:100/manual_time,,100,1048576,8192,1,0.03125,146373,60896.9,127833,684750,63939.6,31650.2,56000,350458,82433.3,33373.6,71416,334292
+0,CM256/iterations:100/manual_time,,100,1048576,8192,1,0.03125,1.66066e+06,31785.5,1.56492e+06,1.76504e+06,1.21881e+06,21614.9,1.15175e+06,1.2815e+06,441853,19181.3,413167,537583
+0,ISA-L/iterations:100/manual_time,,100,1048576,8192,1,0.03125,2.81377e+06,153974,2.63508e+06,3.95788e+06,339154,24713.4,312000,508792,2.47461e+06,137165,2.316e+06,3.44908e+06
+0,Leopard/iterations:100/manual_time,,100,1048576,8192,1,0.03125,3.28975e+06,2.02589e+06,2.16696e+06,2.22439e+07,306497,181367,253709,1.98838e+06,2.98325e+06,2.01469e+06,1.83571e+06,2.19734e+07
+0,Wirehair/iterations:100/manual_time,,100,1048576,8192,1,0.03125,1.94131e+07,470716,1.8482e+07,2.10985e+07,9.53696e+06,316498,8.91142e+06,1.0983e+07,9.87614e+06,263842,9.30012e+06,1.0696e+07
