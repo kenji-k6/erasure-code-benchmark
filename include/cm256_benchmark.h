@@ -13,7 +13,7 @@
  * 
  * This class implements the ECCBenchmark interface, providing specific functionality
  * for benchmarking the CM256 library. It supports setup, teardown, encoding, decoding,
- * data loss simulation, corruption checking and cache flushing.
+ * data loss simulation and corruption checking.
  */
 class CM256Benchmark : public ECCBenchmark {
 public:

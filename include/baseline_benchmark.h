@@ -23,7 +23,7 @@ public:
 private:
   // Data Buffers
   uint8_t* original_buffer_ = nullptr;    ///< Buffer for the original data we want to transmit
-  uint8_t* parity_block_ = nullptr;      ///< Buffer for the decoded data
+  uint8_t* parity_block_ = nullptr;       ///< Buffer for the decoded data
 };
 
 

@@ -12,7 +12,7 @@
  * 
  * This class implements the ECCBenchmark interface, providing specific functionality
  * for benchmarking the ISA-L library. It supports setup, teardown, encoding, decoding,
- * data loss simulation, corruption checking and cache flushing.
+ * data loss simulation and corruption checking..
  */
 class ISALBenchmark : public ECCBenchmark {
 public:

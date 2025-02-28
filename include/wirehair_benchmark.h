@@ -11,7 +11,7 @@
  * 
  * This class implements the ECCBenchmark interface, providing specific functionality
  * for benchmarking the Wirehair library. It supports setup, teardown, encoding, decoding,
- * data loss simulation, corruption checking and cache flushing.
+ * data loss simulation and corruption checking..
  * 
  * @attention Since Wirehair uses a fountain code approach, this means that recovery blocks are generated
  * until the data can be restored. To still have an adequate comparison with the other libraries, the
