@@ -47,8 +47,8 @@ struct BenchmarkConfig {
     uint32_t num_recovery_blocks;   ///< Number of recovery blocks
   } computed;
 
-  uint32_t num_iterations;
-  uint8_t plot_id;          ///< Identifier for plotting 0
+  uint32_t num_iterations;          ///< Number of iterations to run the benchmark
+  uint8_t plot_id;                  ///< Identifier for plotting 0
 };
 
 
@@ -90,7 +90,7 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size);
  * @brief Selects k unique indices from range [0, maxIndex) to determine lost blocks.
  * @param num_lost_blocks Number of blocks to select.
  * @param max_index Upper limit of the index range.
- * @param lost_block_idxs Vector to store the selected lost block indices.
+ * @param lost_block_idxs Pointer to the array to store the selected indices.
  */
 void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, uint32_t *lost_block_idxs);
 
