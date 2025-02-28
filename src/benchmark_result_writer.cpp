@@ -16,26 +16,26 @@ BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool 
     file  << "plot_id,"
           << "name,"
           << "err_msg,"
+
           << "num_iterations,"
           << "tot_data_size_B,"
           << "block_size_B,"
           << "num_lost_blocks,"
           << "redundancy_ratio,"
+          << "num_data_blocks,"
+          << "num_parity_blocks,"
 
           << "time_ns,"
-          << "tot_time_stddev_ns,"
-          << "tot_time_min_ns,"
-          << "tot_time_max_ns,"
 
           << "encode_time_ns,"
           << "encode_time_stddev_ns,"
-          << "encode_time_min_ns,"
-          << "encode_time_max_ns,"
+          << "encode_throughput_Gbps,"
+          << "encode_throughput_stddev_Gbps,"
 
           << "decode_time_ns,"
           << "encode_time_stddev_ns,"
-          << "decode_time_min_ns,"
-          << "decode_time_max_ns\n";
+          << "decode_throughput_Gbps,"
+          << "decode_throughput_stddev_Gbps\n";
           
   }
 }
@@ -49,26 +49,28 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
     file  << static_cast<uint32_t>(run.counters.find("plot_id")->second.value) << ","
           << run.benchmark_name() << ","
           << run.skip_message << ","
+
           << run.iterations << ","
           << static_cast<uint64_t>(run.counters.find("tot_data_size_B")->second.value) << "," 
           << static_cast<uint64_t>(run.counters.find("block_size_B")->second.value) << ","
           << static_cast<uint32_t>(run.counters.find("num_lost_blocks")->second.value) << ","
           << run.counters.find("redundancy_ratio")->second.value << ","
+          << static_cast<uint32_t>(run.counters.find("num_data_blocks")->second.value) << ","
+          << static_cast<uint32_t>(run.counters.find("num_parity_blocks")->second.value) << ","
 
           << run.GetAdjustedRealTime() << ","
-          << run.counters.find("tot_time_stddev_ns")->second.value << ","
-          << run.counters.find("tot_time_min_ns")->second.value << ","
-          << run.counters.find("tot_time_max_ns")->second.value << ","
+
           
           << run.counters.find("encode_time_ns")->second.value << ","
           << run.counters.find("encode_time_stddev_ns")->second.value << ","
-          << run.counters.find("encode_time_min_ns")->second.value << ","
-          << run.counters.find("encode_time_max_ns")->second.value << ","
+          << run.counters.find("encode_throughput_Gbps")->second.value << ","
+          << run.counters.find("encode_throughput_stddev_Gbps")->second.value << ","
+
 
           << run.counters.find("decode_time_ns")->second.value << ","
           << run.counters.find("decode_time_stddev_ns")->second.value << ","
-          << run.counters.find("decode_time_min_ns")->second.value << ","
-          << run.counters.find("decode_time_max_ns")->second.value << "\n";
+          << run.counters.find("decode_throughput_Gbps")->second.value << ","
+          << run.counters.find("decode_throughput_stddev_Gbps")->second.value << "\n";
   }
 }
 

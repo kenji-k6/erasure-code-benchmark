@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import math
 
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -74,11 +75,18 @@ def process_dataframe(df: pd.DataFrame):
   df["tot_data_size_MiB"] = df["tot_data_size_B"] // (1024 * 1024)
   df["throughput_Gbps"] = (df["tot_data_size_B"] * 8) / df["time_ns"]
   df["num_data_blocks"] = df["tot_data_size_B"] // df["block_size_B"]
-  df["num_recovery_blocks"] = (df["redundancy_ratio"] * df["num_data_blocks"]).astype(int)
+  df["num_parity_blocks"] = (df["redundancy_ratio"] * df["num_data_blocks"]).astype(int)
 
   # Return DataFrame grouped by plot_id
   # return {plot_id: group for plot_id, group in df.groupby("plot_id")}
 
+def get_confidence_interval(mean: float, stddev: float, n: int) -> tuple[float, float]:
+  """Get the confidence interval for the mean."""
+  z = 1.96 # 95% confidence interval
+  lower = mean - z * (stddev / math.sqrt(n))
+  upper = mean + z * (stddev / math.sqrt(n))
+
+  return lower, upper
 
 
 if __name__ == "__main__":
@@ -91,12 +99,10 @@ if __name__ == "__main__":
   # Remove rows where corruption occured
   df = df[df["err_msg"].isna()]
 
-  # Get additional columns (mainly different units of existing columns)
+  # Get additional columns 
   df["time_ms"] = df["time_ns"] / 1e6
   df["tot_data_size_MiB"] = df["tot_data_size_B"] // (1024 * 1024)
   df["throughput_Gbps"] = (df["tot_data_size_B"] * 8 / 1e9) / (df["time_ns"] / 1e9)
-  df["num_data_blocks"] = df["tot_data_size_B"] // df["block_size_B"]
-  df["num_recovery_blocks"] = (df["redundancy_ratio"] * df["num_data_blocks"]).astype(int)
 
   dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
 
@@ -108,10 +114,10 @@ if __name__ == "__main__":
 
 
   # X: Num Parity Blocks, Y: Time
-  plot_scatter(dfs, "num_recovery_blocks", "time_ms", "#Parity Blocks", "Time (ms)", "parity_blocks_vs_time.png", 1)
+  plot_scatter(dfs, "num_parity_blocks", "time_ms", "#Parity Blocks", "Time (ms)", "parity_blocks_vs_time.png", 1)
 
   # X: Num Parity Blocks, Y: Throughput
-  plot_scatter(dfs, "num_recovery_blocks", "throughput_Gbps", "#Parity Blocks", "Throughput (Gbps)", "parity_blocks_vs_throughput.png", 1)
+  plot_scatter(dfs, "num_parity_blocks", "throughput_Gbps", "#Parity Blocks", "Throughput (Gbps)", "parity_blocks_vs_throughput.png", 1)
 
 
   # X: Num Lost Blocks, Y: Time
