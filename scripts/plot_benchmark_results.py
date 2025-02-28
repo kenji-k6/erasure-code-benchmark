@@ -94,7 +94,7 @@ if __name__ == "__main__":
   # Get additional columns (mainly different units of existing columns)
   df["time_ms"] = df["time_ns"] / 1e6
   df["tot_data_size_MiB"] = df["tot_data_size_B"] // (1024 * 1024)
-  df["throughput_Gbps"] = (df["tot_data_size_B"] * 8) / df["time_ns"]
+  df["throughput_Gbps"] = (df["tot_data_size_B"] * 8 / 1e9) / (df["time_ns"] / 1e9)
   df["num_data_blocks"] = df["tot_data_size_B"] // df["block_size_B"]
   df["num_recovery_blocks"] = (df["redundancy_ratio"] * df["num_data_blocks"]).astype(int)
 

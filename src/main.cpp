@@ -14,7 +14,7 @@
 #include <unordered_set>
 #include <getopt.h>
 
-#define TAKE_CMD_LINE_ARGS false
+#define TAKE_CMD_LINE_ARGS true
 #define RUNNING_ON_DOCKER true
 
 constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
@@ -312,7 +312,7 @@ int main(int argc, char** argv) {
   // Register benchmarks
   for (const auto& [name, func] : available_benchmarks) {
     if (selected_benchmarks.contains(name)) {
-      benchmark::RegisterBenchmark(name.c_str(), func, benchmark_config)->Iterations(benchmark_config.num_iterations);
+      benchmark::RegisterBenchmark(name.c_str(), func, benchmark_config)->UseManualTime()->Iterations(benchmark_config.num_iterations);
     }
   }
 
@@ -436,11 +436,11 @@ int main (int argc, char** argv) {
 
 
   for (auto& config : configs) {
-    benchmark::RegisterBenchmark("Baseline", BM_Baseline, config)->Iterations(config.num_iterations);
-    benchmark::RegisterBenchmark("CM256", BM_CM256, config)->Iterations(config.num_iterations);
-    benchmark::RegisterBenchmark("ISA-L", BM_ISAL, config)->Iterations(config.num_iterations);
-    benchmark::RegisterBenchmark("Leopard", BM_Leopard, config)->Iterations(config.num_iterations);
-    benchmark::RegisterBenchmark("Wirehair", BM_Wirehair, config)->Iterations(config.num_iterations);
+    benchmark::RegisterBenchmark("Baseline", BM_Baseline, config)->UseManualTime()->Iterations(config.num_iterations);
+    benchmark::RegisterBenchmark("CM256", BM_CM256, config)->UseManualTime()->Iterations(config.num_iterations);
+    benchmark::RegisterBenchmark("ISA-L", BM_ISAL, config)->UseManualTime()->Iterations(config.num_iterations);
+    benchmark::RegisterBenchmark("Leopard", BM_Leopard, config)->UseManualTime()->Iterations(config.num_iterations);
+    benchmark::RegisterBenchmark("Wirehair", BM_Wirehair, config)->UseManualTime()->Iterations(config.num_iterations);
   }
 
 

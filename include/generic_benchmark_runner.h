@@ -3,6 +3,7 @@
 
 #include "abstract_benchmark.h"
 #include "benchmark/benchmark.h"
+#include <chrono>
 
 
 /**
@@ -30,24 +31,30 @@ template <typename BenchmarkType>
 static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   BenchmarkType bench(config);
   for (auto _ : state) {
-    state.PauseTiming();
     bench.setup();
-    state.ResumeTiming();
 
+    auto start_encode = std::chrono::high_resolution_clock::now();
     bench.encode();
+    auto end_encode = std::chrono::high_resolution_clock::now();
 
-    state.PauseTiming();
     bench.simulate_data_loss();
-    state.ResumeTiming();
     
+    auto start_decode = std::chrono::high_resolution_clock::now();
     bench.decode();
-    
-    state.PauseTiming();
+    auto end_decode = std::chrono::high_resolution_clock::now();
+
     if (!bench.check_for_corruption()) {
       state.SkipWithMessage("Corruption Detected");
     }
     bench.teardown();
-    state.ResumeTiming();
+
+
+    auto time_encode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_encode - start_encode).count();
+    auto time_decode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_decode - start_decode).count();
+
+    state.counters["encode_time_ns"] = time_encode;
+    state.counters["decode_time_ns"] = time_decode;
+    state.SetIterationTime(time_encode + time_decode);
   }
 
   state.counters["tot_data_size_B"] = config.data_size;
