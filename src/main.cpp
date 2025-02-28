@@ -14,13 +14,13 @@
 #include <unordered_set>
 #include <getopt.h>
 
-#define TAKE_CMD_LINE_ARGS true
+#define TAKE_CMD_LINE_ARGS false
 #define RUNNING_ON_DOCKER true
 
 constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
 
 #if RUNNING_ON_DOCKER
-  constexpr uint32_t FIXED_NUM_ITERATIONS = 3;
+  constexpr uint32_t FIXED_NUM_ITERATIONS = 10;
   constexpr uint64_t FIXED_BUFFER_SIZE = 67108864; ///< 64 MiB
 
   const std::vector<uint64_t> VAR_BUFFER_SIZE = { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456 };
@@ -441,6 +441,7 @@ int main (int argc, char** argv) {
     benchmark::RegisterBenchmark("ISA-L", BM_ISAL, config)->UseManualTime()->Iterations(config.num_iterations);
     benchmark::RegisterBenchmark("Leopard", BM_Leopard, config)->UseManualTime()->Iterations(config.num_iterations);
     benchmark::RegisterBenchmark("Wirehair", BM_Wirehair, config)->UseManualTime()->Iterations(config.num_iterations);
+    break;
   }
 
 

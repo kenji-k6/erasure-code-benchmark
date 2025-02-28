@@ -1,0 +1,6 @@
+plot_id,name,err_msg,num_iterations,time_ns,test_time,encode_time_ns,decode_time_ns,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio
+0,Baseline/iterations:10/manual_time,,10,145800,145800,58229,87570,1048576,8192,1,0.03125
+0,CM256/iterations:10/manual_time,,10,1.66922e+06,1669216,1224691,444524,1048576,8192,1,0.03125
+0,ISA-L/iterations:10/manual_time,,10,2.93331e+06,2933308,354187,2579120,1048576,8192,1,0.03125
+0,Leopard/iterations:10/manual_time,,10,3.30559e+06,3305591,281866,3023725,1048576,8192,1,0.03125
+0,Wirehair/iterations:10/manual_time,,10,2.08507e+07,20850650,10487037,10363612,1048576,8192,1,0.03125

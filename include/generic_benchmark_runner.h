@@ -30,6 +30,10 @@
 template <typename BenchmarkType>
 static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   BenchmarkType bench(config);
+  long enc_tot = 0;
+  long dec_tot = 0;
+
+
   for (auto _ : state) {
     bench.setup();
 
@@ -52,10 +56,14 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
     auto time_encode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_encode - start_encode).count();
     auto time_decode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_decode - start_decode).count();
 
-    state.counters["encode_time_ns"] = time_encode;
-    state.counters["decode_time_ns"] = time_decode;
-    state.SetIterationTime(time_encode + time_decode);
+    enc_tot += time_encode;
+    dec_tot += time_decode;
+    
+    state.SetIterationTime(static_cast<double>(time_encode+time_decode)/1e9);
   }
+
+  state.counters["encode_time_ns"] = enc_tot/state.iterations();
+  state.counters["decode_time_ns"] = dec_tot/state.iterations();
 
   state.counters["tot_data_size_B"] = config.data_size;
   state.counters["block_size_B"] = config.block_size;

@@ -13,7 +13,7 @@ BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool 
 
   // Write CSV header only if overwriting the file
   if (overwrite_file) {
-    file << "plot_id,name,err_msg,num_iterations,time_ns,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio\n";
+    file << "plot_id,name,err_msg,num_iterations,time_ns,encode_time_ns,decode_time_ns,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio\n";
   }
 }
 
@@ -27,7 +27,9 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
          << run.benchmark_name() << ","
          << run.skip_message << ","
          << run.iterations << ","
-         << run.GetAdjustedCPUTime() << ","
+         << run.GetAdjustedRealTime() << ","
+         << static_cast<uint64_t>(run.counters.find("encode_time_ns")->second.value) << ","
+         << static_cast<uint64_t>(run.counters.find("decode_time_ns")->second.value) << ","
          << static_cast<uint64_t>(run.counters.find("tot_data_size_B")->second.value) << ","
          << static_cast<uint64_t>(run.counters.find("block_size_B")->second.value) << ","
          << static_cast<uint32_t>(run.counters.find("num_lost_blocks")->second.value) << ","
