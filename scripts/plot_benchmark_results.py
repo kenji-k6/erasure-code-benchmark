@@ -77,6 +77,7 @@ if __name__ == "__main__":
   # CI = mean +/- z * (stddev / sqrt(n))
   z = 1.96 # 95% confidence interval
 
+
   for col in ["encode_time_ns", "decode_time_ns", "encode_throughput_Gbps", "decode_throughput_Gbps"]:
     df[f"{col}_lower"] = df[col] - z * (df[f"{col}_stddev"] / np.sqrt(df["num_iterations"]))
     df[f"{col}_upper"] = df[col] + z * (df[f"{col}_stddev"] / np.sqrt(df["num_iterations"]))
@@ -86,6 +87,7 @@ if __name__ == "__main__":
     df.rename(columns={f"{col}_ns_lower": f"{col}_ms_lower", f"{col}_ns_upper": f"{col}_ms_upper"}, inplace=True)
     df[f"{col}_ms_lower"] = df[f"{col}_ms_lower"] / 1e6
     df[f"{col}_ms_upper"] = df[f"{col}_ms_upper"] / 1e6
+
 
   dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
 
