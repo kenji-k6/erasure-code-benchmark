@@ -20,7 +20,7 @@ public:
 
   inline void reset();
   inline void update();
-  inline void compute_elapsed_time();
+  inline void update_elapsed_time();
 
 private:
   int progress;
@@ -59,75 +59,57 @@ inline void ProgressBar::reset() {
 }
 
 inline void ProgressBar::update() {
-  // if (n_cycles <= 0) throw std::runtime_error("Number of iterations is <= 0");
+  if (n_cycles <= 0) throw std::runtime_error("Number of iterations is <= 0");
 
   if (!update_is_called) {
-    // if (do_show_bar) {
-    //   output << opening_bracket_char;
-    //   for (int _ = 0; _ < 50; _++) output << todo_char;
-    //   output << closing_bracket_char << " 0%\n";
-    // }
-    // else {
-    //   output << "0%\n";
-    // }
+    // First time update is called
+    output << '\n' << opening_bracket_char;
+    for (int _ = 0; _ < 50; ++_) output << todo_char;
+    output << closing_bracket_char << "\033[1;39m" << " 0%" << "\033[0m" << '\n';
+    update_is_called = true;
     start_time = std::chrono::system_clock::now();
   }
-  // // clear current line
 
-  update_is_called = true;
+  // compute percentage
+  int perc = progress*100.0/(n_cycles-1);
+  if (perc < last_perc) return;
 
-  // // compute percentage, if did not change, do nothing and return
-  // int perc = 0;
-  // perc = progress*100.0/(n_cycles-1);
-  // if (perc < last_perc) return;
+  // erase elapsed time, progress bar and percentage
+  output << "\033[A\033[K\033[A\033[K\033[A\033[K\n";
+
+  // update progress bar and percentage
+  int bar_perc = (perc%2 == 0) ? perc : perc-1;
   
-  // // update percentage
-  // if (perc == last_perc + 1) {
-  //   // erase the corret number of characters
-  //   if (perc <= 10) output << "\b\b" << perc << "%\n";
-  //   else if (perc > 10 and perc < 100) output << "\b\b\b\r" << perc << "%\n";
-  //   else if (perc == 100) output << "\b\b\b" << perc << "%\n";
-  // }
+  output << opening_bracket_char;
+  // change color for completed part of the bar
+  output << "\033[32m";
 
-  // if (do_show_bar == true) {
-  //   // update bar every ten units
-  //   if (perc % 2 == 0) {
-  //     // erase closing bracket
-  //     output << std::string(closing_bracket_char.size(), '\b');
-  //     //erase trailing percentage characters
-  //     if (perc < 10) output << "\b\b\b";
-  //     else if (perc >= 10 && perc < 100) output << "\b\b\b\b";
-  //     else if (perc == 100) output << "\b\b\b\b\b";
+  for (int j = 0; j < (bar_perc)/2; ++j) {
+    output << done_char;
+  }
+  //Reset color
+  output << "\033[0m";
 
-  //     //erase 'todo_char'
-  //     for (int j = 0; j < 50-(perc-1)/2; ++j) {
-  //       output << std::string(todo_char.size(), '\b');
-  //     }
+  for (int j = 0; j < 50-(bar_perc)/2; ++j) {
+    output << todo_char;
+  }
 
-  //     // add one additional 'done_char'
-  //     if (perc == 0) output << todo_char;
-  //     else output << done_char;
+  output  << closing_bracket_char // close progress bar
+          << "\033[1;39m" // make text bold for percentage
+          << ' ' << perc << '%' // print percentage
+          << "\033[0m" // reset text style
+          << '\n'; // move to next line
+  
+  // update elapsed time
+  update_elapsed_time();
 
-  //     // refill with 'todo_char'
-  //     for (int j = 0; j < 50-(perc-1)/2-1; ++j) {
-  //       output << todo_char;
-  //     }
-
-  //     //re-add trailing percentage characters
-  //     output << closing_bracket_char << ' ' << perc << '%\n';
-  //   }
-  // }
-
-  // last_perc = perc;
-  // ++progress;
-  output << "\033[A\033[K";
-  compute_elapsed_time();
-
-  // output << std::flush;
-  // return;
+  last_perc = perc;
+  ++progress;
+  output << std::flush;
+  return;
 }
 
-inline void ProgressBar::compute_elapsed_time() {
+inline void ProgressBar::update_elapsed_time() {
   auto now = std::chrono::system_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - start_time);
 

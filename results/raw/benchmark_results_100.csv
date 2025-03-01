@@ -1,0 +1,6 @@
+plot_id,name,err_msg,num_iterations,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio,num_data_blocks,num_parity_blocks,time_ns,encode_time_ns,encode_time_ns_stddev,encode_throughput_Gbps,encode_throughput_Gbps_stddev,decode_time_ns,decode_time_ns_stddev,decode_throughput_Gbps,decode_throughput_Gbps_stddev
+0,Baseline/iterations:1/manual_time,,1,1048576,8192,1,0.03125,128,4,132833,58417,nan,143.599,nan,74416,nan,112.726,nan
+0,CM256/iterations:1/manual_time,,1,1048576,8192,1,0.03125,128,4,1.917e+06,1.4555e+06,nan,5.76339,nan,461500,nan,18.1768,nan
+0,ISA-L/iterations:1/manual_time,,1,1048576,8192,1,0.03125,128,4,2.97979e+06,340209,nan,24.6572,nan,2.63958e+06,nan,3.17801,nan
+0,Leopard/iterations:1/manual_time,,1,1048576,8192,1,0.03125,128,4,5.21292e+06,281541,nan,29.7953,nan,4.93138e+06,nan,1.70107,nan
+0,Wirehair/iterations:1/manual_time,,1,1048576,8192,1,0.03125,128,4,2.24818e+07,1.08472e+07,nan,0.773346,nan,1.16347e+07,nan,0.721001,nan

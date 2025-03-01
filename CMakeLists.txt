@@ -10,6 +10,9 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Set proper compiler flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Werror -O3")
+
 find_package(OpenMP REQUIRED) # needed for leopard
 
 # Add source files
@@ -47,13 +50,6 @@ add_subdirectory(libraries/cm256)
 # wirehair (have to set BUILD_TESTS to OFF)
 set(BUILD_TESTS OFF)
 add_subdirectory(libraries/wirehair)
-
-
-# aff3ct (have to set AFF3CT_COMPILE_EXE, AFF3CT_COMPILE_SHARED_LIB to OFF and AFF3CT_COMPILE_STATIC_LIB to ON)
-# set(AFF3CT_COMPILE_EXE OFF)
-# set(AFF3CT_COMPILE_SHARED_LIB OFF)
-# set(AFF3CT_COMPILE_STATIC_LIB ON)
-# add_subdirectory(libraries/aff3ct)
 
 
 add_library(isal STATIC IMPORTED)
