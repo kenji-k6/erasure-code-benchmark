@@ -2,6 +2,7 @@
 #define BENCHMARK_REPORTERS_H
 
 #include <benchmark/benchmark.h>
+#include <progressbar.h>
 #include <fstream>
 #include <string>
 
@@ -42,6 +43,22 @@ public:
 
 private:
   std::ofstream file; ///< Output file stream for writing benchmark results.
+};
+
+
+
+class BenchmarkProgressReporter : public benchmark::BenchmarkReporter {
+public:
+  explicit BenchmarkProgressReporter(int num_runs);
+
+  ~BenchmarkProgressReporter() override;
+
+  void ReportRuns(const std::vector<Run>& runs) override;
+
+  bool ReportContext(const Context& context) override;
+
+private:
+  ProgressBar bar_;
 };
 
 #endif // BENCHMARK_REPORTERS_H

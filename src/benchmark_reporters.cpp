@@ -75,3 +75,15 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
 }
 
 bool BenchmarkCSVReporter::ReportContext(const Context& context) { return true; }
+
+
+
+
+BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs) : bar_(num_runs, true, std::cout) {}
+BenchmarkProgressReporter::~BenchmarkProgressReporter() {}
+void BenchmarkProgressReporter::ReportRuns(const std::vector<Run>& runs) {
+  for (const auto& run : runs) {
+    bar_.update();
+  }
+}
+bool BenchmarkProgressReporter::ReportContext(const Context& context) { return true; }
