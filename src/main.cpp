@@ -1,4 +1,4 @@
-#include "benchmark_result_writer.h"
+#include "benchmark_reporters.h"
 #include "benchmark/benchmark.h"
 #include "generic_benchmark_runner.h"
 #include "utils.h"
@@ -20,7 +20,7 @@
 constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
 
 #if RUNNING_ON_DOCKER
-  constexpr uint32_t FIXED_NUM_ITERATIONS = 100;
+  constexpr uint32_t FIXED_NUM_ITERATIONS = 1;
   constexpr uint64_t FIXED_BUFFER_SIZE = 67108864; ///< 64 MiB
 
   const std::vector<uint64_t> VAR_BUFFER_SIZE = { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456 };
@@ -338,16 +338,12 @@ int main (int argc, char** argv) {
 
   char* new_args[] = {
     (char *)"benchmark",
-    (char *)"--benchmark_out=csv"
+    (char *)"--benchmark_out=console"
   };
 
   argc = 2;
   argv = new_args;
 
-
-  // Initialize reporter
-  std::string output_file = "benchmark_results_100.csv";
-  BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file, true);
   std::vector<BenchmarkConfig> configs;
 
   /// @attention Configs for varying buffer sizes
@@ -434,14 +430,25 @@ int main (int argc, char** argv) {
   }
 
 
-
+  int num_runs = 0;
+  using BMTuple = std::tuple<std::string, void(*)(benchmark::State&, const BenchmarkConfig&)>;
   for (auto& config : configs) {
-    benchmark::RegisterBenchmark("Baseline", BM_Baseline, config)->UseManualTime()->Iterations(config.num_iterations);
-    benchmark::RegisterBenchmark("CM256", BM_CM256, config)->UseManualTime()->Iterations(config.num_iterations);
-    benchmark::RegisterBenchmark("ISA-L", BM_ISAL, config)->UseManualTime()->Iterations(config.num_iterations);
-    benchmark::RegisterBenchmark("Leopard", BM_Leopard, config)->UseManualTime()->Iterations(config.num_iterations);
-    benchmark::RegisterBenchmark("Wirehair", BM_Wirehair, config)->UseManualTime()->Iterations(config.num_iterations);
+    for (auto& [name, func] : {
+      BMTuple("Baseline", BM_Baseline),
+      BMTuple("CM256", BM_CM256),
+      BMTuple("ISA-L", BM_ISAL),
+      BMTuple("Leopard", BM_Leopard),
+      BMTuple("Wirehair", BM_Wirehair)
+    }) {
+      benchmark::RegisterBenchmark(name, func, config)->UseManualTime()->Iterations(config.num_iterations);
+      ++num_runs;
+    }
   }
+
+  // Initialize reporters
+  std::string output_file = "benchmark_results_100.csv";
+  BenchmarkCSVReporter csv_reporter(OUTPUT_FILE_PATH + output_file, true);
+  BenchmarkProgressReporter console_reporter(num_runs);
 
 
   // Initialize Google Benchmark
@@ -453,7 +460,7 @@ int main (int argc, char** argv) {
   }
 
   // Run all specified benchmarks
-  benchmark::RunSpecifiedBenchmarks(&reporter);
+  benchmark::RunSpecifiedBenchmarks(&console_reporter,&csv_reporter);
 
   // Shutdown Google Benchmark
   benchmark::Shutdown();
