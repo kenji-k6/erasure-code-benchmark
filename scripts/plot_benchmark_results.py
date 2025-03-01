@@ -5,12 +5,14 @@ import seaborn as sns
 import math
 import numpy as np
 
+
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results.csv")
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/")
 
-def ensure_output_directory():
+
+def ensure_output_directory() -> None:
   """Ensure the output directory exists."""
   os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -40,8 +42,8 @@ def plot_scatter(dfs: dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: 
   # Plot the confidence intervals
   for name, group in df.groupby("name"):
     plt.errorbar(group[x_col], group[y_col],
-                 yerr=[group[f"{y_col}_lower"], group[f"{y_col}_upper"]],
-                 fmt='o', color=ax.get_legend().legend_handles[df["name"].unique().tolist().index(name)].get_color())
+                 yerr=[group[f"{y_col}_lower"].to_numpy(), group[f"{y_col}_upper"].to_numpy()],
+                 fmt='o', color=ax.get_legend().legend_handles[df["name"].unique().tolist().index(name)].get_color(), capsize=5)
 
   plt.tight_layout()
   plt.savefig(os.path.join(OUTPUT_DIR, file_name))
@@ -111,19 +113,24 @@ if __name__ == "__main__":
   plot_scatter(dfs, "tot_data_size_MiB", "encode_time_ms", "Buffer Size (MiB)", "Encode Time (ms)", "buffersize_vs_encodetime.png", 0)
   plot_scatter(dfs, "tot_data_size_MiB", "decode_time_ms", "Buffer Size (MiB)", "Decode Time (ms)", "buffersize_vs_decodetime.png", 0)
 
-  # X: Buffer Size, Y: Throughput
-  # plot_scatter(dfs, "tot_data_size_MiB", "throughput_Gbps", "Buffer Size (MiB)", "Throughput (Gbps)", "buffer_size_vs_throughput.png", 0)
+  # X: Buffer Size, Y: Encode/Decode Throughput
+  plot_scatter(dfs, "tot_data_size_MiB", "encode_throughput_Gbps", "Buffer Size (MiB)", "Encode Throughput (Gbps)", "buffersize_vs_encodethroughput.png", 0)
+  plot_scatter(dfs, "tot_data_size_MiB", "decode_throughput_Gbps", "Buffer Size (MiB)", "Decode Throughput (Gbps)", "buffersize_vs_decodethroughput.png", 0)
 
 
-  # # X: Num Parity Blocks, Y: Time
-  # plot_scatter(dfs, "num_parity_blocks", "time_ms", "#Parity Blocks", "Time (ms)", "parity_blocks_vs_time.png", 1)
+  # X: Num Parity Blocks, Y: Encode/Decode Time
+  plot_scatter(dfs, "num_parity_blocks", "encode_time_ms", "#Parity Blocks", "Encode Time (ms)", "parityblocks_vs_encodetime.png", 1)
+  plot_scatter(dfs, "num_parity_blocks", "decode_time_ms", "#Parity Blocks", "Decode Time (ms)", "parityblocks_vs_decodetime.png", 1)
 
-  # # X: Num Parity Blocks, Y: Throughput
-  # plot_scatter(dfs, "num_parity_blocks", "throughput_Gbps", "#Parity Blocks", "Throughput (Gbps)", "parity_blocks_vs_throughput.png", 1)
+  # X: Num Parity Blocks, Y: Encode/Decode Throughput
+  plot_scatter(dfs, "num_parity_blocks", "encode_throughput_Gbps", "#Parity Blocks", "Encode Throughput (Gbps)", "parityblocks_vs_encodethroughput.png", 1)
+  plot_scatter(dfs, "num_parity_blocks", "decode_throughput_Gbps", "#Parity Blocks", "Decode Throughput (Gbps)", "parityblocks_vs_decodethroughput.png", 1)
 
 
-  # # X: Num Lost Blocks, Y: Time
-  # plot_scatter(dfs, "num_lost_blocks", "time_ms", "#Lost Blocks", "Time (ms)", "lost_blocks_vs_time.png", 2)
+  # X: Num Lost Blocks, Y: Encode/Decode Time
+  plot_scatter(dfs, "num_lost_blocks", "encode_time_ms", "#Lost Blocks", "Encode Time (ms)", "lostblocks_vs_encodetime.png", 2)
+  plot_scatter(dfs, "num_lost_blocks", "decode_time_ms", "#Lost Blocks", "Decode Time (ms)", "lostblocks_vs_decodetime.png", 2)
 
-  # # X: Num Lost Blocks, Y: Throughput
-  # plot_scatter(dfs, "num_lost_blocks", "throughput_Gbps", "#Lost Blocks", "Throughput (Gbps)", "lost_blocks_vs_throughput.png", 2)
+  # X: Num Lost Blocks, Y: Encode/Decode Throughput
+  plot_scatter(dfs, "num_lost_blocks", "encode_throughput_Gbps", "#Lost Blocks", "Encode Throughput (Gbps)", "lostblocks_vs_encodethroughput.png", 2)
+  plot_scatter(dfs, "num_lost_blocks", "decode_throughput_Gbps", "#Lost Blocks", "Decode Throughput (Gbps)", "lostblocks_vs_decodethroughput.png", 2)
