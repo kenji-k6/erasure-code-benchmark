@@ -31,9 +31,6 @@ def plot_scatter(dfs: dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: 
   plt.legend(title="Libraries", bbox_to_anchor=(1.05, 1), loc="upper left")
   plt.title(get_plot_title(dfs, plot_id), fontsize=12)
 
-
-  # plt.errorbar(df[x_col], df[y_col], yerr=[df[f"{y_col}_lower"], df[f"{y_col}_upper"]], fmt='o')
-
   ax = plt.gca()
   x_ticks = sorted(df[x_col].unique())
   ax.set_xticks(x_ticks)
@@ -72,33 +69,6 @@ def get_plot_title(dfs: dict[int, pd.DataFrame], plot_id:int):
 
 
 
-def process_dataframe(df: pd.DataFrame):
-  """Process the raw DataFrame to generate the required columns. Returns a dictionary of DataFrames, grouped by plot_id."""
-  
-  # Clean up 'name' column by removing the '/iterations:...' part
-  df["name"] = df["name"].str.split("/", n=1).str[0]
-
-  # Remove rows where corruption occured
-  df = df[df["err_msg"].isna()]
-
-  # Get additional columns (mainly different units of existing columns)
-  df["time_ms"] = df["time_ns"] / 1e6
-  df["tot_data_size_MiB"] = df["tot_data_size_B"] // (1024 * 1024)
-  df["throughput_Gbps"] = (df["tot_data_size_B"] * 8) / df["time_ns"]
-
-
-  # Return DataFrame grouped by plot_id
-  # return {plot_id: group for plot_id, group in df.groupby("plot_id")}
-
-def get_confidence_interval(mean: float, stddev: float, n: int) -> tuple[float, float]:
-  """Get the confidence interval for the mean."""
-  z = 1.96 # 95% confidence interval
-  lower = mean - z * (stddev / math.sqrt(n))
-  upper = mean + z * (stddev / math.sqrt(n))
-
-  return lower, upper
-
-
 if __name__ == "__main__":
   ensure_output_directory()
   df = pd.read_csv(INPUT_FILE)
@@ -118,13 +88,8 @@ if __name__ == "__main__":
 
 
   # Compute the confidence  intervals per row for the throughput and time columns
+  # The formula used is CI = mean +/- z * (stddev / sqrt(n))
   z = 1.96 # 95% confidence interval
-
-
-  # TESTING
-  df["encode_time_stddev_ns"] = np.sqrt((np.pow(df["encode_time_stddev_ns"],2)*2)/3)
-
-  # TESTING
 
   df["encode_time_ms_lower"] = (df["encode_time_ns"] - z * (df["encode_time_stddev_ns"] / np.sqrt(df["num_iterations"]))) / 1e6
   df["encode_time_ms_upper"] = (df["encode_time_ns"] + z * (df["encode_time_stddev_ns"] / np.sqrt(df["num_iterations"]))) / 1e6
@@ -132,15 +97,21 @@ if __name__ == "__main__":
   df["decode_time_ms_lower"] = (df["decode_time_ns"] - z * (df["decode_time_stddev_ns"] / np.sqrt(df["num_iterations"]))) / 1e6
   df["decode_time_ms_upper"] = (df["decode_time_ns"] + z * (df["decode_time_stddev_ns"] / np.sqrt(df["num_iterations"]))) / 1e6
 
-  
-    
+  df["encode_throughput_Gbps_lower"] = (df["encode_throughput_Gbps"] - z * (df["encode_throughput_stddev_Gbps"] / np.sqrt(df["num_iterations"])))
+  df["encode_throughput_Gbps_upper"] = (df["encode_throughput_Gbps"] + z * (df["encode_throughput_stddev_Gbps"] / np.sqrt(df["num_iterations"])))
 
+  df["decode_throughput_Gbps_lower"] = (df["decode_throughput_Gbps"] - z * (df["decode_throughput_stddev_Gbps"] / np.sqrt(df["num_iterations"])))
+  df["decode_throughput_Gbps_upper"] = (df["decode_throughput_Gbps"] + z * (df["decode_throughput_stddev_Gbps"] / np.sqrt(df["num_iterations"])))
+
+  
+  
   dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
 
-  # # X: Buffer Size, Y: Time
-  plot_scatter(dfs, "tot_data_size_MiB", "encode_time_ms", "Buffer Size (MiB)", "Encode Time (ms)", "sdasdasdbuffer_size_vs_time.png", 0)
+  # X: Buffer Size, Y: Encode/Decode Time
+  plot_scatter(dfs, "tot_data_size_MiB", "encode_time_ms", "Buffer Size (MiB)", "Encode Time (ms)", "buffersize_vs_encodetime.png", 0)
+  plot_scatter(dfs, "tot_data_size_MiB", "decode_time_ms", "Buffer Size (MiB)", "Decode Time (ms)", "buffersize_vs_decodetime.png", 0)
 
-  # # X: Buffer Size, Y: Throughput
+  # X: Buffer Size, Y: Throughput
   # plot_scatter(dfs, "tot_data_size_MiB", "throughput_Gbps", "Buffer Size (MiB)", "Throughput (Gbps)", "buffer_size_vs_throughput.png", 0)
 
 
