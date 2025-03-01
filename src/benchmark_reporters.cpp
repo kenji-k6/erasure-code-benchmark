@@ -1,4 +1,4 @@
-#include "benchmark_result_writer.h"
+#include "benchmark_reporters.h"
 #include <stdexcept>
 
 

@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
   # Compute confidence intervals
   # CI = mean +/- z * (stddev / sqrt(n))
-  z = 1.10 # 95% confidence interval
+  z = 1.96 # 95% confidence interval
 
   for col in ["encode_time_ns", "decode_time_ns", "encode_throughput_Gbps", "decode_throughput_Gbps"]:
     df[f"{col}_lower"] = df[col] - z * (df[f"{col}_stddev"] / np.sqrt(df["num_iterations"]))

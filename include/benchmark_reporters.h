@@ -1,5 +1,5 @@
-#ifndef BENCHMARK_RESULT_WRITER_H
-#define BENCHMARK_RESULT_WRITER_H
+#ifndef BENCHMARK_REPORTERS_H
+#define BENCHMARK_REPORTERS_H
 
 #include <benchmark/benchmark.h>
 #include <fstream>
@@ -44,4 +44,4 @@ private:
   std::ofstream file; ///< Output file stream for writing benchmark results.
 };
 
-#endif // BENCHMARK_RESULT_WRITER_H
+#endif // BENCHMARK_REPORTERS_H

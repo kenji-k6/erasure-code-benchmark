@@ -20,7 +20,7 @@
 constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
 
 #if RUNNING_ON_DOCKER
-  constexpr uint32_t FIXED_NUM_ITERATIONS = 3;
+  constexpr uint32_t FIXED_NUM_ITERATIONS = 100;
   constexpr uint64_t FIXED_BUFFER_SIZE = 67108864; ///< 64 MiB
 
   const std::vector<uint64_t> VAR_BUFFER_SIZE = { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456 };
@@ -338,7 +338,7 @@ int main (int argc, char** argv) {
 
   char* new_args[] = {
     (char *)"benchmark",
-    (char *)"--benchmark_out=console"
+    (char *)"--benchmark_out=csv"
   };
 
   argc = 2;
@@ -346,7 +346,7 @@ int main (int argc, char** argv) {
 
 
   // Initialize reporter
-  std::string output_file = "benchmark_results.csv";
+  std::string output_file = "benchmark_results_100.csv";
   BenchmarkCSVReporter reporter(OUTPUT_FILE_PATH + output_file, true);
   std::vector<BenchmarkConfig> configs;
 
@@ -453,7 +453,7 @@ int main (int argc, char** argv) {
   }
 
   // Run all specified benchmarks
-  benchmark::RunSpecifiedBenchmarks(nullptr, &reporter);
+  benchmark::RunSpecifiedBenchmarks(&reporter);
 
   // Shutdown Google Benchmark
   benchmark::Shutdown();
