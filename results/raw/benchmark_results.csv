@@ -1,4 +1,4 @@
-plot_id,name,err_msg,num_iterations,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio,num_data_blocks,num_parity_blocks,time_ns,encode_time_ns,encode_time_stddev_ns,encode_throughput_Gbps,encode_throughput_stddev_Gbps,decode_time_ns,encode_time_stddev_ns,decode_throughput_Gbps,decode_throughput_stddev_Gbps
+plot_id,name,err_msg,num_iterations,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio,num_data_blocks,num_parity_blocks,time_ns,encode_time_ns,encode_time_stddev_ns,encode_throughput_Gbps,encode_throughput_stddev_Gbps,decode_time_ns,decode_time_stddev_ns,decode_throughput_Gbps,decode_throughput_stddev_Gbps
 0,Baseline/iterations:3/manual_time,,3,1048576,8192,1,0.03125,128,4,165514,75736.3,13316.3,110.761,22.1203,89777.7,23938.1,93.4376,22.5185
 0,CM256/iterations:3/manual_time,,3,1048576,8192,1,0.03125,128,4,2.21797e+06,1.6321e+06,315592,5.13977,1.1479,585875,188045,14.3181,4.22193
 0,ISA-L/iterations:3/manual_time,,3,1048576,8192,1,0.03125,128,4,4.02247e+06,610861,293152,13.7324,8.50788,3.41161e+06,274203,2.45884,0.20735

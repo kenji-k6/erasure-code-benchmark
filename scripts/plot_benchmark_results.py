@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import math
+import numpy as np
 
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,12 +31,20 @@ def plot_scatter(dfs: dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: 
   plt.legend(title="Libraries", bbox_to_anchor=(1.05, 1), loc="upper left")
   plt.title(get_plot_title(dfs, plot_id), fontsize=12)
 
-  plt.errorbar(df[x_col], df[y_col], yerr=[df[f"{y_col}_lower"], df[f"{y_col}_upper"]], fmt='o')
+
+  # plt.errorbar(df[x_col], df[y_col], yerr=[df[f"{y_col}_lower"], df[f"{y_col}_upper"]], fmt='o')
 
   ax = plt.gca()
   x_ticks = sorted(df[x_col].unique())
   ax.set_xticks(x_ticks)
   ax.set_xticklabels([f"{x}" for x in x_ticks])
+
+
+  # Plot the confidence intervals
+  for name, group in df.groupby("name"):
+    plt.errorbar(group[x_col], group[y_col],
+                 yerr=[group[f"{y_col}_lower"], group[f"{y_col}_upper"]],
+                 fmt='o', color=ax.get_legend().legend_handles[df["name"].unique().tolist().index(name)].get_color())
 
   plt.tight_layout()
   plt.savefig(os.path.join(OUTPUT_DIR, file_name))
@@ -111,16 +120,22 @@ if __name__ == "__main__":
   # Compute the confidence  intervals per row for the throughput and time columns
   z = 1.96 # 95% confidence interval
 
-  df["encode_time_ms_lower"] = (df["encode_time_ns"] - z * (df["encode_time_stddev_ns"] / math.sqrt(df["num_iterations"]))) / 1e6
-  df["encode_time_ms_upper"] = (df["encode_time_ns"] + z * (df["encode_time_stddev_ns"] / math.sqrt(df["num_iterations"]))) / 1e6
 
-  df["decode_time_ms_lower"] = (df["decode_time_ns"] - z * (df["decode_time_stddev_ns"] / math.sqrt(df["num_iterations"]))) / 1e6
-  df["decode_time_ms_upper"] = (df["decode_time_ns"] + z * (df["decode_time_stddev_ns"] / math.sqrt(df["num_iterations"]))) / 1e6
+  # TESTING
+  df["encode_time_stddev_ns"] = np.sqrt((np.pow(df["encode_time_stddev_ns"],2)*2)/3)
+
+  # TESTING
+
+  df["encode_time_ms_lower"] = (df["encode_time_ns"] - z * (df["encode_time_stddev_ns"] / np.sqrt(df["num_iterations"]))) / 1e6
+  df["encode_time_ms_upper"] = (df["encode_time_ns"] + z * (df["encode_time_stddev_ns"] / np.sqrt(df["num_iterations"]))) / 1e6
+
+  df["decode_time_ms_lower"] = (df["decode_time_ns"] - z * (df["decode_time_stddev_ns"] / np.sqrt(df["num_iterations"]))) / 1e6
+  df["decode_time_ms_upper"] = (df["decode_time_ns"] + z * (df["decode_time_stddev_ns"] / np.sqrt(df["num_iterations"]))) / 1e6
 
   
     
 
-  # dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
+  dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
 
   # # X: Buffer Size, Y: Time
   plot_scatter(dfs, "tot_data_size_MiB", "encode_time_ms", "Buffer Size (MiB)", "Encode Time (ms)", "sdasdasdbuffer_size_vs_time.png", 0)

@@ -33,7 +33,7 @@ BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool 
           << "encode_throughput_stddev_Gbps,"
 
           << "decode_time_ns,"
-          << "encode_time_stddev_ns,"
+          << "decode_time_stddev_ns,"
           << "decode_throughput_Gbps,"
           << "decode_throughput_stddev_Gbps\n";
           
