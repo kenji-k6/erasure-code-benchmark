@@ -1,0 +1,4 @@
+#ifndef XOR_BASELINE_H
+#define XOR_BASELINE_H
+
+#endif // XOR_BASELINE_H
