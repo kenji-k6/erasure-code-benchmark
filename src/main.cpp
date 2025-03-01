@@ -446,7 +446,7 @@ int main (int argc, char** argv) {
   }
 
   // Initialize reporters
-  std::string output_file = "benchmark_results_100.csv";
+  std::string output_file = "benchmark_results_test.csv";
   BenchmarkCSVReporter csv_reporter(OUTPUT_FILE_PATH + output_file, true);
   BenchmarkProgressReporter console_reporter(num_runs);
 

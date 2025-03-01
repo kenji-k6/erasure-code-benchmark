@@ -8,7 +8,7 @@ import numpy as np
 
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results.csv")
+INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results_100.csv")
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/")
 
 
@@ -67,10 +67,13 @@ if __name__ == "__main__":
   df["name"] = df["name"].str.split("/", n=1).str[0]
   df = df[df["err_msg"].isna()]
 
+
   # Compute additional columns 
   df["encode_time_ms"] = df["encode_time_ns"] / 1e6
   df["decode_time_ms"] = df["decode_time_ns"] / 1e6
   df["tot_data_size_MiB"] = df["tot_data_size_B"] // (1024 * 1024)
+
+
 
 
   # Compute confidence intervals
@@ -86,6 +89,9 @@ if __name__ == "__main__":
     df.rename(columns={f"{col}_ns_lower": f"{col}_ms_lower", f"{col}_ns_upper": f"{col}_ms_upper"}, inplace=True)
     df[f"{col}_ms_lower"] = df[f"{col}_ms_lower"] / 1e6
     df[f"{col}_ms_upper"] = df[f"{col}_ms_upper"] / 1e6
+
+  # df = df[df["name"] != "CM256"]
+  # print(df[df["decode_time_ms_lower"] < 0])
 
   dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
 
