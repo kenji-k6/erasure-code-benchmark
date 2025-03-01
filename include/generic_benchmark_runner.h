@@ -130,14 +130,14 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   state.counters["num_parity_blocks"] = config.computed.num_recovery_blocks;
 
   state.counters["encode_time_ns"] = enc_time_mean;
-  state.counters["encode_time_stddev_ns"] = enc_time_stddev;
+  state.counters["encode_time_ns_stddev"] = enc_time_stddev;
   state.counters["encode_throughput_Gbps"] = enc_throughput;
-  state.counters["encode_throughput_stddev_Gbps"] = enc_throughput_stddev;
+  state.counters["encode_throughput_Gbps_stddev"] = enc_throughput_stddev;
 
   state.counters["decode_time_ns"] = dec_time_mean;
-  state.counters["decode_time_stddev_ns"] = dec_time_stddev;
+  state.counters["decode_time_ns_stddev"] = dec_time_stddev;
   state.counters["decode_throughput_Gbps"] = dec_throughput;
-  state.counters["decode_throughput_stddev_Gbps"] = dec_throughput_stddev;
+  state.counters["decode_throughput_Gbps_stddev"] = dec_throughput_stddev;
 }
 
 #endif // GENERIC_BENCHMARK_RUNNER_H
