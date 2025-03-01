@@ -24,7 +24,7 @@ constexpr uint32_t XORBASELINE_PTR_ALIGNMENT = 32;
 constexpr uint32_t XORBASELINE_MIN_BLOCK_SIZE = 64;
 
 constexpr uint32_t XORBASELINE_MIN_DATA_BLOCKS = 1;
-constexpr uint32_t XORBASELINE_MAX_DATA_BLOCKS = 255;
+constexpr uint32_t XORBASELINE_MAX_DATA_BLOCKS = 128;
 
 constexpr uint32_t XORBASELINE_MIN_PARITY_BLOCKS = 1;
 constexpr uint32_t XORBASELINE_MAX_PARITY_BLOCKS = 128;
@@ -56,7 +56,7 @@ XORBaselineResult decode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  std::bitset<256> &lost_blocks
+  std::bitset<256> &lost_blocks // i-th bit set if i-th data_block received, indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j
  );
 
 #endif // XORBASELINE_H
