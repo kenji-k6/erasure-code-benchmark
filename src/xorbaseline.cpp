@@ -1,7 +1,6 @@
 #include "xorbaseline.h"
+#include <cstring>
 
-
-constexpr std::bitset<256> compare_bitmap = (std::bitset<256>(0xFFFFFFFFFFFFFFFFULL)<<64) | std::bitset<256>(0xFFFFFFFFFFFFFFFFULL);
 
 XORBaselineResult encode(
   uint8_t *data_buffer,
@@ -19,7 +18,9 @@ XORBaselineResult encode(
     num_data_blocks < XORBASELINE_MIN_DATA_BLOCKS ||
     num_data_blocks > XORBASELINE_MAX_DATA_BLOCKS ||
     num_parity_blocks < XORBASELINE_MIN_PARITY_BLOCKS ||
-    num_parity_blocks > XORBASELINE_MAX_PARITY_BLOCKS
+    num_parity_blocks > XORBASELINE_MAX_PARITY_BLOCKS ||
+    num_parity_blocks > num_data_blocks ||
+    num_data_blocks % num_parity_blocks != 0
   ) {
         return XORBaseline_InvalidCounts;
   }
@@ -74,7 +75,9 @@ XORBaselineResult decode(
     num_data_blocks < XORBASELINE_MIN_DATA_BLOCKS ||
     num_data_blocks > XORBASELINE_MAX_DATA_BLOCKS ||
     num_parity_blocks < XORBASELINE_MIN_PARITY_BLOCKS ||
-    num_parity_blocks > XORBASELINE_MAX_PARITY_BLOCKS
+    num_parity_blocks > XORBASELINE_MAX_PARITY_BLOCKS ||
+    num_parity_blocks > num_data_blocks ||
+    num_data_blocks % num_parity_blocks != 0
   ) {
         return XORBaseline_InvalidCounts;
   }
@@ -88,6 +91,24 @@ XORBaselineResult decode(
 
   if ((block_bitmap & compare_bitmap).count() == num_data_blocks) return XORBaseline_Success; // No need to decode, all data blocks are present
 
+  // Check recoverability
+  // if more than one block per "set" is lost, we can't recover => immediately return
+  std::bitset<128> block_lost_bitmap;
+  for (unsigned i = 0; i < num_parity_blocks; ++i) {
+    if (!block_bitmap.test(128 + i)) block_lost_bitmap.set(i);
+
+    for (unsigned j = i; j < num_data_blocks; j += num_parity_blocks) {
+      if (!block_bitmap[j]) {
+        if (block_lost_bitmap.test(i)) return XORBaseline_DecodeFailure;
+        block_lost_bitmap.set(i);
+      }
+    }
+  }
+
+  // Recovery possible => Decode
+
+
+
   #if defined(XORBASELINE_AVX512)
     // AVX-512 implementation
   #elif defined(XORBASELINE_AVX2)
@@ -96,11 +117,26 @@ XORBaselineResult decode(
     // AVX implementation
   #else
     // Scalar implementation
-    for (unsigned j = 0; j < num_data_blocks; ++j) {
-      if (block_bitmap[j]) continue; // Data block is present
+    // Decode the data if possible
+    for (unsigned i = 0; i < num_data_blocks; ++i) {
+      if (block_bitmap[i]) continue; // Data block is present
+
+      // Block is lost => copy parity block to data block and xor with rest of blocks
+      uint64_t *recover_block = reinterpret_cast<uint64_t*>(data_buffer + i * block_size);
+      uint8_t *parity_block = parity_buffer + (i % num_parity_blocks) * block_size;
+
+      std::memcpy(recover_block, parity_block, block_size);
+
+      for (unsigned j = i%num_parity_blocks; j < num_data_blocks; ++j) {
+        if (i == j) continue;
+
+        uint64_t *data_block = reinterpret_cast<uint64_t*>(data_buffer + j * block_size);
+
+        for (unsigned k = 0; k < block_size / sizeof(uint64_t); ++k) {
+          recover_block[k] ^= data_block[k];
+        }
+      }
     }
-
-
   #endif
 
   return XORBaseline_Success;

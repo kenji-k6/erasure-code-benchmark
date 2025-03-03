@@ -31,6 +31,9 @@ constexpr uint32_t XORBASELINE_MAX_PARITY_BLOCKS = 128;
 
 constexpr uint32_t XORBASELINE_MAX_TOTAL_BLOCKS = 256;
 
+/// Bitmap to check if all data arrived
+constexpr std::bitset<256> compare_bitmap = (std::bitset<256>(0xFFFFFFFFFFFFFFFFULL)<<64) | std::bitset<256>(0xFFFFFFFFFFFFFFFFULL);
+
 
 typedef enum XORBaselineResult_t {
   XORBaseline_Success = 0,
@@ -39,7 +42,9 @@ typedef enum XORBaselineResult_t {
   
   XORBaseline_InvalidCounts = 2,
 
-  XORBaseline_InvalidAlignment = 3
+  XORBaseline_InvalidAlignment = 3,
+
+  XORBaseline_DecodeFailure = 4
 } XORBaselineResult;
 
 XORBaselineResult encode(
@@ -56,7 +61,7 @@ XORBaselineResult decode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  std::bitset<256> &lost_blocks // i-th bit set if i-th data_block received, indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j
+  std::bitset<256> &block_bitmap // i-th bit set if i-th data_block received, indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
  );
 
 #endif // XORBASELINE_H
