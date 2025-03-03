@@ -99,10 +99,6 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
 
   for (uint32_t i = 0; i < num_lost_blocks; i++) {
 
-    // Seed the random number generator
-    srand(i+num_recovery_blocks+num_lost_blocks);
-
-
     lost_block_idxs[i] = valid_idxs[rng.next()%valid_idxs.size()];
     uint32_t recovery_set = lost_block_idxs[i] % num_recovery_blocks;
     

@@ -111,12 +111,7 @@ XORBaselineResult xor_decode(
     }
   }
 
-  
-  
-
   // Recovery possible => Decode
-
-
 
   #if defined(XORBASELINE_AVX512)
     // AVX-512 implementation
