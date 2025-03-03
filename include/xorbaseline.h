@@ -3,15 +3,15 @@
 #include <bitset>
 #include <cstdint>
 
-#if defined(__AVX512F__):
+#if defined(__AVX512F__)
   #define XORBASELINE_AVX512
   #include <immintrin.h>
   constexpr uint32_t XORBASELINE_BLOCK_SIZE_MULTIPLE = 64;
-#elif defined(__AVX2__):
+#elif defined(__AVX2__)
   #define XORBASELINE_AVX2
   #include <immintrin.h>
   constexpr uint32_t XORBASELINE_BLOCK_SIZE_MULTIPLE = 32;
-#elif defined(__AVX__):
+#elif defined(__AVX__)
   #define XORBASELINE_AVX
   #include <immintrin.h>
   constexpr uint32_t XORBASELINE_BLOCK_SIZE_MULTIPLE = 16;

@@ -107,9 +107,11 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
     uint32_t recovery_set = lost_block_idxs[i] % num_recovery_blocks;
     
     // update valid indices
-    for (auto it = valid_idxs.begin(); it != valid_idxs.end(); ++it) {
+    for (auto it = valid_idxs.begin(); it != valid_idxs.end();) {
       if (*it % num_recovery_blocks == recovery_set) {
         it = valid_idxs.erase(it);
+      } else {
+        ++it;
       }
     }
   }

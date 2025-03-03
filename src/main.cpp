@@ -20,7 +20,7 @@
 constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
 
 #if RUNNING_ON_DOCKER
-  constexpr uint32_t FIXED_NUM_ITERATIONS = 100;
+  constexpr uint32_t FIXED_NUM_ITERATIONS = 1;
   constexpr uint64_t FIXED_BUFFER_SIZE = 67108864; ///< 64 MiB
 
   const std::vector<uint64_t> VAR_BUFFER_SIZE = { 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456 };
@@ -206,7 +206,7 @@ BenchmarkConfig parse_args(int argc, char** argv) {
 
   struct option long_options[] = {
     { "help",     no_argument, nullptr, 'h' },
-    // { "baseline", no_argument, nullptr, 0 },
+    { "baseline", no_argument, nullptr, 0 },
     { "cm256",    no_argument, nullptr, 0 },
     { "isal",     no_argument, nullptr, 0 },
     { "leopard",  no_argument, nullptr, 0 },

@@ -42,14 +42,23 @@ int BaselineBenchmark::encode() noexcept {
 
 int BaselineBenchmark::decode() noexcept {
   xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_);
+  return 0;
 }
 
 void BaselineBenchmark::simulate_data_loss() noexcept {
-  for (unsigned i = 0; i < num_lost_blocks_; ++i) {
-    uint32_t idx = lost_block_idxs_[i];
-    if (idx < num_original_blocks_) memset(data_buffer_ + idx * block_size_, 0, block_size_);
-    else memset(parity_buffer_ + (idx - num_original_blocks_) * block_size_, 0, block_size_);
-    block_bitmap_.set(idx);
+  uint32_t loss_idx = 0;
+  for (unsigned i = 0; i < num_original_blocks_ + num_recovery_blocks_; ++i) {
+    if (loss_idx < num_lost_blocks_ && lost_block_idxs_[loss_idx] == i) {
+      if (i < num_original_blocks_) {
+        memset(data_buffer_ + i * block_size_, 0, block_size_);
+      } else {
+        memset(parity_buffer_ + (i - num_original_blocks_) * block_size_, 0, block_size_);
+      }
+
+      ++loss_idx;
+      continue;
+    }
+    block_bitmap_.set(i);
   }
 }
 

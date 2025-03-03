@@ -1,5 +1,6 @@
 #include "xorbaseline.h"
 #include <cstring>
+#include <iostream>
 
 
 XORBaselineResult xor_encode(
@@ -67,7 +68,7 @@ XORBaselineResult xor_decode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  std::bitset<256> &block_bitmap
+  std::bitset<256> block_bitmap
 ) {
   if (block_size < XORBASELINE_MIN_BLOCK_SIZE || block_size % XORBASELINE_BLOCK_SIZE_MULTIPLE != 0) {
     return XORBaseline_InvalidSize;
@@ -99,14 +100,19 @@ XORBaselineResult xor_decode(
   std::bitset<128> block_lost_bitmap;
   for (unsigned i = 0; i < num_parity_blocks; ++i) {
     if (!block_bitmap.test(128 + i)) block_lost_bitmap.set(i);
-
-    for (unsigned j = i; j < num_data_blocks; j += num_parity_blocks) {
-      if (!block_bitmap[j]) {
-        if (block_lost_bitmap.test(i)) return XORBaseline_DecodeFailure;
-        block_lost_bitmap.set(i);
-      }
+  }
+  
+  
+  for (unsigned j = 0; j < num_data_blocks; ++j) {
+    uint32_t parity_idx = j % num_parity_blocks;
+    if (!block_bitmap.test(j)) {
+      if (block_lost_bitmap.test(parity_idx)) return XORBaseline_DecodeFailure;
+      block_lost_bitmap.set(parity_idx);
     }
   }
+
+  
+  
 
   // Recovery possible => Decode
 
@@ -130,11 +136,10 @@ XORBaselineResult xor_decode(
 
       std::memcpy(recover_block, parity_block, block_size);
 
-      for (unsigned j = i%num_parity_blocks; j < num_data_blocks; ++j) {
+      for (unsigned j = i%num_parity_blocks; j < num_data_blocks; j+= num_parity_blocks) {
         if (i == j) continue;
 
         uint64_t *data_block = reinterpret_cast<uint64_t*>(data_buffer + j * block_size);
-
         for (unsigned k = 0; k < block_size / sizeof(uint64_t); ++k) {
           recover_block[k] ^= data_block[k];
         }
