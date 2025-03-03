@@ -14,7 +14,8 @@
  * This header defines the XOR-based erasure encoding and decoding functions,
  * optimized with SIMD intrinsics when available. It supports AVX, AVX2 and AVX-512.
  */
-// #define __AVX__ 0 
+
+
 #define XOR_RESTRICT __restrict
 
 #if defined(__AVX512F__)
@@ -102,9 +103,9 @@ XORResult xor_decode(
 );
 
 /**
- * @brief XORs two memory buffers.
- * @param dest Pointer to the destination buffer.
- * @param src Pointer to the source buffer.
+ * @brief XORs two memory blocks.
+ * @param dest Pointer to the destination block.
+ * @param src Pointer to the source block.
  * @param bytes Number of bytes to XOR.
  */
 static void inline XOR_xor_blocks(
@@ -129,9 +130,69 @@ static void inline XOR_xor_blocks(
       XOR_AVX512 x0 = _mm512_xor_si512(_mm512_loadu_si512(dest512), _mm512_loadu_si512(src512));
       _mm512_storeu_si512(dest512, x0);
     }
+  
+  #elif defined(TRY_XOR_AVX2)
+    XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
+    const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
+
+    while (bytes >= 128) {
+      XOR_AVX2 x0 = _mm256_xor_si256(_mm256_loadu_si256(dest256), _mm256_loadu_si256(src256));
+      XOR_AVX2 x1 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 1), _mm256_loadu_si256(src256 + 1));
+      XOR_AVX2 x2 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 2), _mm256_loadu_si256(src256 + 2));
+      XOR_AVX2 x3 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 3), _mm256_loadu_si256(src256 + 3));
+      _mm256_storeu_si256(dest256, x0);
+      _mm256_storeu_si256(dest256 + 1, x1);
+      _mm256_storeu_si256(dest256 + 2, x2);
+      _mm256_storeu_si256(dest256 + 3, x3);
+      dest256 += 4, src256 += 4;
+      bytes -= 128;
+    }
+
+    if (bytes > 0) {
+      XOR_AVX2 x0 = _mm256_xor_si256(_mm256_loadu_si256(dest256), _mm256_loadu_si256(src256));
+      XOR_AVX2 x1 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 1), _mm256_loadu_si256(src256 + 1));
+      _mm256_storeu_si256(dest256, x0);
+      _mm256_storeu_si256(dest256 + 1, x1);
+    }
+  
+  #elif defined(TRY_XOR_AVX)
+    XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
+    const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
+
+    while (bytes >= 64) {
+      XOR_AVX x0 = _mm_xor_si128(_mm_loadu_si128(dest128), _mm_loadu_si128(src128));
+      XOR_AVX x1 = _mm_xor_si128(_mm_loadu_si128(dest128 + 1), _mm_loadu_si128(src128 + 1));
+      XOR_AVX x2 = _mm_xor_si128(_mm_loadu_si128(dest128 + 2), _mm_loadu_si128(src128 + 2));
+      XOR_AVX x3 = _mm_xor_si128(_mm_loadu_si128(dest128 + 3), _mm_loadu_si128(src128 + 3));
+      _mm_storeu_si128(dest128, x0);
+      _mm_storeu_si128(dest128 + 1, x1);
+      _mm_storeu_si128(dest128 + 2, x2);
+      _mm_storeu_si128(dest128 + 3, x3);
+      dest128 += 4, src128 += 4;
+      bytes -= 64;
+    }
+  #else
+    uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
+    const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
+
+    while (bytes >= 64) {
+      *dest64 ^= *src64;
+      *(dest64 + 1) ^= *(src64 + 1);
+      *(dest64 + 2) ^= *(src64 + 2);
+      *(dest64 + 3) ^= *(src64 + 3);
+      dest64 += 4, src64 += 4;
+      bytes -= 64;
+    }
   #endif
 }
 
+
+/**
+ * @brief Copies one memory block to the next one.
+ * @param dest Pointer to the destination block.
+ * @param src Pointer to the source block.
+ * @param bytes Number of bytes to copy.
+ */
 static void inline XOR_copy_blocks(
   void * XOR_RESTRICT dest,
   const void * XOR_RESTRICT src,
