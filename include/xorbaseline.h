@@ -14,18 +14,20 @@
  * This header defines the XOR-based erasure encoding and decoding functions,
  * optimized with SIMD intrinsics when available. It supports AVX, AVX2 and AVX-512.
  */
-
+#define __AVX512F__ 1
+#define XOR_RESTRICT __restrict
 
 #if defined(__AVX512F__)
-  #define XOR_AVX512
+  #define TRY_XOR_AVX512
   #include <immintrin.h>
+  #define XOR_AVX512 __m512i
   constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 64;
 #elif defined(__AVX2__)
-  #define XOR_AVX2
+  #define TRY_XOR_AVX2
   #include <immintrin.h>
   constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 32;
 #elif defined(__AVX__)
-  #define XOR_AVX
+  #define TRY_XOR_AVX
   #include <immintrin.h>
   constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 16;
 #else
@@ -74,8 +76,8 @@ enum class XORResult {
  * @return XORResult XORResult indicating success or failure.
  */
 XORResult xor_encode(
-  uint8_t *data_buffer,
-  uint8_t *parity_buffer,
+  const uint8_t *XOR_RESTRICT data_buffer,
+  uint8_t *XOR_RESTRICT parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks
@@ -93,8 +95,8 @@ XORResult xor_encode(
  * @return XORResult XORResult indicating success or failure.
  */
 XORResult xor_decode(
-  uint8_t *data_buffer,
-  uint8_t *parity_buffer,
+  uint8_t *XOR_RESTRICT data_buffer,
+  const uint8_t *XOR_RESTRICT parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,

@@ -10,8 +10,8 @@
 
 
 XORResult xor_encode(
-  uint8_t *data_buffer,
-  uint8_t *parity_buffer,
+  const uint8_t *XOR_RESTRICT data_buffer,
+  uint8_t *XOR_RESTRICT parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks
@@ -41,11 +41,33 @@ XORResult xor_encode(
 
   std::memset(parity_buffer, 0, block_size * num_parity_blocks);
 
-  #if defined(XOR_AVX512)
+  #if defined(TRY_XOR_AVX512)
     // AVX-512 implementation
-  #elif defined(XOR_AVX2)
+    for (unsigned i = 0; i < num_parity_blocks; ++i) {
+      XOR_AVX512 * XOR_RESTRICT p_block512 = reinterpret_cast<XOR_AVX512*>(parity_buffer + i * block_size);
+
+      for (unsigned j = i; j < num_data_blocks; j += num_parity_blocks) {
+        const XOR_AVX512 * XOR_RESTRICT d_block512 = reinterpret_cast<const XOR_AVX512*>(data_buffer + j * block_size);
+        uint32_t block_bytes = block_size;
+
+        while (block_bytes >= 128) {
+          XOR_AVX512 res1 = _mm512_xor_si512(_mm512_loadu_si512(p_block512), _mm512_loadu_si512(d_block512));
+          XOR_AVX512 res2 = _mm512_xor_si512(_mm512_loadu_si512(p_block512 + 1), _mm512_loadu_si512(d_block512 + 1));
+          _mm512_storeu_si512(p_block512, res1);
+          _mm512_storeu_si512(p_block512 + 1, res2);
+          p_block512 += 2, d_block512 += 2;
+          block_bytes -= 128;
+        }
+
+        if (block_bytes > 0) {
+          XOR_AVX512 res = _mm512_xor_si512(_mm512_loadu_si512(p_block512), _mm512_loadu_si512(d_block512));
+          _mm512_storeu_si512(p_block512, res);
+        }
+      }
+    }
+  #elif defined(TRY_XOR_AVX2)
     // AVX2 implementation
-  #elif defined(XOR_AVX)
+  #elif defined(TRY_XOR_AVX)
     // AVX implementation
   #else
     for (unsigned i = 0; i < num_parity_blocks; ++i) {
@@ -64,8 +86,8 @@ XORResult xor_encode(
 
 
 XORResult xor_decode(
-  uint8_t *data_buffer,
-  uint8_t *parity_buffer,
+  uint8_t *XOR_RESTRICT data_buffer,
+  const uint8_t *XOR_RESTRICT parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
@@ -114,11 +136,11 @@ XORResult xor_decode(
   }
 
 
-  #if defined(XOR_AVX512)
+  #if defined(TRY_XOR_AVX512)
     // AVX-512 implementation
-  #elif defined(XOR_AVX2)
+  #elif defined(TRY_XOR_AVX2)
     // AVX2 implementation
-  #elif defined(XOR_AVX)
+  #elif defined(TRY_XOR_AVX)
     // AVX implementation
   #else
     for (unsigned i = 0; i < num_data_blocks; ++i) {
