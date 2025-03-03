@@ -17,19 +17,19 @@
 
 
 #if defined(__AVX512F__)
-  #define XORBASELINE_AVX512
+  #define XOR_AVX512
   #include <immintrin.h>
-  constexpr uint32_t XORBASELINE_BLOCK_SIZE_MULTIPLE = 64;
+  constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 64;
 #elif defined(__AVX2__)
-  #define XORBASELINE_AVX2
+  #define XOR_AVX2
   #include <immintrin.h>
-  constexpr uint32_t XORBASELINE_BLOCK_SIZE_MULTIPLE = 32;
+  constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 32;
 #elif defined(__AVX__)
-  #define XORBASELINE_AVX
+  #define XOR_AVX
   #include <immintrin.h>
-  constexpr uint32_t XORBASELINE_BLOCK_SIZE_MULTIPLE = 16;
+  constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 16;
 #else
-  constexpr uint32_t XORBASELINE_BLOCK_SIZE_MULTIPLE = 8;
+  constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 8;
 #endif
 
 
@@ -98,7 +98,7 @@ XORResult xor_decode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  std::bitset<256> block_bitmap // i-th bit set if i-th data_block received, indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
+  std::bitset<256> block_bitmap   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
  );
 
 #endif // XORBASELINE_H
