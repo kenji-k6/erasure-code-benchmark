@@ -175,13 +175,13 @@ static void inline XOR_xor_blocks(
     uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
     const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
 
-    while (bytes >= 64) {
+    while (bytes >= 32) {
       *dest64 ^= *src64;
       *(dest64 + 1) ^= *(src64 + 1);
       *(dest64 + 2) ^= *(src64 + 2);
       *(dest64 + 3) ^= *(src64 + 3);
       dest64 += 4, src64 += 4;
-      bytes -= 64;
+      bytes -= 32;
     }
   #endif
 }
@@ -243,7 +243,6 @@ static void inline XOR_copy_blocks(
       dest128 += 4, src128 += 4;
       bytes -= 64;
     }
-
   #else
     memcpy(dest, src, bytes);
   #endif

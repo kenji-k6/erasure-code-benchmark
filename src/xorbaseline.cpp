@@ -43,8 +43,10 @@ XORResult xor_encode(
 
   for (unsigned i = 0; i < num_parity_blocks; ++i) {
     void * XOR_RESTRICT parity_block = reinterpret_cast<void*>(parity_buffer + i * block_size);
+
     for (unsigned j = i; j < num_data_blocks; j += num_parity_blocks) {
       const void * XOR_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + j * block_size);
+
       XOR_xor_blocks(parity_block, data_block, block_size);
     }
   }
@@ -103,32 +105,23 @@ XORResult xor_decode(
     }
   }
 
+  for (unsigned i = 0; i < num_data_blocks; ++i) {
+    if (block_bitmap.test(i)) continue;
 
-  #if defined(TRY_XOR_AVX512)
-    
-  #elif defined(TRY_XOR_AVX2)
-    // AVX2 implementation
-  #elif defined(TRY_XOR_AVX)
-    // AVX implementation
-  #else
-    for (unsigned i = 0; i < num_data_blocks; ++i) {
-      if (block_bitmap.test(i)) continue;
+    void * XOR_RESTRICT recover_block = reinterpret_cast<void*>(data_buffer + i * block_size);
+    const void * XOR_RESTRICT parity_block = reinterpret_cast<const void*>(parity_buffer + (i % num_parity_blocks) * block_size);
 
-      uint64_t *recover_block = reinterpret_cast<uint64_t*>(data_buffer + i * block_size);
-      uint8_t *parity_block = parity_buffer + (i % num_parity_blocks) * block_size;
+    // Copy the parity block to the recover block
+    XOR_copy_blocks(recover_block, parity_block, block_size);
 
-      std::memcpy(recover_block, parity_block, block_size);
+    // XOR the recover block with the other data blocks
+    for (unsigned j = i % num_parity_blocks; j < num_data_blocks; j += num_parity_blocks) {
+      if (i == j) continue;
 
-      for (unsigned j = i%num_parity_blocks; j < num_data_blocks; j+= num_parity_blocks) {
-        if (i == j) continue;
-
-        uint64_t *data_block = reinterpret_cast<uint64_t*>(data_buffer + j * block_size);
-        for (unsigned k = 0; k < block_size / sizeof(uint64_t); ++k) {
-          recover_block[k] ^= data_block[k];
-        }
-      }
+      const void * XOR_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + j * block_size);
+      XOR_xor_blocks(recover_block, data_block, block_size);
     }
-  #endif
+  }
 
   return XORResult::Success;
 }
