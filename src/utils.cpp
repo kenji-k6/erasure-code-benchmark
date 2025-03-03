@@ -92,7 +92,7 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
     exit(0);
   }
 
-
+  PCGRandom rng(RANDOM_SEED+num_recovery_blocks+num_lost_blocks, 1);
   // Vector of valid indices to remove
   std::vector<uint32_t> valid_idxs(max_idx);
   std::iota(valid_idxs.begin(), valid_idxs.end(), 0);
@@ -103,7 +103,7 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
     srand(i+num_recovery_blocks+num_lost_blocks);
 
 
-    lost_block_idxs[i] = valid_idxs[rand()%valid_idxs.size()];
+    lost_block_idxs[i] = valid_idxs[rng.next()%valid_idxs.size()];
     uint32_t recovery_set = lost_block_idxs[i] % num_recovery_blocks;
     
     // update valid indices
