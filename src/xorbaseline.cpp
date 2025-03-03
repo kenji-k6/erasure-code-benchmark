@@ -41,46 +41,14 @@ XORResult xor_encode(
 
   std::memset(parity_buffer, 0, block_size * num_parity_blocks);
 
-  #if defined(TRY_XOR_AVX512)
-    // AVX-512 implementation
-    for (unsigned i = 0; i < num_parity_blocks; ++i) {
-      XOR_AVX512 * XOR_RESTRICT p_block512 = reinterpret_cast<XOR_AVX512*>(parity_buffer + i * block_size);
-
-      for (unsigned j = i; j < num_data_blocks; j += num_parity_blocks) {
-        const XOR_AVX512 * XOR_RESTRICT d_block512 = reinterpret_cast<const XOR_AVX512*>(data_buffer + j * block_size);
-        uint32_t block_bytes = block_size;
-
-        while (block_bytes >= 128) {
-          XOR_AVX512 res1 = _mm512_xor_si512(_mm512_loadu_si512(p_block512), _mm512_loadu_si512(d_block512));
-          XOR_AVX512 res2 = _mm512_xor_si512(_mm512_loadu_si512(p_block512 + 1), _mm512_loadu_si512(d_block512 + 1));
-          _mm512_storeu_si512(p_block512, res1);
-          _mm512_storeu_si512(p_block512 + 1, res2);
-          p_block512 += 2, d_block512 += 2;
-          block_bytes -= 128;
-        }
-
-        if (block_bytes > 0) {
-          XOR_AVX512 res = _mm512_xor_si512(_mm512_loadu_si512(p_block512), _mm512_loadu_si512(d_block512));
-          _mm512_storeu_si512(p_block512, res);
-        }
-      }
+  for (unsigned i = 0; i < num_parity_blocks; ++i) {
+    void * XOR_RESTRICT parity_block = reinterpret_cast<void*>(parity_buffer + i * block_size);
+    for (unsigned j = i; j < num_data_blocks; j += num_parity_blocks) {
+      const void * XOR_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + j * block_size);
+      XOR_xor_blocks(parity_block, data_block, block_size);
     }
-  #elif defined(TRY_XOR_AVX2)
-    // AVX2 implementation
-  #elif defined(TRY_XOR_AVX)
-    // AVX implementation
-  #else
-    for (unsigned i = 0; i < num_parity_blocks; ++i) {
-      uint64_t *parity_block = reinterpret_cast<uint64_t*>(parity_buffer + i * block_size);
-      for (unsigned j = i; j < num_data_blocks; j += num_parity_blocks) {
-        uint64_t *data_block = reinterpret_cast<uint64_t*>(data_buffer + + j * block_size);
-        for (unsigned k = 0; k < block_size / sizeof(uint64_t); ++k) {
-          parity_block[k] ^= data_block[k];
-        }
-      }
-    }
-
-  #endif
+  }
+  
   return XORResult::Success;  
 }
 
@@ -137,7 +105,7 @@ XORResult xor_decode(
 
 
   #if defined(TRY_XOR_AVX512)
-    // AVX-512 implementation
+    
   #elif defined(TRY_XOR_AVX2)
     // AVX2 implementation
   #elif defined(TRY_XOR_AVX)

@@ -14,27 +14,25 @@
  * This header defines the XOR-based erasure encoding and decoding functions,
  * optimized with SIMD intrinsics when available. It supports AVX, AVX2 and AVX-512.
  */
-#define __AVX512F__ 1
+// #define __AVX__ 0 
 #define XOR_RESTRICT __restrict
 
 #if defined(__AVX512F__)
   #define TRY_XOR_AVX512
   #include <immintrin.h>
   #define XOR_AVX512 __m512i
-  constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 64;
 #elif defined(__AVX2__)
   #define TRY_XOR_AVX2
   #include <immintrin.h>
-  constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 32;
+  #define XOR_AVX2 __m256i
 #elif defined(__AVX__)
   #define TRY_XOR_AVX
   #include <immintrin.h>
-  constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 16;
-#else
-  constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 8;
+  #define XOR_AVX __m128i
 #endif
 
 
+constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 64;
 
 constexpr uint32_t XOR_PTR_ALIGNMENT = 32;
 constexpr uint32_t XOR_MIN_BLOCK_SIZE = 64;
@@ -101,6 +99,98 @@ XORResult xor_decode(
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
   std::bitset<256> block_bitmap   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
- );
+);
+
+/**
+ * @brief XORs two memory buffers.
+ * @param dest Pointer to the destination buffer.
+ * @param src Pointer to the source buffer.
+ * @param bytes Number of bytes to XOR.
+ */
+static void inline XOR_xor_blocks(
+  void * XOR_RESTRICT dest,
+  const void * XOR_RESTRICT src,
+  uint32_t bytes
+) {
+  #if defined(TRY_XOR_AVX512)
+    XOR_AVX512 * XOR_RESTRICT dest512 = reinterpret_cast<XOR_AVX512*>(dest);
+    const XOR_AVX512 * XOR_RESTRICT src512 = reinterpret_cast<const XOR_AVX512*>(src);
+
+    while (bytes >= 128) {
+      XOR_AVX512 x0 = _mm512_xor_si512(_mm512_loadu_si512(dest512), _mm512_loadu_si512(src512));
+      XOR_AVX512 x1 = _mm512_xor_si512(_mm512_loadu_si512(dest512 + 1), _mm512_loadu_si512(src512 + 1));
+      _mm512_storeu_si512(dest512, x0);
+      _mm512_storeu_si512(dest512 + 1, x1);
+      dest512 += 2, src512 += 2;
+      bytes -= 128;
+    }
+
+    if (bytes > 0) {
+      XOR_AVX512 x0 = _mm512_xor_si512(_mm512_loadu_si512(dest512), _mm512_loadu_si512(src512));
+      _mm512_storeu_si512(dest512, x0);
+    }
+  #endif
+}
+
+static void inline XOR_copy_blocks(
+  void * XOR_RESTRICT dest,
+  const void * XOR_RESTRICT src,
+  uint32_t bytes
+) {
+  #if defined(TRY_XOR_AVX512)
+    XOR_AVX512 * XOR_RESTRICT dest512 = reinterpret_cast<XOR_AVX512*>(dest);
+    const XOR_AVX512 * XOR_RESTRICT src512 = reinterpret_cast<const XOR_AVX512*>(src);
+
+    while (bytes >= 128) {
+      _mm512_storeu_si512(dest512, _mm512_loadu_si512(src512));
+      _mm512_storeu_si512(dest512 + 1, _mm512_loadu_si512(src512 + 1));
+      dest512 += 2, src512 += 2;
+      bytes -= 128;
+    }
+
+    if (bytes > 0) {
+      _mm512_storeu_si512(dest512, _mm512_loadu_si512(src512));
+    }
+  
+  #elif defined(TRY_XOR_AVX2)
+    XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
+    const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
+
+    while (bytes >= 128) {
+      _mm256_storeu_si256(dest256, _mm256_loadu_si256(src256));
+      _mm256_storeu_si256(dest256 + 1, _mm256_loadu_si256(src256 + 1));
+      _mm256_storeu_si256(dest256 + 2, _mm256_loadu_si256(src256 + 2));
+      _mm256_storeu_si256(dest256 + 3, _mm256_loadu_si256(src256 + 3));
+      dest256 += 4, src256 += 4;
+      bytes -= 128;
+    }
+
+    if (bytes > 0) {
+      _mm256_storeu_si256(dest256, _mm256_loadu_si256(src256));
+      _mm256_storeu_si256(dest256 + 1, _mm256_loadu_si256(src256 + 1));
+    }
+  
+  #elif defined(TRY_XOR_AVX)
+    XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
+    const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
+
+    while (bytes >= 64) {
+      _mm_storeu_si128(dest128, _mm_loadu_si128(src128));
+      _mm_storeu_si128(dest128 + 1, _mm_loadu_si128(src128 + 1));
+      _mm_storeu_si128(dest128 + 2, _mm_loadu_si128(src128 + 2));
+      _mm_storeu_si128(dest128 + 3, _mm_loadu_si128(src128 + 3));
+      dest128 += 4, src128 += 4;
+      bytes -= 64;
+    }
+
+  #else
+    memcpy(dest, src, bytes);
+  #endif
+}
+
+
+
+
+
 
 #endif // XORBASELINE_H
