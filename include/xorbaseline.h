@@ -47,7 +47,7 @@ typedef enum XORBaselineResult_t {
   XORBaseline_DecodeFailure = 4
 } XORBaselineResult;
 
-XORBaselineResult encode(
+XORBaselineResult xor_encode(
   uint8_t *data_buffer,
   uint8_t *parity_buffer,
   uint32_t block_size,
@@ -55,13 +55,13 @@ XORBaselineResult encode(
   uint32_t num_parity_blocks
 );
 
-XORBaselineResult decode(
+XORBaselineResult xor_decode(
   uint8_t *data_buffer,
   uint8_t *parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  std::bitset<256> &block_bitmap // i-th bit set if i-th data_block received, indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
+  std::bitset<256> block_bitmap // i-th bit set if i-th data_block received, indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
  );
 
 #endif // XORBASELINE_H

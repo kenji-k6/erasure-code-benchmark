@@ -2,6 +2,7 @@
 #define BASELINE_BENCHMARK_H
 
 #include "abstract_benchmark.h"
+#include <bitset>
 
 
 /**
@@ -22,8 +23,9 @@ public:
 
 private:
   // Data Buffers
-  uint8_t* original_buffer_ = nullptr;    ///< Buffer for the original data we want to transmit
-  uint8_t* parity_block_ = nullptr;       ///< Buffer for the decoded data
+  uint8_t* data_buffer_ = nullptr;        ///< Buffer for the original data we want to transmit
+  uint8_t* parity_buffer_ = nullptr;      ///< Buffer for the decoded data
+  std::bitset<256> block_bitmap_;         ///< Bitmap to check if all data arrived
 };
 
 

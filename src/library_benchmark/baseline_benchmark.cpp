@@ -1,4 +1,5 @@
 #include "baseline_benchmark.h"
+#include "xorbaseline.h"
 #include "utils.h"
 #include <cstring>
 
@@ -7,10 +8,10 @@ BaselineBenchmark::BaselineBenchmark(const BenchmarkConfig& config) noexcept : E
 
 int BaselineBenchmark::setup() noexcept {
   // Allocate buffers with proper alignment for SIMD
-  original_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_original_blocks_));
-  parity_block_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_));
+  data_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_original_blocks_));
+  parity_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_recovery_blocks_));
 
-  if (!original_buffer_ || !parity_block_) {
+  if (!data_buffer_ || !parity_buffer_) {
     std::cerr << "Baseline: Failed to allocate buffer(s).\n";
     teardown();
     return -1;
@@ -18,7 +19,7 @@ int BaselineBenchmark::setup() noexcept {
   
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    int write_res = write_validation_pattern(i, original_buffer_ + i * block_size_, block_size_);
+    int write_res = write_validation_pattern(i, data_buffer_ + i * block_size_, block_size_);
     if (write_res) {
       std::cerr << "Baseline: Failed to write random checking packet.\n";
       teardown();
@@ -30,48 +31,31 @@ int BaselineBenchmark::setup() noexcept {
 }
 
 void BaselineBenchmark::teardown() noexcept {
-  if (original_buffer_) free(original_buffer_);
-  if (parity_block_) free(parity_block_);
+  if (data_buffer_) free(data_buffer_);
+  if (parity_buffer_) free(parity_buffer_);
 }
 
 int BaselineBenchmark::encode() noexcept {
-  /// @attention For this to be efficient, the block size has to be a multple of 8 byte
-  // Zero out parity block
-  memset(parity_block_, 0, block_size_);
-
-  // XOR all data blocks to get parity block
-  for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    for (unsigned j = 0; j < block_size_; j += 8) {
-      *((uint64_t*)(parity_block_ + j)) ^= *((uint64_t*)(original_buffer_ + i * block_size_ + j));
-    }
-  }
+  xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_);
   return 0;
 }
 
 int BaselineBenchmark::decode() noexcept {
-  /// @attention For this to be efficient, the block size has to be a multple of 8 byte
-  if (num_lost_blocks_ != 1) return 0;
-
-  // XOR the parity block with all received blocks to recover the lost block
-  for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    for (unsigned j = 0; j < block_size_; j += 8) {
-      *((uint64_t*)(parity_block_ + j)) ^= *((uint64_t*)(original_buffer_ + i * block_size_ + j));
-    }
-  }
-
-  memcpy(original_buffer_ + lost_block_idxs_[0] * block_size_, parity_block_, block_size_);
-  return 0;
+  xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_);
 }
 
 void BaselineBenchmark::simulate_data_loss() noexcept {
-  if (num_lost_blocks_ == 0) return;
-  uint32_t idx = lost_block_idxs_[0];
-  memset(original_buffer_ + idx * block_size_, 0, block_size_);
+  for (unsigned i = 0; i < num_lost_blocks_; ++i) {
+    uint32_t idx = lost_block_idxs_[i];
+    if (idx < num_original_blocks_) memset(data_buffer_ + idx * block_size_, 0, block_size_);
+    else memset(parity_buffer_ + (idx - num_original_blocks_) * block_size_, 0, block_size_);
+    block_bitmap_.set(idx);
+  }
 }
 
 bool BaselineBenchmark::check_for_corruption() const noexcept {
   for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    if (!validate_block(original_buffer_ + i * block_size_, block_size_)) return false;
+    if (!validate_block(data_buffer_ + i * block_size_, block_size_)) return false;
   }
   return true;
 }

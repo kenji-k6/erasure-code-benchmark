@@ -2,7 +2,7 @@
 #include <cstring>
 
 
-XORBaselineResult encode(
+XORBaselineResult xor_encode(
   uint8_t *data_buffer,
   uint8_t *parity_buffer,
   uint32_t block_size,
@@ -32,6 +32,9 @@ XORBaselineResult encode(
     return XORBaseline_InvalidAlignment;
   }
 
+  // Zero out parity buffer
+  std::memset(parity_buffer, 0, block_size * num_parity_blocks);
+
   #if defined(XORBASELINE_AVX512)
     // AVX-512 implementation
   #elif defined(XORBASELINE_AVX2)
@@ -58,7 +61,7 @@ XORBaselineResult encode(
 }
 
 
-XORBaselineResult decode(
+XORBaselineResult xor_decode(
   uint8_t *data_buffer,
   uint8_t *parity_buffer,
   uint32_t block_size,
