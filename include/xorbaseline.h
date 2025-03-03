@@ -1,7 +1,20 @@
 #ifndef XORBASELINE_H
 #define XORBASELINE_H
+
 #include <bitset>
 #include <cstdint>
+#include <cstring>
+#include <array>
+
+
+/**
+ * @file xorbaseline.h
+ * @brief Provides encoding and decoding functions for custom XOR-based erasure coding.
+ * 
+ * This header defines the XOR-based erasure encoding and decoding functions,
+ * optimized with SIMD intrinsics when available. It supports AVX, AVX2 and AVX-512.
+ */
+
 
 #if defined(__AVX512F__)
   #define XORBASELINE_AVX512
@@ -20,34 +33,47 @@
 #endif
 
 
-constexpr uint32_t XORBASELINE_PTR_ALIGNMENT = 32;
-constexpr uint32_t XORBASELINE_MIN_BLOCK_SIZE = 64;
 
-constexpr uint32_t XORBASELINE_MIN_DATA_BLOCKS = 1;
-constexpr uint32_t XORBASELINE_MAX_DATA_BLOCKS = 128;
+constexpr uint32_t XOR_PTR_ALIGNMENT = 32;
+constexpr uint32_t XOR_MIN_BLOCK_SIZE = 64;
 
-constexpr uint32_t XORBASELINE_MIN_PARITY_BLOCKS = 1;
-constexpr uint32_t XORBASELINE_MAX_PARITY_BLOCKS = 128;
-
-constexpr uint32_t XORBASELINE_MAX_TOTAL_BLOCKS = 256;
-
-/// Bitmap to check if all data arrived
-constexpr std::bitset<256> compare_bitmap = (std::bitset<256>(0xFFFFFFFFFFFFFFFFULL)<<64) | std::bitset<256>(0xFFFFFFFFFFFFFFFFULL);
+constexpr uint32_t XOR_MIN_DATA_BLOCKS = 1;
+constexpr uint32_t XOR_MAX_DATA_BLOCKS = 128;
+constexpr uint32_t XOR_MIN_PARITY_BLOCKS = 1;
+constexpr uint32_t XOR_MAX_PARITY_BLOCKS = 128;
+constexpr uint32_t XOR_MAX_TOTAL_BLOCKS = 256;
 
 
-typedef enum XORBaselineResult_t {
-  XORBaseline_Success = 0,
+/// Bitmap to check if all data blocks are available (no recovery needed)
+constexpr std::bitset<XOR_MAX_TOTAL_BLOCKS> COMPLETE_DATA_BITMAP =(
+  std::bitset<256>(0xFFFFFFFFFFFFFFFFULL)<<64) |
+  std::bitset<256>(0xFFFFFFFFFFFFFFFFULL
+  );
 
-  XORBaseline_InvalidSize = 1,
-  
-  XORBaseline_InvalidCounts = 2,
 
-  XORBaseline_InvalidAlignment = 3,
+/**
+ * @enum XORResult
+ * @brief Represents the result status of encoding and decoding operations.
+ */
+enum class XORResult {
+  Success = 0,
+  InvalidSize = 1,
+  InvalidCounts = 2,
+  InvalidAlignment = 3,
+  DecodeFailure = 4
+};
 
-  XORBaseline_DecodeFailure = 4
-} XORBaselineResult;
 
-XORBaselineResult xor_encode(
+/**
+ * @brief Encodes data using XOR-based erasure coding.
+ * @param data_buffer Pointer to the data buffer.
+ * @param parity_buffer Pointer to the parity buffer.
+ * @param block_size Size of each block in bytes.
+ * @param num_data_blocks Number of data blocks.
+ * @param num_parity_blocks Number of parity blocks.
+ * @return XORResult XORResult indicating success or failure.
+ */
+XORResult xor_encode(
   uint8_t *data_buffer,
   uint8_t *parity_buffer,
   uint32_t block_size,
@@ -55,7 +81,18 @@ XORBaselineResult xor_encode(
   uint32_t num_parity_blocks
 );
 
-XORBaselineResult xor_decode(
+
+/**
+ * @brief Decodes data using XOR-based erasure coding.
+ * @param data_buffer Pointer to the data buffer.
+ * @param parity_buffer Pointer to the parity buffer.
+ * @param block_size Size of each block in bytes.
+ * @param num_data_blocks Number of data blocks.
+ * @param num_parity_blocks Number of parity blocks.
+ * @param block_bitmap A bitset indicating which blocks are present.
+ * @return XORResult XORResult indicating success or failure.
+ */
+XORResult xor_decode(
   uint8_t *data_buffer,
   uint8_t *parity_buffer,
   uint32_t block_size,
