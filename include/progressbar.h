@@ -16,7 +16,7 @@ public:
   ProgressBar (ProgressBar&&) = delete;
   ProgressBar& operator=(ProgressBar&&) = delete;
 
-  inline ProgressBar(int n_iter, bool showbar=true, std:: ostream& out=std::cerr);
+  inline ProgressBar(int n_iter, std:: ostream& out=std::cerr);
 
   inline void reset();
   inline void update();
@@ -26,7 +26,6 @@ private:
   int progress;
   int n_cycles;
   int last_perc;
-  bool do_show_bar;
   bool update_is_called;
 
   std::string done_char;
@@ -39,11 +38,10 @@ private:
   std::ostream& output;
 };
 
-inline ProgressBar::ProgressBar(int n_iter, bool showbar, std::ostream& out) :
+inline ProgressBar::ProgressBar(int n_iter, std::ostream& out) :
   progress(0),
   n_cycles(n_iter),
   last_perc(0),
-  do_show_bar(showbar),
   update_is_called(false),
   done_char("█"),
   todo_char(" "),
