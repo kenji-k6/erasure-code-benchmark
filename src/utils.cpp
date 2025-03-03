@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <numeric>
 
 
 /**
@@ -85,21 +86,33 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size) {
 }
 
 
-void select_lost_block_idxs(size_t num_lost_blocks, size_t max_idx, uint32_t *lost_block_idxs) {
-  uint32_t i;
-  PCGRandom rng(RANDOM_SEED, 1); 
-
-  for (i = 0; i < num_lost_blocks; i++) {
-    lost_block_idxs[i] = i;
+void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_blocks, uint32_t max_idx, uint32_t *lost_block_idxs) {
+  if (num_lost_blocks > num_recovery_blocks) {
+    std::cerr << "select_lost_block_idxs: Number of lost blocks must be less than or equal to the number of recovery blocks\n";
+    exit(0);
   }
 
-  for (; i < max_idx; i++) {
-    uint32_t j = rng.next() % (i + 1);
-    if (j < num_lost_blocks) {
-      lost_block_idxs[j] = i;
+
+  // Vector of valid indices to remove
+  std::vector<uint32_t> valid_idxs(max_idx);
+  std::iota(valid_idxs.begin(), valid_idxs.end(), 0);
+
+  for (uint32_t i = 0; i < num_lost_blocks; i++) {
+
+    // Seed the random number generator
+    srand(i+num_recovery_blocks+num_lost_blocks);
+
+
+    lost_block_idxs[i] = valid_idxs[rand()%valid_idxs.size()];
+    uint32_t recovery_set = lost_block_idxs[i] % num_recovery_blocks;
+    
+    // update valid indices
+    for (auto it = valid_idxs.begin(); it != valid_idxs.end(); ++it) {
+      if (*it % num_recovery_blocks == recovery_set) {
+        it = valid_idxs.erase(it);
+      }
     }
   }
-
 
   // Sort the indices (needed for Wirehair and ISA-L)
   std::sort(lost_block_idxs, lost_block_idxs + num_lost_blocks);

@@ -294,6 +294,7 @@ int main(int argc, char** argv) {
   // Initialize lost block indices
   std::vector<uint32_t> lost_block_idxs(benchmark_config.num_lost_blocks);
   select_lost_block_idxs(
+    benchmark_config.computed.num_recovery_blocks,
     benchmark_config.num_lost_blocks,
     benchmark_config.computed.num_original_blocks + benchmark_config.computed.num_recovery_blocks,
     lost_block_idxs.data()
@@ -350,6 +351,7 @@ int main (int argc, char** argv) {
   std::vector<uint32_t>fixed_num_lost_block_idxs(FIXED_NUM_LOST_BLOCKS);
 
   select_lost_block_idxs(
+    FIXED_NUM_RECOVERY_BLOCKS,
     FIXED_NUM_LOST_BLOCKS,
     FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_RECOVERY_BLOCKS,
     fixed_num_lost_block_idxs.data()
@@ -407,6 +409,7 @@ int main (int argc, char** argv) {
     BenchmarkConfig config;
 
     select_lost_block_idxs(
+      FIXED_NUM_ORIGINAL_BLOCKS,
       num_lost_blocks,
       FIXED_NUM_ORIGINAL_BLOCKS + num_lost_blocks,
       curr
