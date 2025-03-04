@@ -62,7 +62,11 @@ public:
     print_elapsed_time();
 
     last_percentage_ = percentage;
-    ++current_step_;
+    if (!first_update_called_) {
+      first_update_called_ = true;
+    } else {
+      ++current_step_;
+    }
     output_ << std::flush;
   }
 
@@ -89,7 +93,6 @@ private:
     output_ << '\n' << open_bracket_;
     for (int i = 0; i < 50; ++i) output_ << todo_char_;
     output_ << close_bracket_ << "\033[1;31m" << " 0%" << "\033[1;33m" << " (" << 0 << '/' << total_steps_ << ')' << "\033[0m" << '\n';
-    first_update_called_ = true;
     start_time_ = std::chrono::system_clock::now();
   }
 

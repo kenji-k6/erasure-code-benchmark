@@ -79,7 +79,7 @@ bool BenchmarkCSVReporter::ReportContext(const Context& _) { return true; }
 
 
 
-BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs) : bar_(num_runs, std::cout) {}
+BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs) : bar_(num_runs, std::cout) { bar_.update(); }
 BenchmarkProgressReporter::~BenchmarkProgressReporter() {}
 void BenchmarkProgressReporter::ReportRuns(const std::vector<Run>& runs) {
   for (const auto& _ : runs) {
