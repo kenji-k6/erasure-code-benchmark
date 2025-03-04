@@ -6,8 +6,8 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed. Please run cmake from a 'build' directory.")
 endif()
 
-# Set C++ standard to 23
-set(CMAKE_CXX_STANDARD 23)
+# Set C++ standard to 20
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set proper compiler flags

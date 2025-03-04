@@ -46,7 +46,7 @@ constexpr uint32_t XOR_MAX_TOTAL_BLOCKS = 256;
 
 
 /// Bitmap to check if all data blocks are available (no recovery needed)
-constexpr std::bitset<XOR_MAX_TOTAL_BLOCKS> COMPLETE_DATA_BITMAP =(
+const std::bitset<XOR_MAX_TOTAL_BLOCKS> COMPLETE_DATA_BITMAP =(
   std::bitset<256>(0xFFFFFFFFFFFFFFFFULL)<<64) |
   std::bitset<256>(0xFFFFFFFFFFFFFFFFULL
   );
