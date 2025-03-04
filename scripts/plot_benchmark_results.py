@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import math
 import numpy as np
+from typing import Dict
 
 
 # File / directory paths
@@ -27,7 +28,7 @@ def get_plot_title(df: pd.DataFrame, plot_id: int) -> str:
   return titles.get(plot_id, "ERROR: Invalid plot_id")
 
 
-def make_scatter_plot(dfs: dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: str, y_label: str, file_name: str, plot_id: int) -> None:
+def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: str, y_label: str, file_name: str, plot_id: int) -> None:
   """Generate and save scatter plots."""
   df = dfs[plot_id]
   sns.set_theme(style="whitegrid")
