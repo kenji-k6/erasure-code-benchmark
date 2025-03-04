@@ -50,6 +50,7 @@ add_subdirectory(libraries/cm256)
 
 # wirehair (have to set BUILD_TESTS to OFF)
 set(BUILD_TESTS OFF)
+message(STATUS "BUILD_TESTS in wirehair: ${BUILD_TESTS}")
 add_subdirectory(libraries/wirehair)
 
 
