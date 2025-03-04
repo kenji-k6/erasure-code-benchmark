@@ -88,7 +88,7 @@ private:
   void initialize_bar() {
     output_ << '\n' << open_bracket_;
     for (int i = 0; i < 50; ++i) output_ << todo_char_;
-    output_ << close_bracket_ << "\033[1;39m" << " 0%" << "\033[0m" << '\n';
+    output_ << close_bracket_ << "\033[1;31m" << " 0%" << "\033[1;33m" << " (" << 0 << '/' << total_steps_ << ')' << "\033[0m" << '\n';
     first_update_called_ = true;
     start_time_ = std::chrono::system_clock::now();
   }
@@ -111,11 +111,13 @@ private:
 
     for (int i = completed; i < 50; ++i) output_ << todo_char_;
     
-    output_ << close_bracket_           // Close progress bar
-            << "\033[1;39m"             // Bold text for percentage
-            << ' ' << percentage << '%' // Print percentage
-            << "\033[0m"                // Reset text style
-            << '\n';                    // Move to next line
+    output_ << close_bracket_                                       // Close progress bar
+            << "\033[1;39m"                                         // Bold, red text for percentage
+            << ' ' << percentage << '%'                             // Print percentage
+            << "\033[1;33m"                                         // Bold, yellow text for progress relative
+            << " (" << current_step_ << '/' << total_steps_ << ')'  // Print progress relative to total iterations
+            << "\033[0m"                                            // Reset text style
+            << '\n';                                                // Move to next line
   
   }
 

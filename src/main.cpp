@@ -20,15 +20,15 @@
 constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
 
 #if RUNNING_ON_DOCKER
-  constexpr uint32_t FIXED_NUM_ITERATIONS = 10;
+  constexpr uint32_t FIXED_NUM_ITERATIONS = 3;
   constexpr uint64_t FIXED_BUFFER_SIZE = 4194304; ///< 4 MiB
 
-  const std::vector<uint64_t> VAR_BUFFER_SIZE = { 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728 };
+  const std::vector<uint64_t> VAR_BUFFER_SIZE = { 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144 };
 #else
-  constexpr uint32_t FIXED_NUM_ITERATIONS = 10000;
+  constexpr uint32_t FIXED_NUM_ITERATIONS = 2000;
   constexpr uint64_t FIXED_BUFFER_SIZE = 4194304; ///< 4 MiB
 
-  const std::vector<uint64_t> VAR_BUFFER_SIZE = { 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728 };
+  const std::vector<uint64_t> VAR_BUFFER_SIZE = { 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144 };
 #endif
 
 /// Constants that are the same regardless where the code is run
@@ -36,8 +36,8 @@ constexpr uint32_t FIXED_NUM_ORIGINAL_BLOCKS = 128;
 constexpr uint32_t FIXED_NUM_RECOVERY_BLOCKS = 4;
 constexpr double FIXED_PARITY_RATIO = 0.03125;
 constexpr uint64_t FIXED_NUM_LOST_BLOCKS = 1;
-const std::vector<uint32_t> VAR_NUM_RECOVERY_BLOCKS = { 1, 2, 4, 8, 16, 32, 64, 128 };
-const std::vector<uint64_t> VAR_NUM_LOST_BLOCKS = { 1, 2, 4, 8, 16, 32, 64, 128 };
+const std::vector<uint32_t> VAR_NUM_RECOVERY_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
+const std::vector<uint64_t> VAR_NUM_LOST_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
 
 
 /// Benchmark functions for different libraries/algorithms

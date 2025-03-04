@@ -8,7 +8,7 @@ from typing import Dict
 
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results_test.csv")
+INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results_intelv100.csv")
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/")
 
 
@@ -53,7 +53,7 @@ def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_la
   ax.set_xticks(ticks=x_ticks, labels=x_ticklabels, rotation=rot)
 
   ax.set_xlim(left=x_ticks[0]/2, right=x_ticks[-1]*2)
-
+  
   # Plot confidence intervals (has to be done with a loop, to ensure the correct color)
   for name, group in df.groupby("name"):
     plt.errorbar(group[x_col], group[y_col],
