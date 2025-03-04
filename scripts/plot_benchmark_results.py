@@ -9,12 +9,14 @@ from typing import Dict
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results_intelv100.csv")
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/")
+LIN_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/linear/")
+LOG_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/log/")
 
 
-def ensure_output_directory() -> None:
+def ensure_output_directories() -> None:
   """Ensure the output directory exists."""
-  os.makedirs(OUTPUT_DIR, exist_ok=True)
+  os.makedirs(LIN_OUTPUT_DIR, exist_ok=True)
+  os.makedirs(LOG_OUTPUT_DIR, exist_ok=True)
 
 def get_plot_title(df: pd.DataFrame, plot_id: int) -> str:
   """Generate a  plot title containing all the constant parameters."""
@@ -27,17 +29,19 @@ def get_plot_title(df: pd.DataFrame, plot_id: int) -> str:
   return titles.get(plot_id, "ERROR: Invalid plot_id")
 
 
-def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: str, y_label: str, file_name: str, plot_id: int) -> None:
+def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: str, y_label: str, y_scale: str, file_name: str, plot_id: int) -> None:
   """Generate and save scatter plots."""
   df = dfs[plot_id]
   sns.set_theme(style="whitegrid")
   plt.figure(figsize=(10, 6))
+  output_directory = LIN_OUTPUT_DIR if y_scale == "linear" else LOG_OUTPUT_DIR
+
 
   sns.scatterplot(data=df, x=x_col, y=y_col, hue="name", palette="tab10")
   plt.xlabel(x_label, fontsize=12)
   plt.ylabel(y_label, fontsize=12)
   plt.xscale("log", base=2)
-  plt.yscale("linear")
+  plt.yscale(y_scale)
   plt.legend(title="Libraries", bbox_to_anchor=(1.05, 1), loc="upper left")
   plt.title(get_plot_title(df, plot_id), fontsize=12)  
 
@@ -61,13 +65,13 @@ def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_la
                  fmt='o', color=ax.get_legend().legend_handles[df["name"].unique().tolist().index(name)].get_color(), capsize=5
                  )
   plt.tight_layout()
-  plt.savefig(os.path.join(OUTPUT_DIR, file_name))
+  plt.savefig(os.path.join(output_directory, file_name))
   plt.close()
 
 
 
 if __name__ == "__main__":
-  ensure_output_directory()
+  ensure_output_directories()
   df = pd.read_csv(INPUT_FILE)
 
   # Process and clean data
@@ -100,27 +104,50 @@ if __name__ == "__main__":
 
   # Define plot parameters
   plot_params = [
+    # Linear Y-scale
     # X: Buffer Size, Y: Encode/Decode Time
-    ("tot_data_size_KiB", "encode_time_ms", "Buffer Size", "Encode Time (ms)", "buffersize_vs_encodetime.png", 0),
-    ("tot_data_size_KiB", "decode_time_ms", "Buffer Size", "Decode Time (ms)", "buffersize_vs_decodetime.png", 0),
+    ("tot_data_size_KiB", "encode_time_ms", "Buffer Size", "Encode Time (ms)", "linear", "buffersize_vs_encodetime_linear.png", 0),
+    ("tot_data_size_KiB", "decode_time_ms", "Buffer Size", "Decode Time (ms)", "linear", "buffersize_vs_decodetime_linear.png", 0),
     # X: Buffer Size, Y: Encode/Decode Throughput
-    ("tot_data_size_KiB", "encode_throughput_Gbps", "Buffer Size", "Encode Throughput (Gbps)", "buffersize_vs_encodethroughput.png", 0),
-    ("tot_data_size_KiB", "decode_throughput_Gbps", "Buffer Size", "Decode Throughput (Gbps)", "buffersize_vs_decodethroughput.png", 0),
+    ("tot_data_size_KiB", "encode_throughput_Gbps", "Buffer Size", "Encode Throughput (Gbps)", "linear", "buffersize_vs_encodethroughput_linear.png", 0),
+    ("tot_data_size_KiB", "decode_throughput_Gbps", "Buffer Size", "Decode Throughput (Gbps)", "linear", "buffersize_vs_decodethroughput_linear.png", 0),
 
     # X: Num Parity Blocks, Y: Encode/Decode Time
-    ("num_parity_blocks", "encode_time_ms", "#Parity Blocks", "Encode Time (ms)", "parityblocks_vs_encodetime.png", 1),
-    ("num_parity_blocks", "decode_time_ms", "#Parity Blocks", "Decode Time (ms)", "parityblocks_vs_decodetime.png", 1),
+    ("num_parity_blocks", "encode_time_ms", "#Parity Blocks", "Encode Time (ms)", "linear", "parityblocks_vs_encodetime_linear.png", 1),
+    ("num_parity_blocks", "decode_time_ms", "#Parity Blocks", "Decode Time (ms)", "linear", "parityblocks_vs_decodetime_linear.png", 1),
     # X: Num Parity Blocks, Y: Encode/Decode Throughput
-    ("num_parity_blocks", "encode_throughput_Gbps", "#Parity Blocks", "Encode Throughput (Gbps)", "parityblocks_vs_encodethroughput.png", 1),
-    ("num_parity_blocks", "decode_throughput_Gbps", "#Parity Blocks", "Decode Throughput (Gbps)", "parityblocks_vs_decodethroughput.png", 1),
-
+    ("num_parity_blocks", "encode_throughput_Gbps", "#Parity Blocks", "Encode Throughput (Gbps)", "linear", "parityblocks_vs_encodethroughput_linear.png", 1),
+    ("num_parity_blocks", "decode_throughput_Gbps", "#Parity Blocks", "Decode Throughput (Gbps)", "linear", "parityblocks_vs_decodethroughput_linear.png", 1),
 
     # X: Num Lost Blocks, Y: Encode/Decode Time
-    ("num_lost_blocks", "encode_time_ms", "#Lost Blocks", "Encode Time (ms)", "lostblocks_vs_encodetime.png", 2),
-    ("num_lost_blocks", "decode_time_ms", "#Lost Blocks", "Decode Time (ms)", "lostblocks_vs_decodetime.png", 2),
+    ("num_lost_blocks", "encode_time_ms", "#Lost Blocks", "Encode Time (ms)", "linear", "lostblocks_vs_encodetime_linear.png", 2),
+    ("num_lost_blocks", "decode_time_ms", "#Lost Blocks", "Decode Time (ms)", "linear", "lostblocks_vs_decodetime_linear.png", 2),
     # X: Num Lost Blocks, Y: Encode/Decode Throughput
-    ("num_lost_blocks", "encode_throughput_Gbps", "#Lost Blocks", "Encode Throughput (Gbps)", "lostblocks_vs_encodethroughput.png", 2),
-    ("num_lost_blocks", "decode_throughput_Gbps", "#Lost Blocks", "Decode Throughput (Gbps)", "lostblocks_vs_decodethroughput.png", 2)
+    ("num_lost_blocks", "encode_throughput_Gbps", "#Lost Blocks", "Encode Throughput (Gbps)", "linear", "lostblocks_vs_encodethroughput_linear.png", 2),
+    ("num_lost_blocks", "decode_throughput_Gbps", "#Lost Blocks", "Decode Throughput (Gbps)", "linear", "lostblocks_vs_decodethroughput_linear.png", 2),
+
+
+    # Log Y-scale
+    # X: Buffer Size, Y: Encode/Decode Time
+    ("tot_data_size_KiB", "encode_time_ms", "Buffer Size", "Encode Time (ms)", "log", "buffersize_vs_encodetime_log.png", 0),
+    ("tot_data_size_KiB", "decode_time_ms", "Buffer Size", "Decode Time (ms)", "log", "buffersize_vs_decodetime_log.png", 0),
+    # X: Buffer Size, Y: Encode/Decode Throughput
+    ("tot_data_size_KiB", "encode_throughput_Gbps", "Buffer Size", "Encode Throughput (Gbps)", "log", "buffersize_vs_encodethroughput_log.png", 0),
+    ("tot_data_size_KiB", "decode_throughput_Gbps", "Buffer Size", "Decode Throughput (Gbps)", "log", "buffersize_vs_decodethroughput_log.png", 0),
+
+    # X: Num Parity Blocks, Y: Encode/Decode Time
+    ("num_parity_blocks", "encode_time_ms", "#Parity Blocks", "Encode Time (ms)", "log", "parityblocks_vs_encodetime_log.png", 1),
+    ("num_parity_blocks", "decode_time_ms", "#Parity Blocks", "Decode Time (ms)", "log", "parityblocks_vs_decodetime_log.png", 1),
+    # X: Num Parity Blocks, Y: Encode/Decode Throughput
+    ("num_parity_blocks", "encode_throughput_Gbps", "#Parity Blocks", "Encode Throughput (Gbps)", "log", "parityblocks_vs_encodethroughput_log.png", 1),
+    ("num_parity_blocks", "decode_throughput_Gbps", "#Parity Blocks", "Decode Throughput (Gbps)", "log", "parityblocks_vs_decodethroughput_log.png", 1),
+
+    # X: Num Lost Blocks, Y: Encode/Decode Time
+    ("num_lost_blocks", "encode_time_ms", "#Lost Blocks", "Encode Time (ms)", "log", "lostblocks_vs_encodetime_log.png", 2),
+    ("num_lost_blocks", "decode_time_ms", "#Lost Blocks", "Decode Time (ms)", "log", "lostblocks_vs_decodetime_log.png", 2),
+    # X: Num Lost Blocks, Y: Encode/Decode Throughput
+    ("num_lost_blocks", "encode_throughput_Gbps", "#Lost Blocks", "Encode Throughput (Gbps)", "log", "lostblocks_vs_encodethroughput_log.png", 2),
+    ("num_lost_blocks", "decode_throughput_Gbps", "#Lost Blocks", "Decode Throughput (Gbps)", "log", "lostblocks_vs_decodethroughput_log.png", 2)
   ]
 
   # Generate plots

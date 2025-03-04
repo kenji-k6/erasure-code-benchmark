@@ -35,8 +35,8 @@ BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool 
           << "decode_time_ns,"
           << "decode_time_ns_stddev,"
           << "decode_throughput_Gbps,"
-          << "decode_throughput_Gbps_stddev\n";
-          
+          << "decode_throughput_Gbps_stddev\n"
+          << std::flush;
   }
 }
 
@@ -70,7 +70,8 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
           << run.counters.find("decode_time_ns")->second.value << ","
           << run.counters.find("decode_time_ns_stddev")->second.value << ","
           << run.counters.find("decode_throughput_Gbps")->second.value << ","
-          << run.counters.find("decode_throughput_Gbps_stddev")->second.value << "\n";
+          << run.counters.find("decode_throughput_Gbps_stddev")->second.value << "\n"
+          << std::flush;
   }
 }
 
