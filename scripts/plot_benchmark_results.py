@@ -6,7 +6,6 @@ import math
 import numpy as np
 from typing import Dict
 
-
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results_test.csv")
