@@ -16,3 +16,6 @@
 [submodule "libraries/google_benchmark"]
 	path = libraries/google_benchmark
 	url = https://github.com/google/benchmark.git
+[submodule "libraries/nasm"]
+	path = libraries/nasm
+	url = https://github.com/netwide-assembler/nasm.git
