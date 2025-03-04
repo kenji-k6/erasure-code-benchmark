@@ -73,7 +73,6 @@ target_link_libraries(ecc-benchmark PRIVATE
   libleopard
   cm256
   wirehair
-  # aff3ct-static-lib
   isal
   benchmark::benchmark
   OpenMP::OpenMP_CXX
