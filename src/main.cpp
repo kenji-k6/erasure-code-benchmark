@@ -15,7 +15,7 @@
 #include <getopt.h>
 
 #define TAKE_CMD_LINE_ARGS false
-#define RUNNING_ON_DOCKER true
+#define RUNNING_ON_DOCKER false
 
 constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
 
@@ -28,7 +28,7 @@ constexpr const char* OUTPUT_FILE_PATH = "../results/raw/";
   constexpr uint32_t FIXED_NUM_ITERATIONS = 10000;
   constexpr uint64_t FIXED_BUFFER_SIZE = 4194304; ///< 4 MiB
 
-  const std::vector<uint64_t> VAR_BUFFER_SIZE = { 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728};
+  const std::vector<uint64_t> VAR_BUFFER_SIZE = { 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728 };
 #endif
 
 /// Constants that are the same regardless where the code is run
@@ -449,7 +449,7 @@ int main (int argc, char** argv) {
   }
 
   // Initialize reporters
-  std::string output_file = "benchmark_results_test.csv";
+  std::string output_file = "benchmark_results_intelv100.csv";
   BenchmarkCSVReporter csv_reporter(OUTPUT_FILE_PATH + output_file, true);
   BenchmarkProgressReporter console_reporter(num_runs);
 
