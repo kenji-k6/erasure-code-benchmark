@@ -432,10 +432,18 @@ int main (int argc, char** argv) {
     curr += num_lost_blocks;
   }
 
+  int all_bmarks_iterations = available_benchmarks.size() * configs.size() * FIXED_NUM_ITERATIONS;
 
-  int num_runs = 0;
+  // Initialize output file name and reporters
+  std::string output_file = "benchmark_results_intelv100.csv";
+  BenchmarkCSVReporter csv_reporter(OUTPUT_FILE_PATH + output_file, true);
+  BenchmarkProgressReporter console_reporter(all_bmarks_iterations);
+
+
   using BMTuple = std::tuple<std::string, void(*)(benchmark::State&, const BenchmarkConfig&)>;
   for (auto& config : configs) {
+    config.progress_reporter = &console_reporter;
+
     for (auto& [name, func] : {
       BMTuple("Baseline", BM_Baseline),
       BMTuple("CM256", BM_CM256),
@@ -444,14 +452,13 @@ int main (int argc, char** argv) {
       BMTuple("Wirehair", BM_Wirehair)
     }) {
       benchmark::RegisterBenchmark(name, func, config)->UseManualTime()->Iterations(config.num_iterations);
-      ++num_runs;
     }
   }
 
-  // Initialize reporters
-  std::string output_file = "benchmark_results_intelv100.csv";
-  BenchmarkCSVReporter csv_reporter(OUTPUT_FILE_PATH + output_file, true);
-  BenchmarkProgressReporter console_reporter(num_runs);
+
+  for (auto& config : configs) {
+    config.progress_reporter = &console_reporter;
+  }
 
 
   // Initialize Google Benchmark

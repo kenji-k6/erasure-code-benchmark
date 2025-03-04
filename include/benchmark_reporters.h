@@ -57,6 +57,8 @@ public:
 
   bool ReportContext(const Context& context) override;
 
+  void update_bar();
+
 private:
   ProgressBar bar_;
 };

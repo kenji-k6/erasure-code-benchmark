@@ -53,7 +53,12 @@ public:
    * @brief Updates the progress bar with the current step.
    */
   void update() {
-    if (!first_update_called_) initialize_bar();
+    if (!first_update_called_) {
+      initialize_bar();
+      first_update_called_ = true;
+    } else {
+      ++current_step_;
+    }
 
     int percentage = (current_step_ * 100) / (total_steps_ - 1);
     if (percentage < last_percentage_) return;
@@ -62,11 +67,6 @@ public:
     print_elapsed_time();
 
     last_percentage_ = percentage;
-    if (!first_update_called_) {
-      first_update_called_ = true;
-    } else {
-      ++current_step_;
-    }
     output_ << std::flush;
   }
 
