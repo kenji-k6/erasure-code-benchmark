@@ -1,5 +1,5 @@
-#ifndef GENERIC_BENCHMARK_RUNNER_H
-#define GENERIC_BENCHMARK_RUNNER_H
+#ifndef BENCHMARK_GENERIC_RUNNER_H
+#define BENCHMARK_GENERIC_RUNNER_H
 
 #include "abstract_benchmark.h"
 #include "benchmark/benchmark.h"
@@ -140,4 +140,4 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   state.counters["decode_throughput_Gbps_stddev"] = dec_throughput_stddev;
 }
 
-#endif // GENERIC_BENCHMARK_RUNNER_H
+#endif // BENCHMARK_GENERIC_RUNNER_H

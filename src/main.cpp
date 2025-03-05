@@ -1,7 +1,8 @@
 #include "benchmark_reporters.h"
 #include "benchmark/benchmark.h"
-#include "generic_benchmark_runner.h"
+#include "benchmark_functions.h"
 #include "utils.h"
+#include "benchmark_config.h"
 
 #include "baseline_benchmark.h"
 #include "cm256_benchmark.h"
@@ -40,26 +41,6 @@ const std::vector<uint32_t> VAR_NUM_RECOVERY_BLOCKS = { 128, 64, 32, 16, 8, 4, 2
 const std::vector<uint64_t> VAR_NUM_LOST_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
 
 
-/// Benchmark functions for different libraries/algorithms
-static void BM_Baseline(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<BaselineBenchmark>(state, config);
-}
-
-static void BM_CM256(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<CM256Benchmark>(state, config);
-}
-
-static void BM_ISAL(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<ISALBenchmark>(state, config);
-}
-
-static void BM_Leopard(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<LeopardBenchmark>(state, config);
-}
-
-static void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<WirehairBenchmark>(state, config);
-}
 
 /// @brief Map ov available benchmarks
 const std::unordered_map<std::string, void(*)(benchmark::State&, const BenchmarkConfig&)> available_benchmarks = {
@@ -442,7 +423,7 @@ int main (int argc, char** argv) {
 
   using BMTuple = std::tuple<std::string, void(*)(benchmark::State&, const BenchmarkConfig&)>;
   for (auto& config : configs) {
-    config.progress_reporter = &console_reporter;
+    // config.progress_reporter = &console_reporter;
 
     for (auto& [name, func] : {
       BMTuple("Baseline", BM_Baseline),
@@ -457,7 +438,7 @@ int main (int argc, char** argv) {
 
 
   for (auto& config : configs) {
-    config.progress_reporter = &console_reporter;
+    // config.progress_reporter = &console_reporter;
   }
 
 
