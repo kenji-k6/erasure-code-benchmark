@@ -12,7 +12,9 @@
 #include <getopt.h>
 
 // Global variable definitions
+constexpr const char* OUTPUT_FILE_DIR = "../results/raw/";
 std::string output_file_name = "benchmark_results.csv";
+
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
   { "baseline", BM_Baseline },
@@ -141,79 +143,6 @@ static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint
   }
 }
 
-
-void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
-  struct option long_options[] = {
-    { "help",     no_argument,        nullptr, 'h' },
-    { "full",     no_argument,        nullptr, 0 },
-    { "file",     required_argument,  nullptr, 0 },
-    { "baseline", no_argument,        nullptr, 0 },
-    { "cm256",    no_argument,        nullptr, 0 },
-    { "isal",     no_argument,        nullptr, 0 },
-    { "leopard",  no_argument,        nullptr, 0 },
-    { "wirehair", no_argument,        nullptr, 0 },
-    { nullptr,    0,                  nullptr, 0 }
-  };
-
-  uint64_t s = FIXED_BUFFFER_SIZE;
-  uint64_t b = FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
-  uint32_t l = FIXED_NUM_LOST_BLOCKS;
-  double r = FIXED_PARITY_RATIO;
-  int i = 10;
-  bool full = false;
-
-  int c;
-  int option_index = 0;
-  while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, &option_index)) != -1) {
-    switch (c) {
-      case 'h':
-        usage();
-        break;
-      case 's':
-        s = std::stoull(optarg);
-        break;
-      case 'b':
-        b = std::stoull(optarg);
-        break;
-      case 'l':
-        l = std::stoul(optarg);
-        break;
-      case 'r':
-        r = std::stod(optarg);
-        break;
-      case 'i':
-        i = std::stoi(optarg);
-        break;
-      case 0:
-        if (long_options[option_index].name) {
-          if (std::string(long_options[option_index].name) == "full") {
-            full = true;
-          } else if (std::string(long_options[option_index].name) == "file") {
-            output_file_name = std::string(optarg);
-          } else {
-            selected_benchmarks.insert(long_options[option_index].name);
-          }
-        }
-        break;
-      default:
-        usage();
-        exit(0);
-    }
-  }
-
-  if (!full && selected_benchmarks.empty()) {
-    for (const auto& [name, func] : available_benchmarks) selected_benchmarks.insert(name);
-  }
-
-  if (full) {
-    get_full_benchmark_configs(i, configs, lost_block_idxs);
-  } else {
-    configs.push_back(get_single_benchmark_config(s, b, l, r, i, lost_block_idxs));
-  }
-}
-  
-
-
 // Function that creates the configs for the full benchmark suite
 static void get_full_benchmark_configs(int num_iterations, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
   int tot_lost_blocks = FIXED_NUM_LOST_BLOCKS;
@@ -317,11 +246,77 @@ static BenchmarkConfig get_single_benchmark_config(uint64_t s, uint64_t b, uint3
   return config;
 }
 
-std::string get_filename() {
-  return OUTPUT_FILE_DIR + output_file_name;
+void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
+  struct option long_options[] = {
+    { "help",     no_argument,        nullptr, 'h' },
+    { "full",     no_argument,        nullptr, 0 },
+    { "file",     required_argument,  nullptr, 0 },
+    { "baseline", no_argument,        nullptr, 0 },
+    { "cm256",    no_argument,        nullptr, 0 },
+    { "isal",     no_argument,        nullptr, 0 },
+    { "leopard",  no_argument,        nullptr, 0 },
+    { "wirehair", no_argument,        nullptr, 0 },
+    { nullptr,    0,                  nullptr, 0 }
+  };
+
+  uint64_t s = FIXED_BUFFFER_SIZE;
+  uint64_t b = FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
+  uint32_t l = FIXED_NUM_LOST_BLOCKS;
+  double r = FIXED_PARITY_RATIO;
+  int i = 10;
+  bool full = false;
+
+  int c;
+  int option_index = 0;
+  while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        usage();
+        break;
+      case 's':
+        s = std::stoull(optarg);
+        break;
+      case 'b':
+        b = std::stoull(optarg);
+        break;
+      case 'l':
+        l = std::stoul(optarg);
+        break;
+      case 'r':
+        r = std::stod(optarg);
+        break;
+      case 'i':
+        i = std::stoi(optarg);
+        break;
+      case 0:
+        if (long_options[option_index].name) {
+          if (std::string(long_options[option_index].name) == "full") {
+            full = true;
+          } else if (std::string(long_options[option_index].name) == "file") {
+            output_file_name = std::string(optarg);
+          } else {
+            selected_benchmarks.insert(long_options[option_index].name);
+          }
+        }
+        break;
+      default:
+        usage();
+        exit(0);
+    }
+  }
+
+  if (!full && selected_benchmarks.empty()) {
+    for (const auto& [name, func] : available_benchmarks) selected_benchmarks.insert(name);
+  }
+
+  if (full) {
+    get_full_benchmark_configs(i, configs, lost_block_idxs);
+  } else {
+    configs.push_back(get_single_benchmark_config(s, b, l, r, i, lost_block_idxs));
+  }
 }
 
-void register_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgressReporter *console_reporter) {
+static void register_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgressReporter *console_reporter) {
   if (configs.size() == 1) { // Individual run => don't write to file
     auto config = configs[0];
     config.progress_reporter = nullptr;
@@ -349,17 +344,27 @@ void register_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgres
   }
 }
 
-void run_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgressReporter *console_reporter, BenchmarkCSVReporter *csv_reporter) {
+void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
+  if (configs.empty()) exit(1);
+
+  std::unique_ptr<BenchmarkProgressReporter> console_reporter;
+  std::unique_ptr<BenchmarkCSVReporter> csv_reporter;
+
   int argc = 2;
   char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
+
   if (configs.size() == 1) { // Individual run
     argc = 1;
-    console_reporter = nullptr;
-    csv_reporter = nullptr;
+  } else {
+    int tot_num_iterations = configs[0].num_iterations * configs.size() * available_benchmarks.size();
+    console_reporter = std::make_unique<BenchmarkProgressReporter>(tot_num_iterations);
+    csv_reporter = std::make_unique<BenchmarkCSVReporter>(OUTPUT_FILE_DIR + output_file_name, true);
   }
+
+  register_benchmarks(configs, console_reporter.get());
 
   benchmark::Initialize(&argc, argv);
   if (benchmark::ReportUnrecognizedArguments(argc, argv)) return;
-  benchmark::RunSpecifiedBenchmarks(console_reporter, csv_reporter);
+  benchmark::RunSpecifiedBenchmarks(console_reporter.get(), csv_reporter.get());
   benchmark::Shutdown();
 }

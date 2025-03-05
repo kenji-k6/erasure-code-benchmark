@@ -19,7 +19,7 @@ struct BenchmarkConfig {
   double redundancy_ratio;          ///< Recovery blocks / original blocks ratio
   int num_iterations;               ///< Number of iterations to run the benchmark
   uint8_t plot_id;                  ///< Identifier for plotting
-  const uint32_t *lost_block_idxs;  ///< Pointer to the lost block indices array
+  uint32_t *lost_block_idxs;        ///< Pointer to the lost block indices array
 
   struct {
     uint32_t num_original_blocks;   ///< Number of original data blocks

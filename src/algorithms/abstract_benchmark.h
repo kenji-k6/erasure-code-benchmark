@@ -1,7 +1,7 @@
 #ifndef ABSTRACT_BENCHMARK_H
 #define ABSTRACT_BENCHMARK_H
 
-#include "utils.h"
+#include "benchmark_utils.h"
 #include <cstddef>
 #include <iostream>
 

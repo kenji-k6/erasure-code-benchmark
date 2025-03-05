@@ -102,7 +102,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
   
 
-  for (unsigned i = 0; i < config.num_iterations; ++i) {
+  for (int i = 0; i < config.num_iterations; ++i) {
     enc_time_stddev += std::pow(enc_times[i] - enc_time_mean, 2);
     dec_time_stddev += std::pow(dec_times[i] - dec_time_mean, 2);
 
