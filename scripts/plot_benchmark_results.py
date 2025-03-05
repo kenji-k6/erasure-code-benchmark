@@ -8,7 +8,7 @@ from typing import Dict
 
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results_intelv100.csv")
+INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results.csv")
 LIN_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/linear/")
 LOG_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/log/")
 
