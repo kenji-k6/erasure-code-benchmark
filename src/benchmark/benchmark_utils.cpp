@@ -317,6 +317,10 @@ static BenchmarkConfig get_single_benchmark_config(uint64_t s, uint64_t b, uint3
   return config;
 }
 
+std::string get_filename() {
+  return OUTPUT_FILE_DIR + output_file_name;
+}
+
 void register_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgressReporter *console_reporter) {
   if (configs.size() == 1) { // Individual run => don't write to file
     auto config = configs[0];
