@@ -7,6 +7,7 @@
 #ifndef BENCHMARK_CONFIG_H
 #define BENCHMARK_CONFIG_H
 
+#include "benchmark_reporters.h"
 #include <cstdint>
 #include <vector>
 
@@ -24,7 +25,13 @@ struct BenchmarkConfig {
     uint32_t num_original_blocks;   ///< Number of original data blocks
     uint32_t num_recovery_blocks;   ///< Number of recovery blocks
   } computed;
+
+  BenchmarkProgressReporter *progress_reporter = nullptr;
 };
+
+/// @Brief Alias for benchmark function type
+using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
+using BMTuple = std::tuple<std::string, BenchmarkFunction>;
 
 /// Constants for benchmark configurations (when running full benchmark)
 constexpr uint32_t FIXED_NUM_ORIGINAL_BLOCKS = 128;
