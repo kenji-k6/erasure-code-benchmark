@@ -9,13 +9,13 @@
 
 /**
  * @class CM256Benchmark
- * @brief Benchmark implementation for the CM256 ECC library https://github.com/catid/cm256
+ * @brief Benchmark implementation for the CM256 EC library https://github.com/catid/cm256
  * 
- * This class implements the ECCBenchmark interface, providing specific functionality
+ * This class implements the ECBenchmark interface, providing specific functionality
  * for benchmarking the CM256 library. It supports setup, teardown, encoding, decoding,
  * data loss simulation and corruption checking.
  */
-class CM256Benchmark : public ECCBenchmark {
+class CM256Benchmark : public ECBenchmark {
 public:
   explicit CM256Benchmark(const BenchmarkConfig& config) noexcept;
   ~CM256Benchmark() noexcept = default;
@@ -34,7 +34,7 @@ private:
 
   // CM256 Internals
   cm256_encoder_params params_;       ///< cm256 internal parameters
-  cm256_block blocks_[ECCLimits::CM256_MAX_TOT_BLOCKS];   ///< vector of cm256 blocks (keeps track of pointers and indices)
+  cm256_block blocks_[ECLimits::CM256_MAX_TOT_BLOCKS];   ///< vector of cm256 blocks (keeps track of pointers and indices)
 };
 
 #endif // CM256_BENCHMARK_H

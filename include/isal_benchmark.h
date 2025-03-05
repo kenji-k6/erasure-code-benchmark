@@ -8,13 +8,13 @@
 
 /**
  * @class ISALBenchmark
- * @brief Benchmark implementation for the Intel ISA-L library's ECC implementation https://github.com/intel/isa-l
+ * @brief Benchmark implementation for the Intel ISA-L library's EC implementation https://github.com/intel/isa-l
  * 
- * This class implements the ECCBenchmark interface, providing specific functionality
+ * This class implements the ECBenchmark interface, providing specific functionality
  * for benchmarking the ISA-L library. It supports setup, teardown, encoding, decoding,
  * data loss simulation and corruption checking..
  */
-class ISALBenchmark : public ECCBenchmark {
+class ISALBenchmark : public ECBenchmark {
 public:
   explicit ISALBenchmark(const BenchmarkConfig& config) noexcept;
   ~ISALBenchmark() noexcept = default;
@@ -34,9 +34,9 @@ private:
   uint8_t *recovery_outp_buffer_ = nullptr;   ///< Buffer for recovery of corrupted data
 
   // Pointer Arrays
-  uint8_t *original_ptrs_[ECCLimits::ISAL_MAX_TOT_BLOCKS] = { nullptr };        ///< Pointers to the original data blocks
-  uint8_t *recovery_src_ptrs_[ECCLimits::ISAL_MAX_DATA_BLOCKS] = { nullptr };   ///< Pointers to the recovery source data blocks
-  uint8_t *recovery_outp_ptrs_[ECCLimits::ISAL_MAX_DATA_BLOCKS] = { nullptr };  ///< Pointers to the recovery output data blocks
+  uint8_t *original_ptrs_[ECLimits::ISAL_MAX_TOT_BLOCKS] = { nullptr };        ///< Pointers to the original data blocks
+  uint8_t *recovery_src_ptrs_[ECLimits::ISAL_MAX_DATA_BLOCKS] = { nullptr };   ///< Pointers to the recovery source data blocks
+  uint8_t *recovery_outp_ptrs_[ECLimits::ISAL_MAX_DATA_BLOCKS] = { nullptr };  ///< Pointers to the recovery output data blocks
 
   // Erasure and Coefficient Matrices
   uint8_t *encode_matrix_ = nullptr;
@@ -45,8 +45,8 @@ private:
   uint8_t *temp_matrix_ = nullptr;
   uint8_t *g_tbls_ = nullptr;           ///< Generator tables for encoding
 
-  uint8_t block_err_list_[ECCLimits::ISAL_MAX_TOT_BLOCKS] = { 0 };  ///< Array containing the indices of lost blocks
-  uint8_t decode_index_[ECCLimits::ISAL_MAX_TOT_BLOCKS] = { 0 };    ///< Array containing the indices of the blocks to decode
+  uint8_t block_err_list_[ECLimits::ISAL_MAX_TOT_BLOCKS] = { 0 };  ///< Array containing the indices of lost blocks
+  uint8_t decode_index_[ECLimits::ISAL_MAX_TOT_BLOCKS] = { 0 };    ///< Array containing the indices of the blocks to decode
 };
 
 // Helper function for generating the decode matrix (simple version, implementation from ISA-L Github repository)

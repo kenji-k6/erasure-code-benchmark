@@ -4,7 +4,7 @@
 #include <cstring>
 
 
-BaselineBenchmark::BaselineBenchmark(const BenchmarkConfig& config) noexcept : ECCBenchmark(config) {}
+BaselineBenchmark::BaselineBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {}
 
 int BaselineBenchmark::setup() noexcept {
   // Allocate buffers with proper alignment for SIMD

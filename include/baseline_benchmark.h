@@ -9,7 +9,7 @@
  * @class BaselineBenchmark
  * @brief Baseline Benchmark implementation
  */
-class BaselineBenchmark : public ECCBenchmark {
+class BaselineBenchmark : public ECBenchmark {
 public:
   explicit BaselineBenchmark(const BenchmarkConfig& config) noexcept;
   ~BaselineBenchmark() noexcept = default;

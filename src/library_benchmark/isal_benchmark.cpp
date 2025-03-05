@@ -8,13 +8,13 @@
 
 /**
  * @file isal_benchmark.cpp
- * @brief Benchmark implementation for the Intel ISA-L library's ECC implementation
+ * @brief Benchmark implementation for the Intel ISA-L library's EC implementation
  * 
  * Documentation can be found in isal_benchmark.h and abstract_benchmark.h
  */
 
 
-ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECCBenchmark(config) {}
+ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {}
 
 int ISALBenchmark::setup() noexcept {
   // Store frequently used variables / variables used in performance-critical areas locally
@@ -157,7 +157,7 @@ static int gf_gen_decode_matrix_simple(uint8_t *encode_matrix, uint8_t *decode_m
   int i, j, p, r;
   int nsrcerrs = 0;
   uint8_t s, *b = temp_matrix;
-  uint8_t frag_in_err[ECCLimits::ISAL_MAX_TOT_BLOCKS];
+  uint8_t frag_in_err[ECLimits::ISAL_MAX_TOT_BLOCKS];
   memset(frag_in_err, 0, sizeof(frag_in_err));
   
   // Order the fragments in erasure for easier sorting

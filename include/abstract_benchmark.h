@@ -6,17 +6,17 @@
 #include <iostream>
 
 /**
- * @class ECCBenchmark
- * @brief Abstract base class for Error Correction Code (ECC) benchmarking
+ * @class ECBenchmark
+ * @brief Abstract base class for Erasure Code (EC) benchmarking
  * 
- * This class defines the interface that all ECC libraries should implement for benchmarking
+ * This class defines the interface that all EC libraries should implement for benchmarking
  * their encoding, decoding and error-checking capabilities.
- * The class provides a clean and standardized way to set up, run and clean up ECC benchmark tests.
+ * The class provides a clean and standardized way to set up, run and clean up EC benchmark tests.
  */
-class ECCBenchmark {
+class ECBenchmark {
 public:
 
-  virtual ~ECCBenchmark() noexcept = default; ///< Default virtual destructor
+  virtual ~ECBenchmark() noexcept = default; ///< Default virtual destructor
 
 
   /**
@@ -42,7 +42,7 @@ public:
   /**
    * @brief Run the encoding process.
    * 
-   * Derived classes should implement the encoding process for their specific ECC algorithm
+   * Derived classes should implement the encoding process for their specific EC algorithm
    * This should include the actual error-correction encoding process.
    * 
    * @return 0 on success, non-zero on failure.
@@ -67,9 +67,9 @@ public:
   /**
    * @brief Simulate data loss during transmission.
    * 
-   * This function introduces data loss (and/or corruption) to the dataset to simulate
-   * erroneous data transmission. The actual implementation of this function will vary
-   * a lot based on the ECC algorithm/library being tested.
+   * This function introduces data loss to the dataset to simulate erasure during
+   * data transmission. The actual implementation of this function will vary
+   * a lot based on the EC algorithm/library being tested.
    */
   virtual void simulate_data_loss() noexcept = 0;
 
@@ -85,7 +85,7 @@ public:
   virtual bool check_for_corruption() const noexcept = 0;
 
   protected:
-    explicit ECCBenchmark(const BenchmarkConfig& config) noexcept
+    explicit ECBenchmark(const BenchmarkConfig& config) noexcept
       : block_size_(config.block_size),
         num_original_blocks_(config.computed.num_original_blocks),
         num_recovery_blocks_(config.computed.num_recovery_blocks),

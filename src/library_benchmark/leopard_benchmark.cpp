@@ -8,13 +8,13 @@
 
 /**
  * @file leopard_benchmark.cpp
- * @brief Benchmark implementation for the Leopard ECC library
+ * @brief Benchmark implementation for the Leopard EC library
  * 
  * Documentation can be found in leopard_benchmark.h and abstract_benchmark.h
  */
 
 
-LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECCBenchmark(config) {}
+LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {}
 
 int LeopardBenchmark::setup() noexcept {
   

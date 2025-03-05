@@ -8,13 +8,13 @@
 
 /**
  * @class LeopardBenchmark
- * @brief Benchmark implementation for the Leopard ECC library https://github.com/catid/leopard
+ * @brief Benchmark implementation for the Leopard EC library https://github.com/catid/leopard
  * 
- * This class implements the ECCBenchmark interface, providing specific functionality
+ * This class implements the ECBenchmark interface, providing specific functionality
  * for benchmarking the Leopard library. It supports setup, teardown, encoding, decoding,
  * data loss simulation and corruption checking..
  */
-class LeopardBenchmark : public ECCBenchmark {
+class LeopardBenchmark : public ECBenchmark {
 public:
   explicit LeopardBenchmark(const BenchmarkConfig& config) noexcept;
   ~LeopardBenchmark() noexcept = default;

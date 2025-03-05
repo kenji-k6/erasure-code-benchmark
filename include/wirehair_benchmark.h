@@ -7,18 +7,18 @@
 
 /**
  * @class WirehairBenchmark
- * @brief Benchmark implementation for the Wirehair ECC library https://github.com/catid/wirehair
+ * @brief Benchmark implementation for the Wirehair EC library https://github.com/catid/wirehair
  * 
- * This class implements the ECCBenchmark interface, providing specific functionality
+ * This class implements the ECBenchmark interface, providing specific functionality
  * for benchmarking the Wirehair library. It supports setup, teardown, encoding, decoding,
- * data loss simulation and corruption checking..
+ * data loss simulation and corruption checking.
  * 
  * @attention Since Wirehair uses a fountain code approach, this means that recovery blocks are generated
  * until the data can be restored. To still have an adequate comparison with the other libraries, the
  * benchmark will limit the number of recovery blocks that Wirehair is allowed to generate.
  * For the same reason, part of the loss simulation has to be done in the decode function unfortunately.
  */
-class WirehairBenchmark : public ECCBenchmark {
+class WirehairBenchmark : public ECBenchmark {
 public:
   explicit WirehairBenchmark(const BenchmarkConfig& config) noexcept;
   ~WirehairBenchmark() noexcept = default;

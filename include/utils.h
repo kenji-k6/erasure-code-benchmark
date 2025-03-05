@@ -13,8 +13,8 @@ constexpr size_t RANDOM_SEED = 1896;
 constexpr size_t MIN_DATA_BLOCK_SIZE = 2;
 
 
-// Error Correction Code (ECC) constraints
-namespace ECCLimits {
+// Erasure Code (EC) constraints
+namespace ECLimits {
   constexpr size_t BASELINE_BLOCK_ALIGNMENT = 64;
 
   constexpr size_t CM256_MAX_TOT_BLOCKS = 256;

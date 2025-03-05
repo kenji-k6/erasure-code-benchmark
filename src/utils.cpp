@@ -1,7 +1,7 @@
 #include "utils.h"
+
 #include <iostream>
 #include <algorithm>
-#include <vector>
 #include <numeric>
 
 
@@ -38,7 +38,7 @@ int write_validation_pattern(size_t block_idx, uint8_t* block_ptr, uint32_t size
     std::cerr << "write_validation_pattern: num_bytes must be at least 2\n";
     return -1;
   }
-
+  
   PCGRandom rng(block_idx, 1);
 
   if (size < 16) { // CRC check not viable

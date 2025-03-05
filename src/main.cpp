@@ -74,7 +74,7 @@ std::unordered_set<std::string> selected_benchmarks;
 
 /// @brief Function to display usage information
 void usage() {
-  std::cerr << "Usage: ecc-benchmark [options]\n"
+  std::cerr << "Usage: ec-benchmark [options]\n"
             << "  -h | --help       Help\n"
             << "  -s <size>         Total size of original data in bytes (default 520'192B)\n"
             << "  -b <size>         Size of each block in bytes (default 4'096B)\n"
@@ -136,17 +136,17 @@ void check_args(size_t s, size_t b, size_t l, double r, int i, size_t num_orig_b
 
   // Baseline checks
   if (selected_benchmarks.contains("baseline")) {
-    if (b % ECCLimits::BASELINE_BLOCK_ALIGNMENT != 0) {
-      std::cerr << "Error: Block size must be a multiple of " << ECCLimits::BASELINE_BLOCK_ALIGNMENT << " for Baseline.\n";
+    if (b % ECLimits::BASELINE_BLOCK_ALIGNMENT != 0) {
+      std::cerr << "Error: Block size must be a multiple of " << ECLimits::BASELINE_BLOCK_ALIGNMENT << " for Baseline.\n";
       exit(0);
     }
   }
   
   // CM256 Checks
   if (selected_benchmarks.contains("cm256")) {
-    if (num_orig_blocks + num_rec_blocks > ECCLimits::CM256_MAX_TOT_BLOCKS) {
+    if (num_orig_blocks + num_rec_blocks > ECLimits::CM256_MAX_TOT_BLOCKS) {
       std::cerr << "Error: Total number of blocks exceeds the maximum allowed by CM256.\n"
-                << "Condition: #(original blocks) + #(recovery blocks) <= " << ECCLimits::CM256_MAX_TOT_BLOCKS << "\n"
+                << "Condition: #(original blocks) + #(recovery blocks) <= " << ECLimits::CM256_MAX_TOT_BLOCKS << "\n"
                 << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
       exit(0);
     }
@@ -154,9 +154,9 @@ void check_args(size_t s, size_t b, size_t l, double r, int i, size_t num_orig_b
 
   // ISA-L Checks
   if (selected_benchmarks.contains("isal")) {
-    if (num_orig_blocks + num_rec_blocks > ECCLimits::ISAL_MAX_TOT_BLOCKS) {
+    if (num_orig_blocks + num_rec_blocks > ECLimits::ISAL_MAX_TOT_BLOCKS) {
       std::cerr << "Error: Total number of blocks exceeds the maximum allowed by ISA-L.\n"
-                << "Condition: #(original blocks) + #(recovery blocks) <= " << ECCLimits::ISAL_MAX_TOT_BLOCKS << "\n"
+                << "Condition: #(original blocks) + #(recovery blocks) <= " << ECLimits::ISAL_MAX_TOT_BLOCKS << "\n"
                 << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
       exit(0);
     }
@@ -165,9 +165,9 @@ void check_args(size_t s, size_t b, size_t l, double r, int i, size_t num_orig_b
 
   // Leopard Checks
   if (selected_benchmarks.contains("leopard")) {
-    if (num_orig_blocks + num_rec_blocks > ECCLimits::LEOPARD_MAX_TOT_BLOCKS) {
+    if (num_orig_blocks + num_rec_blocks > ECLimits::LEOPARD_MAX_TOT_BLOCKS) {
       std::cerr << "Error: Total number of blocks exceeds the maximum allowed by Leopard.\n"
-                << "Condition: #(original blocks) + #(recovery blocks) <= " << ECCLimits::LEOPARD_MAX_TOT_BLOCKS << "\n"
+                << "Condition: #(original blocks) + #(recovery blocks) <= " << ECLimits::LEOPARD_MAX_TOT_BLOCKS << "\n"
                 << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
       exit(0);
     }
@@ -179,16 +179,16 @@ void check_args(size_t s, size_t b, size_t l, double r, int i, size_t num_orig_b
       exit(0);
     }
 
-    if (b % ECCLimits::LEOPARD_BLOCK_ALIGNMENT != 0) {
-      std::cerr << "Error: Block size must be a multiple of " << ECCLimits::LEOPARD_BLOCK_ALIGNMENT << " for Leopard.\n";
+    if (b % ECLimits::LEOPARD_BLOCK_ALIGNMENT != 0) {
+      std::cerr << "Error: Block size must be a multiple of " << ECLimits::LEOPARD_BLOCK_ALIGNMENT << " for Leopard.\n";
       exit(0);
     } 
   }
 
   // Wirehair Checks
   if (selected_benchmarks.contains("wirehair")) {
-    if (num_orig_blocks < ECCLimits::WIREHAIR_MIN_DATA_BLOCKS || num_orig_blocks > ECCLimits::WIREHAIR_MAX_DATA_BLOCKS) {
-      std::cerr << "Error: Number of original blocks must be between " << ECCLimits::WIREHAIR_MIN_DATA_BLOCKS << " and " << ECCLimits::WIREHAIR_MAX_DATA_BLOCKS << " for Wirehair.\n"
+    if (num_orig_blocks < ECLimits::WIREHAIR_MIN_DATA_BLOCKS || num_orig_blocks > ECLimits::WIREHAIR_MAX_DATA_BLOCKS) {
+      std::cerr << "Error: Number of original blocks must be between " << ECLimits::WIREHAIR_MIN_DATA_BLOCKS << " and " << ECLimits::WIREHAIR_MAX_DATA_BLOCKS << " for Wirehair.\n"
                 << "(#original blocks) = " << num_orig_blocks << "\n";
       exit(0);
     }

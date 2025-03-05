@@ -7,13 +7,13 @@
 
 /**
  * @file wirehair_benchmark.cpp
- * @brief Benchmark implementation for the Wirehair ECC library
+ * @brief Benchmark implementation for the Wirehair EC library
  * 
  * Documentation can be found in wirehair_benchmark.h and abstract_benchmark.h
  */
 
 
-WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : ECCBenchmark(config) {}
+WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {}
 
 int WirehairBenchmark::setup() noexcept {
 
