@@ -15,6 +15,18 @@ void BM_Baseline(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<BaselineBenchmark>(state, config);
 }
 
+void BM_BaselineScalar(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<BaselineScalarBenchmark>(state, config);
+}
+
+void BM_BaselineAVX(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<BaselineAVXBenchmark>(state, config);
+}
+
+void BM_BaselineAVX2(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<BaselineAVX2Benchmark>(state, config);
+}
+
 void BM_CM256(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<CM256Benchmark>(state, config);
 }
