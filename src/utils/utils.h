@@ -6,30 +6,10 @@
 #include <vector>
 #include "benchmark_reporters.h"
 
-
 // Constants
 constexpr size_t ALIGNMENT_BYTES = 64;
 constexpr size_t RANDOM_SEED = 1896;
 constexpr size_t MIN_DATA_BLOCK_SIZE = 2;
-
-
-// Erasure Code (EC) constraints
-namespace ECLimits {
-  constexpr size_t BASELINE_BLOCK_ALIGNMENT = 64;
-
-  constexpr size_t CM256_MAX_TOT_BLOCKS = 256;
-
-  constexpr size_t ISAL_MIN_BLOCK_SIZE = 64;
-  constexpr size_t ISAL_MAX_DATA_BLOCKS = 256;
-  constexpr size_t ISAL_MAX_TOT_BLOCKS = 256;
-
-  constexpr size_t LEOPARD_MAX_TOT_BLOCKS = 65'536;
-  constexpr size_t LEOPARD_BLOCK_ALIGNMENT = 64;
-
-  constexpr size_t WIREHAIR_MIN_DATA_BLOCKS = 2;
-  constexpr size_t WIREHAIR_MAX_DATA_BLOCKS = 64'000;
-}
-
 
 /**
  * @class PCGRandom
