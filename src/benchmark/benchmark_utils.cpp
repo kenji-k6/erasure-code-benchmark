@@ -333,7 +333,9 @@ static void register_benchmarks(std::vector<BenchmarkConfig>& configs, Benchmark
   for (auto& config : configs) {
     config.progress_reporter = console_reporter;
     for (auto& [name, func] : {
-      BMTuple("Baseline", BM_Baseline),
+      BMTuple("Baseline (Scalar)", BM_BaselineScalar),
+      BMTuple("Baseline (AVX)", BM_BaselineAVX),
+      BMTuple("Baseline (AVX2)", BM_BaselineAVX2),
       BMTuple("CM256", BM_CM256),
       BMTuple("ISA-L", BM_ISAL),
       BMTuple("Leopard", BM_Leopard),
@@ -356,7 +358,7 @@ void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
   if (configs.size() == 1) { // Individual run
     argc = 1;
   } else {
-    int tot_num_iterations = configs[0].num_iterations * configs.size() * available_benchmarks.size();
+    int tot_num_iterations = configs[0].num_iterations * configs.size() * NUM_FULL_BENCHMARKS;
     console_reporter = std::make_unique<BenchmarkProgressReporter>(tot_num_iterations);
     csv_reporter = std::make_unique<BenchmarkCSVReporter>(OUTPUT_FILE_DIR + output_file_name, true);
   }
