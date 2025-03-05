@@ -76,3 +76,31 @@ bool BaselineBenchmark::check_for_corruption() const noexcept {
   }
   return true;
 }
+
+
+BaselineScalarBenchmark::BaselineScalarBenchmark(const BenchmarkConfig& config) noexcept : BaselineBenchmark(config) {}
+int BaselineScalarBenchmark::encode() noexcept {
+  xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::Scalar);
+}
+int BaselineScalarBenchmark::decode() noexcept {
+  xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_, XORVersion::Scalar);
+  return 0;
+}
+
+BaselineAVXBenchmark::BaselineAVXBenchmark(const BenchmarkConfig& config) noexcept : BaselineBenchmark(config) {}
+int BaselineAVXBenchmark::encode() noexcept {
+  xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::AVX);
+}
+int BaselineAVXBenchmark::decode() noexcept {
+  xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_, XORVersion::AVX);
+  return 0;
+}
+
+BaselineAVX2Benchmark::BaselineAVX2Benchmark(const BenchmarkConfig& config) noexcept : BaselineBenchmark(config) {}
+int BaselineAVX2Benchmark::encode() noexcept {
+  xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::AVX2);
+}
+int BaselineAVX2Benchmark::decode() noexcept {
+  xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_, XORVersion::AVX2);
+  return 0;
+}
