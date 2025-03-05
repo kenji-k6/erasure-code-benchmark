@@ -1,17 +1,16 @@
-#include "isal_benchmark.h"
-
-#include "erasure_code.h"
-#include <cstring>
-#include <iostream>
-
-
-
 /**
  * @file isal_benchmark.cpp
  * @brief Benchmark implementation for the Intel ISA-L library's EC implementation
  * 
  * Documentation can be found in isal_benchmark.h and abstract_benchmark.h
  */
+
+
+#include "isal_benchmark.h"
+
+#include "erasure_code.h"
+#include <cstring>
+#include <iostream>
 
 
 ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {}

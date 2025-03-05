@@ -1,12 +1,12 @@
-#include "xorbaseline.h"
-#include <cstring>
-#include <iostream>
-
-
 /**
  * @file xorbaseline.cpp
  * @brief Implements XOR-based erasure encoding and decoding functions.
  */
+
+
+#include "xorbaseline.h"
+#include <cstring>
+#include <iostream>
 
 
 XORResult xor_encode(

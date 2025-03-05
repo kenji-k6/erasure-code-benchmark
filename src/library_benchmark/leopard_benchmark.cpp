@@ -1,17 +1,17 @@
-#include "leopard_benchmark.h"
-
-#include "leopard.h"
-#include "utils.h"
-#include <cstring>
-#include <iostream>
-
-
 /**
  * @file leopard_benchmark.cpp
  * @brief Benchmark implementation for the Leopard EC library
  * 
  * Documentation can be found in leopard_benchmark.h and abstract_benchmark.h
  */
+
+
+#include "leopard_benchmark.h"
+
+#include "leopard.h"
+#include "utils.h"
+#include <cstring>
+#include <iostream>
 
 
 LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {}

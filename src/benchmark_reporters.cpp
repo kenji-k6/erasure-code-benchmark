@@ -1,6 +1,11 @@
+/**
+ * @file benchmark_reporters.cpp
+ * @brief Reporter implementations for writing to the CSV output file and displaying the progress bar
+ */
+
+
 #include "benchmark_reporters.h"
 #include <stdexcept>
-
 
 
 BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool overwrite_file) {
