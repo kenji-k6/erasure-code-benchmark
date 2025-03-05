@@ -6,23 +6,18 @@
 #include <cstring>
 #include <array>
 
-
 /**
  * @file xorbaseline.h
  * @brief Provides encoding and decoding functions for custom XOR-based erasure coding.
  * 
  * This header defines the XOR-based erasure encoding and decoding functions,
- * optimized with SIMD intrinsics when available. It supports AVX, AVX2 and AVX-512.
+ * optimized with SIMD intrinsics when available. It supports AVX and AVX2
  */
 
 
 #define XOR_RESTRICT __restrict
 
-#if defined(__AVX512F__)
-  #define TRY_XOR_AVX512
-  #include <immintrin.h>
-  #define XOR_AVX512 __m512i
-#elif defined(__AVX2__)
+#if defined(__AVX2__)
   #define TRY_XOR_AVX2
   #include <immintrin.h>
   #define XOR_AVX2 __m256i
@@ -113,25 +108,7 @@ static void inline XOR_xor_blocks(
   const void * XOR_RESTRICT src,
   uint32_t bytes
 ) {
-  #if defined(TRY_XOR_AVX512)
-    XOR_AVX512 * XOR_RESTRICT dest512 = reinterpret_cast<XOR_AVX512*>(dest);
-    const XOR_AVX512 * XOR_RESTRICT src512 = reinterpret_cast<const XOR_AVX512*>(src);
-
-    while (bytes >= 128) {
-      XOR_AVX512 x0 = _mm512_xor_si512(_mm512_loadu_si512(dest512), _mm512_loadu_si512(src512));
-      XOR_AVX512 x1 = _mm512_xor_si512(_mm512_loadu_si512(dest512 + 1), _mm512_loadu_si512(src512 + 1));
-      _mm512_storeu_si512(dest512, x0);
-      _mm512_storeu_si512(dest512 + 1, x1);
-      dest512 += 2, src512 += 2;
-      bytes -= 128;
-    }
-
-    if (bytes > 0) {
-      XOR_AVX512 x0 = _mm512_xor_si512(_mm512_loadu_si512(dest512), _mm512_loadu_si512(src512));
-      _mm512_storeu_si512(dest512, x0);
-    }
-  
-  #elif defined(TRY_XOR_AVX2)
+  #if defined(TRY_XOR_AVX2)
     XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
     const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
 
@@ -198,22 +175,7 @@ static void inline XOR_copy_blocks(
   const void * XOR_RESTRICT src,
   uint32_t bytes
 ) {
-  #if defined(TRY_XOR_AVX512)
-    XOR_AVX512 * XOR_RESTRICT dest512 = reinterpret_cast<XOR_AVX512*>(dest);
-    const XOR_AVX512 * XOR_RESTRICT src512 = reinterpret_cast<const XOR_AVX512*>(src);
-
-    while (bytes >= 128) {
-      _mm512_storeu_si512(dest512, _mm512_loadu_si512(src512));
-      _mm512_storeu_si512(dest512 + 1, _mm512_loadu_si512(src512 + 1));
-      dest512 += 2, src512 += 2;
-      bytes -= 128;
-    }
-
-    if (bytes > 0) {
-      _mm512_storeu_si512(dest512, _mm512_loadu_si512(src512));
-    }
-  
-  #elif defined(TRY_XOR_AVX2)
+  #if defined(TRY_XOR_AVX2)
     XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
     const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
 
@@ -247,10 +209,5 @@ static void inline XOR_copy_blocks(
     memcpy(dest, src, bytes);
   #endif
 }
-
-
-
-
-
 
 #endif // XORBASELINE_H
