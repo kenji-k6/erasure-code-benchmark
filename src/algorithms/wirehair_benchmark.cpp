@@ -1,16 +1,16 @@
-#include "wirehair_benchmark.h"
-
-#include "utils.h"
-#include <cstring>
-#include <iostream>
-
-
 /**
  * @file wirehair_benchmark.cpp
  * @brief Benchmark implementation for the Wirehair EC library
  * 
  * Documentation can be found in wirehair_benchmark.h and abstract_benchmark.h
  */
+
+
+#include "wirehair_benchmark.h"
+
+#include "utils.h"
+#include <cstring>
+#include <iostream>
 
 
 WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {}

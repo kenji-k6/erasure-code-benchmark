@@ -1,3 +1,11 @@
+/**
+ * @file baseline_benchmark.cpp
+ * @brief Benchmark implementation for the baseline implementation.
+ * 
+ * Documentation can be found in baseline_benchmark.h and abstract_benchmark.h
+ */
+
+
 #include "baseline_benchmark.h"
 #include "xorbaseline.h"
 #include "utils.h"

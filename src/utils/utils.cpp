@@ -1,16 +1,16 @@
-#include "utils.h"
-
-#include <iostream>
-#include <algorithm>
-#include <numeric>
-
-
 /**
  * @file utils.cpp
  * @brief Implements utility functions for benchmarking, random number generation, and data corruption detection.
  * 
  * Documentation can be found in utils.h
  */
+
+ 
+#include "utils.h"
+
+#include <iostream>
+#include <algorithm>
+#include <numeric>
 
 
 // PCGRandom class implementation

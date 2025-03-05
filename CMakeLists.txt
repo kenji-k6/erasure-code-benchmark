@@ -17,15 +17,20 @@ find_package(OpenMP REQUIRED) # needed for leopard
 
 # Add source files
 set (SOURCES
-  src/library_benchmark/baseline_benchmark.cpp
-  src/utils.cpp
   src/main.cpp
-  src/benchmark_reporters.cpp
-  src/xorbaseline.cpp
-  src/library_benchmark/leopard_benchmark.cpp
-  src/library_benchmark/cm256_benchmark.cpp
-  src/library_benchmark/wirehair_benchmark.cpp
-  src/library_benchmark/isal_benchmark.cpp
+
+  src/benchmark/benchmark_reporters.cpp
+  src/benchmark/benchmark_utils.cpp
+
+  src/utils/utils.cpp
+
+  src/baseline/xorbaseline.cpp
+
+  src/algorithms/baseline_benchmark.cpp
+  src/algorithms/cm256_benchmark.cpp
+  src/algorithms/isal_benchmark.cpp
+  src/algorithms/leopard_benchmark.cpp
+  src/algorithms/wirehair_benchmark.cpp
 )
 
 
@@ -63,7 +68,10 @@ set_target_properties(isal PROPERTIES
 
 # Include directories
 target_include_directories(ec-benchmark PRIVATE
-  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/src/algorithms
+  ${CMAKE_SOURCE_DIR}/src/baseline
+  ${CMAKE_SOURCE_DIR}/src/utils
+  ${CMAKE_SOURCE_DIR}/src/benchmark
   ${CMAKE_SOURCE_DIR}/libraries/leopard
   ${CMAKE_SOURCE_DIR}/libraries/isa-l/include
 )
