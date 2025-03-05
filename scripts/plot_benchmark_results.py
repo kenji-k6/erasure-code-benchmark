@@ -42,8 +42,20 @@ def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_la
   plt.ylabel(y_label, fontsize=12)
   plt.xscale("log", base=2)
   plt.yscale(y_scale)
+
+  if (x_col == "tot_data_size_KiB"):
+    # Plot the cache sizes
+    l2_cache_size = 1024 # 1024 KiB
+    l3_cache_size = 25344 # 25344 KiB
+    plt.axvline(x=l2_cache_size, color="red", linestyle="--", label="L2 Cache Size\n" + f"({l2_cache_size} KiB)")
+    plt.axvline(x=l3_cache_size, color="green", linestyle="--", label="L3 Cache Size\n" + f"({l3_cache_size} KiB)")
+
   plt.legend(title="Libraries", bbox_to_anchor=(1.05, 1), loc="upper left")
-  plt.title(get_plot_title(df, plot_id), fontsize=12)  
+  plt.title(get_plot_title(df, plot_id), fontsize=12)
+
+  
+  
+
 
   # Set proper x-ticks
   ax = plt.gca()
