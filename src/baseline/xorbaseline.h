@@ -21,7 +21,8 @@
   #define TRY_XOR_AVX2
   #include <immintrin.h>
   #define XOR_AVX2 __m256i
-#elif defined(__AVX__)
+#endif
+#if defined(__AVX__)
   #define TRY_XOR_AVX
   #include <immintrin.h>
   #define XOR_AVX __m128i
@@ -59,6 +60,17 @@ enum class XORResult {
   DecodeFailure = 4
 };
 
+/**
+ * @enum XORVersion
+ * @brief Allows to specify which version of the implementations to use
+ */
+enum class XORVersion {
+  Auto = 0,
+  Scalar = 1,
+  AVX = 2,
+  AVX2 = 3
+};
+
 
 /**
  * @brief Encodes data using XOR-based erasure coding.
@@ -74,7 +86,8 @@ XORResult xor_encode(
   uint8_t *XOR_RESTRICT parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
-  uint32_t num_parity_blocks
+  uint32_t num_parity_blocks,
+  XORVersion version = XORVersion::Auto
 );
 
 
@@ -94,20 +107,11 @@ XORResult xor_decode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  std::bitset<256> block_bitmap   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
+  std::bitset<256> block_bitmap,   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
+  XORVersion version = XORVersion::Auto
 );
 
-/**
- * @brief XORs two memory blocks.
- * @param dest Pointer to the destination block.
- * @param src Pointer to the source block.
- * @param bytes Number of bytes to XOR.
- */
-static void inline XOR_xor_blocks(
-  void * XOR_RESTRICT dest,
-  const void * XOR_RESTRICT src,
-  uint32_t bytes
-) {
+static void inline XOR_xor_blocks_avx2(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
   #if defined(TRY_XOR_AVX2)
     XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
     const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
@@ -131,8 +135,11 @@ static void inline XOR_xor_blocks(
       _mm256_storeu_si256(dest256, x0);
       _mm256_storeu_si256(dest256 + 1, x1);
     }
-  
-  #elif defined(TRY_XOR_AVX)
+  #endif
+}
+
+static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
+  #if defined(TRY_XOR_AVX)
     XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
     const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
 
@@ -148,33 +155,25 @@ static void inline XOR_xor_blocks(
       dest128 += 4, src128 += 4;
       bytes -= 64;
     }
-  #else
-    uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
-    const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
-
-    while (bytes >= 32) {
-      *dest64 ^= *src64;
-      *(dest64 + 1) ^= *(src64 + 1);
-      *(dest64 + 2) ^= *(src64 + 2);
-      *(dest64 + 3) ^= *(src64 + 3);
-      dest64 += 4, src64 += 4;
-      bytes -= 32;
-    }
   #endif
 }
 
+static void inline XOR_xor_blocks_scalar(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
+  uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
+  const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
 
-/**
- * @brief Copies one memory block to the next one.
- * @param dest Pointer to the destination block.
- * @param src Pointer to the source block.
- * @param bytes Number of bytes to copy.
- */
-static void inline XOR_copy_blocks(
-  void * XOR_RESTRICT dest,
-  const void * XOR_RESTRICT src,
-  uint32_t bytes
-) {
+  while (bytes >= 32) {
+    *dest64 ^= *src64;
+    *(dest64 + 1) ^= *(src64 + 1);
+    *(dest64 + 2) ^= *(src64 + 2);
+    *(dest64 + 3) ^= *(src64 + 3);
+    dest64 += 4, src64 += 4;
+    bytes -= 32;
+  }
+}
+
+
+static void inline XOR_copy_blocks_avx2(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
   #if defined(TRY_XOR_AVX2)
     XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
     const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
@@ -193,7 +192,11 @@ static void inline XOR_copy_blocks(
       _mm256_storeu_si256(dest256 + 1, _mm256_loadu_si256(src256 + 1));
     }
   
-  #elif defined(TRY_XOR_AVX)
+  #endif
+}
+
+static void inline XOR_copy_blocks_avx(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
+  #if defined(TRY_XOR_AVX)
     XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
     const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
 
@@ -205,8 +208,50 @@ static void inline XOR_copy_blocks(
       dest128 += 4, src128 += 4;
       bytes -= 64;
     }
+  #endif
+}
+
+static void inline XOR_copy_blocks_scalar(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) { memcpy(dest, src, bytes); }
+
+
+/**
+ * @brief XORs two memory blocks.
+ * @param dest Pointer to the destination block.
+ * @param src Pointer to the source block.
+ * @param bytes Number of bytes to XOR.
+ */
+static void inline XOR_xor_blocks(
+  void * XOR_RESTRICT dest,
+  const void * XOR_RESTRICT src,
+  uint32_t bytes
+) {
+  #if defined(TRY_XOR_AVX2)
+    XOR_xor_blocks_avx2(dest, src, bytes);
+  #elif defined(TRY_XOR_AVX)
+    XOR_xor_blocks_avx(dest, src, bytes);
   #else
-    memcpy(dest, src, bytes);
+    XOR_xor_blocks_scalar(dest, src, bytes);
+  #endif
+}
+
+
+/**
+ * @brief Copies one memory block to the next one.
+ * @param dest Pointer to the destination block.
+ * @param src Pointer to the source block.
+ * @param bytes Number of bytes to copy.
+ */
+static void inline XOR_copy_blocks(
+  void * XOR_RESTRICT dest,
+  const void * XOR_RESTRICT src,
+  uint32_t bytes
+) {
+  #if defined(TRY_XOR_AVX2)
+    XOR_copy_blocks_avx2(dest, src, bytes);
+  #elif defined(TRY_XOR_AVX)
+    XOR_copy_blocks_avx(dest, src, bytes);
+  #else
+    XOR_copy_blocks_scalar(dest, src, bytes);
   #endif
 }
 

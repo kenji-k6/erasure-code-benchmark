@@ -14,7 +14,8 @@ XORResult xor_encode(
   uint8_t *XOR_RESTRICT parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
-  uint32_t num_parity_blocks
+  uint32_t num_parity_blocks,
+  XORVersion version = XORVersion::Auto
 ) {
   if (block_size < XOR_MIN_BLOCK_SIZE || block_size % XOR_BLOCK_SIZE_MULTIPLE != 0) {
     return XORResult::InvalidSize;
@@ -46,8 +47,20 @@ XORResult xor_encode(
 
     for (unsigned j = i; j < num_data_blocks; j += num_parity_blocks) {
       const void * XOR_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + j * block_size);
-
-      XOR_xor_blocks(parity_block, data_block, block_size);
+      switch (version) {
+        case XORVersion::Auto:
+          XOR_xor_blocks(parity_block, data_block, block_size);
+          break;
+        case XORVersion::Scalar:
+          XOR_xor_blocks_scalar(parity_block, data_block, block_size);
+          break;
+        case XORVersion::AVX:
+          XOR_xor_blocks_avx(parity_block, data_block, block_size);
+          break;
+        case XORVersion::AVX2:
+          XOR_xor_blocks_avx2(parity_block, data_block, block_size);
+          break;
+      }
     }
   }
   
@@ -61,7 +74,8 @@ XORResult xor_decode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  std::bitset<256> block_bitmap
+  std::bitset<256> block_bitmap,
+  XORVersion version = XORVersion::Auto
 ) {
 
   if ((block_bitmap & COMPLETE_DATA_BITMAP).count() == num_data_blocks) return XORResult::Success;
@@ -112,14 +126,40 @@ XORResult xor_decode(
     const void * XOR_RESTRICT parity_block = reinterpret_cast<const void*>(parity_buffer + (i % num_parity_blocks) * block_size);
 
     // Copy the parity block to the recover block
-    XOR_copy_blocks(recover_block, parity_block, block_size);
+    switch (version) {
+      case XORVersion::Auto:
+        XOR_copy_blocks(recover_block, parity_block, block_size);
+        break;
+      case XORVersion::Scalar:
+        XOR_copy_blocks_scalar(recover_block, parity_block, block_size);
+        break;
+      case XORVersion::AVX:
+        XOR_copy_blocks_avx(recover_block, parity_block, block_size);
+        break;
+      case XORVersion::AVX2:
+        XOR_copy_blocks_avx2(recover_block, parity_block, block_size);
+        break;
+    }
 
     // XOR the recover block with the other data blocks
     for (unsigned j = i % num_parity_blocks; j < num_data_blocks; j += num_parity_blocks) {
       if (i == j) continue;
 
       const void * XOR_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + j * block_size);
-      XOR_xor_blocks(recover_block, data_block, block_size);
+      switch (version) {
+        case XORVersion::Auto:
+          XOR_xor_blocks(recover_block, data_block, block_size);
+          break;
+        case XORVersion::Scalar:
+          XOR_xor_blocks_scalar(recover_block, data_block, block_size);
+          break;
+        case XORVersion::AVX:
+          XOR_xor_blocks_avx(recover_block, data_block, block_size);
+          break;
+        case XORVersion::AVX2:
+          XOR_xor_blocks_avx2(recover_block, data_block, block_size);
+          break;
+      }
     }
   }
 
