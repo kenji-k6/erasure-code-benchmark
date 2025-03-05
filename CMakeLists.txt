@@ -18,7 +18,6 @@ find_package(OpenMP REQUIRED) # needed for leopard
 # Add source files
 set (SOURCES
   src/main.cpp
-
   src/benchmark/benchmark_functions.cpp
   src/benchmark/benchmark_reporters.cpp
   src/benchmark/benchmark_utils.cpp
