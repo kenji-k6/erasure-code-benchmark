@@ -15,7 +15,7 @@ XORResult xor_encode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  XORVersion version = XORVersion::Auto
+  XORVersion version
 ) {
   if (block_size < XOR_MIN_BLOCK_SIZE || block_size % XOR_BLOCK_SIZE_MULTIPLE != 0) {
     return XORResult::InvalidSize;
@@ -75,7 +75,7 @@ XORResult xor_decode(
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
   std::bitset<256> block_bitmap,
-  XORVersion version = XORVersion::Auto
+  XORVersion version
 ) {
 
   if ((block_bitmap & COMPLETE_DATA_BITMAP).count() == num_data_blocks) return XORResult::Success;
