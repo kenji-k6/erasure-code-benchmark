@@ -1,31 +1,98 @@
 
-# ECC Benchmark
+# Erasure Code Benchmark
+A high-performance benchmarking suite for evaluation open-source erasure coding (EC)
+libraries on **x86_64 machines**. This repository provides a structured micro-benchmarking testbed
+based on [Google's microbenchmark support library](https://github.com/google/benchmark)
+to analyze various EC implementations based on multiple system parameters.
 
-## Toolchain & Installation
 
-1. Install C++ compiler and bechmarking dependencies:
-`sudo apt update `
-`sudo apt install -y build-essential cmake git clang libbenchmark-dev automake autoconf libtool build-essential python3 python3.12-venv`
-`sudo apt-get install libom-dev`
+## Features
+* **Multi-Library Support**: Benchmarks [cm256](https://github.com/catid/cm256),
+[Intel ISA-L](https://github.com/intel/isa-l), [Leopard](https://github.com/catid/leopard)
+and [Wirehair](https://github.com/catid/wirehair) as well as a custom baseline implementation.
 
-2. Install Python tools (for results analysis)
-`pip install numpy pandas matplotlib`
+* **Customizable Parameters**: Evaluate performance based on payload size, parity size,
+algorithm and SIMD (amongst others).
 
-3. Update git submodules
-`git submodule update --init --recursive`
+* **GPU Memory Support** *(Upcoming!)*: Modify the best-performing EC library to enable GPU
+memory pointer inputs.
 
-4. ISA-L needs to be built manually. In root-folder execute the following:
-`cd libraries/isa-l`
-`./autogen.sh`
-`./configure`
-`make`
-`cd ../..`
+* **Micro-Benchmarking Suite**: Optimized benchmarking framework in C++.
 
-5. Create the build folder, use cmake, build the benchmark program
-`mkdir build`
-`cd build`
-`cmake ..`
-`make`
-`./ecc-benchmark`
+* **Plotting**: Provides a pre-implemented Python script to visualize your results.
+
+* **Benchmarking Results**: You can also find a full result set of all EC libraries that was
+ran on [Swis National Supercomputing Centre's](https://www.cscs.ch/) nodes.
+
+
+## Building
+### Prerequisites
+* **Build System**: CMake 3.16+
+
+* **Make**: GNU 'make'
+
+* **C++ Compiler**: GCC 10+ (Recommended) / Clang 12+ (must support C++20)
+
+* **Python**: 3.8+ (for result analysis and visualization)
+
+* **SIMD Support**: AVX2 / AVX-512 recommended for best performance
+
+* **NVIDIA CUDA Toolkit** (for future GPU acceleration)
+
+### Building the Benchmark framework (Linux)
+1. **Clone the repository and update/initialize Git submodules**
+```bash
+git clone https://github.com/kenji-k6/erasure-code-benchmark.git
+cd erasure-code-benchmark
+git submodule update --init --recursive
+```
+
+2. **Install required packages**
+```bash
+sudo apt update && sudo apt install -y \
+  build-essential libbenchmark-dev automake \
+  autoconf libtool
+```
+
+3. **Build ISA-L (has to be built manually)**
+```bash
+cd libraries/isa-l
+./autogen.sh
+./configure
+make
+cd ../..
+```
+
+4. **Create build folder & compile benchmark program**
+```bash
+mkdir build && cd build
+cmake ..
+make
+```
+5. **(Optional) Change macros in **
+
+### Building the the Result Analysis
+1. **Create and activate a Python virtual environment**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+2. **Install required Python packages**
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+
+## Usage
+
+## Results & Analysis
+
+## Roadmap
+
+## License
+
+## Contact
 
 

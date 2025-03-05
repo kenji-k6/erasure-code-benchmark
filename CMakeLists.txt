@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(ecc-benchmark)
+project(ec-benchmark)
 
 # Prevent in-source builds
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
@@ -29,13 +29,13 @@ set (SOURCES
 )
 
 
-# Create the ecc-benchmark executable
-add_executable(ecc-benchmark ${SOURCES})
+# Create the ec-benchmark executable
+add_executable(ec-benchmark ${SOURCES})
 
 
 
 # Maybe in the future: link necessary libraries / check if submodules are initialized
-set_target_properties(ecc-benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
+set_target_properties(ec-benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 
 # Google benchmarking library
 set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
@@ -62,14 +62,14 @@ set_target_properties(isal PROPERTIES
 
 
 # Include directories
-target_include_directories(ecc-benchmark PRIVATE
+target_include_directories(ec-benchmark PRIVATE
   ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/libraries/leopard
   ${CMAKE_SOURCE_DIR}/libraries/isa-l/include
 )
 
 # Linking the Libraries
-target_link_libraries(ecc-benchmark PRIVATE
+target_link_libraries(ec-benchmark PRIVATE
   libleopard
   cm256
   wirehair
