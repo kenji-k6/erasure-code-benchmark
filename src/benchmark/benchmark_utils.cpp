@@ -22,7 +22,7 @@ const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = 
   { "wirehair", BM_Wirehair }
 };
 
-void usage() {
+static void usage() {
  std::cerr << "Usage: ec-benchmark [options]\n"
            << "  -h | --help       Help\n"
            << "  -i <num>          Number of benchmark iterations (default 10)\n\n"
@@ -47,7 +47,7 @@ void usage() {
  exit(0);
 }
 
-void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint32_t num_orig_blocks, uint32_t num_rec_blocks) {
+static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint32_t num_orig_blocks, uint32_t num_rec_blocks) {
   if (num_orig_blocks < 1 || num_rec_blocks < 0) {
     std::cerr << "Error: Number of original blocks must be at least 1 and number of recovery blocks must be at least 0.\n"
               << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
@@ -349,7 +349,7 @@ void register_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgres
   }
 }
 
-void run_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgressReporter *console_reporter, BenchmarkProgressReporter *csv_reporter) {
+void run_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgressReporter *console_reporter, BenchmarkCSVReporter *csv_reporter) {
   int argc = 2;
   char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
   if (configs.size() == 1) { // Individual run
