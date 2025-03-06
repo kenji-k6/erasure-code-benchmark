@@ -1,5 +1,6 @@
 import os
 import cpuinfo
+import platform
 import psutil
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,7 +15,11 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results_first_2000_it.csv")
 LIN_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/linear/")
 LOG_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/log/")
-CPUInfo = namedtuple("CPUInfo", ["model_name", "clock_speed_MHz", "l1_cache_size_KiB", "l2_cache_size_KiB", "l3_cache_size_KiB"])
+
+# AVX XOR / AVX2 XOR max throughput
+AVX_XOR_CPI_XEON = 0.33
+AVX2_XOR_CPI_XEON = 0.33
+CPUInfo = namedtuple("CPUInfo", ["model_name", "clock_speed_GHz", "l1_cache_size_KiB", "l2_cache_size_KiB", "l3_cache_size_KiB"])
 
 def ensure_output_directories() -> None:
   """Ensure the output directory exists."""
@@ -27,7 +32,7 @@ def get_cpu_info() -> CPUInfo:
   model_name = info["brand_raw"]
 
   #clock speed in MHz 
-  clock_speed_MHz = float(psutil.cpu_freq().max if psutil.cpu_freq().max else "0")
+  clock_speed_GHz = float(psutil.cpu_freq().max if psutil.cpu_freq().max else "0") / 1e3
 
   #L1, l2, l3 Cache sizes
   l1_cache_size = int(info.get("l1_data_cache_size", "0")) // 1024
@@ -35,7 +40,7 @@ def get_cpu_info() -> CPUInfo:
   l3_cache_size = int(info.get("l3_cache_size", "0")) // 1024
 
   return CPUInfo(model_name=model_name,
-                 clock_speed_MHz=clock_speed_MHz,
+                 clock_speed_GHz=clock_speed_GHz,
                  l1_cache_size_KiB=l1_cache_size,
                  l2_cache_size_KiB=l2_cache_size,
                  l3_cache_size_KiB=l3_cache_size)
@@ -43,7 +48,7 @@ def get_cpu_info() -> CPUInfo:
 def get_plot_title(df: pd.DataFrame, plot_id: int, cpu_info: CPUInfo) -> str:
   """Generate a  plot title containing all the constant parameters."""
   first_row = df.iloc[0]
-  cpu_title = f"CPU: {cpu_info.model_name}, Max clock frequency: {cpu_info.clock_speed_MHz} MHz"
+  cpu_title = f"CPU: {cpu_info.model_name}, Max clock frequency: {cpu_info.clock_speed_GHz} GHz"
 
   titles = {
     0: f"#Data Blocks: {first_row['num_data_blocks']}, #Redundancy Ratio: {first_row['redundancy_ratio']}, #Lost Blocks: {first_row['num_lost_blocks']}, #Iterations: {first_row['num_iterations']}\n{cpu_title}",
@@ -52,6 +57,41 @@ def get_plot_title(df: pd.DataFrame, plot_id: int, cpu_info: CPUInfo) -> str:
   }
 
   return titles.get(plot_id, "ERROR: Invalid plot_id")
+
+
+def get_min_encode_time(xor_cpi: float, avx_bits: int, cpu_frequency_GHz: float, data_size_B: int, num_data_blocks: int) -> float:
+  """Compute the theoretical minimum encoding time (single threaded)."""
+  block_size_bits = (data_size_B // num_data_blocks) * 8
+
+  num_xor = (num_data_blocks * block_size_bits) / avx_bits
+  num_cycles = num_xor * xor_cpi
+  encode_time_ms = (num_cycles / cpu_frequency_GHz) / 1e6 # equal to (#cycles / (#GHz * 1e9)) * 1e3  = (#cycles / #Hz) * 1e3
+  return encode_time_ms
+
+
+def get_encode_throughput(encode_time_ms, data_size_B: int) -> float:
+  """Compute the theoretical maximum encoding throughput (single threaded)."""
+  data_size_bits = data_size_B * 8
+  encode_throughput_Gbps = (data_size_bits / 1e6) / encode_time_ms # equal to (#bits/1e9)/(#ms/1e3) = #Gbps
+  return encode_throughput_Gbps
+
+
+def get_min_decode_time(xor_cpi: float, avx_bits: int, cpu_frequency_GHz: float, data_size_B: int, num_data_blocks: int, num_parity_blocks: int, num_lost_data_blocks: int) -> float:
+  """Compute the theoretical minimum decoding time (single threaded)."""
+  block_size_bits = (data_size_B // num_data_blocks) * 8
+  blocks_per_parity_block = num_data_blocks // num_parity_blocks
+  num_xors_per_lost_data_block = ((blocks_per_parity_block - 1) * block_size_bits)
+  tot_num_xors = num_xors_per_lost_data_block * num_lost_data_blocks
+  num_cycles = tot_num_xors * xor_cpi
+  decode_time_ms = (num_cycles / cpu_frequency_GHz) / 1e6 # equal to (#cycles / (#GHz * 1e9)) * 1e3  = (#cycles / #Hz) * 1e3
+  return decode_time_ms
+
+
+def get_decode_throughput(decode_time_ms, data_size_B: int) -> float:
+  """Compute the theoretical maximum decoding throughput (single threaded)."""
+  data_size_bits = data_size_B * 8
+  decode_throughput_Gbps = (data_size_bits / 1e6) / decode_time_ms # equal to (#bits/1e9)/(#ms/1e3) = #Gbps
+  return decode_throughput_Gbps
 
 
 def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: str, y_label: str, y_scale: str, file_name: str, plot_id: int) -> None:
