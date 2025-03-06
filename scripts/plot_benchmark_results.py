@@ -1,31 +1,56 @@
 import os
+import cpuinfo
+import psutil
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import math
 import numpy as np
-from typing import Dict
+from typing import Dict, Any
+from collections import namedtuple
 
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results_first_2000_it.csv")
 LIN_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/linear/")
 LOG_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/log/")
-
+CPUInfo = namedtuple("CPUInfo", ["model_name", "clock_speed_MHz", "l1_cache_size_KiB", "l2_cache_size_KiB", "l3_cache_size_KiB"])
 
 def ensure_output_directories() -> None:
   """Ensure the output directory exists."""
   os.makedirs(LIN_OUTPUT_DIR, exist_ok=True)
   os.makedirs(LOG_OUTPUT_DIR, exist_ok=True)
 
-def get_plot_title(df: pd.DataFrame, plot_id: int) -> str:
+def get_cpu_info() -> CPUInfo:
+  """Get CPU information."""
+  info = cpuinfo.get_cpu_info()
+  model_name = info["brand_raw"]
+
+  #clock speed in MHz 
+  clock_speed_MHz = float(psutil.cpu_freq().max if psutil.cpu_freq().max else "0")
+
+  #L1, l2, l3 Cache sizes
+  l1_cache_size = int(info.get("l1_data_cache_size", "0")) // 1024
+  l2_cache_size = int(info.get("l2_cache_size", "0")) // 1024
+  l3_cache_size = int(info.get("l3_cache_size", "0")) // 1024
+
+  return CPUInfo(model_name=model_name,
+                 clock_speed_MHz=clock_speed_MHz,
+                 l1_cache_size_KiB=l1_cache_size,
+                 l2_cache_size_KiB=l2_cache_size,
+                 l3_cache_size_KiB=l3_cache_size)
+
+def get_plot_title(df: pd.DataFrame, plot_id: int, cpu_info: CPUInfo) -> str:
   """Generate a  plot title containing all the constant parameters."""
   first_row = df.iloc[0]
+  cpu_title = f"CPU: {cpu_info.model_name}, Max clock frequency: {cpu_info.clock_speed_MHz} MHz"
+
   titles = {
-    0: f"#Data Blocks: {first_row['num_data_blocks']}, #Redundancy Ratio: {first_row['redundancy_ratio']}, #Lost Blocks: {first_row['num_lost_blocks']}, #Iterations: {first_row['num_iterations']}",
-    1: f"Buffer Size: {first_row['tot_data_size_KiB']} KiB, #Data Blocks: {first_row['num_data_blocks']}, #Lost Blocks: {first_row['num_lost_blocks']}, #Iterations: {first_row['num_iterations']}",
-    2: f"Buffer Size: {first_row['tot_data_size_KiB']} KiB, #Data Blocks: {first_row['num_data_blocks']}, #Parity Blocks: {int(first_row['num_parity_blocks'])}, #Iterations: {first_row['num_iterations']}"
+    0: f"#Data Blocks: {first_row['num_data_blocks']}, #Redundancy Ratio: {first_row['redundancy_ratio']}, #Lost Blocks: {first_row['num_lost_blocks']}, #Iterations: {first_row['num_iterations']}\n{cpu_title}",
+    1: f"Buffer Size: {first_row['tot_data_size_KiB']} KiB, #Data Blocks: {first_row['num_data_blocks']}, #Lost Blocks: {first_row['num_lost_blocks']}, #Iterations: {first_row['num_iterations']}\n{cpu_title}",
+    2: f"Buffer Size: {first_row['tot_data_size_KiB']} KiB, #Data Blocks: {first_row['num_data_blocks']}, #Parity Blocks: {int(first_row['num_parity_blocks'])}, #Iterations: {first_row['num_iterations']}\n{cpu_title}"
   }
+
   return titles.get(plot_id, "ERROR: Invalid plot_id")
 
 
@@ -35,7 +60,7 @@ def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_la
   sns.set_theme(style="whitegrid")
   plt.figure(figsize=(10, 6))
   output_directory = LIN_OUTPUT_DIR if y_scale == "linear" else LOG_OUTPUT_DIR
-
+  cpu_info = get_cpu_info()  
 
   sns.scatterplot(data=df, x=x_col, y=y_col, hue="name", palette="tab10")
   plt.xlabel(x_label, fontsize=12)
@@ -45,13 +70,13 @@ def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_la
 
   if (x_col == "tot_data_size_KiB"):
     # Plot the cache sizes
-    l2_cache_size = 1024 # 1024 KiB
-    l3_cache_size = 25344 # 25344 KiB
+    l2_cache_size = cpu_info.l2_cache_size_KiB
+    l3_cache_size = cpu_info.l3_cache_size_KiB
     plt.axvline(x=l2_cache_size, color="red", linestyle="--", label="L2 Cache Size\n" + f"({l2_cache_size} KiB)")
     plt.axvline(x=l3_cache_size, color="green", linestyle="--", label="L3 Cache Size\n" + f"({l3_cache_size} KiB)")
-
+    
   plt.legend(title="Libraries", bbox_to_anchor=(1.05, 1), loc="upper left")
-  plt.title(get_plot_title(df, plot_id), fontsize=12)
+  plt.title(get_plot_title(df, plot_id, cpu_info), fontsize=12)
 
   
   
