@@ -43,7 +43,7 @@ def get_cpu_info() -> CPUInfo:
   info = cpuinfo.get_cpu_info()
   model_name = info["brand_raw"]
 
-  #clock speed in MHz 
+  #clock speed in GHz 
   clock_speed_GHz = float(psutil.cpu_freq().max if psutil.cpu_freq().max else "0") / 1e3
 
   #L1, l2, l3 Cache sizes
@@ -148,18 +148,6 @@ def get_decode_throughput(decode_time_ms, data_size_B: int) -> float:
   decode_throughput_Gbps = (data_size_bits / 1e6) / decode_time_ms # equal to (#bits/1e9)/(#ms/1e3) = #Gbps
   return decode_throughput_Gbps
 
-
-# def write_scatter_plot(dfs: Dict[int, pd.DataFrame], x_ax: AxType, y_ax: AxType, y_scale: str, plot_id: int) -> None:
-#   """Generate and save scatter plot."""
-#   x_label = get_ax_label(x_ax)
-#   y_label = get_ax_label(y_ax)
-#   output_file = get_output_path(x_ax, y_ax, y_scale)
-#   cpu_info = get_cpu_info()
-
-#   df = dfs[plot_id]
-
-#   pass
-
 def plot_cache_sizes(cpu_info: CPUInfo) -> None:
   l2_cache_size = cpu_info.l2_cache_size_KiB
   l3_cache_size = cpu_info.l3_cache_size_KiB
@@ -178,6 +166,7 @@ def plot_xticks(df: pd.DataFrame, x_ax: AxType) -> None:
     x_ticklabels = [f"{x}" for x in x_ticks]
     rot = 0
   ax.set_xticks(ticks=x_ticks, labels=x_ticklabels, rotation=rot)
+  ax.set_xlim(left=x_ticks[0]/2, right=x_ticks[-1]*2)
 
 def plot_confidence_intervals(df: pd.DataFrame, x_ax: AxType, y_ax: AxType) -> None:
   x_col = get_col_name(x_ax)
@@ -191,46 +180,38 @@ def plot_confidence_intervals(df: pd.DataFrame, x_ax: AxType, y_ax: AxType) -> N
     )
 
 
-def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: str, y_label: str, y_scale: str, file_name: str, plot_id: int) -> None:
-  """Generate and save scatter plots."""
+def write_scatter_plot(dfs: Dict[int, pd.DataFrame], x_ax: AxType, y_ax: AxType, y_scale: str, plot_id: int) -> None:
+  """Generate and save scatter plot."""
+  output_file = get_output_path(x_ax, y_ax, y_scale)
+  cpu_info = get_cpu_info()
   df = dfs[plot_id]
+
+  x_label= get_ax_label(x_ax)
+  y_label = get_ax_label(y_ax)
+  x_col = get_col_name(x_ax)
+  y_col = get_col_name(y_ax)
+
   sns.set_theme(style="whitegrid")
   plt.figure(figsize=(10, 6))
-  output_directory = LIN_OUTPUT_DIR if y_scale == "linear" else LOG_OUTPUT_DIR
-  cpu_info = get_cpu_info()  
-
   sns.scatterplot(data=df, x=x_col, y=y_col, hue="name", palette="tab10")
+
   plt.xlabel(x_label, fontsize=12)
   plt.ylabel(y_label, fontsize=12)
+
   plt.xscale("log", base=2)
   plt.yscale(y_scale)
 
-  if (x_col == "tot_data_size_KiB"):
-    # Plot the cache sizes
-    plot_cache_sizes(cpu_info)
-    
+  if x_ax == AxType.BUF_SIZE: plot_cache_sizes(cpu_info)
+
   plt.legend(title="Libraries", bbox_to_anchor=(1.05, 1), loc="upper left")
   plt.title(get_plot_title(df, plot_id, cpu_info), fontsize=12)
 
-  
-  # Set proper x-ticks
-  ax = plt.gca()
-  x_ticks = sorted(df[x_col].unique())
-  if (x_col == "tot_data_size_KiB"):
-    x_ticklabels = [(lambda x: f"{x//1024} MiB" if x >= 1024 else f"{x} KiB")(x) for x in x_ticks]
-    rot = 45
-  else:
-    x_ticklabels = [f"{x}" for x in x_ticks]
-    rot = 0
-  ax.set_xticks(ticks=x_ticks, labels=x_ticklabels, rotation=rot)
+  plot_xticks(df, x_ax)
+  plot_confidence_intervals(df, x_ax, y_ax)
 
-  ax.set_xlim(left=x_ticks[0]/2, right=x_ticks[-1]*2)
-  
-  # plot_confidence_intervals(df, x_col, y_col)
   plt.tight_layout()
-  plt.savefig(os.path.join(output_directory, file_name))
+  plt.savefig(output_file)
   plt.close()
-
 
 
 if __name__ == "__main__":
@@ -265,54 +246,46 @@ if __name__ == "__main__":
 
   dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
 
-  # Define plot parameters
   plot_params = [
-    # Linear Y-scale
     # X: Buffer Size, Y: Encode/Decode Time
-    ("tot_data_size_KiB", "encode_time_ms", "Buffer Size", "Encode Time (ms)", "linear", "buffersize_vs_encodetime_linear.png", 0),
-    ("tot_data_size_KiB", "decode_time_ms", "Buffer Size", "Decode Time (ms)", "linear", "buffersize_vs_decodetime_linear.png", 0),
+    (AxType.BUF_SIZE, AxType.ENCODE_T, "linear", 0),
+    (AxType.BUF_SIZE, AxType.DECODE_T, "linear", 0),
+    (AxType.BUF_SIZE, AxType.ENCODE_T, "log", 0),
+    (AxType.BUF_SIZE, AxType.DECODE_T, "log", 0),
+
     # X: Buffer Size, Y: Encode/Decode Throughput
-    ("tot_data_size_KiB", "encode_throughput_Gbps", "Buffer Size", "Encode Throughput (Gbps)", "linear", "buffersize_vs_encodethroughput_linear.png", 0),
-    ("tot_data_size_KiB", "decode_throughput_Gbps", "Buffer Size", "Decode Throughput (Gbps)", "linear", "buffersize_vs_decodethroughput_linear.png", 0),
+    (AxType.BUF_SIZE, AxType.ENCODE_TP, "linear", 0),
+    (AxType.BUF_SIZE, AxType.DECODE_TP, "linear", 0),
+    (AxType.BUF_SIZE, AxType.ENCODE_TP, "log", 0),
+    (AxType.BUF_SIZE, AxType.DECODE_TP, "log", 0),
+
 
     # X: Num Parity Blocks, Y: Encode/Decode Time
-    ("num_parity_blocks", "encode_time_ms", "#Parity Blocks", "Encode Time (ms)", "linear", "parityblocks_vs_encodetime_linear.png", 1),
-    ("num_parity_blocks", "decode_time_ms", "#Parity Blocks", "Decode Time (ms)", "linear", "parityblocks_vs_decodetime_linear.png", 1),
+    (AxType.PARITY_BLKS, AxType.ENCODE_T, "linear", 1),
+    (AxType.PARITY_BLKS, AxType.DECODE_T, "linear", 1),
+    (AxType.PARITY_BLKS, AxType.ENCODE_T, "log", 1),
+    (AxType.PARITY_BLKS, AxType.DECODE_T, "log", 1),
+
     # X: Num Parity Blocks, Y: Encode/Decode Throughput
-    ("num_parity_blocks", "encode_throughput_Gbps", "#Parity Blocks", "Encode Throughput (Gbps)", "linear", "parityblocks_vs_encodethroughput_linear.png", 1),
-    ("num_parity_blocks", "decode_throughput_Gbps", "#Parity Blocks", "Decode Throughput (Gbps)", "linear", "parityblocks_vs_decodethroughput_linear.png", 1),
+    (AxType.PARITY_BLKS, AxType.ENCODE_TP, "linear", 1),
+    (AxType.PARITY_BLKS, AxType.DECODE_TP, "linear", 1),
+    (AxType.PARITY_BLKS, AxType.ENCODE_TP, "log", 1),
+    (AxType.PARITY_BLKS, AxType.DECODE_TP, "log", 1),
+
 
     # X: Num Lost Blocks, Y: Encode/Decode Time
-    ("num_lost_blocks", "encode_time_ms", "#Lost Blocks", "Encode Time (ms)", "linear", "lostblocks_vs_encodetime_linear.png", 2),
-    ("num_lost_blocks", "decode_time_ms", "#Lost Blocks", "Decode Time (ms)", "linear", "lostblocks_vs_decodetime_linear.png", 2),
+    (AxType.LOST_BLKS, AxType.ENCODE_T, "linear", 2),
+    (AxType.LOST_BLKS, AxType.DECODE_T, "linear", 2),
+    (AxType.LOST_BLKS, AxType.ENCODE_T, "log", 2),
+    (AxType.LOST_BLKS, AxType.DECODE_T, "log", 2),
+
     # X: Num Lost Blocks, Y: Encode/Decode Throughput
-    ("num_lost_blocks", "encode_throughput_Gbps", "#Lost Blocks", "Encode Throughput (Gbps)", "linear", "lostblocks_vs_encodethroughput_linear.png", 2),
-    ("num_lost_blocks", "decode_throughput_Gbps", "#Lost Blocks", "Decode Throughput (Gbps)", "linear", "lostblocks_vs_decodethroughput_linear.png", 2),
-
-
-    # Log Y-scale
-    # X: Buffer Size, Y: Encode/Decode Time
-    ("tot_data_size_KiB", "encode_time_ms", "Buffer Size", "Encode Time (ms)", "log", "buffersize_vs_encodetime_log.png", 0),
-    ("tot_data_size_KiB", "decode_time_ms", "Buffer Size", "Decode Time (ms)", "log", "buffersize_vs_decodetime_log.png", 0),
-    # X: Buffer Size, Y: Encode/Decode Throughput
-    ("tot_data_size_KiB", "encode_throughput_Gbps", "Buffer Size", "Encode Throughput (Gbps)", "log", "buffersize_vs_encodethroughput_log.png", 0),
-    ("tot_data_size_KiB", "decode_throughput_Gbps", "Buffer Size", "Decode Throughput (Gbps)", "log", "buffersize_vs_decodethroughput_log.png", 0),
-
-    # X: Num Parity Blocks, Y: Encode/Decode Time
-    ("num_parity_blocks", "encode_time_ms", "#Parity Blocks", "Encode Time (ms)", "log", "parityblocks_vs_encodetime_log.png", 1),
-    ("num_parity_blocks", "decode_time_ms", "#Parity Blocks", "Decode Time (ms)", "log", "parityblocks_vs_decodetime_log.png", 1),
-    # X: Num Parity Blocks, Y: Encode/Decode Throughput
-    ("num_parity_blocks", "encode_throughput_Gbps", "#Parity Blocks", "Encode Throughput (Gbps)", "log", "parityblocks_vs_encodethroughput_log.png", 1),
-    ("num_parity_blocks", "decode_throughput_Gbps", "#Parity Blocks", "Decode Throughput (Gbps)", "log", "parityblocks_vs_decodethroughput_log.png", 1),
-
-    # X: Num Lost Blocks, Y: Encode/Decode Time
-    ("num_lost_blocks", "encode_time_ms", "#Lost Blocks", "Encode Time (ms)", "log", "lostblocks_vs_encodetime_log.png", 2),
-    ("num_lost_blocks", "decode_time_ms", "#Lost Blocks", "Decode Time (ms)", "log", "lostblocks_vs_decodetime_log.png", 2),
-    # X: Num Lost Blocks, Y: Encode/Decode Throughput
-    ("num_lost_blocks", "encode_throughput_Gbps", "#Lost Blocks", "Encode Throughput (Gbps)", "log", "lostblocks_vs_encodethroughput_log.png", 2),
-    ("num_lost_blocks", "decode_throughput_Gbps", "#Lost Blocks", "Decode Throughput (Gbps)", "log", "lostblocks_vs_decodethroughput_log.png", 2)
+    (AxType.LOST_BLKS, AxType.ENCODE_TP, "linear", 2),
+    (AxType.LOST_BLKS, AxType.DECODE_TP, "linear", 2),
+    (AxType.LOST_BLKS, AxType.ENCODE_TP, "log", 2),
+    (AxType.LOST_BLKS, AxType.DECODE_TP, "log", 2)
   ]
 
-  # Generate plots
   for params in plot_params:
-    make_scatter_plot(dfs, *params)
+    write_scatter_plot(dfs, *params)
+
