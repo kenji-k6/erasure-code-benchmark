@@ -9,6 +9,7 @@ import math
 import numpy as np
 from typing import Dict, Any
 from collections import namedtuple
+from enum import Enum
 
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,6 +21,17 @@ LOG_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/log/")
 AVX_XOR_CPI_XEON = 0.33
 AVX2_XOR_CPI_XEON = 0.33
 CPUInfo = namedtuple("CPUInfo", ["model_name", "clock_speed_GHz", "l1_cache_size_KiB", "l2_cache_size_KiB", "l3_cache_size_KiB"])
+
+class AxType(Enum):
+  ENCODE_T = 0
+  DECODE_T = 1
+  ENCODE_TP = 2
+  DECODE_TP = 3
+  BUF_SIZE = 4
+  PARITY_BLKS = 5
+  LOST_BLKS = 6
+
+
 
 def ensure_output_directories() -> None:
   """Ensure the output directory exists."""
@@ -58,6 +70,49 @@ def get_plot_title(df: pd.DataFrame, plot_id: int, cpu_info: CPUInfo) -> str:
 
   return titles.get(plot_id, "ERROR: Invalid plot_id")
 
+def get_output_path(x_ax: AxType, y_ax: AxType, y_scale: str) -> str:
+  """Generate the file name for the plot."""
+  ax_map = {
+    AxType.ENCODE_T: "encodetime",
+    AxType.DECODE_T: "decodetime",
+    AxType.ENCODE_TP: "encodethroughput",
+    AxType.DECODE_TP: "decodethroughput",
+    AxType.BUF_SIZE: "buffersize",
+    AxType.PARITY_BLKS: "parityblocks",
+    AxType.LOST_BLKS: "lostblocks"
+  }
+
+  x_part = ax_map[x_ax]
+  y_part = ax_map[y_ax]
+  file_name = f"{x_part}_vs_{y_part}_{y_scale}.png"
+  output_dir = LOG_OUTPUT_DIR if (y_scale == "log") else LIN_OUTPUT_DIR
+  return os.path.join(output_dir, file_name)
+
+def get_col_name(ax: AxType) -> str:
+  """Return the column name in the dataframe for the given AxType."""
+  ax_map = {
+    AxType.ENCODE_T: "encode_time_ms",
+    AxType.DECODE_T: "decode_time_ms",
+    AxType.ENCODE_TP: "encode_throughput_Gbps",
+    AxType.DECODE_TP: "decode_throughput_Gbps",
+    AxType.BUF_SIZE: "tot_data_size_KiB",
+    AxType.PARITY_BLKS: "num_parity_blocks",
+    AxType.LOST_BLKS: "num_lost_blocks"
+  }
+  return ax_map[ax]
+
+def get_ax_label(ax: AxType) -> str:
+  """Return the axis label for the given AxType."""
+  ax_map = {
+    AxType.ENCODE_T: "Encode Time (ms)",
+    AxType.DECODE_T: "Decode Time (ms)",
+    AxType.ENCODE_TP: "Encode Throughput (Gbps)",
+    AxType.DECODE_TP: "Decode Throughput (Gbps)",
+    AxType.BUF_SIZE: "Buffer Size",
+    AxType.PARITY_BLKS: "#Parity Blocks",
+    AxType.LOST_BLKS: "#Lost Blocks"
+  }
+  return ax_map[ax]
 
 def get_min_encode_time(xor_cpi: float, avx_bits: int, cpu_frequency_GHz: float, data_size_B: int, num_data_blocks: int) -> float:
   """Compute the theoretical minimum encoding time (single threaded)."""
@@ -94,6 +149,48 @@ def get_decode_throughput(decode_time_ms, data_size_B: int) -> float:
   return decode_throughput_Gbps
 
 
+# def write_scatter_plot(dfs: Dict[int, pd.DataFrame], x_ax: AxType, y_ax: AxType, y_scale: str, plot_id: int) -> None:
+#   """Generate and save scatter plot."""
+#   x_label = get_ax_label(x_ax)
+#   y_label = get_ax_label(y_ax)
+#   output_file = get_output_path(x_ax, y_ax, y_scale)
+#   cpu_info = get_cpu_info()
+
+#   df = dfs[plot_id]
+
+#   pass
+
+def plot_cache_sizes(cpu_info: CPUInfo) -> None:
+  l2_cache_size = cpu_info.l2_cache_size_KiB
+  l3_cache_size = cpu_info.l3_cache_size_KiB
+  plt.axvline(x=l2_cache_size, color="red", linestyle="--", label="L2 Cache Size\n" + f"({l2_cache_size} KiB)")
+  plt.axvline(x=l3_cache_size, color="green", linestyle="--", label="L3 Cache Size\n" + f"({l3_cache_size} KiB)")
+
+def plot_xticks(df: pd.DataFrame, x_ax: AxType) -> None:
+  ax = plt.gca()
+  x_col = get_col_name(x_ax)
+  x_ticks = sorted(df[x_col].unique())
+
+  if x_ax == AxType.BUF_SIZE:
+    x_ticklabels = [(lambda x: f"{x//1024} MiB" if x >= 1024 else f"{x} KiB")(x) for x in x_ticks]
+    rot = 45
+  else:
+    x_ticklabels = [f"{x}" for x in x_ticks]
+    rot = 0
+  ax.set_xticks(ticks=x_ticks, labels=x_ticklabels, rotation=rot)
+
+def plot_confidence_intervals(df: pd.DataFrame, x_ax: AxType, y_ax: AxType) -> None:
+  x_col = get_col_name(x_ax)
+  y_col = get_col_name(y_ax)
+  low_err_col = f"{y_col}_lower"
+  up_err_col = f"{y_col}_upper"
+  ax = plt.gca()
+  for name, group in df.groupby("name"):
+    plt.errorbar(group[x_col], group[y_col], yerr=[group[low_err_col].to_numpy(), group[up_err_col].to_numpy()],
+                 fmt='o', color=ax.get_legend().legend_handles[df["name"].unique().tolist().index(name)].get_color(), capsize=5 
+    )
+
+
 def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_label: str, y_label: str, y_scale: str, file_name: str, plot_id: int) -> None:
   """Generate and save scatter plots."""
   df = dfs[plot_id]
@@ -110,18 +207,12 @@ def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_la
 
   if (x_col == "tot_data_size_KiB"):
     # Plot the cache sizes
-    l2_cache_size = cpu_info.l2_cache_size_KiB
-    l3_cache_size = cpu_info.l3_cache_size_KiB
-    plt.axvline(x=l2_cache_size, color="red", linestyle="--", label="L2 Cache Size\n" + f"({l2_cache_size} KiB)")
-    plt.axvline(x=l3_cache_size, color="green", linestyle="--", label="L3 Cache Size\n" + f"({l3_cache_size} KiB)")
+    plot_cache_sizes(cpu_info)
     
   plt.legend(title="Libraries", bbox_to_anchor=(1.05, 1), loc="upper left")
   plt.title(get_plot_title(df, plot_id, cpu_info), fontsize=12)
 
   
-  
-
-
   # Set proper x-ticks
   ax = plt.gca()
   x_ticks = sorted(df[x_col].unique())
@@ -135,12 +226,7 @@ def make_scatter_plot(dfs: Dict[int, pd.DataFrame], x_col: str, y_col: str, x_la
 
   ax.set_xlim(left=x_ticks[0]/2, right=x_ticks[-1]*2)
   
-  # Plot confidence intervals (has to be done with a loop, to ensure the correct color)
-  for name, group in df.groupby("name"):
-    plt.errorbar(group[x_col], group[y_col],
-                 yerr=[group[f"{y_col}_lower"].to_numpy(), group[f"{y_col}_upper"].to_numpy()],
-                 fmt='o', color=ax.get_legend().legend_handles[df["name"].unique().tolist().index(name)].get_color(), capsize=5
-                 )
+  # plot_confidence_intervals(df, x_col, y_col)
   plt.tight_layout()
   plt.savefig(os.path.join(output_directory, file_name))
   plt.close()
