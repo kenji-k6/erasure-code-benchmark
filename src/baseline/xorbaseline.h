@@ -135,6 +135,9 @@ static void inline XOR_xor_blocks_avx2(void * XOR_RESTRICT dest, const void * XO
       _mm256_storeu_si256(dest256, x0);
       _mm256_storeu_si256(dest256 + 1, x1);
     }
+  #else
+    std::cerr << "AVX2 not supported\n";
+    exit(1);
   #endif
 }
 
@@ -155,6 +158,9 @@ static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR
       dest128 += 4, src128 += 4;
       bytes -= 64;
     }
+  #else
+    std::cerr << "AVX not supported\n";
+    exit(1);
   #endif
 }
 
@@ -191,7 +197,9 @@ static void inline XOR_copy_blocks_avx2(void * XOR_RESTRICT dest, const void * X
       _mm256_storeu_si256(dest256, _mm256_loadu_si256(src256));
       _mm256_storeu_si256(dest256 + 1, _mm256_loadu_si256(src256 + 1));
     }
-  
+  #else
+    std::cerr << "AVX2 not supported\n";
+    exit(1);
   #endif
 }
 
@@ -208,6 +216,9 @@ static void inline XOR_copy_blocks_avx(void * XOR_RESTRICT dest, const void * XO
       dest128 += 4, src128 += 4;
       bytes -= 64;
     }
+  #else
+    std::cerr << "AVX2 not supported\n";
+    exit(1);
   #endif
 }
 
