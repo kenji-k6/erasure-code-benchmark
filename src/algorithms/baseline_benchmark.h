@@ -42,6 +42,19 @@ public:
   int decode() noexcept override;
 };
 
+/**
+ * @class BaselineScalarNoOptBenchmark
+ * @brief Baseline Benchmark implementation using scalar operations
+ */
+class BaselineScalarNoOptBenchmark : public BaselineBenchmark {
+  public:
+    explicit BaselineScalarNoOptBenchmark(const BenchmarkConfig& config) noexcept;
+    ~BaselineScalarNoOptBenchmark() noexcept = default; 
+  
+    int encode() noexcept override;
+    int decode() noexcept override;
+  };
+
 
 /**
  * @class BaselineAVXBenchmark

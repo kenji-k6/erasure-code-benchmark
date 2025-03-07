@@ -88,6 +88,16 @@ int BaselineScalarBenchmark::decode() noexcept {
   return 0;
 }
 
+BaselineScalarNoOptBenchmark::BaselineScalarNoOptBenchmark(const BenchmarkConfig& config) noexcept : BaselineBenchmark(config) {}
+int BaselineScalarNoOptBenchmark::encode() noexcept {
+  xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::ScalarNoOpt);
+  return 0;
+}
+int BaselineScalarNoOptBenchmark::decode() noexcept {
+  xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_, XORVersion::ScalarNoOpt);
+  return 0;
+}
+
 BaselineAVXBenchmark::BaselineAVXBenchmark(const BenchmarkConfig& config) noexcept : BaselineBenchmark(config) {}
 int BaselineAVXBenchmark::encode() noexcept {
   xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::AVX);
