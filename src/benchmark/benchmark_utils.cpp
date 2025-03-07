@@ -19,64 +19,68 @@ bool OVERWRITE_FILE = true;
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
-  { "baseline",         BM_Baseline       },
-  { "baseline-scalar",  BM_BaselineScalar },
-  { "baseline-avx",     BM_BaselineAVX    },
-  { "baseline-avx2",    BM_BaselineAVX2   },
-  { "cm256",            BM_CM256          },
-  { "isal",             BM_ISAL           },
-  { "leopard",          BM_Leopard        },
-  { "wirehair",         BM_Wirehair       }
+  { "baseline",               BM_Baseline             },
+  { "baseline-scalar",        BM_BaselineScalar       },
+  { "baseline-scalar-noopt",  BM_BaselineScalarNoOpt  },
+  { "baseline-avx",           BM_BaselineAVX          },
+  { "baseline-avx2",          BM_BaselineAVX2         },
+  { "cm256",                  BM_CM256                },
+  { "isal",                   BM_ISAL                 },
+  { "leopard",                BM_Leopard              },
+  { "wirehair",               BM_Wirehair             }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
-  { "baseline",         "Baseline (Auto)"   },
-  { "baseline-scalar",  "Baseline (Scalar)" },
-  { "baseline-avx",     "Baseline (AVX)"    },
-  { "baseline-avx2",    "Baseline (AVX2)"   },
-  { "cm256",            "CM256"             },
-  { "isal",             "ISA-L"             },
-  { "leopard",          "Leopard"           },
-  { "wirehair",         "Wirehair"          }
+  { "baseline",               "Baseline (Auto)"                           },
+  { "baseline-scalar",        "Baseline (Scalar, SIMD Optimizations)"     },
+  { "baseline-scalar-noopt",  "Baseline (Scalar, no SIMD Optimizations)"  },
+  { "baseline-avx",           "Baseline (AVX)"                            },
+  { "baseline-avx2",          "Baseline (AVX2)"                           },
+  { "cm256",                  "CM256"                                     },
+  { "isal",                   "ISA-L"                                     },
+  { "leopard",                "Leopard"                                   },
+  { "wirehair",               "Wirehair"                                  }
 };
 
 static void usage() {
   std::cerr << "Usage: ec-benchmark [options]\n\n"
 
             << " Help Option:\n"
-            << "  -h, --help                show this help message\n\n"
+            << "  -h, --help                    show this help message\n\n"
             
             << " Benchmark Options:\n"
-            << "  -i, --iterations=<num>    number of benchmark iterations (default 10)\n"
-            << "      --full                run the full benchmark suite, write results to CSV,\n"
-            << "                            any specifed benchmark config parameters will be ignored\n\n"
+            << "  -i, --iterations=<num>        number of benchmark iterations (default 10)\n"
+            << "      --full                    run the full benchmark suite, write results to CSV,\n"
+            << "                                any specifed benchmark config parameters will be ignored\n\n"
 
             << " Algorithm Selection:\n"
-            << "      --baseline            run the baseline benchmark (automatically chooses between\n"
-            << "                            the Scalar, AVX, and AVX2 implementations according\n"
-            << "                            to the system specification)\n"
-            << "      --baseline-scalar     run the scalar baseline implementation\n"
-            << "      --baseline-avx        run the AVX baseline implementation\n"
-            << "      --baseline-avx2       run the AVX2 baseline implementation\n"
-            << "      --cm256               run the CM256 benchmark\n"
-            << "      --isal                run the ISA-L benchmark\n"
-            << "      --leopard             run the Leopard benchmark\n"
-            << "      --wirehair            run the Wirehair benchmark\n"
+            << "      --baseline                run the baseline benchmark (automatically chooses between\n"
+            << "                                the Scalar, AVX, and AVX2 implementations according\n"
+            << "                                to the system specification)\n"
+            << "      --baseline-scalar         run the scalar baseline implementation\n"
+            << "                                (SIMD optimizations disabled)\n"
+            << "      --baseline-scalar-noopt   run the scalar baseline implementation\n"
+            << "      --baseline-avx            run the AVX baseline implementation\n"
+            << "      --baseline-avx2           run the AVX2 baseline implementation\n"
+            << "      --cm256                   run the CM256 benchmark\n"
+            << "      --isal                    run the ISA-L benchmark\n"
+            << "      --leopard                 run the Leopard benchmark\n"
+            << "      --wirehair                run the Wirehair benchmark\n"
             << " *If no algorithm is specified, all algorithms will be run.*\n\n"
 
             << " Full Suite Options:\n"
-            << "      --file=<file_name>    specify output file name\n"
-            << "      --append              append results to the output file (default: overwrite)\n\n"
+            << "      --file=<file_name>        specify output file name\n"
+            << "      --append                  append results to the output file (default: overwrite)\n\n"
 
             << " Single Run Options:\n"
-            << "  -s, --size=<size>         total size of original data in bytes\n"
-            << "                            default: " << FIXED_BUFFFER_SIZE << " B\n"
-            << "  -b, --block-size=<size>   size of each block in bytes\n"
-            << "                            default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << " B\n"
-            << "  -l, --lost_blocks=<num>   number of lost blocks\n"
-            << "                            default: " << FIXED_NUM_LOST_BLOCKS << '\n'
-            << "  -r, --redundancy=<ratio>  redundancy ratio (#recovery blocks / #original blocks)\n"
-            << "                            default= " << FIXED_PARITY_RATIO << "\n\n";
+            << "  -s, --size=<size>             total size of original data in bytes\n"
+            << "                                default: " << FIXED_BUFFFER_SIZE << " B\n"
+            << "  -b, --block-size=<size>       size of each block in bytes\n"
+            << "                                default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << " B\n"
+            << "  -l, --lost_blocks=<num>       number of lost blocks\n"
+            << "                                default: " << FIXED_NUM_LOST_BLOCKS << '\n'
+            << "  -r, --redundancy=<ratio>      redundancy ratio (#recovery blocks / #original blocks)\n"
+            << "                                default= " << FIXED_PARITY_RATIO << "\n\n";
   exit(0);
 }
 
@@ -114,7 +118,11 @@ static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint
   }
 
   // Baseline checks
-  if (selected_benchmarks.contains("baseline")) {
+  if (selected_benchmarks.contains("baseline") ||
+      selected_benchmarks.contains("baseline-scalar") ||
+      selected_benchmarks.contains("baseline-scalar-noopt") ||
+      selected_benchmarks.contains("baseline-avx") ||
+      selected_benchmarks.contains("baseline-avx2")) {
     if (b % ECLimits::BASELINE_BLOCK_ALIGNMENT != 0) {
       std::cerr << "Error: Block size must be a multiple of " << ECLimits::BASELINE_BLOCK_ALIGNMENT << " for Baseline.\n";
       exit(0);
@@ -307,6 +315,7 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     { "append",           no_argument,        nullptr,  0   },
     { "baseline",         no_argument,        nullptr,  0   },
     { "baseline-scalar",  no_argument,        nullptr,  0   },
+    { "baseline-noopt",   no_argument,        nullptr,  0   },
     { "baseline-avx",     no_argument,        nullptr,  0   },
     { "baseline-avx2",    no_argument,        nullptr,  0   },
     { "cm256",            no_argument,        nullptr,  0   },
