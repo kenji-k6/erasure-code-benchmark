@@ -1,0 +1,7 @@
+plot_id,name,err_msg,num_iterations,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio,num_data_blocks,num_parity_blocks,time_ns,encode_time_ns,encode_time_ns_stddev,encode_throughput_Gbps,encode_throughput_Gbps_stddev,decode_time_ns,decode_time_ns_stddev,decode_throughput_Gbps,decode_throughput_Gbps_stddev
+0,Baseline (Scalar)/iterations:2000/manual_time,,2000,67108864,524288,1,0.03125,128,4,8.73474e+06,7.11899e+06,48812.7,75.4139,0.47561,1.61575e+06,10298.7,332.273,2.09139
+0,Baseline (AVX)/iterations:2000/manual_time,,2000,67108864,524288,1,0.03125,128,4,9.50735e+06,7.70056e+06,36841,69.7185,0.3327,1.8068e+06,12581.4,297.139,1.95112
+0,Baseline (AVX2)/iterations:2000/manual_time,,2000,67108864,524288,1,0.03125,128,4,8.49784e+06,6.90556e+06,26782,77.7447,0.297755,1.59228e+06,12761.4,337.171,2.51843
+0,CM256/iterations:2000/manual_time,,2000,67108864,524288,1,0.03125,128,4,3.50711e+07,2.86436e+07,100624,18.7431,0.0657046,6.42752e+06,21722.7,83.5269,0.280673
+0,ISA-L/iterations:2000/manual_time,,2000,67108864,524288,1,0.03125,128,4,4.21206e+07,2.52345e+07,50017.3,21.2753,0.0419422,1.68861e+07,53628.7,31.7936,0.100214
+0,Leopard/iterations:2000/manual_time,,2000,67108864,524288,1,0.03125,128,4,1.59355e+08,1.27103e+07,34769,42.2389,0.109691,1.46644e+08,368953,3.66104,0.00921078

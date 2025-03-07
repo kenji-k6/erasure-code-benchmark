@@ -17,11 +17,25 @@ std::string output_file_name = "benchmark_results.csv";
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
-  { "baseline", BM_Baseline },
-  { "cm256", BM_CM256 },
-  { "isal", BM_ISAL },
-  { "leopard", BM_Leopard },
-  { "wirehair", BM_Wirehair }
+  { "baseline",         BM_Baseline       },
+  { "baseline-scalar",  BM_BaselineScalar },
+  { "baseline-avx",     BM_BaselineAVX    },
+  { "baseline-avx2",    BM_BaselineAVX2   },
+  { "cm256",            BM_CM256          },
+  { "isal",             BM_ISAL           },
+  { "leopard",          BM_Leopard        },
+  { "wirehair",         BM_Wirehair       }
+};
+
+const std::unordered_map<std::string, std::string> benchmark_names = {
+  { "baseline",         "Baseline (Auto)"   },
+  { "baseline-scalar",  "Baseline (Scalar)" },
+  { "baseline-avx",     "Baseline (AVX)"    },
+  { "baseline-avx2",    "Baseline (AVX2)"   },
+  { "cm256",            "CM256"             },
+  { "isal",             "ISA-L"             },
+  { "leopard",          "Leopard"           },
+  { "wirehair",         "Wirehair"          }
 };
 
 static void usage() {
@@ -29,7 +43,8 @@ static void usage() {
            << "  -h | --help       Help\n"
            << "  -i <num>          Number of benchmark iterations (default 10)\n\n"
 
-           << "  --full            Run the full benchmark suite, (only options -i and -f are considered)\n"
+           << "  --full            Run the full benchmark config suite, (only options -i, -f \n"
+           << "                    and the specified benchmarks are considered)\n"
            << "  --file <name>     Name of the output file (default: " << output_file_name << ")\n\n" 
 
            << " The following flags are used to specify the parameters if --full was not specified.\n"
@@ -39,13 +54,17 @@ static void usage() {
            << "  -l <num>          Number of lost blocks (default: " << FIXED_NUM_LOST_BLOCKS << ")\n"
            << "  -r <ratio>        Redundancy ratio (#recovery blocks / #original blocks) (default: " << FIXED_PARITY_RATIO << "\n\n"
 
-           << " The following flags are used to specify which benchmarks to run if --full was not specified.\n"
-           << "  --baseline        Run the baseline benchmark\n"
+           << " The following flags are used to specify which benchmarks to run.\n"
+           << "  --baseline        Run the baseline benchmark (automatically chooses between the Scalar,\n"
+           << "                    AVX, and AVX2 implementations according to system specification).\n"
+           << "  --baseline-scalar Run the scalar baseline implementation\n"
+           << "  --baseline-avx    Run the AVX baseline implementation\n"
+           << "  --baseline-avx2   Run the AVX2 baseline implementation\n"
            << "  --cm256           Run the CM256 benchmark\n"
            << "  --isal            Run the ISA-L benchmark\n"
            << "  --leopard         Run the Leopard benchmark\n"
            << "  --wirehair        Run the Wirehair benchmark\n"
-           << " *If no arguments at all are specified, the full selection of benchmarks, over multiple configurations, will be run.\n";
+           << " *If no arguments at all are specified, the full selection of benchmarks, over multiple configurations, will be run.*\n";
  exit(0);
 }
 
@@ -248,15 +267,18 @@ static BenchmarkConfig get_single_benchmark_config(uint64_t s, uint64_t b, uint3
 
 void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
   struct option long_options[] = {
-    { "help",     no_argument,        nullptr, 'h' },
-    { "full",     no_argument,        nullptr, 0 },
-    { "file",     required_argument,  nullptr, 0 },
-    { "baseline", no_argument,        nullptr, 0 },
-    { "cm256",    no_argument,        nullptr, 0 },
-    { "isal",     no_argument,        nullptr, 0 },
-    { "leopard",  no_argument,        nullptr, 0 },
-    { "wirehair", no_argument,        nullptr, 0 },
-    { nullptr,    0,                  nullptr, 0 }
+    { "help",             no_argument,        nullptr, 'h'  },
+    { "full",             no_argument,        nullptr,  0   },
+    { "file",             required_argument,  nullptr,  0   },
+    { "baseline",         no_argument,        nullptr,  0   },
+    { "baseline-scalar",  no_argument,        nullptr,  0   },
+    { "baseline-avx",     no_argument,        nullptr,  0   },
+    { "baseline-avx2",    no_argument,        nullptr,  0   },
+    { "cm256",            no_argument,        nullptr,  0   },
+    { "isal",             no_argument,        nullptr,  0   },
+    { "leopard",          no_argument,        nullptr,  0   },
+    { "wirehair",         no_argument,        nullptr,  0   },
+    { nullptr,            0,                  nullptr,  0   }
   };
 
   uint64_t s = FIXED_BUFFFER_SIZE;
@@ -305,8 +327,10 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     }
   }
 
-  if (!full && selected_benchmarks.empty()) {
-    for (const auto& [name, func] : available_benchmarks) selected_benchmarks.insert(name);
+  if (selected_benchmarks.empty()) {
+    for (const auto& [name, func] : available_benchmarks) {
+      if (name != "baseline") selected_benchmarks.insert(name);
+    }
   }
 
   if (full) {
@@ -317,31 +341,12 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
 }
 
 static void register_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgressReporter *console_reporter) {
-  if (configs.size() == 1) { // Individual run => don't write to file
-    auto config = configs[0];
-    config.progress_reporter = nullptr;
-
-    for (const auto& [name, func] : available_benchmarks) {
-      if (selected_benchmarks.contains(name)) {
-        benchmark::RegisterBenchmark(name.c_str(), func, config)->UseManualTime()->Iterations(config.num_iterations);
-      }
-    }
-    return;
-  }
-
-  // Full suite
-  for (auto& config : configs) {
+  for (auto& config: configs) {
     config.progress_reporter = console_reporter;
-    for (auto& [name, func] : {
-      BMTuple("Baseline (Scalar)", BM_BaselineScalar),
-      BMTuple("Baseline (AVX)", BM_BaselineAVX),
-      BMTuple("Baseline (AVX2)", BM_BaselineAVX2),
-      BMTuple("CM256", BM_CM256),
-      BMTuple("ISA-L", BM_ISAL),
-      BMTuple("Leopard", BM_Leopard),
-      BMTuple("Wirehair", BM_Wirehair)
-    }) {
-      benchmark::RegisterBenchmark(name, func, config)->UseManualTime()->Iterations(config.num_iterations);
+    for (auto& inp_name : selected_benchmarks) {
+      auto bm_name = benchmark_names.at(inp_name);
+      auto bm_func = available_benchmarks.at(inp_name);
+      benchmark::RegisterBenchmark(bm_name, bm_func, config)->UseManualTime()->Iterations(config.num_iterations);
     }
   }
 }
