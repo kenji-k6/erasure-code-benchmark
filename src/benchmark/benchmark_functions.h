@@ -20,6 +20,4 @@ void BM_ISAL(benchmark::State& state, const BenchmarkConfig& config);
 void BM_Leopard(benchmark::State& state, const BenchmarkConfig& config);
 void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config);
 
-constexpr uint32_t NUM_FULL_BENCHMARKS = 7;
-
 #endif // BENCHMARK_FUNCTIONS_H

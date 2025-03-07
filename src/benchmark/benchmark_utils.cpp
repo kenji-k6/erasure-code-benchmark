@@ -14,6 +14,8 @@
 // Global variable definitions
 constexpr const char* OUTPUT_FILE_DIR = "../results/raw/";
 std::string output_file_name = "benchmark_results.csv";
+bool FULL_BENCHMARK = false;
+bool OVERWRITE_FILE = true;
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
@@ -43,16 +45,12 @@ static void usage() {
            << "  -h | --help       Help\n"
            << "  -i <num>          Number of benchmark iterations (default 10)\n\n"
 
-           << "  --full            Run the full benchmark config suite, (only options -i, -f \n"
-           << "                    and the specified benchmarks are considered)\n"
-           << "  --file <name>     Name of the output file (default: " << output_file_name << ")\n\n" 
-
-           << " The following flags are used to specify the parameters if --full was not specified.\n"
-           << " Nothing will be written to file.\n"
-           << "  -s <size>         Total size of original data in bytes (default: " << FIXED_BUFFFER_SIZE << "B)\n"
-           << "  -b <size>         Size of each block in bytes (default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << "B)\n" 
-           << "  -l <num>          Number of lost blocks (default: " << FIXED_NUM_LOST_BLOCKS << ")\n"
-           << "  -r <ratio>        Redundancy ratio (#recovery blocks / #original blocks) (default: " << FIXED_PARITY_RATIO << "\n\n"
+           << "  --full            Run the full benchmark config suite, any specified benchmark config\n"
+           << "                    parameters will be ignored\n"
+           << "  --file <name>     Name of the output file (default: " << output_file_name << ")\n"
+           << "                    Only used when --full is specified\n"
+           << "  --append          If set, the outputs will be appended to the file, if not set it will\n"
+           << "                    overwrite. Only used when --full is specified\n\n"
 
            << " The following flags are used to specify which benchmarks to run.\n"
            << "  --baseline        Run the baseline benchmark (automatically chooses between the Scalar,\n"
@@ -63,7 +61,16 @@ static void usage() {
            << "  --cm256           Run the CM256 benchmark\n"
            << "  --isal            Run the ISA-L benchmark\n"
            << "  --leopard         Run the Leopard benchmark\n"
-           << "  --wirehair        Run the Wirehair benchmark\n"
+           << "  --wirehair        Run the Wirehair benchmark\n\n"
+
+           << " The following flags are used to specify the parameters if --full was not specified.\n"
+           << " *Nothing will be written to file.*\n"
+           << "  -s <size>         Total size of original data in bytes (default: " << FIXED_BUFFFER_SIZE << "B)\n"
+           << "  -b <size>         Size of each block in bytes (default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << "B)\n" 
+           << "  -l <num>          Number of lost blocks (default: " << FIXED_NUM_LOST_BLOCKS << ")\n"
+           << "  -r <ratio>        Redundancy ratio (#recovery blocks / #original blocks) (default: " << FIXED_PARITY_RATIO << "\n\n"
+
+
            << " *If no arguments at all are specified, the full selection of benchmarks, over multiple configurations, will be run.*\n";
  exit(0);
 }
@@ -270,6 +277,7 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     { "help",             no_argument,        nullptr, 'h'  },
     { "full",             no_argument,        nullptr,  0   },
     { "file",             required_argument,  nullptr,  0   },
+    { "append",           no_argument,        nullptr,  0   },
     { "baseline",         no_argument,        nullptr,  0   },
     { "baseline-scalar",  no_argument,        nullptr,  0   },
     { "baseline-avx",     no_argument,        nullptr,  0   },
@@ -286,7 +294,6 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
   uint32_t l = FIXED_NUM_LOST_BLOCKS;
   double r = FIXED_PARITY_RATIO;
   int i = 10;
-  bool full = false;
 
   int c;
   int option_index = 0;
@@ -313,10 +320,13 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
       case 0:
         if (long_options[option_index].name) {
           if (std::string(long_options[option_index].name) == "full") {
-            full = true;
+            FULL_BENCHMARK = true;
           } else if (std::string(long_options[option_index].name) == "file") {
             output_file_name = std::string(optarg);
-          } else {
+          } else if (std::string(long_options[option_index].name) == "append") {
+            OVERWRITE_FILE = false;
+          }
+          else {
             selected_benchmarks.insert(long_options[option_index].name);
           }
         }
@@ -333,7 +343,7 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     }
   }
 
-  if (full) {
+  if (FULL_BENCHMARK) {
     get_full_benchmark_configs(i, configs, lost_block_idxs);
   } else {
     configs.push_back(get_single_benchmark_config(s, b, l, r, i, lost_block_idxs));
@@ -360,12 +370,12 @@ void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
   int argc = 2;
   char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
 
-  if (configs.size() == 1) { // Individual run
-    argc = 1;
-  } else {
-    int tot_num_iterations = configs[0].num_iterations * configs.size() * NUM_FULL_BENCHMARKS;
+  if (FULL_BENCHMARK) { // Full suite
+    int tot_num_iterations = configs[0].num_iterations * configs.size() * selected_benchmarks.size();
     console_reporter = std::make_unique<BenchmarkProgressReporter>(tot_num_iterations);
-    csv_reporter = std::make_unique<BenchmarkCSVReporter>(OUTPUT_FILE_DIR + output_file_name, true);
+    csv_reporter = std::make_unique<BenchmarkCSVReporter>(OUTPUT_FILE_DIR + output_file_name, OVERWRITE_FILE);
+  } else { // Individual run
+    argc = 1;
   }
 
   register_benchmarks(configs, console_reporter.get());
