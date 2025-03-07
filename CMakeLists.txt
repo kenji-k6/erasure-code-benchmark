@@ -24,9 +24,9 @@ set (SOURCES
 
   src/utils/utils.cpp
 
-  src/baseline/xorbaseline.cpp
+  src/baseline/xorec.cpp
 
-  src/algorithms/baseline_benchmark.cpp
+  src/algorithms/xorec_benchmark.cpp
   src/algorithms/cm256_benchmark.cpp
   src/algorithms/isal_benchmark.cpp
   src/algorithms/leopard_benchmark.cpp

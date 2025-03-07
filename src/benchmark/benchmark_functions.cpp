@@ -15,15 +15,15 @@ void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XORECBenchmark>(state, config);
 }
 
-void BM_XORECScalar(benchmark::State& state, const BenchmarkConfig& config) {
+void BM_XOREC_Scalar(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XORECScalarBenchmark>(state, config);
 }
 
-void BM_XORECAVX(benchmark::State& state, const BenchmarkConfig& config) {
+void BM_XOREC_AVX(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XORECAVXBenchmark>(state, config);
 }
 
-void BM_XORECAVX2(benchmark::State& state, const BenchmarkConfig& config) {
+void BM_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XORECAVX2Benchmark>(state, config);
 }
 
