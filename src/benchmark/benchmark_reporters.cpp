@@ -89,4 +89,18 @@ BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs) : bar_(num_ru
 void BenchmarkProgressReporter::update_bar() { bar_.update(); }
 BenchmarkProgressReporter::~BenchmarkProgressReporter() {}
 void BenchmarkProgressReporter::ReportRuns(const std::vector<Run>& runs) { return; }
-bool BenchmarkProgressReporter::ReportContext(const Context& _) { return true; }
+bool BenchmarkProgressReporter::ReportContext(const Context& _) {
+  #if defined(__GNUC__)
+      std::cout << "Compiler: GCC\n";
+      std::cout << "Version: " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << "\n";
+  #elif defined(__clang__)
+      std::cout << "Compiler: Clang\n";
+      std::cout << "Version: " << __clang_major__ << "." << __clang_minor__ << "." << __clang_patchlevel__ << "\n";
+  #elif defined(__INTEL_COMPILER)
+      std::cout << "Compiler: Intel Compiler\n";
+      std::cout << "Version: " << __INTEL_COMPILER << "\n";
+  #else
+      std::cout << "Unknown Compiler\n";
+  #endif
+  return true; 
+}
