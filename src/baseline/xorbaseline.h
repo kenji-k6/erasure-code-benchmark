@@ -117,7 +117,7 @@ static void inline XOR_xor_blocks_avx2(void * XOR_RESTRICT dest, const void * XO
     XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
     const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
 
-    while (bytes >= 128) {
+    for (; bytes >= 128; bytes -= 128, dest256 += 4, src256 += 4) {
       XOR_AVX2 x0 = _mm256_xor_si256(_mm256_loadu_si256(dest256), _mm256_loadu_si256(src256));
       XOR_AVX2 x1 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 1), _mm256_loadu_si256(src256 + 1));
       XOR_AVX2 x2 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 2), _mm256_loadu_si256(src256 + 2));
@@ -126,8 +126,6 @@ static void inline XOR_xor_blocks_avx2(void * XOR_RESTRICT dest, const void * XO
       _mm256_storeu_si256(dest256 + 1, x1);
       _mm256_storeu_si256(dest256 + 2, x2);
       _mm256_storeu_si256(dest256 + 3, x3);
-      dest256 += 4, src256 += 4;
-      bytes -= 128;
     }
 
     if (bytes > 0) {
@@ -147,7 +145,7 @@ static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR
     XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
     const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
 
-    while (bytes >= 64) {
+    for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
       XOR_AVX x0 = _mm_xor_si128(_mm_loadu_si128(dest128), _mm_loadu_si128(src128));
       XOR_AVX x1 = _mm_xor_si128(_mm_loadu_si128(dest128 + 1), _mm_loadu_si128(src128 + 1));
       XOR_AVX x2 = _mm_xor_si128(_mm_loadu_si128(dest128 + 2), _mm_loadu_si128(src128 + 2));
@@ -156,8 +154,6 @@ static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR
       _mm_storeu_si128(dest128 + 1, x1);
       _mm_storeu_si128(dest128 + 2, x2);
       _mm_storeu_si128(dest128 + 3, x3);
-      dest128 += 4, src128 += 4;
-      bytes -= 64;
     }
   #else
     std::cerr << "AVX not supported\n";
@@ -168,14 +164,12 @@ static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR
 static void inline XOR_xor_blocks_scalar(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
   uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
   const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
-
-  while (bytes >= 32) {
+  #pragma aligned
+  for (; bytes >= 32; bytes -= 32, dest64 += 4, src64 += 4) {
     *dest64 ^= *src64;
     *(dest64 + 1) ^= *(src64 + 1);
     *(dest64 + 2) ^= *(src64 + 2);
     *(dest64 + 3) ^= *(src64 + 3);
-    dest64 += 4, src64 += 4;
-    bytes -= 32;
   }
 }
 
@@ -184,13 +178,11 @@ static void inline XOR_xor_blocks_scalar_no_opt(void * XOR_RESTRICT dest, const 
   const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
 
   #pragma novector
-  while (bytes >= 32) {
+  for (; bytes >= 32; bytes -= 32, dest64 += 4, src64 += 4) {
     *dest64 ^= *src64;
     *(dest64 + 1) ^= *(src64 + 1);
     *(dest64 + 2) ^= *(src64 + 2);
     *(dest64 + 3) ^= *(src64 + 3);
-    dest64 += 4, src64 += 4;
-    bytes -= 32;
   }
 }
 
@@ -200,13 +192,11 @@ static void inline XOR_copy_blocks_avx2(void * XOR_RESTRICT dest, const void * X
     XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
     const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
 
-    while (bytes >= 128) {
+    for (; bytes >= 128; bytes -= 128, dest256 += 4, src256 += 4) {
       _mm256_storeu_si256(dest256, _mm256_loadu_si256(src256));
       _mm256_storeu_si256(dest256 + 1, _mm256_loadu_si256(src256 + 1));
       _mm256_storeu_si256(dest256 + 2, _mm256_loadu_si256(src256 + 2));
       _mm256_storeu_si256(dest256 + 3, _mm256_loadu_si256(src256 + 3));
-      dest256 += 4, src256 += 4;
-      bytes -= 128;
     }
 
     if (bytes > 0) {
@@ -224,13 +214,11 @@ static void inline XOR_copy_blocks_avx(void * XOR_RESTRICT dest, const void * XO
     XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
     const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
 
-    while (bytes >= 64) {
+    for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
       _mm_storeu_si128(dest128, _mm_loadu_si128(src128));
       _mm_storeu_si128(dest128 + 1, _mm_loadu_si128(src128 + 1));
       _mm_storeu_si128(dest128 + 2, _mm_loadu_si128(src128 + 2));
       _mm_storeu_si128(dest128 + 3, _mm_loadu_si128(src128 + 3));
-      dest128 += 4, src128 += 4;
-      bytes -= 64;
     }
   #else
     std::cerr << "AVX2 not supported\n";
