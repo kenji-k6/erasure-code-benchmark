@@ -2,12 +2,10 @@ import os
 import argparse
 from webbrowser import get
 import cpuinfo
-import platform
 import psutil
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import math
 import numpy as np
 from typing import Dict, Any
 from collections import namedtuple
@@ -259,7 +257,7 @@ def write_scatter_plot(dfs: Dict[int, pd.DataFrame], x_ax: AxType, y_ax: AxType,
   plot_confidence_intervals(df, x_ax, y_ax)
 
   plt.tight_layout()
-  plt.savefig(output_file)
+  plt.savefig(output_file, dpi=300)
   plt.close()
 
 
