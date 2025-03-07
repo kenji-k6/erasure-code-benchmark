@@ -1,13 +1,14 @@
-#ifndef XORBASELINE_H
-#define XORBASELINE_H
+#ifndef XOR_EC_H
+#define XOR_EC_H
 
 #include <bitset>
 #include <cstdint>
 #include <cstring>
 #include <array>
+#include <iostream>
 
 /**
- * @file xorbaseline.h
+ * @file xor_ec.h
  * @brief Provides encoding and decoding functions for custom XOR-based erasure coding.
  * 
  * This header defines the XOR-based erasure encoding and decoding functions,
@@ -276,4 +277,4 @@ static void inline XOR_copy_blocks(
   #endif
 }
 
-#endif // XORBASELINE_H
+#endif // XOR_EC_H

@@ -1,10 +1,10 @@
 /**
- * @file xorbaseline.cpp
+ * @file xor_ec.cpp
  * @brief Implements XOR-based erasure encoding and decoding functions.
  */
 
 
-#include "xorbaseline.h"
+#include "xor_ec.h"
 #include <cstring>
 #include <iostream>
 
