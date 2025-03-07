@@ -1,4 +1,5 @@
 import os
+import argparse
 from webbrowser import get
 import cpuinfo
 import platform
@@ -14,7 +15,7 @@ from enum import Enum
 
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_FILE = os.path.join(SCRIPT_DIR, "../results/raw/benchmark_results_first_2000_it.csv")
+INPUT_FILE = "undefined"
 LIN_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/linear/")
 LOG_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/log/")
 
@@ -263,6 +264,12 @@ def write_scatter_plot(dfs: Dict[int, pd.DataFrame], x_ax: AxType, y_ax: AxType,
 
 
 if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description="Plot benchmark results")
+  parser.add_argument("--input-file", type=str, help="Input file name (in ../results/raw/ directory)", required=True)
+  args = parser.parse_args()
+  INPUT_FILE = os.path.join(SCRIPT_DIR, f"../results/raw/{args.input_file}")
+
+
   ensure_output_directories()
   df = pd.read_csv(INPUT_FILE)
 
@@ -270,6 +277,8 @@ if __name__ == "__main__":
   df["name"] = df["name"].str.split("/", n=1).str[0]
   df = df[df["err_msg"].isna()]
 
+  # Sort by name
+  df.sort_values(by="name", ascending=True, inplace=True)
 
   # Compute additional columns 
   df["encode_time_ms"] = df["encode_time_ns"] / 1e6
