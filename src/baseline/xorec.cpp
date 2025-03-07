@@ -1,10 +1,10 @@
 /**
- * @file xor_ec.cpp
+ * @file xorec.cpp
  * @brief Implements XOR-based erasure encoding and decoding functions.
  */
 
 
-#include "xor_ec.h"
+#include "xorec.h"
 #include <cstring>
 #include <iostream>
 
