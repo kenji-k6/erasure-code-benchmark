@@ -19,25 +19,25 @@ bool OVERWRITE_FILE = true;
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
-  { "baseline",         BM_Baseline       },
-  { "baseline-scalar",  BM_BaselineScalar },
-  { "baseline-avx",     BM_BaselineAVX    },
-  { "baseline-avx2",    BM_BaselineAVX2   },
+  { "xor-ec",           BM_XOREC       },
+  { "xor-ec-scalar",  BM_XOREC_Scalar },
+  { "xor-ec-avx",     BM_XOREC_AVX    },
+  { "xor-ec-avx2",    BM_XOREC_AVX2   },
   { "cm256",            BM_CM256          },
-  { "isal",             BM_ISAL           },
+  { "isa-l",            BM_ISAL           },
   { "leopard",          BM_Leopard        },
   { "wirehair",         BM_Wirehair       }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
-  { "baseline",               "Baseline (Auto)"                           },
-  { "baseline-scalar",        "Baseline (Scalar — no SIMD optimization)"  },
-  { "baseline-avx",           "Baseline (AVX)"                            },
-  { "baseline-avx2",          "Baseline (AVX2)"                           },
-  { "cm256",                  "CM256"                                     },
-  { "isal",                   "ISA-L"                                     },
-  { "leopard",                "Leopard"                                   },
-  { "wirehair",               "Wirehair"                                  }
+  { "xor-ec",               "XOR-EC (Auto)"   },
+  { "xor-ec-scalar",        "XOR-EC (Scalar)" },
+  { "xor-ec-avx",           "XOR-EC (AVX)"    },
+  { "xor-ec-avx2",          "XOR-EC (AVX2)"   },
+  { "cm256",                  "CM256"           },
+  { "isa-l",                   "ISA-L"           },
+  { "leopard",                "Leopard"         },
+  { "wirehair",               "Wirehair"        }
 };
 
 static void usage() {
@@ -52,15 +52,15 @@ static void usage() {
             << "                                any specifed benchmark config parameters will be ignored\n\n"
 
             << " Algorithm Selection:\n"
-            << "      --baseline                run the baseline benchmark (automatically chooses between\n"
+            << "      --xor-ec                run the XOR-EC benchmark (automatically chooses between\n"
             << "                                the Scalar, AVX, and AVX2 implementations according\n"
             << "                                to the system specification)\n"
-            << "      --baseline-scalar         run the scalar baseline implementation\n"
+            << "      --xor-ec-scalar         run the scalar XOR-EC implementation\n"
             << "                                (SIMD optimizations disabled)\n"
-            << "      --baseline-avx            run the AVX baseline implementation\n"
-            << "      --baseline-avx2           run the AVX2 baseline implementation\n"
+            << "      --xor-ec-avx            run the AVX XOR-EC implementation\n"
+            << "      --xor-ec-avx2           run the AVX2 XOR-EC implementation\n"
             << "      --cm256                   run the CM256 benchmark\n"
-            << "      --isal                    run the ISA-L benchmark\n"
+            << "      --isa-l                    run the ISA-L benchmark\n"
             << "      --leopard                 run the Leopard benchmark\n"
             << "      --wirehair                run the Wirehair benchmark\n"
             << " *If no algorithm is specified, all algorithms will be run.*\n\n"
@@ -114,13 +114,13 @@ static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint
     exit(0);
   }
 
-  // Baseline checks
-  if (selected_benchmarks.contains("baseline") ||
-      selected_benchmarks.contains("baseline-scalar") ||
-      selected_benchmarks.contains("baseline-avx") ||
-      selected_benchmarks.contains("baseline-avx2")) {
-    if (b % ECLimits::BASELINE_BLOCK_ALIGNMENT != 0) {
-      std::cerr << "Error: Block size must be a multiple of " << ECLimits::BASELINE_BLOCK_ALIGNMENT << " for Baseline.\n";
+  // XOR-EC checks
+  if (selected_benchmarks.contains("xor-ec") ||
+      selected_benchmarks.contains("xor-ec-scalar") ||
+      selected_benchmarks.contains("xor-ec-avx") ||
+      selected_benchmarks.contains("xor-ec-avx2")) {
+    if (b % ECLimits::XOREC_BLOCK_ALIGNMENT != 0) {
+      std::cerr << "Error: Block size must be a multiple of " << ECLimits::XOREC_BLOCK_ALIGNMENT << " for XOR-EC.\n";
       exit(0);
     }
   }
@@ -136,7 +136,7 @@ static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint
   }
 
   // ISA-L Checks
-  if (selected_benchmarks.contains("isal")) {
+  if (selected_benchmarks.contains("isa-l")) {
     if (num_orig_blocks + num_rec_blocks > ECLimits::ISAL_MAX_TOT_BLOCKS) {
       std::cerr << "Error: Total number of blocks exceeds the maximum allowed by ISA-L.\n"
                 << "Condition: #(original blocks) + #(recovery blocks) <= " << ECLimits::ISAL_MAX_TOT_BLOCKS << "\n"
@@ -282,7 +282,7 @@ static BenchmarkConfig get_single_benchmark_config(uint64_t s, uint64_t b, uint3
 }
 
 static void inline add_benchmark(std::string name) {
-  if (name == "baseline-avx") {
+  if (name == "xor-ec-avx") {
     #if defined(__AVX__)
       selected_benchmarks.insert(name);
     #else
@@ -291,7 +291,7 @@ static void inline add_benchmark(std::string name) {
     #endif
   }
 
-  if (name == "baseline-avx2") {
+  if (name == "xor-ec-avx2") {
     #if defined(__AVX2__)
       selected_benchmarks.insert(name);
     #else
@@ -309,12 +309,12 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     { "full",                   no_argument,        nullptr,  0   },
     { "file",                   required_argument,  nullptr,  0   },
     { "append",                 no_argument,        nullptr,  0   },
-    { "baseline",               no_argument,        nullptr,  0   },
-    { "baseline-scalar",        no_argument,        nullptr,  0   },
-    { "baseline-avx",           no_argument,        nullptr,  0   },
-    { "baseline-avx2",          no_argument,        nullptr,  0   },
+    { "xor-ec",               no_argument,        nullptr,  0   },
+    { "xor-ec-scalar",        no_argument,        nullptr,  0   },
+    { "xor-ec-avx",           no_argument,        nullptr,  0   },
+    { "xor-ec-avx2",          no_argument,        nullptr,  0   },
     { "cm256",                  no_argument,        nullptr,  0   },
-    { "isal",                   no_argument,        nullptr,  0   },
+    { "isa-l",                   no_argument,        nullptr,  0   },
     { "leopard",                no_argument,        nullptr,  0   },
     { "wirehair",               no_argument,        nullptr,  0   },
     { "size",                   no_argument,        nullptr, 's'  },
@@ -374,7 +374,7 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
 
   if (selected_benchmarks.empty()) {
     for (const auto& [name, _] : available_benchmarks) {
-      if (name != "baseline") add_benchmark(name);
+      if (name != "xor-ec") add_benchmark(name);
     }
   }
 

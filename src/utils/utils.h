@@ -13,7 +13,7 @@ constexpr size_t MIN_DATA_BLOCK_SIZE = 2;
 
 // Erasure Code (EC) constraints
 namespace ECLimits {
-  constexpr size_t BASELINE_BLOCK_ALIGNMENT = 64;
+  constexpr size_t XOREC_BLOCK_ALIGNMENT = 64;
 
   constexpr size_t CM256_MAX_TOT_BLOCKS = 256;
 
@@ -64,7 +64,7 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size);
 
 /**
  * @brief Selects k unique indices from range [0, maxIndex) to determine lost blocks.
- * @attention To properly benchmark CM256 and the Baseline, the lost blocks returned always make a recoverable set.
+ * @attention To properly benchmark CM256 and XOR-EC, the lost blocks returned always make a recoverable set.
  * @param num_recovery_blocks Number of recovery blocks.
  * @param num_lost_blocks Number of blocks to select.
  * @param max_index Upper limit of the index range.

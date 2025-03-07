@@ -10,10 +10,10 @@
 #include <benchmark_config.h>
 
 /// Benchmark function declarations
-void BM_Baseline(benchmark::State& state, const BenchmarkConfig& config);
-void BM_BaselineScalar(benchmark::State& state, const BenchmarkConfig& config);
-void BM_BaselineAVX(benchmark::State& state, const BenchmarkConfig& config);
-void BM_BaselineAVX2(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_Scalar(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_AVX(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config);
 void BM_CM256(benchmark::State& state, const BenchmarkConfig& config);
 void BM_ISAL(benchmark::State& state, const BenchmarkConfig& config);
 void BM_Leopard(benchmark::State& state, const BenchmarkConfig& config);
