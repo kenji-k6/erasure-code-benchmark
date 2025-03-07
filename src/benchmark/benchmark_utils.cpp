@@ -272,9 +272,31 @@ static BenchmarkConfig get_single_benchmark_config(uint64_t s, uint64_t b, uint3
   return config;
 }
 
+static void inline add_benchmark(std::string name) {
+  if (name == "baseline-avx") {
+    #if defined(__AVX__)
+      selected_benchmarks.insert(name);
+    #else
+      std::cerr << "Error: AVX is not supported on this system.\n";
+      exit(0);
+    #endif
+  }
+
+  if (name == "baseline-avx2") {
+    #if defined(__AVX2__)
+      selected_benchmarks.insert(name);
+    #else
+      std::cerr << "Error: AVX2 is not supported on this system.\n";
+      exit(0);
+    #endif
+  }
+  selected_benchmarks.insert(name);
+}
+
 void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
   struct option long_options[] = {
     { "help",             no_argument,        nullptr, 'h'  },
+    { "iterations",       required_argument,  nullptr, 'i'  },
     { "full",             no_argument,        nullptr,  0   },
     { "file",             required_argument,  nullptr,  0   },
     { "append",           no_argument,        nullptr,  0   },
@@ -286,6 +308,10 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     { "isal",             no_argument,        nullptr,  0   },
     { "leopard",          no_argument,        nullptr,  0   },
     { "wirehair",         no_argument,        nullptr,  0   },
+    { "size",             no_argument,        nullptr, 's'  },
+    { "block-size",       no_argument,        nullptr, 'b'  },
+    { "lost_blocks",      no_argument,        nullptr, 'l'  },
+    { "redundancy",       no_argument,        nullptr, 'r'  },
     { nullptr,            0,                  nullptr,  0   }
   };
 
@@ -327,7 +353,7 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
             OVERWRITE_FILE = false;
           }
           else {
-            selected_benchmarks.insert(long_options[option_index].name);
+            add_benchmark(long_options[option_index].name);
           }
         }
         break;
@@ -338,8 +364,8 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
   }
 
   if (selected_benchmarks.empty()) {
-    for (const auto& [name, func] : available_benchmarks) {
-      if (name != "baseline") selected_benchmarks.insert(name);
+    for (const auto& [name, _] : available_benchmarks) {
+      if (name != "baseline") add_benchmark(name);
     }
   }
 
