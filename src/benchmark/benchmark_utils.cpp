@@ -308,25 +308,25 @@ static void inline add_benchmark(std::string name) {
 
 void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
   struct option long_options[] = {
-    { "help",             no_argument,        nullptr, 'h'  },
-    { "iterations",       required_argument,  nullptr, 'i'  },
-    { "full",             no_argument,        nullptr,  0   },
-    { "file",             required_argument,  nullptr,  0   },
-    { "append",           no_argument,        nullptr,  0   },
-    { "baseline",         no_argument,        nullptr,  0   },
-    { "baseline-scalar",  no_argument,        nullptr,  0   },
-    { "baseline-noopt",   no_argument,        nullptr,  0   },
-    { "baseline-avx",     no_argument,        nullptr,  0   },
-    { "baseline-avx2",    no_argument,        nullptr,  0   },
-    { "cm256",            no_argument,        nullptr,  0   },
-    { "isal",             no_argument,        nullptr,  0   },
-    { "leopard",          no_argument,        nullptr,  0   },
-    { "wirehair",         no_argument,        nullptr,  0   },
-    { "size",             no_argument,        nullptr, 's'  },
-    { "block-size",       no_argument,        nullptr, 'b'  },
-    { "lost-blocks",      no_argument,        nullptr, 'l'  },
-    { "redundancy",       no_argument,        nullptr, 'r'  },
-    { nullptr,            0,                  nullptr,  0   }
+    { "help",                   no_argument,        nullptr, 'h'  },
+    { "iterations",             required_argument,  nullptr, 'i'  },
+    { "full",                   no_argument,        nullptr,  0   },
+    { "file",                   required_argument,  nullptr,  0   },
+    { "append",                 no_argument,        nullptr,  0   },
+    { "baseline",               no_argument,        nullptr,  0   },
+    { "baseline-scalar",        no_argument,        nullptr,  0   },
+    { "baseline-scalar-noopt",  no_argument,        nullptr,  0   },
+    { "baseline-avx",           no_argument,        nullptr,  0   },
+    { "baseline-avx2",          no_argument,        nullptr,  0   },
+    { "cm256",                  no_argument,        nullptr,  0   },
+    { "isal",                   no_argument,        nullptr,  0   },
+    { "leopard",                no_argument,        nullptr,  0   },
+    { "wirehair",               no_argument,        nullptr,  0   },
+    { "size",                   no_argument,        nullptr, 's'  },
+    { "block-size",             no_argument,        nullptr, 'b'  },
+    { "lost-blocks",            no_argument,        nullptr, 'l'  },
+    { "redundancy",             no_argument,        nullptr, 'r'  },
+    { nullptr,                  0,                  nullptr,  0   }
   };
 
   uint64_t s = FIXED_BUFFFER_SIZE;
