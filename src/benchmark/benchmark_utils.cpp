@@ -41,38 +41,43 @@ const std::unordered_map<std::string, std::string> benchmark_names = {
 };
 
 static void usage() {
- std::cerr << "Usage: ec-benchmark [options]\n"
-           << "  -h | --help       Help\n"
-           << "  -i <num>          Number of benchmark iterations (default 10)\n\n"
+  std::cerr << "Usage: ec-benchmark [options]\n\n"
 
-           << "  --full            Run the full benchmark config suite, any specified benchmark config\n"
-           << "                    parameters will be ignored\n"
-           << "  --file <name>     Name of the output file (default: " << output_file_name << ")\n"
-           << "                    Only used when --full is specified\n"
-           << "  --append          If set, the outputs will be appended to the file, if not set it will\n"
-           << "                    overwrite. Only used when --full is specified\n\n"
+            << " Help Option:\n"
+            << "  -h, --help                show this help message\n\n"
+            
+            << " Benchmark Options:\n"
+            << "  -i, --iterations=<num>    number of benchmark iterations (default 10)\n"
+            << "      --full                run the full benchmark suite, write results to CSV,\n"
+            << "                            any specifed benchmark config parameters will be ignored\n\n"
 
-           << " The following flags are used to specify which benchmarks to run.\n"
-           << "  --baseline        Run the baseline benchmark (automatically chooses between the Scalar,\n"
-           << "                    AVX, and AVX2 implementations according to system specification).\n"
-           << "  --baseline-scalar Run the scalar baseline implementation\n"
-           << "  --baseline-avx    Run the AVX baseline implementation\n"
-           << "  --baseline-avx2   Run the AVX2 baseline implementation\n"
-           << "  --cm256           Run the CM256 benchmark\n"
-           << "  --isal            Run the ISA-L benchmark\n"
-           << "  --leopard         Run the Leopard benchmark\n"
-           << "  --wirehair        Run the Wirehair benchmark\n\n"
+            << " Algorithm Selection:\n"
+            << "      --baseline            run the baseline benchmark (automatically chooses between\n"
+            << "                            the Scalar, AVX, and AVX2 implementations according\n"
+            << "                            to the system specification)\n"
+            << "      --baseline-scalar     run the scalar baseline implementation\n"
+            << "      --baseline-avx        run the AVX baseline implementation\n"
+            << "      --baseline-avx2       run the AVX2 baseline implementation\n"
+            << "      --cm256               run the CM256 benchmark\n"
+            << "      --isal                run the ISA-L benchmark\n"
+            << "      --leopard             run the Leopard benchmark\n"
+            << "      --wirehair            run the Wirehair benchmark\n"
+            << " *If no algorithm is specified, all algorithms will be run.*\n\n"
 
-           << " The following flags are used to specify the parameters if --full was not specified.\n"
-           << " *Nothing will be written to file.*\n"
-           << "  -s <size>         Total size of original data in bytes (default: " << FIXED_BUFFFER_SIZE << "B)\n"
-           << "  -b <size>         Size of each block in bytes (default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << "B)\n" 
-           << "  -l <num>          Number of lost blocks (default: " << FIXED_NUM_LOST_BLOCKS << ")\n"
-           << "  -r <ratio>        Redundancy ratio (#recovery blocks / #original blocks) (default: " << FIXED_PARITY_RATIO << "\n\n"
+            << " Full Suite Options:\n"
+            << "      --file=<file_name>    specify output file name\n"
+            << "      --append              append results to the output file (default: overwrite)\n\n"
 
-
-           << " *If no arguments at all are specified, the full selection of benchmarks, over multiple configurations, will be run.*\n";
- exit(0);
+            << " Single Run Options:\n"
+            << "  -s, --size=<size>         total size of original data in bytes\n"
+            << "                            default: " << FIXED_BUFFFER_SIZE << " B\n"
+            << "  -b, --block-size=<size>   size of each block in bytes\n"
+            << "                            default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << " B\n"
+            << "  -l, --lost_blocks=<num>   number of lost blocks\n"
+            << "                            default: " << FIXED_NUM_LOST_BLOCKS << '\n'
+            << "  -r, --redundancy=<ratio>  redundancy ratio (#recovery blocks / #original blocks)\n"
+            << "                            default= " << FIXED_PARITY_RATIO << "\n\n";
+  exit(0);
 }
 
 static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint32_t num_orig_blocks, uint32_t num_rec_blocks) {
@@ -310,7 +315,7 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     { "wirehair",         no_argument,        nullptr,  0   },
     { "size",             no_argument,        nullptr, 's'  },
     { "block-size",       no_argument,        nullptr, 'b'  },
-    { "lost_blocks",      no_argument,        nullptr, 'l'  },
+    { "lost-blocks",      no_argument,        nullptr, 'l'  },
     { "redundancy",       no_argument,        nullptr, 'r'  },
     { nullptr,            0,                  nullptr,  0   }
   };

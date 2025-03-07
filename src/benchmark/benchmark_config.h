@@ -36,7 +36,7 @@ using BMTuple = std::tuple<std::string, BenchmarkFunction>;
 /// Constants for benchmark configurations (when running full benchmark)
 constexpr uint32_t FIXED_NUM_ORIGINAL_BLOCKS = 128;
 constexpr uint32_t FIXED_NUM_RECOVERY_BLOCKS = 4;
-constexpr uint64_t FIXED_BUFFFER_SIZE = 4194304; // 4 MiB
+constexpr uint64_t FIXED_BUFFFER_SIZE = 1048576; // 1 MiB
 constexpr double FIXED_PARITY_RATIO = 0.03125;
 constexpr uint64_t FIXED_NUM_LOST_BLOCKS = 1;
 const std::vector<uint64_t> VAR_BUFFER_SIZE = { 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144 };
