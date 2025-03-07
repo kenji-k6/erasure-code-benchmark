@@ -76,6 +76,15 @@ target_include_directories(ec-benchmark PRIVATE
   ${CMAKE_SOURCE_DIR}/libraries/isa-l/include
 )
 
+
+# CUDA Stuff
+set(CUDA_TOOLKIT_ROOT_DIR /apps/ault/spack/opt/spack/linux-centos8-zen2/gcc-10.2.0/cuda-11.4.0-udyaakpt7oztg7gnj764dhkhdf5ory5d)
+find_package(CUDA REQUIRED)
+
+# Include CUDA headers and libraries
+include_directories(${CUDA_INCLUDE_DIRS})
+link_directories(${CUDA_LIBRARY_DIRS})
+
 # Linking the Libraries
 target_link_libraries(ec-benchmark PRIVATE
   libleopard
@@ -84,5 +93,6 @@ target_link_libraries(ec-benchmark PRIVATE
   isal
   benchmark::benchmark
   OpenMP::OpenMP_CXX
+  ${CUDA_LIBRARIES}
 )
 
