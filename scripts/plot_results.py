@@ -1,13 +1,11 @@
 import os
 import argparse
-from webbrowser import get
 import cpuinfo
 import psutil
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from typing import Dict, Any
 from collections import namedtuple
 from enum import Enum
 
@@ -261,6 +259,7 @@ def write_scatter_plot(df: pd.DataFrame, x_ax: AxType, y_ax: AxType, y_scale: st
   plt.title(get_plot_title(df, plot_id, cpu_info), fontsize=12)
 
   plot_xticks(df, x_ax)
+
   plot_confidence_intervals(df, x_ax, y_ax)
 
   plt.tight_layout()
