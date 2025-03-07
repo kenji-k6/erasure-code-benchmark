@@ -42,19 +42,6 @@ public:
   int decode() noexcept override;
 };
 
-/**
- * @class XORECScalarNoOptBenchmark
- * @brief XOREC Benchmark implementation using scalar operations
- */
-class XORECScalarNoOptBenchmark : public XORECBenchmark {
-  public:
-    explicit XORECScalarNoOptBenchmark(const BenchmarkConfig& config) noexcept;
-    ~XORECScalarNoOptBenchmark() noexcept = default; 
-  
-    int encode() noexcept override;
-    int decode() noexcept override;
-  };
-
 
 /**
  * @class XORECAVXBenchmark

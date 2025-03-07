@@ -5,30 +5,26 @@
 
 #include "benchmark_functions.h"
 #include "benchmark_generic_runner.h"
-#include "baseline_benchmark.h"
+#include "xorec_benchmark.h"
 #include "cm256_benchmark.h"
 #include "isal_benchmark.h"
 #include "leopard_benchmark.h"
 #include "wirehair_benchmark.h"
 
-void BM_Baseline(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<BaselineBenchmark>(state, config);
+void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XORECBenchmark>(state, config);
 }
 
-void BM_BaselineScalar(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<BaselineScalarBenchmark>(state, config);
+void BM_XORECScalar(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XORECScalarBenchmark>(state, config);
 }
 
-void BM_BaselineScalarNoOpt(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<BaselineScalarNoOptBenchmark>(state, config);
+void BM_XORECAVX(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XORECAVXBenchmark>(state, config);
 }
 
-void BM_BaselineAVX(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<BaselineAVXBenchmark>(state, config);
-}
-
-void BM_BaselineAVX2(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<BaselineAVX2Benchmark>(state, config);
+void BM_XORECAVX2(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XORECAVX2Benchmark>(state, config);
 }
 
 void BM_CM256(benchmark::State& state, const BenchmarkConfig& config) {

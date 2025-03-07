@@ -88,16 +88,6 @@ int XORECScalarBenchmark::decode() noexcept {
   return 0;
 }
 
-XORECScalarNoOptBenchmark::XORECScalarNoOptBenchmark(const BenchmarkConfig& config) noexcept : XORECBenchmark(config) {}
-int XORECScalarNoOptBenchmark::encode() noexcept {
-  xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::ScalarNoOpt);
-  return 0;
-}
-int XORECScalarNoOptBenchmark::decode() noexcept {
-  xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_, XORVersion::ScalarNoOpt);
-  return 0;
-}
-
 XORECAVXBenchmark::XORECAVXBenchmark(const BenchmarkConfig& config) noexcept : XORECBenchmark(config) {}
 int XORECAVXBenchmark::encode() noexcept {
   xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::AVX);

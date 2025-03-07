@@ -68,9 +68,8 @@ enum class XORResult {
 enum class XORVersion {
   Auto = 0,
   Scalar = 1,
-  ScalarNoOpt = 2,
-  AVX = 3,
-  AVX2 = 4
+  AVX = 2,
+  AVX2 = 3
 };
 
 
@@ -164,6 +163,8 @@ static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR
   #endif
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("no-tree-vectorize")
 static void inline XOR_xor_blocks_scalar(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
   uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
   const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
@@ -175,22 +176,7 @@ static void inline XOR_xor_blocks_scalar(void * XOR_RESTRICT dest, const void * 
     *(dest64 + 3) ^= *(src64 + 3);
   }
 }
-
-#pragma GCC push_options
-#pragma GCC optimize ("no-tree-vectorize")
-static void inline XOR_xor_blocks_scalar_no_opt(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
-  uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
-  const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
-
-  for (; bytes >= 32; bytes -= 32, dest64 += 4, src64 += 4) {
-    *dest64 ^= *src64;
-    *(dest64 + 1) ^= *(src64 + 1);
-    *(dest64 + 2) ^= *(src64 + 2);
-    *(dest64 + 3) ^= *(src64 + 3);
-  }
-}
 #pragma GCC pop_options
-
 
 static void inline XOR_copy_blocks_avx2(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
   #if defined(TRY_XOR_AVX2)

@@ -19,21 +19,19 @@ bool OVERWRITE_FILE = true;
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
-  { "baseline",               BM_Baseline             },
-  { "baseline-scalar",        BM_BaselineScalar       },
-  { "baseline-scalar-noopt",  BM_BaselineScalarNoOpt  },
-  { "baseline-avx",           BM_BaselineAVX          },
-  { "baseline-avx2",          BM_BaselineAVX2         },
-  { "cm256",                  BM_CM256                },
-  { "isal",                   BM_ISAL                 },
-  { "leopard",                BM_Leopard              },
-  { "wirehair",               BM_Wirehair             }
+  { "baseline",         BM_Baseline       },
+  { "baseline-scalar",  BM_BaselineScalar },
+  { "baseline-avx",     BM_BaselineAVX    },
+  { "baseline-avx2",    BM_BaselineAVX2   },
+  { "cm256",            BM_CM256          },
+  { "isal",             BM_ISAL           },
+  { "leopard",          BM_Leopard        },
+  { "wirehair",         BM_Wirehair       }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
   { "baseline",               "Baseline (Auto)"                           },
-  { "baseline-scalar",        "Baseline (Scalar, SIMD Optimizations)"     },
-  { "baseline-scalar-noopt",  "Baseline (Scalar, no SIMD Optimizations)"  },
+  { "baseline-scalar",        "Baseline (Scalar — no SIMD optimization)"  },
   { "baseline-avx",           "Baseline (AVX)"                            },
   { "baseline-avx2",          "Baseline (AVX2)"                           },
   { "cm256",                  "CM256"                                     },
@@ -59,7 +57,6 @@ static void usage() {
             << "                                to the system specification)\n"
             << "      --baseline-scalar         run the scalar baseline implementation\n"
             << "                                (SIMD optimizations disabled)\n"
-            << "      --baseline-scalar-noopt   run the scalar baseline implementation\n"
             << "      --baseline-avx            run the AVX baseline implementation\n"
             << "      --baseline-avx2           run the AVX2 baseline implementation\n"
             << "      --cm256                   run the CM256 benchmark\n"
@@ -120,7 +117,6 @@ static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint
   // Baseline checks
   if (selected_benchmarks.contains("baseline") ||
       selected_benchmarks.contains("baseline-scalar") ||
-      selected_benchmarks.contains("baseline-scalar-noopt") ||
       selected_benchmarks.contains("baseline-avx") ||
       selected_benchmarks.contains("baseline-avx2")) {
     if (b % ECLimits::BASELINE_BLOCK_ALIGNMENT != 0) {
@@ -315,7 +311,6 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     { "append",                 no_argument,        nullptr,  0   },
     { "baseline",               no_argument,        nullptr,  0   },
     { "baseline-scalar",        no_argument,        nullptr,  0   },
-    { "baseline-scalar-noopt",  no_argument,        nullptr,  0   },
     { "baseline-avx",           no_argument,        nullptr,  0   },
     { "baseline-avx2",          no_argument,        nullptr,  0   },
     { "cm256",                  no_argument,        nullptr,  0   },
