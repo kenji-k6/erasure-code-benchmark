@@ -183,7 +183,7 @@ static void inline XOR_xor_blocks_scalar_no_opt(void * XOR_RESTRICT dest, const 
   uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
   const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
 
-  #pragma GCC novector pragma
+  #pragma novector
   while (bytes >= 32) {
     *dest64 ^= *src64;
     *(dest64 + 1) ^= *(src64 + 1);
