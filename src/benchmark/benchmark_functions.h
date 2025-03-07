@@ -11,8 +11,8 @@
 
 /// Benchmark function declarations
 void BM_Baseline(benchmark::State& state, const BenchmarkConfig& config);
-
 void BM_BaselineScalar(benchmark::State& state, const BenchmarkConfig& config);
+void BM_BaselineScalarNoOpt(benchmark::State& state, const BenchmarkConfig& config);
 void BM_BaselineAVX(benchmark::State& state, const BenchmarkConfig& config);
 void BM_BaselineAVX2(benchmark::State& state, const BenchmarkConfig& config);
 void BM_CM256(benchmark::State& state, const BenchmarkConfig& config);

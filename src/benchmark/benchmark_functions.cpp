@@ -19,6 +19,10 @@ void BM_BaselineScalar(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<BaselineScalarBenchmark>(state, config);
 }
 
+void BM_BaselineScalarNoOpt(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<BaselineScalarNoOptBenchmark>(state, config);
+}
+
 void BM_BaselineAVX(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<BaselineAVXBenchmark>(state, config);
 }
