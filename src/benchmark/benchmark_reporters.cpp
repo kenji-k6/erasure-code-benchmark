@@ -85,14 +85,14 @@ bool BenchmarkCSVReporter::ReportContext(const Context& _) { return true; }
 
 
 
-BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs) : bar_(num_runs, std::cout) { bar_.update(); }
+BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs) : bar_(num_runs, std::cout) { }
 void BenchmarkProgressReporter::update_bar() { bar_.update(); }
 BenchmarkProgressReporter::~BenchmarkProgressReporter() {}
 void BenchmarkProgressReporter::ReportRuns(const std::vector<Run>& runs) { return; }
 bool BenchmarkProgressReporter::ReportContext(const Context& _) {
   #if defined(__GNUC__)
       std::cout << "Compiler: GCC\n";
-      std::cout << "Version: " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << "\n";
+      std::cout << "Version: " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << "\n\n";
   #elif defined(__clang__)
       std::cout << "Compiler: Clang\n";
       std::cout << "Version: " << __clang_major__ << "." << __clang_minor__ << "." << __clang_patchlevel__ << "\n";
@@ -102,5 +102,6 @@ bool BenchmarkProgressReporter::ReportContext(const Context& _) {
   #else
       std::cout << "Unknown Compiler\n";
   #endif
+  bar_.update();
   return true; 
 }
