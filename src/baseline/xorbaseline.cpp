@@ -159,6 +159,9 @@ XORResult xor_decode(
         case XORVersion::Scalar:
           XOR_xor_blocks_scalar(recover_block, data_block, block_size);
           break;
+        case XORVersion::ScalarNoOpt:
+          XOR_xor_blocks_scalar_no_opt(recover_block, data_block, block_size);
+          break;
         case XORVersion::AVX:
           XOR_xor_blocks_avx(recover_block, data_block, block_size);
           break;

@@ -117,7 +117,6 @@ static void inline XOR_xor_blocks_avx2(void * XOR_RESTRICT dest, const void * XO
     XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
     const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
 
-    #pragma vector aligned
     #pragma GCC ivdep
     for (; bytes >= 128; bytes -= 128, dest256 += 4, src256 += 4) {
       XOR_AVX2 x0 = _mm256_xor_si256(_mm256_load_si256(dest256), _mm256_load_si256(src256));
@@ -147,7 +146,6 @@ static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR
     XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
     const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
 
-    #pragma vector aligned
     #pragma GCC ivdep
     for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
       XOR_AVX x0 = _mm_xor_si128(_mm_load_si128(dest128), _mm_load_si128(src128));
@@ -177,11 +175,12 @@ static void inline XOR_xor_blocks_scalar(void * XOR_RESTRICT dest, const void * 
   }
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("no-tree-vectorize")
 static void inline XOR_xor_blocks_scalar_no_opt(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
   uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
   const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
 
-  #pragma 
   for (; bytes >= 32; bytes -= 32, dest64 += 4, src64 += 4) {
     *dest64 ^= *src64;
     *(dest64 + 1) ^= *(src64 + 1);
@@ -189,6 +188,7 @@ static void inline XOR_xor_blocks_scalar_no_opt(void * XOR_RESTRICT dest, const 
     *(dest64 + 3) ^= *(src64 + 3);
   }
 }
+#pragma GCC pop_options
 
 
 static void inline XOR_copy_blocks_avx2(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
@@ -196,7 +196,6 @@ static void inline XOR_copy_blocks_avx2(void * XOR_RESTRICT dest, const void * X
     XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
     const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
 
-    #pragma vector aligned
     #pragma GCC ivdep
     for (; bytes >= 128; bytes -= 128, dest256 += 4, src256 += 4) {
       _mm256_store_si256(dest256, _mm256_load_si256(src256));
@@ -220,7 +219,6 @@ static void inline XOR_copy_blocks_avx(void * XOR_RESTRICT dest, const void * XO
     XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
     const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
 
-    #pragma vector aligned
     #pragma GCC ivdep
     for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
       _mm_store_si128(dest128, _mm_load_si128(src128));
