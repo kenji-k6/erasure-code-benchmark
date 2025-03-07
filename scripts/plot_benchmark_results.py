@@ -14,8 +14,10 @@ from enum import Enum
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_FILE = "undefined"
-LIN_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/linear/")
 LOG_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/log/")
+LIN_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/linear/")
+XOR_LOG_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/xor/log/")
+XOR_LIN_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "../results/processed/xor/linear/")
 
 # AVX XOR / AVX2 XOR max throughput
 AVX_XOR_CPI_XEON = 0.33
@@ -75,7 +77,7 @@ def get_plot_title(df: pd.DataFrame, plot_id: int, cpu_info: CPUInfo) -> str:
 
   return titles.get(plot_id, "ERROR: Invalid plot_id")
 
-def get_output_path(x_ax: AxType, y_ax: AxType, y_scale: str) -> str:
+def get_output_path(x_ax: AxType, y_ax: AxType, y_scale: str, xor_only: bool) -> str:
   """Generate the file name for the plot."""
   ax_map = {
     AxType.ENCODE_T: "encodetime",
@@ -89,8 +91,14 @@ def get_output_path(x_ax: AxType, y_ax: AxType, y_scale: str) -> str:
 
   x_part = ax_map[x_ax]
   y_part = ax_map[y_ax]
-  file_name = f"{x_part}_vs_{y_part}_{y_scale}.png"
-  output_dir = LOG_OUTPUT_DIR if (y_scale == "log") else LIN_OUTPUT_DIR
+
+  if xor_only:
+    file_name = f"{x_part}_vs_{y_part}_{y_scale}_xor.png"
+    output_dir = XOR_LOG_OUTPUT_DIR if (y_scale == "log") else XOR_LIN_OUTPUT_DIR
+  else:
+    file_name = f"{x_part}_vs_{y_part}_{y_scale}.png"
+    output_dir = LOG_OUTPUT_DIR if (y_scale == "log") else LIN_OUTPUT_DIR
+
   return os.path.join(output_dir, file_name)
 
 def get_col_name(ax: AxType) -> str:
@@ -226,11 +234,10 @@ def plot_avx_avx2_xor(df: pd.DataFrame, x_ax: AxType, y_ax: AxType, cpu_frequenc
   plt.plot(x_values, y_values_AVX2, label="AVX2 XOR", color=AVX2_COLOR, linestyle="--")
 
 
-def write_scatter_plot(dfs: Dict[int, pd.DataFrame], x_ax: AxType, y_ax: AxType, y_scale: str, plot_id: int) -> None:
+def write_scatter_plot(df: pd.DataFrame, x_ax: AxType, y_ax: AxType, y_scale: str, plot_id: int, xor_only: bool=True) -> None:
   """Generate and save scatter plot."""
-  output_file = get_output_path(x_ax, y_ax, y_scale)
+  output_file = get_output_path(x_ax, y_ax, y_scale, xor_only)
   cpu_info = get_cpu_info()
-  df = dfs[plot_id]
 
   x_label= get_ax_label(x_ax)
   y_label = get_ax_label(y_ax)
@@ -298,8 +305,10 @@ if __name__ == "__main__":
     df[f"{col}_ms_lower"] = df[f"{col}_ms_lower"] / 1e6
     df[f"{col}_ms_upper"] = df[f"{col}_ms_upper"] / 1e6
 
+  xor_df = df[df["name"].str.contains("XOR")] 
 
   dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
+  xor_dfs = {plot_id: group for plot_id, group in xor_df.groupby("plot_id")}
 
   plot_params = [
     # X: Buffer Size, Y: Encode/Decode Time
@@ -341,6 +350,24 @@ if __name__ == "__main__":
     (AxType.LOST_BLKS, AxType.DECODE_TP, "log", 2)
   ]
 
-  for params in plot_params:
-    write_scatter_plot(dfs, *params)
+
+  for x_ax, y_ax, scale, plot_id in plot_params:
+    write_scatter_plot(dfs[plot_id], x_ax, y_ax, scale, plot_id, False)
+
+  xor_only_plot_params = [
+    # X: Buffer Size, Y: Encode/Decode Time
+    (AxType.BUF_SIZE, AxType.ENCODE_T, "linear", 0, True),
+    (AxType.BUF_SIZE, AxType.DECODE_T, "linear", 0, True),
+    (AxType.BUF_SIZE, AxType.ENCODE_T, "log", 0, True),
+    (AxType.BUF_SIZE, AxType.DECODE_T, "log", 0, True),
+
+    # X: Buffer Size, Y: Encode/Decode Throughput
+    (AxType.BUF_SIZE, AxType.ENCODE_TP, "linear", 0, True),
+    (AxType.BUF_SIZE, AxType.DECODE_TP, "linear", 0, True),
+    (AxType.BUF_SIZE, AxType.ENCODE_TP, "log", 0, True),
+    (AxType.BUF_SIZE, AxType.DECODE_TP, "log", 0, True)
+  ]
+
+  for x_ax, y_ax, scale, plot_id, xor_only in xor_only_plot_params:
+    write_scatter_plot(xor_dfs[plot_id], x_ax, y_ax, scale, plot_id, xor_only)
   
