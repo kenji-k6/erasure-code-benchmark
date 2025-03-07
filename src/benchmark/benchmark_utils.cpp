@@ -19,25 +19,25 @@ bool OVERWRITE_FILE = true;
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
-  { "xor-ec",           BM_XOREC       },
+  { "xor-ec",         BM_XOREC        },
   { "xor-ec-scalar",  BM_XOREC_Scalar },
   { "xor-ec-avx",     BM_XOREC_AVX    },
   { "xor-ec-avx2",    BM_XOREC_AVX2   },
-  { "cm256",            BM_CM256          },
-  { "isa-l",            BM_ISAL           },
-  { "leopard",          BM_Leopard        },
-  { "wirehair",         BM_Wirehair       }
+  { "cm256",          BM_CM256        },
+  { "isa-l",          BM_ISAL         },
+  { "leopard",        BM_Leopard      },
+  { "wirehair",       BM_Wirehair     }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
-  { "xor-ec",               "XOR-EC (Auto)"   },
-  { "xor-ec-scalar",        "XOR-EC (Scalar)" },
-  { "xor-ec-avx",           "XOR-EC (AVX)"    },
-  { "xor-ec-avx2",          "XOR-EC (AVX2)"   },
-  { "cm256",                  "CM256"           },
-  { "isa-l",                   "ISA-L"           },
-  { "leopard",                "Leopard"         },
-  { "wirehair",               "Wirehair"        }
+  { "xor-ec",         "XOR-EC (Auto)"   },
+  { "xor-ec-scalar",  "XOR-EC (Scalar)" },
+  { "xor-ec-avx",     "XOR-EC (AVX)"    },
+  { "xor-ec-avx2",    "XOR-EC (AVX2)"   },
+  { "cm256",          "CM256"           },
+  { "isa-l",          "ISA-L"           },
+  { "leopard",        "Leopard"         },
+  { "wirehair",       "Wirehair"        }
 };
 
 static void usage() {
@@ -52,15 +52,15 @@ static void usage() {
             << "                                any specifed benchmark config parameters will be ignored\n\n"
 
             << " Algorithm Selection:\n"
-            << "      --xor-ec                run the XOR-EC benchmark (automatically chooses between\n"
+            << "      --xor-ec                  run the XOR-EC benchmark (automatically chooses between\n"
             << "                                the Scalar, AVX, and AVX2 implementations according\n"
             << "                                to the system specification)\n"
-            << "      --xor-ec-scalar         run the scalar XOR-EC implementation\n"
+            << "      --xor-ec-scalar           run the scalar XOR-EC implementation\n"
             << "                                (SIMD optimizations disabled)\n"
-            << "      --xor-ec-avx            run the AVX XOR-EC implementation\n"
-            << "      --xor-ec-avx2           run the AVX2 XOR-EC implementation\n"
+            << "      --xor-ec-avx              run the AVX XOR-EC implementation\n"
+            << "      --xor-ec-avx2             run the AVX2 XOR-EC implementation\n"
             << "      --cm256                   run the CM256 benchmark\n"
-            << "      --isa-l                    run the ISA-L benchmark\n"
+            << "      --isa-l                   run the ISA-L benchmark\n"
             << "      --leopard                 run the Leopard benchmark\n"
             << "      --wirehair                run the Wirehair benchmark\n"
             << " *If no algorithm is specified, all algorithms will be run.*\n\n"
@@ -304,24 +304,24 @@ static void inline add_benchmark(std::string name) {
 
 void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
   struct option long_options[] = {
-    { "help",                   no_argument,        nullptr, 'h'  },
-    { "iterations",             required_argument,  nullptr, 'i'  },
-    { "full",                   no_argument,        nullptr,  0   },
-    { "file",                   required_argument,  nullptr,  0   },
-    { "append",                 no_argument,        nullptr,  0   },
-    { "xor-ec",               no_argument,        nullptr,  0   },
-    { "xor-ec-scalar",        no_argument,        nullptr,  0   },
-    { "xor-ec-avx",           no_argument,        nullptr,  0   },
-    { "xor-ec-avx2",          no_argument,        nullptr,  0   },
-    { "cm256",                  no_argument,        nullptr,  0   },
-    { "isa-l",                   no_argument,        nullptr,  0   },
-    { "leopard",                no_argument,        nullptr,  0   },
-    { "wirehair",               no_argument,        nullptr,  0   },
-    { "size",                   no_argument,        nullptr, 's'  },
-    { "block-size",             no_argument,        nullptr, 'b'  },
-    { "lost-blocks",            no_argument,        nullptr, 'l'  },
-    { "redundancy",             no_argument,        nullptr, 'r'  },
-    { nullptr,                  0,                  nullptr,  0   }
+    { "help",           no_argument,        nullptr, 'h'  },
+    { "iterations",     required_argument,  nullptr, 'i'  },
+    { "full",           no_argument,        nullptr,  0   },
+    { "file",           required_argument,  nullptr,  0   },
+    { "append",         no_argument,        nullptr,  0   },
+    { "xor-ec",         no_argument,        nullptr,  0   },
+    { "xor-ec-scalar",  no_argument,        nullptr,  0   },
+    { "xor-ec-avx",     no_argument,        nullptr,  0   },
+    { "xor-ec-avx2",    no_argument,        nullptr,  0   },
+    { "cm256",          no_argument,        nullptr,  0   },
+    { "isa-l",          no_argument,        nullptr,  0   },
+    { "leopard",        no_argument,        nullptr,  0   },
+    { "wirehair",       no_argument,        nullptr,  0   },
+    { "size",           no_argument,        nullptr, 's'  },
+    { "block-size",     no_argument,        nullptr, 'b'  },
+    { "lost-blocks",    no_argument,        nullptr, 'l'  },
+    { "redundancy",     no_argument,        nullptr, 'r'  },
+    { nullptr,          0,                  nullptr,  0   }
   };
 
   uint64_t s = FIXED_BUFFFER_SIZE;
