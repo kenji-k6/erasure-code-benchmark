@@ -500,16 +500,17 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
 }
 
 static std::string get_benchmark_name(std::string inp, bool gpu_mem, bool mem_cold) {
-  auto base_name = benchmark_names.at(inp);
+  std::string full_name = "";
   if (gpu_mem) {
-    base_name += "(GPU, ";
+    full_name += "GPU, ";
     if (mem_cold) {
-      base_name += "Cold)";
+      full_name += "Cold — ";
     } else {
-      base_name += "Warm)";
+      full_name += "Warm — ";
     }
   }
-  return base_name;
+  full_name += benchmark_names.at(inp);
+  return full_name;
 }
 
 static BenchmarkFunction get_benchmark_func(std::string inp_name, bool gpu_mem) {
