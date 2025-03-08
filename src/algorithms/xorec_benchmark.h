@@ -76,14 +76,15 @@ public:
  * @brief XOREC Benchmark implementation using unified memory and CUDA
  */
 
- class CUDA_XORECBenchmark : public XORECBenchmark {
+class CUDA_XORECBenchmark : public XORECBenchmark {
+public:
   explicit CUDA_XORECBenchmark(const BenchmarkConfig& config) noexcept;
   ~CUDA_XORECBenchmark() noexcept = default; 
 
   int setup() noexcept override;
   void teardown() noexcept override;
   void make_memory_cold() noexcept override;
- };
+};
 
 
 #endif // XOREC_BENCHMARK_H

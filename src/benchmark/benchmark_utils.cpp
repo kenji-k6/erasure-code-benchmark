@@ -26,7 +26,8 @@ const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = 
   { "cm256",          BM_CM256        },
   { "isa-l",          BM_ISAL         },
   { "leopard",        BM_Leopard      },
-  { "wirehair",       BM_Wirehair     }
+  { "wirehair",       BM_Wirehair     },
+  { "cuda-xor-ec", BM_CUDA_XOREC}
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
@@ -37,7 +38,8 @@ const std::unordered_map<std::string, std::string> benchmark_names = {
   { "cm256",          "CM256"           },
   { "isa-l",          "ISA-L"           },
   { "leopard",        "Leopard"         },
-  { "wirehair",       "Wirehair"        }
+  { "wirehair",       "Wirehair"        },
+  { "cuda-xor-ec", "CUDA XOR-EC"}
 };
 
 static void usage() {
@@ -321,6 +323,7 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     { "block-size",     no_argument,        nullptr, 'b'  },
     { "lost-blocks",    no_argument,        nullptr, 'l'  },
     { "redundancy",     no_argument,        nullptr, 'r'  },
+    { "cuda-xor-ec",0,nullptr, 0},
     { nullptr,          0,                  nullptr,  0   }
   };
 

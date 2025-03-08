@@ -1,5 +1,6 @@
 #include "cuda_utils.cuh"
 #include <stdexcept>
+#include <cassert>
 
 
 __global__ void touch_memory_kernel(const uint8_t* buffer, size_t size) {
@@ -24,7 +25,7 @@ __host__ void touch_memory(const uint8_t* buffer, size_t size) {
 
 
 
-__host__ cudaError_t aligned_cudaMallocManaged(void** devPtr, size_t size, unsigned int flags = cudaMemAttachGlobal, size_t alignment) {
+__host__ cudaError_t aligned_cudaMallocManaged(void** devPtr, size_t size, size_t alignment, unsigned int flags) {
   assert((alignment & (alignment - 1)) == 0); // Ensure alignment is a power of 2
   size_t extra = alignment - 1 + sizeof(void*);
   void* unaligned_ptr = nullptr;

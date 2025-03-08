@@ -1,14 +1,23 @@
 cmake_minimum_required(VERSION 3.16)
-project(ec-benchmark)
+
 
 # Prevent in-source builds
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed. Please run cmake from a 'build' directory.")
 endif()
 
+project(ec-benchmark LANGUAGES CXX CUDA)
+
 # Set C++ standard to 20
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Set CUDA standard
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+
+# Set architecture to sm_70 (since we have Tesla V100s)
+set(CMAKE_CUDA_ARCHITECTURES 70)
 
 # Set proper compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -O3 -march=native")
@@ -23,6 +32,7 @@ set (SOURCES
   src/benchmark/benchmark_utils.cpp
 
   src/utils/utils.cpp
+  src/utils/cuda_utils.cu
 
   src/baseline/xorec.cpp
 

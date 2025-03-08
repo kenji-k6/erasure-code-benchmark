@@ -116,7 +116,7 @@ CUDA_XORECBenchmark::CUDA_XORECBenchmark(const BenchmarkConfig& config) noexcept
 
 int CUDA_XORECBenchmark::setup() noexcept {
   // Allocate
-  cudaError_t err = aligned_cudaMallocManaged(reinterpret_cast<void**>(&data_buffer_), block_size_ * num_original_blocks_, cudaMemAttachHost, ALIGNMENT_BYTES);
+  cudaError_t err = aligned_cudaMallocManaged(reinterpret_cast<void**>(&data_buffer_), block_size_ * num_original_blocks_, ALIGNMENT_BYTES, cudaMemAttachHost);
   if (err != cudaSuccess) {
     std::cerr << "XOREC: Failed to allocate data buffer.\n";
     return -1;

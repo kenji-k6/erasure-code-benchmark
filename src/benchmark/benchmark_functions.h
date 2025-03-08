@@ -19,4 +19,7 @@ void BM_ISAL(benchmark::State& state, const BenchmarkConfig& config);
 void BM_Leopard(benchmark::State& state, const BenchmarkConfig& config);
 void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config);
 
+
+
+void BM_CUDA_XOREC(benchmark::State& state, const BenchmarkConfig& config);
 #endif // BENCHMARK_FUNCTIONS_H
