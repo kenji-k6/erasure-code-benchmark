@@ -87,4 +87,32 @@ public:
 };
 
 
+class CUDA_XORECScalarBenchmark : public CUDA_XORECBenchmark {
+public:
+  explicit CUDA_XORECScalarBenchmark(const BenchmarkConfig& config) noexcept;
+  ~CUDA_XORECScalarBenchmark() noexcept = default; 
+
+  int encode() noexcept override;
+  int decode() noexcept override;
+};
+
+
+class CUDA_XORECAVXBenchmark : public CUDA_XORECBenchmark {
+  public:
+    explicit CUDA_XORECAVXBenchmark(const BenchmarkConfig& config) noexcept;
+    ~CUDA_XORECAVXBenchmark() noexcept = default; 
+  
+    int encode() noexcept override;
+    int decode() noexcept override;
+};
+
+class CUDA_XORECAVX2Benchmark : public CUDA_XORECBenchmark {
+  public:
+    explicit CUDA_XORECAVX2Benchmark(const BenchmarkConfig& config) noexcept;
+    ~CUDA_XORECAVX2Benchmark() noexcept = default; 
+  
+    int encode() noexcept override;
+    int decode() noexcept override;
+  };
+
 #endif // XOREC_BENCHMARK_H

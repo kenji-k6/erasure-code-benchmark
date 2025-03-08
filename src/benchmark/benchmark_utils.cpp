@@ -16,6 +16,8 @@ constexpr const char* OUTPUT_FILE_DIR = "../results/raw/";
 std::string output_file_name = "benchmark_results.csv";
 bool FULL_BENCHMARK = false;
 bool OVERWRITE_FILE = true;
+bool GPU_BENCHMARK = false;
+bool MAKE_MEM_COLD = false;
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
@@ -26,8 +28,7 @@ const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = 
   { "cm256",          BM_CM256        },
   { "isa-l",          BM_ISAL         },
   { "leopard",        BM_Leopard      },
-  { "wirehair",       BM_Wirehair     },
-  { "cuda-xor-ec", BM_CUDA_XOREC}
+  { "wirehair",       BM_Wirehair     }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
@@ -38,8 +39,7 @@ const std::unordered_map<std::string, std::string> benchmark_names = {
   { "cm256",          "CM256"           },
   { "isa-l",          "ISA-L"           },
   { "leopard",        "Leopard"         },
-  { "wirehair",       "Wirehair"        },
-  { "cuda-xor-ec", "CUDA XOR-EC"}
+  { "wirehair",       "Wirehair"        }
 };
 
 static void usage() {
@@ -323,7 +323,6 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     { "block-size",     no_argument,        nullptr, 'b'  },
     { "lost-blocks",    no_argument,        nullptr, 'l'  },
     { "redundancy",     no_argument,        nullptr, 'r'  },
-    { "cuda-xor-ec",0,nullptr, 0},
     { nullptr,          0,                  nullptr,  0   }
   };
 
