@@ -15,7 +15,6 @@
  * optimized with SIMD intrinsics when available. It supports AVX and AVX2
  */
 
-
 #define XOR_RESTRICT __restrict
 
 #if defined(__AVX2__)
