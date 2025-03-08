@@ -52,7 +52,7 @@ BenchmarkCSVReporter::~BenchmarkCSVReporter() {
 void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
   for (const auto& run : runs) {
     file  << static_cast<uint32_t>(run.counters.find("plot_id")->second.value) << ","
-          << run.benchmark_name() << ","
+          << "\"" << run.benchmark_name() << "\","
           << run.skip_message << ","
 
           << run.iterations << ","

@@ -16,8 +16,10 @@ constexpr const char* OUTPUT_FILE_DIR = "../results/raw/";
 std::string output_file_name = "benchmark_results.csv";
 bool FULL_BENCHMARK = false;
 bool OVERWRITE_FILE = true;
-bool GPU_BENCHMARK = false;
-bool MAKE_MEM_COLD = false;
+bool CPU_MEM = true;
+bool GPU_MEM = false;
+bool MEM_WARM = false;
+bool MEM_COLD = true;
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
@@ -29,6 +31,13 @@ const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = 
   { "isa-l",          BM_ISAL         },
   { "leopard",        BM_Leopard      },
   { "wirehair",       BM_Wirehair     }
+};
+
+const std::unordered_map<std::string, BenchmarkFunction> available_gpu_benchmarks = {
+  { "xor-ec",         BM_XOREC        },
+  { "xor-ec-scalar",  BM_XOREC_Scalar },
+  { "xor-ec-avx",     BM_XOREC_AVX    },
+  { "xor-ec-avx2",    BM_XOREC_AVX2   }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
@@ -46,40 +55,45 @@ static void usage() {
   std::cerr << "Usage: ec-benchmark [options]\n\n"
 
             << " Help Option:\n"
-            << "  -h, --help                    show this help message\n\n"
+            << "  -h, --help                          show this help message\n\n"
             
             << " Benchmark Options:\n"
-            << "  -i, --iterations=<num>        number of benchmark iterations (default 10)\n"
-            << "      --full                    run the full benchmark suite, write results to CSV,\n"
-            << "                                any specifed benchmark config parameters will be ignored\n\n"
-
+            << "  -i, --iterations=<num>              number of benchmark iterations (default 10)\n"
+            << "      --full                          run the full benchmark suite, write results to CSV,\n"
+            << "                                      any specifed benchmark config parameters will be ignored\n\n"
+      
             << " Algorithm Selection:\n"
-            << "      --xor-ec                  run the XOR-EC benchmark (automatically chooses between\n"
-            << "                                the Scalar, AVX, and AVX2 implementations according\n"
-            << "                                to the system specification)\n"
-            << "      --xor-ec-scalar           run the scalar XOR-EC implementation\n"
-            << "                                (SIMD optimizations disabled)\n"
-            << "      --xor-ec-avx              run the AVX XOR-EC implementation\n"
-            << "      --xor-ec-avx2             run the AVX2 XOR-EC implementation\n"
-            << "      --cm256                   run the CM256 benchmark\n"
-            << "      --isa-l                   run the ISA-L benchmark\n"
-            << "      --leopard                 run the Leopard benchmark\n"
-            << "      --wirehair                run the Wirehair benchmark\n"
-            << " *If no algorithm is specified, all algorithms will be run.*\n\n"
+            << "      --xor-ec                        run the XOR-EC benchmark (automatically chooses between\n"
+            << "                                      the Scalar, AVX, and AVX2 implementations according\n"
+            << "                                      to the system specification)\n"
+            << "      --xor-ec-scalar                 run the scalar XOR-EC implementation\n"
+            << "                                      (SIMD optimizations disabled)\n"
+            << "      --xor-ec-avx                    run the AVX XOR-EC implementation\n"
+            << "      --xor-ec-avx2                   run the AVX2 XOR-EC implementation\n"
+            << "      --cm256                         run the CM256 benchmark\n"
+            << "      --isa-l                         run the ISA-L benchmark\n"
+            << "      --leopard                       run the Leopard benchmark\n"
+            << "      --wirehair                      run the Wirehair benchmark\n"
+            << " *If no algorithm is specified,       all algorithms will be run.*\n\n"
 
             << " Full Suite Options:\n"
-            << "      --file=<file_name>        specify output file name\n"
-            << "      --append                  append results to the output file (default: overwrite)\n\n"
+            << "      --file=<file_name>              specify output file name\n"
+            << "      --append                        append results to the output file (default: overwrite)\n"
+            << "      --memory <gpu|cpu|all>          allocate the data buffers of the specified algorithms\n"
+            << "                                      in GPU or CPU memory, or both (default: CPU)\n"
+            << "      --memory-state <warm|cold|all>  whether to simulate cold CPU memory or warm CPU memory"
+            << "                                      for encoding and decoding benchmarks (default: cold)\n"
+            << "                                      *only relevant if --memory=gpu or --memory=all*\n"
 
             << " Single Run Options:\n"
-            << "  -s, --size=<size>             total size of original data in bytes\n"
-            << "                                default: " << FIXED_BUFFFER_SIZE << " B\n"
-            << "  -b, --block-size=<size>       size of each block in bytes\n"
-            << "                                default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << " B\n"
-            << "  -l, --lost_blocks=<num>       number of lost blocks\n"
-            << "                                default: " << FIXED_NUM_LOST_BLOCKS << '\n'
-            << "  -r, --redundancy=<ratio>      redundancy ratio (#recovery blocks / #original blocks)\n"
-            << "                                default= " << FIXED_PARITY_RATIO << "\n\n";
+            << "  -s, --size=<size>                   total size of original data in bytes\n"
+            << "                                      default: " << FIXED_BUFFFER_SIZE << " B\n"
+            << "  -b, --block-size=<size>             size of each block in bytes\n"
+            << "                                      default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << " B\n"
+            << "  -l, --lost_blocks=<num>             number of lost blocks\n"
+            << "                                      default: " << FIXED_NUM_LOST_BLOCKS << '\n'
+            << "  -r, --redundancy=<ratio>            redundancy ratio (#recovery blocks / #original blocks)\n"
+            << "                                      default= " << FIXED_PARITY_RATIO << "\n\n";
   exit(0);
 }
 
@@ -215,8 +229,28 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
     config.lost_block_idxs = lost_block_idxs.data();
     config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
     config.computed.num_recovery_blocks = FIXED_NUM_RECOVERY_BLOCKS;
-    
-    configs.push_back(config);
+
+    if (CPU_MEM) {
+      BenchmarkConfig cpu_config = config;
+      cpu_config.gpu_mem = false;
+      configs.push_back(cpu_config);
+    }
+
+    if (GPU_MEM) {
+      BenchmarkConfig gpu_config = config;
+      gpu_config.gpu_mem = true;
+
+      if (MEM_WARM) {
+        BenchmarkConfig warm_config = gpu_config;
+        warm_config.mem_cold = false;
+        configs.push_back(warm_config);
+      }
+      if (MEM_COLD) {
+        BenchmarkConfig cold_config = gpu_config;
+        cold_config.mem_cold = true;
+        configs.push_back(cold_config);
+      }
+    }
   }
 
   // Configs for varying redundancy ratio
@@ -231,6 +265,8 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
     config.lost_block_idxs = lost_block_idxs.data();
     config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
     config.computed.num_recovery_blocks = num_rec_blocks;
+
+
 
     configs.push_back(config);
   }
@@ -279,7 +315,8 @@ static BenchmarkConfig get_single_benchmark_config(uint64_t s, uint64_t b, uint3
   config.lost_block_idxs = lost_block_idxs.data();
   config.computed.num_original_blocks = num_orig;
   config.computed.num_recovery_blocks = num_rec;
-
+  config.gpu_mem = false;
+  config.mem_cold = false;
   return config;
 }
 
@@ -306,24 +343,26 @@ static void inline add_benchmark(std::string name) {
 
 void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
   struct option long_options[] = {
-    { "help",           no_argument,        nullptr, 'h'  },
-    { "iterations",     required_argument,  nullptr, 'i'  },
-    { "full",           no_argument,        nullptr,  0   },
-    { "file",           required_argument,  nullptr,  0   },
-    { "append",         no_argument,        nullptr,  0   },
-    { "xor-ec",         no_argument,        nullptr,  0   },
-    { "xor-ec-scalar",  no_argument,        nullptr,  0   },
-    { "xor-ec-avx",     no_argument,        nullptr,  0   },
-    { "xor-ec-avx2",    no_argument,        nullptr,  0   },
-    { "cm256",          no_argument,        nullptr,  0   },
-    { "isa-l",          no_argument,        nullptr,  0   },
-    { "leopard",        no_argument,        nullptr,  0   },
-    { "wirehair",       no_argument,        nullptr,  0   },
-    { "size",           no_argument,        nullptr, 's'  },
-    { "block-size",     no_argument,        nullptr, 'b'  },
-    { "lost-blocks",    no_argument,        nullptr, 'l'  },
-    { "redundancy",     no_argument,        nullptr, 'r'  },
-    { nullptr,          0,                  nullptr,  0   }
+    { "help",             no_argument,        nullptr, 'h'  },
+    { "iterations",       required_argument,  nullptr, 'i'  },
+    { "full",             no_argument,        nullptr,  0   },
+    { "memory",           required_argument,  nullptr,  0   },
+    { "memory-state",     required_argument,  nullptr,  0   },
+    { "file",             required_argument,  nullptr,  0   },
+    { "append",           no_argument,        nullptr,  0   },
+    { "xor-ec",           no_argument,        nullptr,  0   },
+    { "xor-ec-scalar",    no_argument,        nullptr,  0   },
+    { "xor-ec-avx",       no_argument,        nullptr,  0   },
+    { "xor-ec-avx2",      no_argument,        nullptr,  0   },
+    { "cm256",            no_argument,        nullptr,  0   },
+    { "isa-l",            no_argument,        nullptr,  0   },
+    { "leopard",          no_argument,        nullptr,  0   },
+    { "wirehair",         no_argument,        nullptr,  0   },
+    { "size",             no_argument,        nullptr, 's'  },
+    { "block-size",       no_argument,        nullptr, 'b'  },
+    { "lost-blocks",      no_argument,        nullptr, 'l'  },
+    { "redundancy",       no_argument,        nullptr, 'r'  },
+    { nullptr,            0,                  nullptr,  0   }
   };
 
   uint64_t s = FIXED_BUFFFER_SIZE;
@@ -334,6 +373,7 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
 
   int c;
   int option_index = 0;
+  std::string name;
   while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, &option_index)) != -1) {
     switch (c) {
       case 'h':
@@ -355,17 +395,51 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
         i = std::stoi(optarg);
         break;
       case 0:
-        if (long_options[option_index].name) {
-          if (std::string(long_options[option_index].name) == "full") {
-            FULL_BENCHMARK = true;
-          } else if (std::string(long_options[option_index].name) == "file") {
-            output_file_name = std::string(optarg);
-          } else if (std::string(long_options[option_index].name) == "append") {
-            OVERWRITE_FILE = false;
+        name = std::string(long_options[option_index].name);
+
+        if (name == "full") {
+          FULL_BENCHMARK = true;
+
+        } else if (name == "memory") {
+          auto arg = std::string(optarg);
+          if (arg == "gpu") {
+            CPU_MEM = false;
+            GPU_MEM = true;
+          } else if (arg == "cpu") {
+            CPU_MEM = true;
+            GPU_MEM = false;
+          } else if (arg == "all") {
+            CPU_MEM = true;
+            GPU_MEM = true;
+          } else {
+            std::cerr << "Error: --memory option must be either 'gpu', 'cpu', or 'all'.\n";
+            exit(0);
           }
-          else {
-            add_benchmark(long_options[option_index].name);
+
+        } else if (name == "memory-state") {
+          auto arg = std::string(optarg);
+          if (arg == "warm") {
+            MEM_WARM = true;
+            MEM_COLD = false;
+          } else if (arg == "cold") {
+            MEM_WARM = false;
+            MEM_COLD = true;
+          } else if (arg == "all") {
+            MEM_WARM = true;
+            MEM_COLD = true;
+          } else {
+            std::cerr << "Error: --memory-state option must be either 'warm', 'cold', or 'all'.\n";
+            exit(0);
           }
+
+        } else if (name == "file") {
+          output_file_name = std::string(optarg);
+
+        } else if (name == "append") {
+          OVERWRITE_FILE = false;
+
+        } else {
+          add_benchmark(name);
         }
         break;
       default:
@@ -387,12 +461,34 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
   }
 }
 
+static std::string get_benchmark_name(std::string inp, bool gpu_mem, bool mem_cold) {
+  auto base_name = benchmark_names.at(inp);
+  if (gpu_mem) {
+    base_name += "(GPU, ";
+    if (mem_cold) {
+      base_name += " Cold)";
+    } else {
+      base_name += " Warm)";
+    }
+  }
+  return base_name;
+}
+
+static BenchmarkFunction get_benchmark_func(std::string inp_name, bool gpu_mem) {
+  if (gpu_mem) {
+    return available_gpu_benchmarks.at(inp_name);
+  }
+  return available_benchmarks.at(inp_name);
+}
+
 static void register_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgressReporter *console_reporter) {
   for (auto& config: configs) {
     config.progress_reporter = console_reporter;
+
     for (auto& inp_name : selected_benchmarks) {
-      auto bm_name = benchmark_names.at(inp_name);
-      auto bm_func = available_benchmarks.at(inp_name);
+      auto bm_name = get_benchmark_name(inp_name, config.gpu_mem, config.mem_cold);
+      auto bm_func = get_benchmark_func(inp_name, config.gpu_mem);
+      
       benchmark::RegisterBenchmark(bm_name, bm_func, config)->UseManualTime()->Iterations(config.num_iterations);
     }
   }

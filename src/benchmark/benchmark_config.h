@@ -26,6 +26,8 @@ struct BenchmarkConfig {
     uint32_t num_recovery_blocks;   ///< Number of recovery blocks
   } computed;
 
+  bool mem_cold;                    ///< Flag to indicate GPU memory warmup
+
   BenchmarkProgressReporter *progress_reporter = nullptr;
 };
 
