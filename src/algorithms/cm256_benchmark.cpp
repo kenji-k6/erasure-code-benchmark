@@ -105,3 +105,5 @@ bool CM256Benchmark::check_for_corruption() const noexcept {
   }
   return true;
 }
+
+void CM256Benchmark::invalidate_memory() noexcept {}

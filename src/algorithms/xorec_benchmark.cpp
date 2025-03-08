@@ -77,6 +77,8 @@ bool XORECBenchmark::check_for_corruption() const noexcept {
   return true;
 }
 
+void XORECBenchmark::invalidate_memory() noexcept {}
+
 
 XORECScalarBenchmark::XORECScalarBenchmark(const BenchmarkConfig& config) noexcept : XORECBenchmark(config) {}
 int XORECScalarBenchmark::encode() noexcept {
@@ -107,3 +109,5 @@ int XORECAVX2Benchmark::decode() noexcept {
   xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_, XORVersion::AVX2);
   return 0;
 }
+
+

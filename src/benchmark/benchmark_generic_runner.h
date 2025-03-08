@@ -54,6 +54,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
     auto end_encode = std::chrono::steady_clock::now();
 
     bench.simulate_data_loss();
+    bench.invalidate_memory();
     
     auto start_decode = std::chrono::steady_clock::now();
     bench.decode();

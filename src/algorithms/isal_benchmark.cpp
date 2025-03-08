@@ -148,6 +148,8 @@ bool ISALBenchmark::check_for_corruption() const noexcept {
   return true;
 }
 
+void ISALBenchmark::invalidate_memory() noexcept {}
+
 
 
 static int gf_gen_decode_matrix_simple(uint8_t *encode_matrix, uint8_t *decode_matrix, uint8_t *invert_matrix,

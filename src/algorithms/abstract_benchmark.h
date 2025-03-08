@@ -84,6 +84,13 @@ public:
    */
   virtual bool check_for_corruption() const noexcept = 0;
 
+  /**
+   * @brief Invalidate the memory to ensure that the data is not cached.
+   * 
+   * @attention This method is intended to be used with the CUDA benchmarks only.
+   */
+  virtual void invalidate_memory() noexcept = 0;
+
   protected:
     explicit ECBenchmark(const BenchmarkConfig& config) noexcept
       : block_size_(config.block_size),
