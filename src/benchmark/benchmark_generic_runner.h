@@ -48,13 +48,14 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
   for (auto _ : state) {
     bench.setup();
+    bench.make_memory_cold();
 
     auto start_encode = std::chrono::steady_clock::now();
     bench.encode();
     auto end_encode = std::chrono::steady_clock::now();
 
     bench.simulate_data_loss();
-    bench.invalidate_memory();
+    bench.make_memory_cold();
     
     auto start_decode = std::chrono::steady_clock::now();
     bench.decode();
