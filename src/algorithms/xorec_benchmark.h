@@ -62,12 +62,28 @@ class XORECAVXBenchmark : public XORECBenchmark {
  * @brief XOREC Benchmark implementation using AVX operations
  */
 class XORECAVX2Benchmark : public XORECBenchmark {
-  public:
-    explicit XORECAVX2Benchmark(const BenchmarkConfig& config) noexcept;
-    ~XORECAVX2Benchmark() noexcept = default; 
-  
-    int encode() noexcept override;
-    int decode() noexcept override;
+public:
+  explicit XORECAVX2Benchmark(const BenchmarkConfig& config) noexcept;
+  ~XORECAVX2Benchmark() noexcept = default; 
+
+  int encode() noexcept override;
+  int decode() noexcept override;
 };
+
+
+/**
+ * @class CUDA_XORECBenchmark
+ * @brief XOREC Benchmark implementation using unified memory and CUDA
+ */
+
+ class CUDA_XORECBenchmark : public XORECBenchmark {
+  explicit CUDA_XORECBenchmark(const BenchmarkConfig& config) noexcept;
+  ~CUDA_XORECBenchmark() noexcept = default; 
+
+  int setup() noexcept override;
+  void teardown() noexcept override;
+  void make_memory_cold() noexcept override;
+ };
+
 
 #endif // XOREC_BENCHMARK_H

@@ -84,6 +84,13 @@ public:
    */
   virtual bool check_for_corruption() const noexcept = 0;
 
+  /**
+   * @brief Function to ensure the CPU memory is cold (only relevant for GPU memory benchmarks)
+   * 
+   * If not overwritten it doesn nothing.
+   */
+  virtual void make_memory_cold() noexcept {};
+
   protected:
     explicit ECBenchmark(const BenchmarkConfig& config) noexcept
       : block_size_(config.block_size),
