@@ -111,4 +111,3 @@ bool WirehairBenchmark::check_for_corruption() const noexcept {
   return true;
 }
 
-void LeopardBenchmark::invalidate_memory() noexcept {}

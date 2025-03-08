@@ -77,7 +77,6 @@ bool XORECBenchmark::check_for_corruption() const noexcept {
   return true;
 }
 
-void XORECBenchmark::invalidate_memory() noexcept {}
 
 
 XORECScalarBenchmark::XORECScalarBenchmark(const BenchmarkConfig& config) noexcept : XORECBenchmark(config) {}
