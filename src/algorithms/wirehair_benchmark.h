@@ -30,23 +30,13 @@ public:
   void simulate_data_loss() noexcept override;
   bool check_for_corruption() const noexcept override;
 
-protected:
+private:
   uint8_t *original_buffer_ = nullptr;    ///< Buffer for the original data we want to transmit
   uint8_t *encode_buffer_ = nullptr;      ///< Buffer for the encoded data
   uint8_t *decode_buffer_ = nullptr;      ///< Buffer for the decoded data
 
   WirehairCodec encoder_ = nullptr;       ///< Wirehair encoder instance
   WirehairCodec decoder_ = nullptr;       ///< Wirehair decoder instance
-};
-
-class WirehairBenchmarkGPU : public WirehairBenchmark {
-public:
-  explicit WirehairBenchmarkGPU(const BenchmarkConfig& config) noexcept;
-  ~WirehairBenchmarkGPU() noexcept = default;
-
-  int setup() noexcept override;
-  void teardown() noexcept override;
-  void make_memory_cold() noexcept override;
 };
 
 #endif // WIREHAIR_BENCHMARK_H

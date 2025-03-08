@@ -130,4 +130,3 @@ bool LeopardBenchmark::check_for_corruption() const noexcept {
 
   return true;
 }
-
