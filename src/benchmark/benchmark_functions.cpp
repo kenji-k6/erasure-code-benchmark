@@ -44,6 +44,21 @@ void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config) {
 }
 
 
+
+
+
 void BM_CUDA_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<CUDA_XORECBenchmark>(state, config);
+}
+
+void BM_CUDA_XOREC_Scalar(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<CUDA_XORECScalarBenchmark>(state, config);
+}
+
+void BM_CUDA_XOREC_AVX(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<CUDA_XORECAVXBenchmark>(state, config);
+}
+
+void BM_CUDA_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<CUDA_XORECAVX2Benchmark>(state, config);
 }
