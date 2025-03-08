@@ -74,7 +74,7 @@ static void usage() {
             << "      --isa-l                         run the ISA-L benchmark\n"
             << "      --leopard                       run the Leopard benchmark\n"
             << "      --wirehair                      run the Wirehair benchmark\n"
-            << " *If no algorithm is specified,       all algorithms will be run.*\n\n"
+            << " *If no algorithm is specified, all algorithms will be run.*\n\n"
 
             << " Full Suite Options:\n"
             << "      --file=<file_name>              specify output file name\n"
@@ -266,9 +266,27 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
     config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
     config.computed.num_recovery_blocks = num_rec_blocks;
 
+    if (CPU_MEM) {
+      BenchmarkConfig cpu_config = config;
+      cpu_config.gpu_mem = false;
+      configs.push_back(cpu_config);
+    }
 
+    if (GPU_MEM) {
+      BenchmarkConfig gpu_config = config;
+      gpu_config.gpu_mem = true;
 
-    configs.push_back(config);
+      if (MEM_WARM) {
+        BenchmarkConfig warm_config = gpu_config;
+        warm_config.mem_cold = false;
+        configs.push_back(warm_config);
+      }
+      if (MEM_COLD) {
+        BenchmarkConfig cold_config = gpu_config;
+        cold_config.mem_cold = true;
+        configs.push_back(cold_config);
+      }
+    }
   }
 
   // Configs for varying no. of lost blocks.
@@ -293,7 +311,27 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
     config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
     config.computed.num_recovery_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
 
-    configs.push_back(config);
+    if (CPU_MEM) {
+      BenchmarkConfig cpu_config = config;
+      cpu_config.gpu_mem = false;
+      configs.push_back(cpu_config);
+    }
+
+    if (GPU_MEM) {
+      BenchmarkConfig gpu_config = config;
+      gpu_config.gpu_mem = true;
+
+      if (MEM_WARM) {
+        BenchmarkConfig warm_config = gpu_config;
+        warm_config.mem_cold = false;
+        configs.push_back(warm_config);
+      }
+      if (MEM_COLD) {
+        BenchmarkConfig cold_config = gpu_config;
+        cold_config.mem_cold = true;
+        configs.push_back(cold_config);
+      }
+    }
     curr += num_lost_blocks;
   }
 }
@@ -466,9 +504,9 @@ static std::string get_benchmark_name(std::string inp, bool gpu_mem, bool mem_co
   if (gpu_mem) {
     base_name += "(GPU, ";
     if (mem_cold) {
-      base_name += " Cold)";
+      base_name += "Cold)";
     } else {
-      base_name += " Warm)";
+      base_name += "Warm)";
     }
   }
   return base_name;
