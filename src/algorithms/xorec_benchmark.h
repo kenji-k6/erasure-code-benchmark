@@ -72,14 +72,14 @@ public:
 
 
 /**
- * @class CUDA_XORECBenchmark
+ * @class XORECBenchmarkGPU
  * @brief XOREC Benchmark implementation using unified memory and CUDA
  */
 
-class CUDA_XORECBenchmark : public XORECBenchmark {
+class XORECBenchmarkGPU : public XORECBenchmark {
 public:
-  explicit CUDA_XORECBenchmark(const BenchmarkConfig& config) noexcept;
-  ~CUDA_XORECBenchmark() noexcept = default; 
+  explicit XORECBenchmarkGPU(const BenchmarkConfig& config) noexcept;
+  ~XORECBenchmarkGPU() noexcept = default; 
 
   int setup() noexcept override;
   void teardown() noexcept override;
@@ -87,29 +87,29 @@ public:
 };
 
 
-class CUDA_XORECScalarBenchmark : public CUDA_XORECBenchmark {
+class XORECScalarBenchmarkGPU : public XORECBenchmarkGPU {
 public:
-  explicit CUDA_XORECScalarBenchmark(const BenchmarkConfig& config) noexcept;
-  ~CUDA_XORECScalarBenchmark() noexcept = default; 
+  explicit XORECScalarBenchmarkGPU(const BenchmarkConfig& config) noexcept;
+  ~XORECScalarBenchmarkGPU() noexcept = default; 
 
   int encode() noexcept override;
   int decode() noexcept override;
 };
 
 
-class CUDA_XORECAVXBenchmark : public CUDA_XORECBenchmark {
+class XORECAVXBenchmarkGPU : public XORECBenchmarkGPU {
   public:
-    explicit CUDA_XORECAVXBenchmark(const BenchmarkConfig& config) noexcept;
-    ~CUDA_XORECAVXBenchmark() noexcept = default; 
+    explicit XORECAVXBenchmarkGPU(const BenchmarkConfig& config) noexcept;
+    ~XORECAVXBenchmarkGPU() noexcept = default; 
   
     int encode() noexcept override;
     int decode() noexcept override;
 };
 
-class CUDA_XORECAVX2Benchmark : public CUDA_XORECBenchmark {
+class XORECAVX2BenchmarkGPU : public XORECBenchmarkGPU {
   public:
-    explicit CUDA_XORECAVX2Benchmark(const BenchmarkConfig& config) noexcept;
-    ~CUDA_XORECAVX2Benchmark() noexcept = default; 
+    explicit XORECAVX2BenchmarkGPU(const BenchmarkConfig& config) noexcept;
+    ~XORECAVX2BenchmarkGPU() noexcept = default; 
   
     int encode() noexcept override;
     int decode() noexcept override;

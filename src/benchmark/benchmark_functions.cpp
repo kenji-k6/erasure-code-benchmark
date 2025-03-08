@@ -47,18 +47,18 @@ void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config) {
 
 
 
-void BM_CUDA_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<CUDA_XORECBenchmark>(state, config);
+void BM_XOREC_GPU(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XORECBenchmarkGPU>(state, config);
 }
 
-void BM_CUDA_XOREC_Scalar(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<CUDA_XORECScalarBenchmark>(state, config);
+void BM_XOREC_Scalar_GPU(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XORECScalarBenchmarkGPU>(state, config);
 }
 
-void BM_CUDA_XOREC_AVX(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<CUDA_XORECAVXBenchmark>(state, config);
+void BM_XOREC_AVX_GPU(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XORECAVXBenchmarkGPU>(state, config);
 }
 
-void BM_CUDA_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<CUDA_XORECAVX2Benchmark>(state, config);
+void BM_XOREC_AVX2_GPU(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XORECAVX2BenchmarkGPU>(state, config);
 }

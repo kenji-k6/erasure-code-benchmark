@@ -34,10 +34,10 @@ const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = 
 };
 
 const std::unordered_map<std::string, BenchmarkFunction> available_gpu_benchmarks = {
-  { "xor-ec",         BM_XOREC        },
-  { "xor-ec-scalar",  BM_XOREC_Scalar },
-  { "xor-ec-avx",     BM_XOREC_AVX    },
-  { "xor-ec-avx2",    BM_XOREC_AVX2   }
+  { "xor-ec",         BM_XOREC_GPU        },
+  { "xor-ec-scalar",  BM_XOREC_Scalar_GPU },
+  { "xor-ec-avx",     BM_XOREC_AVX_GPU    },
+  { "xor-ec-avx2",    BM_XOREC_AVX2_GPU   }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
@@ -488,7 +488,7 @@ static void register_benchmarks(std::vector<BenchmarkConfig>& configs, Benchmark
     for (auto& inp_name : selected_benchmarks) {
       auto bm_name = get_benchmark_name(inp_name, config.gpu_mem, config.mem_cold);
       auto bm_func = get_benchmark_func(inp_name, config.gpu_mem);
-      
+
       benchmark::RegisterBenchmark(bm_name, bm_func, config)->UseManualTime()->Iterations(config.num_iterations);
     }
   }

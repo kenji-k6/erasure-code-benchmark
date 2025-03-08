@@ -112,9 +112,9 @@ int XORECAVX2Benchmark::decode() noexcept {
 
 
 
-CUDA_XORECBenchmark::CUDA_XORECBenchmark(const BenchmarkConfig& config) noexcept : XORECBenchmark(config) {}
+XORECBenchmarkGPU::XORECBenchmarkGPU(const BenchmarkConfig& config) noexcept : XORECBenchmark(config) {}
 
-int CUDA_XORECBenchmark::setup() noexcept {
+int XORECBenchmarkGPU::setup() noexcept {
   // Allocate
   cudaError_t err = aligned_cudaMallocManaged(reinterpret_cast<void**>(&data_buffer_), block_size_ * num_original_blocks_, ALIGNMENT_BYTES, cudaMemAttachHost);
   if (err != cudaSuccess) {
@@ -141,43 +141,43 @@ int CUDA_XORECBenchmark::setup() noexcept {
   return 0;
 }
 
-void CUDA_XORECBenchmark::teardown() noexcept {
+void XORECBenchmarkGPU::teardown() noexcept {
   if (data_buffer_) aligned_cudaFree(data_buffer_);
   if (parity_buffer_) free(parity_buffer_);
 }
 
-void CUDA_XORECBenchmark::make_memory_cold() noexcept {
+void XORECBenchmarkGPU::make_memory_cold() noexcept {
   touch_memory(data_buffer_, block_size_ * num_original_blocks_);
 }
 
 
 
-CUDA_XORECScalarBenchmark::CUDA_XORECScalarBenchmark(const BenchmarkConfig& config) noexcept : CUDA_XORECBenchmark(config) {}
-int CUDA_XORECScalarBenchmark::encode() noexcept {
+XORECScalarBenchmarkGPU::XORECScalarBenchmarkGPU(const BenchmarkConfig& config) noexcept : XORECBenchmarkGPU(config) {}
+int XORECScalarBenchmarkGPU::encode() noexcept {
   xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::Scalar);
   return 0;
 }
-int CUDA_XORECScalarBenchmark::decode() noexcept {
+int XORECScalarBenchmarkGPU::decode() noexcept {
   xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_, XORVersion::Scalar);
   return 0;
 }
 
-CUDA_XORECAVXBenchmark::CUDA_XORECAVXBenchmark(const BenchmarkConfig& config) noexcept : CUDA_XORECBenchmark(config) {}
-int CUDA_XORECAVXBenchmark::encode() noexcept {
+XORECAVXBenchmarkGPU::XORECAVXBenchmarkGPU(const BenchmarkConfig& config) noexcept : XORECBenchmarkGPU(config) {}
+int XORECAVXBenchmarkGPU::encode() noexcept {
   xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::AVX);
   return 0;
 }
-int CUDA_XORECAVXBenchmark::decode() noexcept {
+int XORECAVXBenchmarkGPU::decode() noexcept {
   xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_, XORVersion::AVX);
   return 0;
 }
 
-CUDA_XORECAVX2Benchmark::CUDA_XORECAVX2Benchmark(const BenchmarkConfig& config) noexcept : CUDA_XORECBenchmark(config) {}
-int CUDA_XORECAVX2Benchmark::encode() noexcept {
+XORECAVX2BenchmarkGPU::XORECAVX2BenchmarkGPU(const BenchmarkConfig& config) noexcept : XORECBenchmarkGPU(config) {}
+int XORECAVX2BenchmarkGPU::encode() noexcept {
   xor_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, XORVersion::AVX2);
   return 0;
 }
-int CUDA_XORECAVX2Benchmark::decode() noexcept {
+int XORECAVX2BenchmarkGPU::decode() noexcept {
   xor_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_, XORVersion::AVX2);
   return 0;
 }

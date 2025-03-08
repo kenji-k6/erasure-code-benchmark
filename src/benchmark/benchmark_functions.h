@@ -21,8 +21,9 @@ void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config);
 
 
 
-void BM_CUDA_XOREC(benchmark::State& state, const BenchmarkConfig& config);
-void BM_CUDA_XOREC_Scalar(benchmark::State& state, const BenchmarkConfig& config);
-void BM_CUDA_XOREC_AVX(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_GPU(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_Scalar_GPU(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_AVX_GPU(benchmark::State& state, const BenchmarkConfig& config);
 void BM_CUDA_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_AVX2_GPU(benchmark::State& state, const BenchmarkConfig& config);
 #endif // BENCHMARK_FUNCTIONS_H
