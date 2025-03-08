@@ -8,6 +8,7 @@
 
 #include "xorec_benchmark.h"
 #include "xorec.h"
+#include "cuda_utils.cuh"
 #include "utils.h"
 #include <cstring>
 
@@ -110,3 +111,41 @@ int XORECAVX2Benchmark::decode() noexcept {
 }
 
 
+
+CUDA_XORECBenchmark::CUDA_XORECBenchmark(const BenchmarkConfig& config) noexcept : XORECBenchmark(config) {}
+
+int CUDA_XORECBenchmark::setup() noexcept {
+  // Allocate
+  cudaError_t err = aligned_cudaMallocManaged(reinterpret_cast<void**>(&data_buffer_), block_size_ * num_original_blocks_, cudaMemAttachHost, ALIGNMENT_BYTES);
+  if (err != cudaSuccess) {
+    std::cerr << "XOREC: Failed to allocate data buffer.\n";
+    return -1;
+  }
+
+  parity_buffer_ = static_cast<uint8_t*>(aligned_alloc(ALIGNMENT_BYTES, block_size_ * num_recovery_blocks_));
+  if (!parity_buffer_) {
+    std::cerr << "XOREC: Failed to allocate parity buffer.\n";
+    teardown();
+    return -1;
+  }
+
+  // Initialize data buffer with CRC blocks
+  for (unsigned i = 0; i < num_original_blocks_; ++i) {
+    int write_res = write_validation_pattern(i, data_buffer_ + i * block_size_, block_size_);
+    if (write_res) {
+      std::cerr << "XOREC: Failed to write random checking packet.\n";
+      teardown();
+      return -1;
+    }
+  }
+  return 0;
+}
+
+void CUDA_XORECBenchmark::teardown() noexcept {
+  if (data_buffer_) aligned_cudaFree(data_buffer_);
+  if (parity_buffer_) free(parity_buffer_);
+}
+
+void CUDA_XORECBenchmark::make_memory_cold() noexcept {
+  touch_memory(data_buffer_, block_size_ * num_original_blocks_);
+}
