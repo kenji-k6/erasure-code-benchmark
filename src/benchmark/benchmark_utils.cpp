@@ -81,7 +81,7 @@ static void usage() {
             << "      --append                        append results to the output file (default: overwrite)\n"
             << "      --memory <gpu|cpu|all>          allocate the data buffers of the specified algorithms\n"
             << "                                      in GPU or CPU memory, or both (default: CPU)\n"
-            << "      --memory-state <warm|cold|all>  whether to simulate cold CPU memory or warm CPU memory"
+            << "      --memory-state <warm|cold|all>  whether to simulate cold CPU memory or warm CPU memory\n"
             << "                                      for encoding and decoding benchmarks (default: cold)\n"
             << "                                      *only relevant if --memory=gpu or --memory=all*\n"
 
