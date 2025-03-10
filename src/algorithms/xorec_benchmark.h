@@ -13,18 +13,16 @@ class XORECBenchmark : public ECBenchmark {
 public:
   explicit XORECBenchmark(const BenchmarkConfig& config) noexcept;
   ~XORECBenchmark() noexcept = default;
-
-  int setup() noexcept override;
-  void teardown() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
   bool check_for_corruption() const noexcept override;
 
 protected:
+  uint32_t num_total_blocks_;
   // Data Buffers
-  uint8_t* data_buffer_ = nullptr;        ///< Buffer for the original data we want to transmit
-  uint8_t* parity_buffer_ = nullptr;      ///< Buffer for the decoded data
+  std::unique_ptr<uint8_t[]> data_buffer_;  ///< Buffer for the original data we want to transmit
+  std::unique_ptr<uint8_t[]> parity_buffer_;///< Buffer for the decoded data
   std::bitset<256> block_bitmap_;         ///< Bitmap to check if all data arrived
 };
 
@@ -36,7 +34,6 @@ protected:
 class XORECScalarBenchmark : public XORECBenchmark {
 public:
   explicit XORECScalarBenchmark(const BenchmarkConfig& config) noexcept;
-  ~XORECScalarBenchmark() noexcept = default; 
 
   int encode() noexcept override;
   int decode() noexcept override;
@@ -50,7 +47,6 @@ public:
 class XORECAVXBenchmark : public XORECBenchmark {
   public:
     explicit XORECAVXBenchmark(const BenchmarkConfig& config) noexcept;
-    ~XORECAVXBenchmark() noexcept = default; 
   
     int encode() noexcept override;
     int decode() noexcept override;
@@ -64,7 +60,6 @@ class XORECAVXBenchmark : public XORECBenchmark {
 class XORECAVX2Benchmark : public XORECBenchmark {
 public:
   explicit XORECAVX2Benchmark(const BenchmarkConfig& config) noexcept;
-  ~XORECAVX2Benchmark() noexcept = default; 
 
   int encode() noexcept override;
   int decode() noexcept override;
@@ -75,22 +70,28 @@ public:
  * @class XORECBenchmarkGPU
  * @brief XOREC Benchmark implementation using unified memory and CUDA
  */
-
-class XORECBenchmarkGPU : public XORECBenchmark {
+class XORECBenchmarkGPU : public ECBenchmark {
 public:
   explicit XORECBenchmarkGPU(const BenchmarkConfig& config) noexcept;
-  ~XORECBenchmarkGPU() noexcept = default; 
-
-  int setup() noexcept override;
-  void teardown() noexcept override;
+  ~XORECBenchmarkGPU() noexcept override;
+  int encode() noexcept override;
+  int decode() noexcept override;
+  void simulate_data_loss() noexcept override;
+  bool check_for_corruption() const noexcept override;
   void make_memory_cold() noexcept override;
+
+protected:
+  uint32_t num_total_blocks_;
+  // Data Buffers
+  uint8_t *data_buffer_;          ///< Buffer for the original data we want to transmit
+  std::unique_ptr<uint8_t[]> parity_buffer_;        ///< Buffer for the decoded data
+  std::bitset<256> block_bitmap_;         ///< Bitmap to check if all data arrived
 };
 
 
 class XORECScalarBenchmarkGPU : public XORECBenchmarkGPU {
 public:
   explicit XORECScalarBenchmarkGPU(const BenchmarkConfig& config) noexcept;
-  ~XORECScalarBenchmarkGPU() noexcept = default; 
 
   int encode() noexcept override;
   int decode() noexcept override;
@@ -100,7 +101,6 @@ public:
 class XORECAVXBenchmarkGPU : public XORECBenchmarkGPU {
   public:
     explicit XORECAVXBenchmarkGPU(const BenchmarkConfig& config) noexcept;
-    ~XORECAVXBenchmarkGPU() noexcept = default; 
   
     int encode() noexcept override;
     int decode() noexcept override;
@@ -109,7 +109,6 @@ class XORECAVXBenchmarkGPU : public XORECBenchmarkGPU {
 class XORECAVX2BenchmarkGPU : public XORECBenchmarkGPU {
   public:
     explicit XORECAVX2BenchmarkGPU(const BenchmarkConfig& config) noexcept;
-    ~XORECAVX2BenchmarkGPU() noexcept = default; 
   
     int encode() noexcept override;
     int decode() noexcept override;
