@@ -29,12 +29,12 @@ public:
 
 private:
   // Data Buffers
-  uint8_t* original_buffer_ = nullptr;    ///< Buffer for the original data we want to transmit
-  uint8_t* decode_buffer_ = nullptr;      ///< Buffer for the decoded data
+  std::unique_ptr<uint8_t[]> original_buffer;
+  std::unique_ptr<uint8_t[]> decode_buffer;
 
   // CM256 Internals
   cm256_encoder_params params_;       ///< cm256 internal parameters
-  cm256_block blocks_[ECLimits::CM256_MAX_TOT_BLOCKS];   ///< vector of cm256 blocks (keeps track of pointers and indices)
+  std::vector<cm256_block> blocks_;   ///< vector of cm256 blocks (keeps track of pointers and indices)
 };
 
 #endif // CM256_BENCHMARK_H
