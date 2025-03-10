@@ -34,7 +34,7 @@ set (SOURCES
   src/utils/utils.cpp
   src/utils/cuda_utils.cu
 
-  src/baseline/xorec.cpp
+  src/xorec/xorec.cpp
 
   src/algorithms/xorec_benchmark.cpp
   src/algorithms/cm256_benchmark.cpp
@@ -79,7 +79,7 @@ set_target_properties(isal PROPERTIES
 # Include directories
 target_include_directories(ec-benchmark PRIVATE
   ${CMAKE_SOURCE_DIR}/src/algorithms
-  ${CMAKE_SOURCE_DIR}/src/baseline
+  ${CMAKE_SOURCE_DIR}/src/xorec
   ${CMAKE_SOURCE_DIR}/src/utils
   ${CMAKE_SOURCE_DIR}/src/benchmark
   ${CMAKE_SOURCE_DIR}/libraries/leopard
