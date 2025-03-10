@@ -72,4 +72,9 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size);
  */
 void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_blocks, uint32_t max_idx, uint32_t *lost_block_idxs);
 
+
+// Helper function to throw an error with a message
+[[noreturn]] void throw_error(const std::string& message) {
+  throw std::runtime_error(message);
+}
 #endif // UTILS_H

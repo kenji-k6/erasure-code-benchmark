@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "cm256.h"
 #include <vector>
-
+#include <memory>
 
 /**
  * @class CM256Benchmark
@@ -19,9 +19,7 @@ class CM256Benchmark : public ECBenchmark {
 public:
   explicit CM256Benchmark(const BenchmarkConfig& config) noexcept;
   ~CM256Benchmark() noexcept = default;
-
-  int setup() noexcept override;
-  void teardown() noexcept override;
+  
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
@@ -29,8 +27,8 @@ public:
 
 private:
   // Data Buffers
-  std::unique_ptr<uint8_t[]> original_buffer;
-  std::unique_ptr<uint8_t[]> decode_buffer;
+  std::unique_ptr<uint8_t[]> original_buffer_;
+  std::unique_ptr<uint8_t[]> decode_buffer_;
 
   // CM256 Internals
   cm256_encoder_params params_;       ///< cm256 internal parameters

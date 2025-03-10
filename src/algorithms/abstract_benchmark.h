@@ -16,25 +16,6 @@
 class ECBenchmark {
 public:
   virtual ~ECBenchmark() noexcept = default; ///< Default virtual destructor
-
-  /**
-   * @brief Initialize the benchmark with the given (global) configuration.
-   * 
-   * Derived classes should implement the specific setup logic for their benchmark.
-   * This can include allocating memory, preparing input data, etc.
-   * 
-   * @return 0 on success, non-zero on failure.
-   */
-  virtual int setup() noexcept = 0;
-
-  /**
-   * @brief Cleanup after the benchmark has completed.
-   * 
-   * This function is intended for deallocating resources, closing files and cleaning up
-   * any memory that was allocated during the benchmark.
-   */
-  virtual void teardown() noexcept = 0;
-
   /**
    * @brief Run the encoding process.
    * 
