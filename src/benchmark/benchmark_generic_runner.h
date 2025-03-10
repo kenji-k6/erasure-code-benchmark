@@ -31,7 +31,6 @@
  */
 template <typename BenchmarkType>
 static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
-  BenchmarkType bench(config);
   std::vector<int64_t> enc_times(config.num_iterations);
   std::vector<double> enc_throughputs(config.num_iterations);
 
@@ -47,7 +46,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   unsigned it = 0;
 
   for (auto _ : state) {
-    bench.setup();
+    BenchmarkType bench(config);
     if (config.gpu_mem && config.mem_cold) bench.make_memory_cold();
 
     auto start_encode = std::chrono::steady_clock::now();
@@ -64,9 +63,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
     if (!bench.check_for_corruption()) {
       state.SkipWithMessage("Corruption Detected");
     }
-    bench.teardown();
-
-
+    
     double time_encode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_encode - start_encode).count();
     double time_decode = std::chrono::duration_cast<std::chrono::nanoseconds>(end_decode - start_decode).count();
 
