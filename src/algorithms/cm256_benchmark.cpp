@@ -12,9 +12,7 @@
 #include <memory>
 
 CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
-  if (cm256_init()) {
-    throw_error("CM256: Initialization failed.");
-  }
+  if (cm256_init()) throw_error("CM256: Initialization failed.");
 
   // Initialize CM256 parameters
   params_.BlockBytes = block_size_;
@@ -25,9 +23,7 @@ CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : ECBench
   original_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_original_blocks_);
   decode_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_recovery_blocks_);
 
-  if (!original_buffer_ || !decode_buffer_) {
-    throw_error("CM256: Failed to allocate buffer(s).");
-  }
+  if (!original_buffer_ || !decode_buffer_) throw_error("CM256: Failed to allocate buffer(s).");
 
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < num_original_blocks_; ++i) {
