@@ -1,6 +1,7 @@
 #ifndef XOREC_H
 #define XOREC_H
 
+#include "xorec_utils.h"
 #include <bitset>
 #include <cstdint>
 #include <cstring>
@@ -15,7 +16,6 @@
  * optimized with SIMD intrinsics when available. It supports AVX and AVX2
  */
 
-#define XOR_RESTRICT __restrict
 
 #if defined(__AVX2__)
   #define TRY_XOR_AVX2
@@ -27,38 +27,6 @@
   #include <immintrin.h>
   #define XOR_AVX __m128i
 #endif
-
-
-constexpr uint32_t XOR_BLOCK_SIZE_MULTIPLE = 64;
-
-constexpr uint32_t XOR_PTR_ALIGNMENT = 32;
-constexpr uint32_t XOR_MIN_BLOCK_SIZE = 64;
-
-constexpr uint32_t XOR_MIN_DATA_BLOCKS = 1;
-constexpr uint32_t XOR_MAX_DATA_BLOCKS = 128;
-constexpr uint32_t XOR_MIN_PARITY_BLOCKS = 1;
-constexpr uint32_t XOR_MAX_PARITY_BLOCKS = 128;
-constexpr uint32_t XOR_MAX_TOTAL_BLOCKS = 256;
-
-
-/// Bitmap to check if all data blocks are available (no recovery needed)
-const std::bitset<XOR_MAX_TOTAL_BLOCKS> COMPLETE_DATA_BITMAP =(
-  std::bitset<256>(0xFFFFFFFFFFFFFFFFULL)<<64) |
-  std::bitset<256>(0xFFFFFFFFFFFFFFFFULL
-  );
-
-
-/**
- * @enum XORResult
- * @brief Represents the result status of encoding and decoding operations.
- */
-enum class XORResult {
-  Success = 0,
-  InvalidSize = 1,
-  InvalidCounts = 2,
-  InvalidAlignment = 3,
-  DecodeFailure = 4
-};
 
 /**
  * @enum XORVersion
