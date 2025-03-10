@@ -33,12 +33,6 @@ XORResult xor_encode(
         return XORResult::InvalidCounts;
   }
 
-  if (
-    reinterpret_cast<uintptr_t>((uintptr_t)data_buffer) % XOR_PTR_ALIGNMENT != 0 ||
-    reinterpret_cast<uintptr_t>(parity_buffer) % XOR_PTR_ALIGNMENT != 0
-  ) {
-    return XORResult::InvalidAlignment;
-  }
 
   std::memset(parity_buffer, 0, block_size * num_parity_blocks);
 
@@ -95,14 +89,6 @@ XORResult xor_decode(
   ) {
         return XORResult::InvalidCounts;
   }
-
-  if (
-    reinterpret_cast<uintptr_t>((uintptr_t)data_buffer) % XOR_PTR_ALIGNMENT != 0 ||
-    reinterpret_cast<uintptr_t>(parity_buffer) % XOR_PTR_ALIGNMENT != 0
-  ) {
-    return XORResult::InvalidAlignment;
-  }
-
 
 
   std::bitset<128> lost_blocks;

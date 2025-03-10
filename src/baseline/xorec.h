@@ -118,21 +118,21 @@ static void inline XOR_xor_blocks_avx2(void * XOR_RESTRICT dest, const void * XO
 
     #pragma GCC ivdep
     for (; bytes >= 128; bytes -= 128, dest256 += 4, src256 += 4) {
-      XOR_AVX2 x0 = _mm256_xor_si256(_mm256_load_si256(dest256), _mm256_load_si256(src256));
-      XOR_AVX2 x1 = _mm256_xor_si256(_mm256_load_si256(dest256 + 1), _mm256_load_si256(src256 + 1));
-      XOR_AVX2 x2 = _mm256_xor_si256(_mm256_load_si256(dest256 + 2), _mm256_load_si256(src256 + 2));
-      XOR_AVX2 x3 = _mm256_xor_si256(_mm256_load_si256(dest256 + 3), _mm256_load_si256(src256 + 3));
-      _mm256_store_si256(dest256, x0);
-      _mm256_store_si256(dest256 + 1, x1);
-      _mm256_store_si256(dest256 + 2, x2);
-      _mm256_store_si256(dest256 + 3, x3);
+      XOR_AVX2 x0 = _mm256_xor_si256(_mm256_loadu_si256(dest256), _mm256_loadu_si256(src256));
+      XOR_AVX2 x1 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 1), _mm256_loadu_si256(src256 + 1));
+      XOR_AVX2 x2 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 2), _mm256_loadu_si256(src256 + 2));
+      XOR_AVX2 x3 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 3), _mm256_loadu_si256(src256 + 3));
+      _mm256_storeu_si256(dest256, x0);
+      _mm256_storeu_si256(dest256 + 1, x1);
+      _mm256_storeu_si256(dest256 + 2, x2);
+      _mm256_storeu_si256(dest256 + 3, x3);
     }
 
     if (bytes > 0) {
-      XOR_AVX2 x0 = _mm256_xor_si256(_mm256_load_si256(dest256), _mm256_load_si256(src256));
-      XOR_AVX2 x1 = _mm256_xor_si256(_mm256_load_si256(dest256 + 1), _mm256_load_si256(src256 + 1));
-      _mm256_store_si256(dest256, x0);
-      _mm256_store_si256(dest256 + 1, x1);
+      XOR_AVX2 x0 = _mm256_xor_si256(_mm256_loadu_si256(dest256), _mm256_loadu_si256(src256));
+      XOR_AVX2 x1 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 1), _mm256_loadu_si256(src256 + 1));
+      _mm256_storeu_si256(dest256, x0);
+      _mm256_storeu_si256(dest256 + 1, x1);
     }
   #else
     std::cerr << "AVX2 not supported\n";
@@ -147,14 +147,14 @@ static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR
 
     #pragma GCC ivdep
     for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
-      XOR_AVX x0 = _mm_xor_si128(_mm_load_si128(dest128), _mm_load_si128(src128));
-      XOR_AVX x1 = _mm_xor_si128(_mm_load_si128(dest128 + 1), _mm_load_si128(src128 + 1));
-      XOR_AVX x2 = _mm_xor_si128(_mm_load_si128(dest128 + 2), _mm_load_si128(src128 + 2));
-      XOR_AVX x3 = _mm_xor_si128(_mm_load_si128(dest128 + 3), _mm_load_si128(src128 + 3));
-      _mm_store_si128(dest128, x0);
-      _mm_store_si128(dest128 + 1, x1);
-      _mm_store_si128(dest128 + 2, x2);
-      _mm_store_si128(dest128 + 3, x3);
+      XOR_AVX x0 = _mm_xor_si128(_mm_loadu_si128(dest128), _mm_loadu_si128(src128));
+      XOR_AVX x1 = _mm_xor_si128(_mm_loadu_si128(dest128 + 1), _mm_loadu_si128(src128 + 1));
+      XOR_AVX x2 = _mm_xor_si128(_mm_loadu_si128(dest128 + 2), _mm_loadu_si128(src128 + 2));
+      XOR_AVX x3 = _mm_xor_si128(_mm_loadu_si128(dest128 + 3), _mm_loadu_si128(src128 + 3));
+      _mm_storeu_si128(dest128, x0);
+      _mm_storeu_si128(dest128 + 1, x1);
+      _mm_storeu_si128(dest128 + 2, x2);
+      _mm_storeu_si128(dest128 + 3, x3);
     }
   #else
     std::cerr << "AVX not supported\n";
@@ -184,15 +184,15 @@ static void inline XOR_copy_blocks_avx2(void * XOR_RESTRICT dest, const void * X
 
     #pragma GCC ivdep
     for (; bytes >= 128; bytes -= 128, dest256 += 4, src256 += 4) {
-      _mm256_store_si256(dest256, _mm256_load_si256(src256));
-      _mm256_store_si256(dest256 + 1, _mm256_load_si256(src256 + 1));
-      _mm256_store_si256(dest256 + 2, _mm256_load_si256(src256 + 2));
-      _mm256_store_si256(dest256 + 3, _mm256_load_si256(src256 + 3));
+      _mm256_storeu_si256(dest256, _mm256_loadu_si256(src256));
+      _mm256_storeu_si256(dest256 + 1, _mm256_loadu_si256(src256 + 1));
+      _mm256_storeu_si256(dest256 + 2, _mm256_loadu_si256(src256 + 2));
+      _mm256_storeu_si256(dest256 + 3, _mm256_loadu_si256(src256 + 3));
     }
 
     if (bytes > 0) {
-      _mm256_store_si256(dest256, _mm256_load_si256(src256));
-      _mm256_store_si256(dest256 + 1, _mm256_load_si256(src256 + 1));
+      _mm256_storeu_si256(dest256, _mm256_loadu_si256(src256));
+      _mm256_storeu_si256(dest256 + 1, _mm256_loadu_si256(src256 + 1));
     }
   #else
     std::cerr << "AVX2 not supported\n";
@@ -207,10 +207,10 @@ static void inline XOR_copy_blocks_avx(void * XOR_RESTRICT dest, const void * XO
 
     #pragma GCC ivdep
     for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
-      _mm_store_si128(dest128, _mm_load_si128(src128));
-      _mm_store_si128(dest128 + 1, _mm_load_si128(src128 + 1));
-      _mm_store_si128(dest128 + 2, _mm_load_si128(src128 + 2));
-      _mm_store_si128(dest128 + 3, _mm_load_si128(src128 + 3));
+      _mm_storeu_si128(dest128, _mm_loadu_si128(src128));
+      _mm_storeu_si128(dest128 + 1, _mm_loadu_si128(src128 + 1));
+      _mm_storeu_si128(dest128 + 2, _mm_loadu_si128(src128 + 2));
+      _mm_storeu_si128(dest128 + 3, _mm_loadu_si128(src128 + 3));
     }
   #else
     std::cerr << "AVX2 not supported\n";

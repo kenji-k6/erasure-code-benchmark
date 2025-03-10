@@ -195,19 +195,19 @@ static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint
 }
 
 // Function that creates the configs for the full benchmark suite
-static void get_full_benchmark_configs(int num_iterations, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
+static void get_full_benchmark_configs(int num_iterations, std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
   int tot_lost_blocks = FIXED_NUM_LOST_BLOCKS;
   for (auto num_lost_blocks : VAR_NUM_LOST_BLOCKS) {
     tot_lost_blocks += num_lost_blocks;
   }
-  lost_block_idxs.resize(tot_lost_blocks);
 
+  lost_block_idxs.resize(2 + tot_lost_blocks);
   // Select the lost block indices for the first two plots
   select_lost_block_idxs(
     FIXED_NUM_RECOVERY_BLOCKS,
     FIXED_NUM_LOST_BLOCKS,
     FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_RECOVERY_BLOCKS,
-    lost_block_idxs.data()
+    lost_block_idxs[0]
   );
 
   // Configs for varying buffer sizes
@@ -215,20 +215,24 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
     FIXED_NUM_RECOVERY_BLOCKS,
     FIXED_NUM_LOST_BLOCKS,
     FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_RECOVERY_BLOCKS,
-    lost_block_idxs.data()
+    lost_block_idxs[1]
   );
 
   for (auto buf_size : VAR_BUFFER_SIZE) {
-    BenchmarkConfig config;
-    config.data_size = buf_size;
-    config.block_size = buf_size / FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
-    config.redundancy_ratio = FIXED_PARITY_RATIO;
-    config.num_iterations = num_iterations;
-    config.plot_id = 0;
-    config.lost_block_idxs = lost_block_idxs.data();
-    config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.computed.num_recovery_blocks = FIXED_NUM_RECOVERY_BLOCKS;
+    BenchmarkConfig config{
+      buf_size,
+      buf_size / FIXED_NUM_ORIGINAL_BLOCKS,
+      FIXED_NUM_LOST_BLOCKS,
+      FIXED_PARITY_RATIO,
+      num_iterations,
+      0,
+      lost_block_idxs[0],
+      { FIXED_NUM_ORIGINAL_BLOCKS, FIXED_NUM_RECOVERY_BLOCKS },
+      false,
+      false,
+      nullptr
+    };
+    
 
     if (CPU_MEM) {
       BenchmarkConfig cpu_config = config;
@@ -255,16 +259,19 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
 
   // Configs for varying redundancy ratio
   for (auto num_rec_blocks : VAR_NUM_RECOVERY_BLOCKS) {
-    BenchmarkConfig config;
-    config.data_size = FIXED_BUFFFER_SIZE;
-    config.block_size = FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
-    config.redundancy_ratio = static_cast<double>(num_rec_blocks) / FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_iterations = num_iterations;
-    config.plot_id = 1;
-    config.lost_block_idxs = lost_block_idxs.data();
-    config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.computed.num_recovery_blocks = num_rec_blocks;
+    BenchmarkConfig config{
+      FIXED_BUFFFER_SIZE,
+      FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS,
+      FIXED_NUM_LOST_BLOCKS,
+      static_cast<double>(num_rec_blocks) / FIXED_NUM_ORIGINAL_BLOCKS,
+      num_iterations,
+      1,
+      lost_block_idxs[1],
+      { FIXED_NUM_ORIGINAL_BLOCKS, num_rec_blocks },
+      false,
+      false,
+      nullptr
+    };
 
     if (CPU_MEM) {
       BenchmarkConfig cpu_config = config;
@@ -290,26 +297,29 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
   }
 
   // Configs for varying no. of lost blocks.
-  uint32_t *curr = lost_block_idxs.data() + FIXED_NUM_LOST_BLOCKS;
+  int lb = 2;
 
   for (auto num_lost_blocks : VAR_NUM_LOST_BLOCKS) {
     select_lost_block_idxs(
       FIXED_NUM_ORIGINAL_BLOCKS,
       num_lost_blocks,
       FIXED_NUM_ORIGINAL_BLOCKS + num_lost_blocks,
-      curr
+      lost_block_idxs[lb]
     );
 
-    BenchmarkConfig config;
-    config.data_size = FIXED_BUFFFER_SIZE;
-    config.block_size = FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_lost_blocks = num_lost_blocks;
-    config.redundancy_ratio = 1.0;
-    config.num_iterations = num_iterations;
-    config.plot_id = 2;
-    config.lost_block_idxs = curr;
-    config.computed.num_original_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.computed.num_recovery_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
+    BenchmarkConfig config{
+      FIXED_BUFFFER_SIZE,
+      FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS,
+      num_lost_blocks,
+      1.0,
+      num_iterations,
+      2,
+      lost_block_idxs[lb],
+      { FIXED_NUM_ORIGINAL_BLOCKS, FIXED_NUM_ORIGINAL_BLOCKS },
+      false,
+      false,
+      nullptr
+    };
 
     if (CPU_MEM) {
       BenchmarkConfig cpu_config = config;
@@ -332,29 +342,30 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
         configs.push_back(cold_config);
       }
     }
-    curr += num_lost_blocks;
+    ++lb;
   }
 }
 
-static BenchmarkConfig get_single_benchmark_config(uint64_t s, uint64_t b, uint32_t l, double r, int i, std::vector<uint32_t>& lost_block_idxs) {
+static BenchmarkConfig get_single_benchmark_config(uint64_t s, uint64_t b, uint32_t l, double r, int i, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
   uint32_t num_orig = (s + (b - 1)) / b;
   uint32_t num_rec = static_cast<size_t>(std::ceil(num_orig * r));
   check_args(s, b, l, r, i, num_orig, num_rec);
-  lost_block_idxs.resize(l);
-  select_lost_block_idxs(num_rec, l, num_orig + num_rec, lost_block_idxs.data());
+  lost_block_idxs.resize(1);
+  select_lost_block_idxs(num_rec, l, num_orig + num_rec, lost_block_idxs[0]);
 
-  BenchmarkConfig config;
-  config.data_size = s;
-  config.block_size = b;
-  config.num_lost_blocks = l;
-  config.redundancy_ratio = r;
-  config.num_iterations = i;
-  config.plot_id = -1;
-  config.lost_block_idxs = lost_block_idxs.data();
-  config.computed.num_original_blocks = num_orig;
-  config.computed.num_recovery_blocks = num_rec;
-  config.gpu_mem = false;
-  config.mem_cold = false;
+  BenchmarkConfig config{
+    s,
+    b,
+    l,
+    r,
+    i,
+    -1,
+    lost_block_idxs[0],
+    { num_orig, num_rec },
+    false,
+    false,
+    nullptr
+  };
   return config;
 }
 
@@ -379,7 +390,7 @@ static void inline add_benchmark(std::string name) {
   selected_benchmarks.insert(name);
 }
 
-void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<uint32_t>& lost_block_idxs) {
+void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
   struct option long_options[] = {
     { "help",             no_argument,        nullptr, 'h'  },
     { "iterations",       required_argument,  nullptr, 'i'  },

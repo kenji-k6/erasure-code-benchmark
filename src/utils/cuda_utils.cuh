@@ -22,14 +22,4 @@ __global__ void touch_memory_kernel(const uint8_t* buffer, size_t size);
  * @param size Size of the buffer in bytes.
  */
 __host__ void touch_memory(const uint8_t* buffer, size_t size);
-
-
-/**
- * @brief Helper function to allocated aligned, unified memory
- * @attention to free you have to use the corresponding aligned free (see below)
- */
-
-__host__ cudaError_t aligned_cudaMallocManaged(void** devPtr, size_t size, size_t alignment, unsigned int flags = cudaMemAttachGlobal);
-
-__host__ cudaError_t aligned_cudaFree(void* devPtr);
 #endif // CUDA_UTILS_CUH

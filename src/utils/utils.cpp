@@ -83,7 +83,7 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size) {
 }
 
 
-void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_blocks, uint32_t max_idx, uint32_t *lost_block_idxs) {
+void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_blocks, uint32_t max_idx, std::vector<uint32_t>& lost_block_idxs) {
   if (num_lost_blocks > num_recovery_blocks) {
     std::cerr << "select_lost_block_idxs: Number of lost blocks must be less than or equal to the number of recovery blocks\n";
     exit(0);
@@ -95,8 +95,7 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
   std::iota(valid_idxs.begin(), valid_idxs.end(), 0);
 
   for (uint32_t i = 0; i < num_lost_blocks; i++) {
-
-    lost_block_idxs[i] = valid_idxs[rng.next()%valid_idxs.size()];
+    lost_block_idxs.push_back(valid_idxs[rng.next()%valid_idxs.size()]);
     uint32_t recovery_set = lost_block_idxs[i] % num_recovery_blocks;
     
     // update valid indices
@@ -110,5 +109,5 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
   }
 
   // Sort the indices (needed for Wirehair and ISA-L)
-  std::sort(lost_block_idxs, lost_block_idxs + num_lost_blocks);
+  std::sort(lost_block_idxs.begin(), lost_block_idxs.end());
 }
