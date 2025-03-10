@@ -33,6 +33,7 @@ set (SOURCES
 
   src/utils/utils.cpp
   src/utils/cuda_utils.cu
+  src/xorec/gpu_xorec.cu
 
   src/xorec/xorec.cpp
 

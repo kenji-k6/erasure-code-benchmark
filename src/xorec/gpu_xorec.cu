@@ -128,7 +128,7 @@ namespace XorecGPU {
 
       const void * XOR_RESTRICT parity_block = reinterpret_cast<const void*>(parity_buffer + (i % num_parity_blocks) * block_size);
 
-      cudaMemcpy(recover_block, parity_block, block_size, cudaMemcpyDeviceToDevice);
+      memcpy(recover_block, parity_block, block_size);
       for (uint32_t j = i % num_parity_blocks; j < num_data_blocks; j += num_parity_blocks) {
         if (i == j) continue;
         const void * XOR_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + j * block_size);
