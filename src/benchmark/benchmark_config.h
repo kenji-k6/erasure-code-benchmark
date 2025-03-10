@@ -1,8 +1,7 @@
 /**
- * @file benchmark_config.h
+ * @file benchmark_config.cppm
  * @brief Defines the BenchmarkConfig struct and related constants.
  */
-
 
 #ifndef BENCHMARK_CONFIG_H
 #define BENCHMARK_CONFIG_H
@@ -13,28 +12,27 @@
 
 /// @brief Configuration for a benchmark run
 struct BenchmarkConfig {
-  uint64_t data_size;               ///< Total size of original data
-  uint64_t block_size;              ///< Size of each block
-  uint64_t num_lost_blocks;         ///< Number of total blocks lost (recovery + original)
-  double redundancy_ratio;          ///< Recovery blocks / original blocks ratio
-  int num_iterations;               ///< Number of iterations to run the benchmark
-  uint8_t plot_id;                  ///< Identifier for plotting
-  uint32_t *lost_block_idxs;        ///< Pointer to the lost block indices array
+  uint64_t data_size;                             ///< Total size of original data
+  uint64_t block_size;                            ///< Size of each block
+  uint64_t num_lost_blocks;                       ///< Number of total blocks lost (recovery + original)
+  double redundancy_ratio;                        ///< Recovery blocks / original blocks ratio
+  int num_iterations;                             ///< Number of iterations to run the benchmark
+  uint8_t plot_id;                                ///< Identifier for plotting
+  const std::vector<uint32_t>& lost_block_idxs;   ///< Pointer to the lost block indices array
 
   struct {
-    uint32_t num_original_blocks;   ///< Number of original data blocks
-    uint32_t num_recovery_blocks;   ///< Number of recovery blocks
+    uint32_t num_original_blocks;                 ///< Number of original data blocks
+    uint32_t num_recovery_blocks;                 ///< Number of recovery blocks
   } computed;
 
-  bool gpu_mem;                     ///< Flag to indicate GPU memory usage
-  bool mem_cold;                    ///< Flag to indicate GPU memory warmup
+  bool gpu_mem;                                   ///< Flag to indicate GPU memory usage
+  bool mem_cold;                                  ///< Flag to indicate GPU memory warmup
 
   BenchmarkProgressReporter *progress_reporter = nullptr;
 };
 
 /// @Brief Alias for benchmark function type
 using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
-using BMTuple = std::tuple<std::string, BenchmarkFunction>;
 
 /// Constants for benchmark configurations (when running full benchmark)
 constexpr uint32_t FIXED_NUM_ORIGINAL_BLOCKS = 128;

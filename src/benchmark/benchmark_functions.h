@@ -3,11 +3,12 @@
  * @brief Declares benchmark functions for different EC algorithms.
  */
 
+
 #ifndef BENCHMARK_FUNCTIONS_H
 #define BENCHMARK_FUNCTIONS_H
 
 #include <benchmark/benchmark.h>
-#include <benchmark_config.h>
+#include "benchmark_config.h"
 
 /// Benchmark function declarations
 void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config);
