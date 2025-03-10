@@ -50,7 +50,7 @@ public:
  * @param size Size of the block in bytes.
  * @return 0 on success, nonzero on failure.
  */
-int write_validation_pattern(size_t block_idx, uint8_t* block_ptr, uint32_t size);
+int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, uint32_t size);
 
 
 /**

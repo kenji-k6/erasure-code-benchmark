@@ -34,10 +34,7 @@ uint32_t PCGRandom::next() {
 
 // Utility functions
 int write_validation_pattern(size_t block_idx, uint8_t* block_ptr, uint32_t size) {
-  if (size < 2) {
-    std::cerr << "write_validation_pattern: num_bytes must be at least 2\n";
-    return -1;
-  }
+  if (size < 2) throw_error("write_validation_pattern: num_bytes must be at least 2");
   
   PCGRandom rng(block_idx, 1);
 
