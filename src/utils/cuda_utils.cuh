@@ -22,4 +22,5 @@ __global__ void touch_memory_kernel(const uint8_t* buffer, size_t size);
  * @param size Size of the buffer in bytes.
  */
 __host__ void touch_memory(const uint8_t* buffer, size_t size);
+
 #endif // CUDA_UTILS_CUH

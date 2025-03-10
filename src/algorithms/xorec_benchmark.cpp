@@ -95,6 +95,7 @@ int XORECAVX2Benchmark::decode() noexcept {
 
 
 XORECBenchmarkGPU::XORECBenchmarkGPU(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
+  num_total_blocks_ = num_original_blocks_ + num_recovery_blocks_;
   cudaError_t err = cudaMallocManaged(reinterpret_cast<void**>(&data_buffer_), block_size_ * num_original_blocks_, cudaMemAttachHost); 
   if (err != cudaSuccess) throw_error("XOREC: Failed to allocate data buffer.");
 
@@ -127,7 +128,7 @@ void XORECBenchmarkGPU::simulate_data_loss() noexcept {
   for (unsigned i = 0; i < num_total_blocks_; ++i) {
     if (loss_idx < num_lost_blocks_ && lost_block_idxs_[loss_idx] == i) {
       if (i < num_original_blocks_) {
-        memset(&data_buffer_[i * block_size_], 0, block_size_);
+        memset(data_buffer_ + i * block_size_, 0, block_size_);
       } else {
         memset(&parity_buffer_[(i - num_original_blocks_) * block_size_], 0, block_size_);
       }
