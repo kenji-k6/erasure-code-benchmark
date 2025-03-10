@@ -21,22 +21,21 @@
 class WirehairBenchmark : public ECBenchmark {
 public:
   explicit WirehairBenchmark(const BenchmarkConfig& config) noexcept;
-  ~WirehairBenchmark() noexcept = default;
-
-  int setup() noexcept override;
-  void teardown() noexcept override;
+  ~WirehairBenchmark() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
   bool check_for_corruption() const noexcept override;
 
 private:
-  uint8_t *original_buffer_ = nullptr;    ///< Buffer for the original data we want to transmit
-  uint8_t *encode_buffer_ = nullptr;      ///< Buffer for the encoded data
-  uint8_t *decode_buffer_ = nullptr;      ///< Buffer for the decoded data
+  uint32_t num_total_blocks_;
 
-  WirehairCodec encoder_ = nullptr;       ///< Wirehair encoder instance
-  WirehairCodec decoder_ = nullptr;       ///< Wirehair decoder instance
+  std::unique_ptr<uint8_t[]> original_buffer_;    ///< Buffer for the original data we want to transmit
+  std::unique_ptr<uint8_t[]> encode_buffer_;      ///< Buffer for the encoded data
+  std::unique_ptr<uint8_t[]> decode_buffer_;      ///< Buffer for the decoded data
+
+  WirehairCodec encoder_;       ///< Wirehair encoder instance
+  WirehairCodec decoder_;       ///< Wirehair decoder instance
 };
 
 #endif // WIREHAIR_BENCHMARK_H

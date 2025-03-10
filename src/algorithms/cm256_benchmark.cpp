@@ -27,7 +27,7 @@ CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : ECBench
 
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    int write_res = write_validation_pattern(i, original_buffer_.get() + i * block_size_, block_size_);
+    int write_res = write_validation_pattern(i, &original_buffer_[i * block_size_], block_size_);
     if (write_res) throw_error("CM256: Failed to write random checking packet.");
   }
   
