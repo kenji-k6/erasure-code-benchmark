@@ -74,7 +74,5 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
 
 
 // Helper function to throw an error with a message
-[[noreturn]] void throw_error(const std::string& message) {
-  throw std::runtime_error(message);
-}
+[[noreturn]] void throw_error(const std::string& message);
 #endif // UTILS_H

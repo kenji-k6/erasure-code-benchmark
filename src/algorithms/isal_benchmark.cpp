@@ -16,7 +16,6 @@
 
 ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
   num_total_blocks_ = num_original_blocks_ + num_recovery_blocks_;
-
   // Allocate matrices etc.
   encode_matrix_ = std::make_unique<uint8_t[]>(num_total_blocks_ * num_original_blocks_);
   decode_matrix_ = std::make_unique<uint8_t[]>(num_total_blocks_ * num_original_blocks_);
@@ -24,27 +23,25 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchma
   temp_matrix_ = std::make_unique<uint8_t[]>(num_total_blocks_ * num_original_blocks_);
   g_tbls_ = std::make_unique<uint8_t[]>(num_total_blocks_ * num_original_blocks_ * 32);
 
-  original_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_original_blocks_);
-  decode_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_recovery_blocks_);
+  original_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_total_blocks_);
   recovery_outp_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_recovery_blocks_);
 
   if (!encode_matrix_ || !decode_matrix_ || !invert_matrix_ || !temp_matrix_ || !g_tbls_ ||
-      !original_buffer_ || !decode_buffer_ || !recovery_outp_buffer_) {
+      !original_buffer_ || !recovery_outp_buffer_) {
     throw_error("ISAL: Failed to allocate memory.");
   }
 
   // Initialize Pointer vectors
   original_ptrs_.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  decode_ptrs_.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
   recovery_src_ptrs_.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
   recovery_outp_ptrs_.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
+  decode_index_.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
 
-  for (unsigned i = 0; i < num_original_blocks_; ++i) {
+  for (unsigned i = 0; i < num_total_blocks_; ++i) {
     original_ptrs_[i] = &original_buffer_[i * block_size_];
   }
 
   for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    decode_ptrs_[i] = &decode_buffer_[i * block_size_];
     recovery_outp_ptrs_[i] = &recovery_outp_buffer_[i * block_size_];
   }
 
@@ -63,7 +60,7 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchma
 
 int ISALBenchmark::encode() noexcept {
   ec_encode_data(block_size_, num_original_blocks_, num_recovery_blocks_,
-                 g_tbls_.get(), original_ptrs_.data(), decode_ptrs_.data());
+                 g_tbls_.get(), original_ptrs_.data(), original_ptrs_.data() + num_original_blocks_);
   return 0;
 }
 
@@ -76,37 +73,31 @@ int ISALBenchmark::decode() noexcept {
   for (auto idx : lost_block_idxs_) {
     block_err_list_.push_back(static_cast<uint8_t>(idx));
   }
-
   // Generate decoding matrix
   if (gf_gen_decode_matrix_simple(encode_matrix_, decode_matrix_, invert_matrix_,
                                   temp_matrix_, decode_index_, block_err_list_,
                                   num_lost_blocks_, num_original_blocks_, num_total_blocks_)) {
     return -1;
   }
-
   // Set up recovery pointers
   for (unsigned i = 0; i < num_original_blocks_; i++) {
     recovery_src_ptrs_[i] = original_ptrs_[decode_index_[i]];
   }
-
   // Initialize tables and perform recovery
   ec_init_tables(num_original_blocks_, num_lost_blocks_, decode_matrix_.get(), g_tbls_.get());
   ec_encode_data(block_size_, num_original_blocks_, num_lost_blocks_,
                  g_tbls_.get(), recovery_src_ptrs_.data(), recovery_outp_ptrs_.data());
-  
+                 
   return 0;
 }
 
 
 void ISALBenchmark::simulate_data_loss() noexcept {
   for (auto idx : lost_block_idxs_) {
-    if (idx < num_original_blocks_) {
-      memset(original_ptrs_[idx], 0, block_size_);
-      original_ptrs_[idx] = nullptr;
-    } else {
-      memset(decode_ptrs_[idx - num_original_blocks_], 0, block_size_);
+    memset(original_ptrs_[idx], 0, block_size_);
+    original_ptrs_[idx] = nullptr;
+    if (idx > num_original_blocks_) {
       memset(recovery_outp_ptrs_[idx - num_original_blocks_], 0, block_size_);
-      decode_ptrs_[idx - num_original_blocks_] = nullptr;
     }
   }
 }
@@ -129,59 +120,63 @@ bool ISALBenchmark::check_for_corruption() const noexcept {
 }
 
 
-static int gf_gen_decode_matrix_simple(
+int gf_gen_decode_matrix_simple(
   const std::unique_ptr<uint8_t[]>& encode_matrix,
   std::unique_ptr<uint8_t[]>& decode_matrix,
-  const std::unique_ptr<uint8_t[]>& invert_matrix,
+  std::unique_ptr<uint8_t[]>& invert_matrix,
   std::unique_ptr<uint8_t[]>& temp_matrix,
   std::vector<uint8_t>& decode_index,
-  const std::vector<uint8_t>& frag_err_list,
-  const int nerrs, const int k, const int m
+  std::vector<uint8_t>& frag_err_list,
+  const int nerrs, const int k, [[maybe_unused]] const int m
 ) {
   int i, j, p, r;
   int nsrcerrs = 0;
   uint8_t s;
   uint8_t frag_in_err[ECLimits::ISAL_MAX_TOT_BLOCKS];
   memset(frag_in_err, 0, sizeof(frag_in_err));
-  
+
   // Order the fragments in erasure for easier sorting
   for (i = 0; i < nerrs; i++) {
-          if (frag_err_list[i] < k)
-                  nsrcerrs++;
-          frag_in_err[frag_err_list[i]] = 1;
+    if (frag_err_list[i] < k) {
+      nsrcerrs++;
+    }
+    frag_in_err[frag_err_list[i]] = 1;
   }
-  
   // Construct b (matrix that encoded remaining blocks) by removing erased rows
   for (i = 0, r = 0; i < k; i++, r++) {
-          while (frag_in_err[r])
-                  r++;
-          for (j = 0; j < k; j++)
-                  temp_matrix[k * i + j] = encode_matrix[k * r + j];
-          decode_index[i] = r;
-  }
-  
-  // Invert matrix to get recovery matrix
-  if (gf_invert_matrix(temp_matrix.get(), invert_matrix.get(), k) < 0)
-          return -1;
+    while (frag_in_err[r]) {
+      r++;
+    }
+    for (j = 0; j < k; j++) {
+      
+      temp_matrix[k * i + j] = encode_matrix[k * r + j];
+    }
 
+    decode_index[i] = r;
+  }
+  // Invert matrix to get recovery matrix
+  if (gf_invert_matrix(temp_matrix.get(), invert_matrix.get(), k) < 0) {
+    return -1;
+  }
   // Get decode matrix with only wanted recovery rows
   for (i = 0; i < nerrs; i++) {
-          if (frag_err_list[i] < k) // A src err
-                  for (j = 0; j < k; j++)
-                          decode_matrix[k * i + j] = invert_matrix[k * frag_err_list[i] + j];
+    if (frag_err_list[i] < k) {
+      for (j = 0; j < k; j++) {
+        decode_matrix[k * i + j] = invert_matrix[k * frag_err_list[i] + j];
+      }
+    }
   }
-  
   // For non-src (parity) erasures need to multiply encode matrix * invert
   for (p = 0; p < nerrs; p++) {
-          if (frag_err_list[p] >= k) { // A parity err
-                  for (i = 0; i < k; i++) {
-                          s = 0;
-                          for (j = 0; j < k; j++)
-                                  s ^= gf_mul(invert_matrix[j * k + i],
-                                              encode_matrix[k * frag_err_list[p] + j]);
-                          decode_matrix[k * p + i] = s;
-                  }
-          }
+    if (frag_err_list[p] >= k) { // A parity err
+      for (i = 0; i < k; i++) {
+        s = 0;
+        for (j = 0; j < k; j++) {
+          s ^= gf_mul(invert_matrix[j * k + i], encode_matrix[k * frag_err_list[p] + j]);
+        }
+        decode_matrix[k * p + i] = s;
+      }
+    }
   }
   return 0;
 }

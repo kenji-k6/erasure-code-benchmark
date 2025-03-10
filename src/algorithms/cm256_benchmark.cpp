@@ -34,7 +34,7 @@ CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : ECBench
   // Initialize block vector
   blocks_.resize(ECLimits::CM256_MAX_TOT_BLOCKS);
   for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    blocks_[i].Block = &original_buffer_[i];
+    blocks_[i].Block = &original_buffer_[i * block_size_];
   }
 }
 

@@ -33,7 +33,7 @@ uint32_t PCGRandom::next() {
 
 
 // Utility functions
-int write_validation_pattern(size_t block_idx, uint8_t* block_ptr, uint32_t size) {
+int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, uint32_t size) {
   if (size < 2) throw_error("write_validation_pattern: num_bytes must be at least 2");
   
   PCGRandom rng(block_idx, 1);
@@ -110,4 +110,9 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
 
   // Sort the indices (needed for Wirehair and ISA-L)
   std::sort(lost_block_idxs.begin(), lost_block_idxs.end());
+}
+
+
+[[noreturn]] void throw_error(const std::string& message) {
+  throw std::runtime_error(message);
 }

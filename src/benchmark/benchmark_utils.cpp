@@ -98,9 +98,8 @@ static void usage() {
 }
 
 static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint32_t num_orig_blocks, uint32_t num_rec_blocks) {
-  if (num_orig_blocks < 1 || num_rec_blocks < 0) {
-    std::cerr << "Error: Number of original blocks must be at least 1 and number of recovery blocks must be at least 0.\n"
-              << "(#original blocks) = " << num_orig_blocks << ", (#recovery blocks) = " << num_rec_blocks << "\n";
+  if (num_orig_blocks == 0) {
+    std::cerr << "Error: Number of original blocks must be at least 1\n";
     exit(0);
   }
 
@@ -115,7 +114,7 @@ static void check_args(uint64_t s, uint64_t b, uint32_t l, double r, int i, uint
     exit(0);
   }
 
-  if (l < 0 || l > num_rec_blocks) {
+  if (l > num_rec_blocks) {
     std::cerr << "Error: Number of lost blocks must be between 0 and the number of recovery blocks. (-l)\n";
     exit(0);
   }
@@ -359,7 +358,7 @@ static BenchmarkConfig get_single_benchmark_config(uint64_t s, uint64_t b, uint3
     l,
     r,
     i,
-    -1,
+    0xFF,
     lost_block_idxs[0],
     { num_orig, num_rec },
     false,
