@@ -15,9 +15,7 @@
  */
 class ECBenchmark {
 public:
-
   virtual ~ECBenchmark() noexcept = default; ///< Default virtual destructor
-
 
   /**
    * @brief Initialize the benchmark with the given (global) configuration.
@@ -29,7 +27,6 @@ public:
    */
   virtual int setup() noexcept = 0;
 
-
   /**
    * @brief Cleanup after the benchmark has completed.
    * 
@@ -37,7 +34,6 @@ public:
    * any memory that was allocated during the benchmark.
    */
   virtual void teardown() noexcept = 0;
-
 
   /**
    * @brief Run the encoding process.
@@ -48,7 +44,6 @@ public:
    * @return 0 on success, non-zero on failure.
    */
   virtual int encode() noexcept = 0;
-
 
   /**
    * @brief Run the decoding process (with simulated data loss).
@@ -63,7 +58,6 @@ public:
    */
   virtual int decode() noexcept = 0;
 
-
   /**
    * @brief Simulate data loss during transmission.
    * 
@@ -72,7 +66,6 @@ public:
    * a lot based on the EC algorithm/library being tested.
    */
   virtual void simulate_data_loss() noexcept = 0;
-
 
   /**
    * @brief Check if there is any corruption in the decoded data.
@@ -91,21 +84,19 @@ public:
    */
   virtual void make_memory_cold() noexcept {};
 
-  protected:
-    explicit ECBenchmark(const BenchmarkConfig& config) noexcept
-      : block_size_(config.block_size),
-        num_original_blocks_(config.computed.num_original_blocks),
-        num_recovery_blocks_(config.computed.num_recovery_blocks),
-        num_lost_blocks_(config.num_lost_blocks),
-        lost_block_idxs_(config.lost_block_idxs) {};
+protected:
+  explicit ECBenchmark(const BenchmarkConfig& config) noexcept
+    : block_size_(config.block_size),
+      num_original_blocks_(config.computed.num_original_blocks),
+      num_recovery_blocks_(config.computed.num_recovery_blocks),
+      num_lost_blocks_(config.num_lost_blocks),
+      lost_block_idxs_(config.lost_block_idxs) {};
 
-    uint64_t block_size_;
-
-    uint32_t num_original_blocks_;
-    uint32_t num_recovery_blocks_;
-
-    uint64_t num_lost_blocks_;
-    uint32_t *lost_block_idxs_;
+  uint64_t block_size_;
+  uint32_t num_original_blocks_;
+  uint32_t num_recovery_blocks_;
+  uint64_t num_lost_blocks_;
+  const std::vector<uint32_t>& lost_block_idxs_;
 };
 
 #endif // ABSTRACT_BENCHMARK_H
