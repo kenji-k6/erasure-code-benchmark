@@ -1,4 +1,5 @@
 #include "benchmark_utils.h"
+#include "xorec_gpu.h"
 
 int main (int argc, char** argv) {
   std::vector<BenchmarkConfig> configs;

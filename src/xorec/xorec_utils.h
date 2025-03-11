@@ -50,6 +50,16 @@ enum class XORVersion {
 };
 
 
+
+extern uint32_t DEVICE_ID;
+extern uint32_t MAX_THREADS_PER_BLOCK;
+extern uint32_t MAX_THREADS_PER_MULTIPROCESSOR;
+extern uint32_t MAX_BLOCKS_PER_MULTIPROCESSOR;
+extern uint32_t WARP_SIZE;
+extern bool XOREC_GPU_INIT_CALLED;
+
+void xorec_gpu_init();
+
 static XORResult inline xorec_check_args(uint32_t block_size, uint32_t num_data_blocks, uint32_t num_parity_blocks) {
   if (block_size < XOR_MIN_BLOCK_SIZE || block_size % XOR_BLOCK_SIZE_MULTIPLE != 0) {
     return XORResult::InvalidSize;
@@ -68,5 +78,6 @@ static XORResult inline xorec_check_args(uint32_t block_size, uint32_t num_data_
   }
   return XORResult::Success;
 }
+
 
 #endif // XOREC_UTILS_H

@@ -35,6 +35,8 @@ set (SOURCES
   src/utils/cuda_utils.cu
 
   src/xorec/xorec.cpp
+  src/xorec/xorec_gpu.cpp
+  src/xorec/xorec_gpu_kernels.cu
 
   src/algorithms/xorec_benchmark.cpp
   src/algorithms/cm256_benchmark.cpp

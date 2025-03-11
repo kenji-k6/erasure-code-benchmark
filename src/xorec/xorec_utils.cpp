@@ -1,13 +1,13 @@
-#include "xorec_gpu.h"
-#include "utils.h"
-#include <iostream>
+#include "xorec_utils.h"
 #include <cuda_runtime.h>
+#include "utils.h"
 
 uint32_t DEVICE_ID;
-uint32_t MAX_THREADS_PER_BLOCK;
-uint32_t MAX_THREADS_PER_MULTIPROCESSOR;
-uint32_t MAX_BLOCKS_PER_MULTIPROCESSOR;
+uint32_t MAX_THREADS_PER_BLOCK; // 1024
+uint32_t MAX_THREADS_PER_MULTIPROCESSOR; // 2048
+uint32_t MAX_BLOCKS_PER_MULTIPROCESSOR; // 32
 uint32_t WARP_SIZE;
+
 bool XOREC_GPU_INIT_CALLED = false;
 
 void xorec_gpu_init() {
@@ -27,4 +27,3 @@ void xorec_gpu_init() {
   MAX_BLOCKS_PER_MULTIPROCESSOR = device_prop.maxBlocksPerMultiProcessor;
   WARP_SIZE = device_prop.warpSize;
 }
-
