@@ -37,8 +37,7 @@ const std::unordered_map<std::string, BenchmarkFunction> available_gpu_benchmark
   { "xor-ec",         BM_XOREC_GPU        },
   { "xor-ec-scalar",  BM_XOREC_Scalar_GPU },
   { "xor-ec-avx",     BM_XOREC_AVX_GPU    },
-  { "xor-ec-avx2",    BM_XOREC_AVX2_GPU   },
-  { "gpu-test",      GPU_BM              }
+  { "xor-ec-avx2",    BM_XOREC_AVX2_GPU   }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
@@ -49,9 +48,7 @@ const std::unordered_map<std::string, std::string> benchmark_names = {
   { "cm256",          "CM256"           },
   { "isa-l",          "ISA-L"           },
   { "leopard",        "Leopard"         },
-  { "wirehair",       "Wirehair"        },
-
-  {"gpu-test",       "GPU Test"        }
+  { "wirehair",       "Wirehair"        }
 };
 
 static void usage() {
@@ -413,7 +410,6 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
     { "block-size",       no_argument,        nullptr, 'b'  },
     { "lost-blocks",      no_argument,        nullptr, 'l'  },
     { "redundancy",       no_argument,        nullptr, 'r'  },
-    { "gpu-test",         no_argument,        nullptr,  0   },
     { nullptr,            0,                  nullptr,  0   }
   };
 

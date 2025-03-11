@@ -20,8 +20,6 @@ void BM_ISAL(benchmark::State& state, const BenchmarkConfig& config);
 void BM_Leopard(benchmark::State& state, const BenchmarkConfig& config);
 void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config);
 
-void GPU_BM(benchmark::State& state, const BenchmarkConfig& config);
-
 void BM_XOREC_GPU(benchmark::State& state, const BenchmarkConfig& config);
 void BM_XOREC_Scalar_GPU(benchmark::State& state, const BenchmarkConfig& config);
 void BM_XOREC_AVX_GPU(benchmark::State& state, const BenchmarkConfig& config);

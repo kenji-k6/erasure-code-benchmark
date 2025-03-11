@@ -11,7 +11,6 @@
 #include "leopard_benchmark.h"
 #include "wirehair_benchmark.h"
 
-#include "all_gpu_benchmark.h"
 
 void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XORECBenchmark>(state, config);
@@ -43,11 +42,6 @@ void BM_Leopard(benchmark::State& state, const BenchmarkConfig& config) {
 
 void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<WirehairBenchmark>(state, config);
-}
-
-
-void GPU_BM(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<GPUBenchmark>(state, config);
 }
 
 
