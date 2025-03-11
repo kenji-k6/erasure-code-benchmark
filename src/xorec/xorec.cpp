@@ -17,21 +17,7 @@ XORResult xor_encode(
   uint32_t num_parity_blocks,
   XORVersion version
 ) {
-  if (block_size < XOR_MIN_BLOCK_SIZE || block_size % XOR_BLOCK_SIZE_MULTIPLE != 0) {
-    return XORResult::InvalidSize;
-  }
-
-  if (
-    num_data_blocks + num_parity_blocks > XOR_MAX_TOTAL_BLOCKS ||
-    num_data_blocks < XOR_MIN_DATA_BLOCKS ||
-    num_data_blocks > XOR_MAX_DATA_BLOCKS ||
-    num_parity_blocks < XOR_MIN_PARITY_BLOCKS ||
-    num_parity_blocks > XOR_MAX_PARITY_BLOCKS ||
-    num_parity_blocks > num_data_blocks ||
-    num_data_blocks % num_parity_blocks != 0
-  ) {
-        return XORResult::InvalidCounts;
-  }
+  if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XORResult::Success) return XORResult::InvalidCounts;
 
 
   std::memset(parity_buffer, 0, block_size * num_parity_blocks);
@@ -74,21 +60,7 @@ XORResult xor_decode(
 
   if ((block_bitmap & COMPLETE_DATA_BITMAP).count() == num_data_blocks) return XORResult::Success;
 
-  if (block_size < XOR_MIN_BLOCK_SIZE || block_size % XOR_BLOCK_SIZE_MULTIPLE != 0) {
-    return XORResult::InvalidSize;
-  }
-
-  if (
-    num_data_blocks + num_parity_blocks > XOR_MAX_TOTAL_BLOCKS ||
-    num_data_blocks < XOR_MIN_DATA_BLOCKS ||
-    num_data_blocks > XOR_MAX_DATA_BLOCKS ||
-    num_parity_blocks < XOR_MIN_PARITY_BLOCKS ||
-    num_parity_blocks > XOR_MAX_PARITY_BLOCKS ||
-    num_parity_blocks > num_data_blocks ||
-    num_data_blocks % num_parity_blocks != 0
-  ) {
-        return XORResult::InvalidCounts;
-  }
+  if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XORResult::Success) return XORResult::InvalidCounts;
 
 
   std::bitset<128> lost_blocks;

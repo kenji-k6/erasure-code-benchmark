@@ -38,4 +38,35 @@ enum class XORResult {
   KernelFailure = 5
 };
 
+/**
+ * @enum XORVersion
+ * @brief Allows to specify which version of the implementations to use
+ */
+enum class XORVersion {
+  Auto = 0,
+  Scalar = 1,
+  AVX = 2,
+  AVX2 = 3
+};
+
+
+static XORResult inline xorec_check_args(uint32_t block_size, uint32_t num_data_blocks, uint32_t num_parity_blocks) {
+  if (block_size < XOR_MIN_BLOCK_SIZE || block_size % XOR_BLOCK_SIZE_MULTIPLE != 0) {
+    return XORResult::InvalidSize;
+  }
+
+  if (
+    num_data_blocks + num_parity_blocks > XOR_MAX_TOTAL_BLOCKS ||
+    num_data_blocks < XOR_MIN_DATA_BLOCKS ||
+    num_data_blocks > XOR_MAX_DATA_BLOCKS ||
+    num_parity_blocks < XOR_MIN_PARITY_BLOCKS ||
+    num_parity_blocks > XOR_MAX_PARITY_BLOCKS ||
+    num_parity_blocks > num_data_blocks ||
+    num_data_blocks % num_parity_blocks != 0
+  ) {
+        return XORResult::InvalidCounts;
+  }
+  return XORResult::Success;
+}
+
 #endif // XOREC_UTILS_H
