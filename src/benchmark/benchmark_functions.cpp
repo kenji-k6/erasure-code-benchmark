@@ -12,21 +12,6 @@
 #include "wirehair_benchmark.h"
 
 
-void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XORECBenchmark>(state, config);
-}
-
-void BM_XOREC_Scalar(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XORECScalarBenchmark>(state, config);
-}
-
-void BM_XOREC_AVX(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XORECAVXBenchmark>(state, config);
-}
-
-void BM_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XORECAVX2Benchmark>(state, config);
-}
 
 void BM_CM256(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<CM256Benchmark>(state, config);
@@ -45,18 +30,40 @@ void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config) {
 }
 
 
-void BM_XOREC_GPU(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XORECBenchmarkGPU>(state, config);
+void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmark>(state, config);
 }
 
-void BM_XOREC_Scalar_GPU(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XORECScalarBenchmarkGPU>(state, config);
+void BM_XOREC_Scalar(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkScalar>(state, config);
 }
 
-void BM_XOREC_AVX_GPU(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XORECAVXBenchmarkGPU>(state, config);
+void BM_XOREC_AVX(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkAVX>(state, config);
 }
 
-void BM_XOREC_AVX2_GPU(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XORECAVX2BenchmarkGPU>(state, config);
+void BM_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkAVX2>(state, config);
+}
+
+
+void BM_XOREC_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkGPUPointer>(state, config);
+}
+
+void BM_XOREC_Scalar_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkScalarGPUPointer>(state, config);
+}
+
+void BM_XOREC_AVX_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkAVXGPUPointer>(state, config);
+}
+
+void BM_XOREC_AVX2_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkAVX2GPUPointer>(state, config);
+}
+
+
+void BM_XOREC_GPU_COMPUTATION(benchmark::State&state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkGPUComputation>(state, config);
 }

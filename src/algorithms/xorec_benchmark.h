@@ -1,18 +1,18 @@
-#ifndef XOREC_BENCHMARK_H
-#define XOREC_BENCHMARK_H
+#ifndef Xorec_BENCHMARK_H
+#define Xorec_BENCHMARK_H
 
 #include "abstract_benchmark.h"
 #include <bitset>
 
 
 /**
- * @class XORECBenchmark
- * @brief XOREC Benchmark implementation
+ * @class XorecBenchmark
+ * @brief Xorec Benchmark implementation
  */
-class XORECBenchmark : public ECBenchmark {
+class XorecBenchmark : public ECBenchmark {
 public:
-  explicit XORECBenchmark(const BenchmarkConfig& config) noexcept;
-  ~XORECBenchmark() noexcept = default;
+  explicit XorecBenchmark(const BenchmarkConfig& config) noexcept;
+  ~XorecBenchmark() noexcept = default;
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
@@ -23,17 +23,17 @@ protected:
   // Data Buffers
   std::unique_ptr<uint8_t[]> data_buffer_;  ///< Buffer for the original data we want to transmit
   std::unique_ptr<uint8_t[]> parity_buffer_;///< Buffer for the decoded data
-  std::bitset<256> block_bitmap_;         ///< Bitmap to check if all data arrived
+  std::unique_ptr<uint8_t[]> block_bitmap_; ///< Bitmap to check if all data arrived
 };
 
 
 /**
- * @class XORECScalarBenchmark
- * @brief XOREC Benchmark implementation using scalar operations
+ * @class XorecBenchmarkScalar
+ * @brief Xorec Benchmark implementation using scalar operations
  */
-class XORECScalarBenchmark : public XORECBenchmark {
+class XorecBenchmarkScalar : public XorecBenchmark {
 public:
-  explicit XORECScalarBenchmark(const BenchmarkConfig& config) noexcept;
+  explicit XorecBenchmarkScalar(const BenchmarkConfig& config) noexcept;
 
   int encode() noexcept override;
   int decode() noexcept override;
@@ -41,12 +41,12 @@ public:
 
 
 /**
- * @class XORECAVXBenchmark
- * @brief XOREC Benchmark implementation using AVX operations
+ * @class XorecBenchmarkAVX
+ * @brief Xorec Benchmark implementation using AVX operations
  */
-class XORECAVXBenchmark : public XORECBenchmark {
+class XorecBenchmarkAVX : public XorecBenchmark {
   public:
-    explicit XORECAVXBenchmark(const BenchmarkConfig& config) noexcept;
+    explicit XorecBenchmarkAVX(const BenchmarkConfig& config) noexcept;
   
     int encode() noexcept override;
     int decode() noexcept override;
@@ -54,12 +54,12 @@ class XORECAVXBenchmark : public XORECBenchmark {
 
 
 /**
- * @class XORECAVXBenchmark
- * @brief XOREC Benchmark implementation using AVX operations
+ * @class XorecBenchmarkAVX
+ * @brief Xorec Benchmark implementation using AVX operations
  */
-class XORECAVX2Benchmark : public XORECBenchmark {
+class XorecBenchmarkAVX2 : public XorecBenchmark {
 public:
-  explicit XORECAVX2Benchmark(const BenchmarkConfig& config) noexcept;
+  explicit XorecBenchmarkAVX2(const BenchmarkConfig& config) noexcept;
 
   int encode() noexcept override;
   int decode() noexcept override;
@@ -67,51 +67,68 @@ public:
 
 
 /**
- * @class XORECBenchmarkGPU
- * @brief XOREC Benchmark implementation using unified memory and CUDA
+ * @class XorecBenchmarkGPU
+ * @brief Xorec Benchmark implementation using unified memory, computation still happens on the CPU
  */
-class XORECBenchmarkGPU : public ECBenchmark {
+class XorecBenchmarkGPUPointer : public ECBenchmark {
 public:
-  explicit XORECBenchmarkGPU(const BenchmarkConfig& config) noexcept;
-  ~XORECBenchmarkGPU() noexcept override;
+  explicit XorecBenchmarkGPUPointer(const BenchmarkConfig& config) noexcept;
+  ~XorecBenchmarkGPUPointer() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
   bool check_for_corruption() const noexcept override;
-  void make_memory_cold() noexcept override;
+  void touch_gpu_memory() noexcept override;
 
 protected:
   uint32_t num_total_blocks_;
   // Data Buffers
   uint8_t *data_buffer_;          ///< Buffer for the original data we want to transmit
   std::unique_ptr<uint8_t[]> parity_buffer_;        ///< Buffer for the decoded data
-  std::bitset<256> block_bitmap_;         ///< Bitmap to check if all data arrived
+  std::unique_ptr<uint8_t[]> block_bitmap_; ///< Bitmap to check if all data arrived
 };
 
 
-class XORECScalarBenchmarkGPU : public XORECBenchmarkGPU {
+class XorecBenchmarkScalarGPUPointer : public XorecBenchmarkGPUPointer {
 public:
-  explicit XORECScalarBenchmarkGPU(const BenchmarkConfig& config) noexcept;
+  explicit XorecBenchmarkScalarGPUPointer(const BenchmarkConfig& config) noexcept;
 
   int encode() noexcept override;
   int decode() noexcept override;
 };
 
 
-class XORECAVXBenchmarkGPU : public XORECBenchmarkGPU {
+class XorecBenchmarkAVXGPUPointer : public XorecBenchmarkGPUPointer {
   public:
-    explicit XORECAVXBenchmarkGPU(const BenchmarkConfig& config) noexcept;
+    explicit XorecBenchmarkAVXGPUPointer(const BenchmarkConfig& config) noexcept;
   
     int encode() noexcept override;
     int decode() noexcept override;
 };
 
-class XORECAVX2BenchmarkGPU : public XORECBenchmarkGPU {
+class XorecBenchmarkAVX2GPUPointer : public XorecBenchmarkGPUPointer {
   public:
-    explicit XORECAVX2BenchmarkGPU(const BenchmarkConfig& config) noexcept;
+    explicit XorecBenchmarkAVX2GPUPointer(const BenchmarkConfig& config) noexcept;
   
     int encode() noexcept override;
     int decode() noexcept override;
   };
 
-#endif // XOREC_BENCHMARK_H
+
+class XorecBenchmarkGPUComputation : public ECBenchmark {
+  public:
+  explicit XorecBenchmarkGPUComputation(const BenchmarkConfig& config) noexcept;
+  ~XorecBenchmarkGPUComputation() noexcept = default;
+  int encode() noexcept override;
+  int decode() noexcept override;
+  void simulate_data_loss() noexcept override;
+  bool check_for_corruption() const noexcept override;
+
+protected:
+  uint32_t num_total_blocks_;
+  //  Buffers & Bitmap
+  uint8_t *data_buffer_;                ///< Buffer for the original data we want to transmit (allocated on unified memory)
+  uint8_t *parity_buffer_;              ///< Buffer for the decoded data (allocated on unified memory)
+  std::unique_ptr<uint8_t[]> block_bitmap_; ///< Bitmap to check if all data arrived
+};
+#endif // Xorec_BENCHMARK_H
