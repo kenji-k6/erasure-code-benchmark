@@ -5,6 +5,7 @@
 #include "utils.hpp"
 
 XorecBenchmarkGPUPtr::XorecBenchmarkGPUPtr(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
+  xorec_init();
   num_total_blocks_ = num_original_blocks_ + num_recovery_blocks_;
   cudaError_t err = cudaMallocManaged(reinterpret_cast<void**>(&data_buffer_), block_size_ * num_original_blocks_, cudaMemAttachHost); 
   if (err != cudaSuccess) throw_error("Xorec: Failed to allocate data buffer.");

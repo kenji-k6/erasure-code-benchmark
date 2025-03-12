@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <array>
+#include <iostream>
 
 #define XOREC_RESTRICT __restrict
 
@@ -109,7 +110,7 @@ static bool inline is_recoverable(const uint8_t * XOREC_RESTRICT block_bitmap, u
   std::array<uint8_t, XOREC_MAX_PARITY_BLOCKS> parity_needed = {0}; // indicate for each parity block if recovery has to happen
 
   for (unsigned i = 0; i < num_parity_blocks; ++i) {
-    if (block_bitmap[XOREC_MAX_PARITY_BLOCKS + i]) parity_needed[i] = 1;
+    if (!block_bitmap[XOREC_MAX_PARITY_BLOCKS + i]) parity_needed[i] = 1;
   }
 
   for (unsigned j = 0; j < num_data_blocks; ++j) {
