@@ -34,10 +34,15 @@ set (SOURCES
   src/algorithms/xorec_gpu_cmp_benchmark.cpp
   src/algorithms/xorec_gpu_ptr_benchmark.cpp
 
+  src/benchmark/benchmark_functions.cpp
+  src/benchmark/benchmark_reporters.cpp
+  src/benchmark/benchmark_utils.cpp
+
   src/utils/cuda_utils.cu
   src/utils/utils.cpp
 
   src/xorec/xorec_gpu_cmp.cu
+  src/xorec/xorec_utils.cpp
   src/xorec/xorec.cpp
 
   src/main.cpp

@@ -3,8 +3,8 @@
  * @brief Implementations of utility functions for parsing and validating command-line arguments
  */
 
-#include "benchmark/benchmark.h"
 #include "benchmark_utils.hpp"
+#include "benchmark/benchmark.h"
 #include "benchmark_functions.hpp"
 #include "utils.hpp"
 #include <cmath>
@@ -193,7 +193,7 @@ void parse_args(int argc, char** argv) {
 }
 
 static void init_lost_block_idxs(std::vector<std::vector<uint32_t>>& lost_block_idxs) {
-  for (auto _ : VAR_BUFFER_SIZE) {
+  for ([[maybe_unused]] auto _ : VAR_BUFFER_SIZE) {
     std::vector<uint32_t> vec;
     select_lost_block_idxs(
       FIXED_NUM_RECOVERY_BLOCKS,

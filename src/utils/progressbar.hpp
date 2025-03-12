@@ -62,6 +62,7 @@ public:
 
     int percentage = (current_step_ * 100) / (total_steps_ - 1);
     if (percentage < last_percentage_) return;
+    if (percentage > 100) percentage = 100;
 
     redraw_bar(percentage);
     print_elapsed_time();

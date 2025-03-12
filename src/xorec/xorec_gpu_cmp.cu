@@ -110,11 +110,6 @@ __global__ void xorec_gpu_encode_kernel(
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks
 ) {
-  if (gridDim.x != 1) {
-    std::cerr << "Error: xorec_gpu_encode_kernel called with more than one block" << std::endl;
-    return;
-  }
-
   uint32_t num_warps = blockDim.x / WARP_SIZE;
   uint32_t warp_idx = threadIdx.x / WARP_SIZE;
 

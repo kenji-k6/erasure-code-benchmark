@@ -45,19 +45,19 @@ void BM_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config) {
 }
 
 
-void BM_XOREC_SCALAR_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
+void BM_XOREC_SCALAR_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmarkScalarGPUPtr>(state, config);
 }
 
-void BM_XOREC_AVX_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
+void BM_XOREC_AVX_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmarkAVXGPUPtr>(state, config);
 }
 
-void BM_XOREC_AVX2_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
+void BM_XOREC_AVX2_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmarkAVX2GPUPtr>(state, config);
 }
 
 
-void BM_XOREC_GPU_COMPUTATION(benchmark::State&state, const BenchmarkConfig& config) {
+void BM_XOREC_GPU_CMP(benchmark::State&state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmarkGPUCmp>(state, config);
 }
