@@ -44,7 +44,7 @@ XorecResult xorec_encode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  XorecVersion version = XorecVersion::Auto
+  XorecVersion version
 );
 
 
@@ -65,7 +65,7 @@ XorecResult xorec_decode(
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
   uint8_t *block_bitmap,   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
-  XorecVersion version = XorecVersion::Auto
+  XorecVersion version
 );
 
 static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
@@ -176,47 +176,4 @@ static void inline xorec_copy_blocks_avx(void * XOREC_RESTRICT dest, const void 
 }
 
 static void inline xorec_copy_blocks_scalar(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) { memcpy(dest, src, bytes); }
-
-
-/**
- * @brief XORs two memory blocks.
- * @param dest Pointer to the destination block.
- * @param src Pointer to the source block.
- * @param bytes Number of bytes to XOR.
- */
-static void inline xorec_xor_blocks(
-  void * XOREC_RESTRICT dest,
-  const void * XOREC_RESTRICT src,
-  uint32_t bytes
-) {
-  #if defined(TRY_XOREC_AVX2)
-    xorec_xor_blocks_avx2(dest, src, bytes);
-  #elif defined(TRY_XOREC_AVX)
-    xorec_xor_blocks_avx(dest, src, bytes);
-  #else
-    xorec_xor_blocks_scalar(dest, src, bytes);
-  #endif
-}
-
-
-/**
- * @brief Copies one memory block to the next one.
- * @param dest Pointer to the destination block.
- * @param src Pointer to the source block.
- * @param bytes Number of bytes to copy.
- */
-static void inline xorec_copy_blocks(
-  void * XOREC_RESTRICT dest,
-  const void * XOREC_RESTRICT src,
-  uint32_t bytes
-) {
-  #if defined(TRY_XOREC_AVX2)
-    xorec_copy_blocks_avx2(dest, src, bytes);
-  #elif defined(TRY_XOREC_AVX)
-    xorec_copy_blocks_avx(dest, src, bytes);
-  #else
-    xorec_copy_blocks_scalar(dest, src, bytes);
-  #endif
-}
-
 #endif // XOREC_H

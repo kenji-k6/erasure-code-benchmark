@@ -42,10 +42,9 @@ enum class XorecResult {
  * @brief Allows to specify which version of the implementations to use
  */
 enum class XorecVersion {
-  Auto = 0,
-  Scalar = 1,
-  AVX = 2,
-  AVX2 = 3
+  Scalar = 0,
+  AVX = 1,
+  AVX2 = 2
 };
 
 

@@ -35,32 +35,37 @@ TouchGPUMemory TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_FALSE;
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
-  { "xor-ec",         BM_XOREC        },
-  { "xor-ec-scalar",  BM_XOREC_Scalar },
-  { "xor-ec-avx",     BM_XOREC_AVX    },
-  { "xor-ec-avx2",    BM_XOREC_AVX2   },
   { "cm256",          BM_CM256        },
   { "isa-l",          BM_ISAL         },
   { "leopard",        BM_Leopard      },
-  { "wirehair",       BM_Wirehair     }
-};
+  { "wirehair",       BM_Wirehair     },
 
-const std::unordered_map<std::string, BenchmarkFunction> available_gpu_benchmarks = {
-  { "xor-ec",         BM_XOREC_GPU_Pointer        },
-  { "xor-ec-scalar",  BM_XOREC_Scalar_GPU_Pointer },
-  { "xor-ec-avx",     BM_XOREC_AVX_GPU_Pointer    },
-  { "xor-ec-avx2",    BM_XOREC_AVX2_GPU_Pointer   }
+  { "xor-ec-scalar",  BM_XOREC_SCALAR },
+  { "xor-ec-avx",     BM_XOREC_AVX    },
+  { "xor-ec-avx2",    BM_XOREC_AVX2   },
+
+  {"xor-ec-scalar-gpu-pointer", BM_XOREC_SCALAR_GPU_POINTER},
+  {"xor-ec-avx-gpu-pointer",    BM_XOREC_AVX_GPU_POINTER   },
+  {"xor-ec-avx2-gpu-pointer",   BM_XOREC_AVX2_GPU_POINTER  },
+
+  {"xor-ec-gpu-computation",    BM_XOREC_GPU_COMPUTATION   }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
-  { "xor-ec",         "XOR-EC (Auto)"   },
-  { "xor-ec-scalar",  "XOR-EC (Scalar)" },
-  { "xor-ec-avx",     "XOR-EC (AVX)"    },
-  { "xor-ec-avx2",    "XOR-EC (AVX2)"   },
   { "cm256",          "CM256"           },
   { "isa-l",          "ISA-L"           },
   { "leopard",        "Leopard"         },
-  { "wirehair",       "Wirehair"        }
+  { "wirehair",       "Wirehair"        },
+
+  { "xor-ec-scalar",  "XOR-EC (Scalar)" },
+  { "xor-ec-avx",     "XOR-EC (AVX)"    },
+  { "xor-ec-avx2",    "XOR-EC (AVX2)"   },
+
+  {"xor-ec-scalar-gpu-pointer", "XOR-EC (Scalar, GPU Pointer)"},
+  {"xor-ec-avx-gpu-pointer",    "XOR-EC (AVX, GPU Pointer)"   },
+  {"xor-ec-avx2-gpu-pointer",   "XOR-EC (AVX2, GPU Pointer)"  },
+
+  {"xor-ec-gpu-computation",    "XOR-EC (GPU Computation)"   }
 };
 
 static void usage() {

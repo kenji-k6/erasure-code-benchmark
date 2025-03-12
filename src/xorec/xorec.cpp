@@ -28,9 +28,6 @@ XorecResult xorec_encode(
     for (unsigned j = i; j < num_data_blocks; j += num_parity_blocks) {
       const void * XOREC_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + j * block_size);
       switch (version) {
-        case XorecVersion::Auto:
-          xorec_xor_blocks(parity_block, data_block, block_size);
-          break;
         case XorecVersion::Scalar:
           xorec_xor_blocks_scalar(parity_block, data_block, block_size);
           break;
@@ -65,7 +62,7 @@ XorecResult xorec_decode(
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
 
   std::array<uint8_t, XOREC_MAX_PARITY_BLOCKS> lost_blocks = {0}; // indicate for each parity block if recovery has to happen
-  
+
   for (unsigned i = 0; i < num_parity_blocks; ++i) {
     if (block_bitmap[XOREC_MAX_PARITY_BLOCKS + i]) lost_blocks[i] = 1;
   }
@@ -87,9 +84,6 @@ XorecResult xorec_decode(
 
     // Copy the parity block to the recover block
     switch (version) {
-      case XorecVersion::Auto:
-        xorec_copy_blocks(recover_block, parity_block, block_size);
-        break;
       case XorecVersion::Scalar:
         xorec_copy_blocks_scalar(recover_block, parity_block, block_size);
         break;
@@ -107,9 +101,6 @@ XorecResult xorec_decode(
 
       const void * XOREC_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + j * block_size);
       switch (version) {
-        case XorecVersion::Auto:
-          xorec_xor_blocks(recover_block, data_block, block_size);
-          break;
         case XorecVersion::Scalar:
           xorec_xor_blocks_scalar(recover_block, data_block, block_size);
           break;

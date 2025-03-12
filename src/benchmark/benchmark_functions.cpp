@@ -5,11 +5,13 @@
 
 #include "benchmark_functions.h"
 #include "benchmark_generic_runner.h"
-#include "xorec_benchmark.h"
 #include "cm256_benchmark.h"
 #include "isal_benchmark.h"
 #include "leopard_benchmark.h"
 #include "wirehair_benchmark.h"
+#include "xorec_benchmark.h"
+#include "xorec_gpu_ptr_benchmark.h"
+#include "xorec_gpu_cmp_benchmark.h"
 
 
 
@@ -30,10 +32,6 @@ void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config) {
 }
 
 
-void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XorecBenchmark>(state, config);
-}
-
 void BM_XOREC_SCALAR(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmarkScalar>(state, config);
 }
@@ -47,23 +45,19 @@ void BM_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config) {
 }
 
 
-void BM_XOREC_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XorecBenchmarkGPUPointer>(state, config);
-}
-
 void BM_XOREC_SCALAR_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XorecBenchmarkScalarGPUPointer>(state, config);
+  BM_generic<XorecBenchmarkScalarGPUPtr>(state, config);
 }
 
 void BM_XOREC_AVX_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XorecBenchmarkAVXGPUPointer>(state, config);
+  BM_generic<XorecBenchmarkAVXGPUPtr>(state, config);
 }
 
 void BM_XOREC_AVX2_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XorecBenchmarkAVX2GPUPointer>(state, config);
+  BM_generic<XorecBenchmarkAVX2GPUPtr>(state, config);
 }
 
 
 void BM_XOREC_GPU_COMPUTATION(benchmark::State&state, const BenchmarkConfig& config) {
-  BM_generic<XorecBenchmarkGPUComputation>(state, config);
+  BM_generic<XorecBenchmarkGPUCmp>(state, config);
 }
