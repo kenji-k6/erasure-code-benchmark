@@ -34,7 +34,7 @@ void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmark>(state, config);
 }
 
-void BM_XOREC_Scalar(benchmark::State& state, const BenchmarkConfig& config) {
+void BM_XOREC_SCALAR(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmarkScalar>(state, config);
 }
 
@@ -51,7 +51,7 @@ void BM_XOREC_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config
   BM_generic<XorecBenchmarkGPUPointer>(state, config);
 }
 
-void BM_XOREC_Scalar_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
+void BM_XOREC_SCALAR_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmarkScalarGPUPointer>(state, config);
 }
 

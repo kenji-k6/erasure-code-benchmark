@@ -18,12 +18,12 @@ void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config);
 
 
 void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config);
-void BM_XOREC_Scalar(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_SCALAR(benchmark::State& state, const BenchmarkConfig& config);
 void BM_XOREC_AVX(benchmark::State& state, const BenchmarkConfig& config);
 void BM_XOREC_AVX2(benchmark::State& state, const BenchmarkConfig& config);
 
 void BM_XOREC_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config);
-void BM_XOREC_Scalar_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_SCALAR_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config);
 void BM_XOREC_AVX_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config);
 void BM_XOREC_AVX2_GPU_POINTER(benchmark::State& state, const BenchmarkConfig& config);
 
