@@ -2,7 +2,6 @@
 #define XOREC_H
 
 #include "xorec_utils.h"
-#include <bitset>
 #include <cstdint>
 #include <cstring>
 #include <array>
@@ -18,15 +17,16 @@
 
 
 #if defined(__AVX2__)
-  #define TRY_XOR_AVX2
+  #define TRY_XOREC_AVX2
   #include <immintrin.h>
-  #define XOR_AVX2 __m256i
+  #define XOREC_AVX2 __m256i
 #endif
 #if defined(__AVX__)
-  #define TRY_XOR_AVX
+  #define TRY_XOREC_AVX
   #include <immintrin.h>
-  #define XOR_AVX __m128i
+  #define XOREC_AVX __m128i
 #endif
+
 
 
 /**
@@ -36,15 +36,15 @@
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
- * @return XORResult XORResult indicating success or failure.
+ * @return XorecResult XorecResult indicating success or failure.
  */
-XORResult xor_encode(
-  const uint8_t *XOR_RESTRICT data_buffer,
-  uint8_t *XOR_RESTRICT parity_buffer,
+XorecResult xorec_encode(
+  const uint8_t *XOREC_RESTRICT data_buffer,
+  uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  XORVersion version = XORVersion::Auto
+  XorecVersion version = XorecVersion::Auto
 );
 
 
@@ -55,30 +55,30 @@ XORResult xor_encode(
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
- * @param block_bitmap A bitset indicating which blocks are present.
- * @return XORResult XORResult indicating success or failure.
+ * @param block_bitmap A bitmap indicating which blocks are present.
+ * @return XorecResult XorecResult indicating success or failure.
  */
-XORResult xor_decode(
-  uint8_t *XOR_RESTRICT data_buffer,
-  const uint8_t *XOR_RESTRICT parity_buffer,
+XorecResult xorec_decode(
+  uint8_t *XOREC_RESTRICT data_buffer,
+  const uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  std::bitset<256> block_bitmap,   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
-  XORVersion version = XORVersion::Auto
+  uint8_t *block_bitmap,   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
+  XorecVersion version = XorecVersion::Auto
 );
 
-static void inline XOR_xor_blocks_avx2(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
-  #if defined(TRY_XOR_AVX2)
-    XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
-    const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
+static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
+  #if defined(TRY_XOREC_AVX2)
+    XOREC_AVX2 * XOREC_RESTRICT dest256 = reinterpret_cast<XOREC_AVX2*>(dest);
+    const XOREC_AVX2 * XOREC_RESTRICT src256 = reinterpret_cast<const XOREC_AVX2*>(src);
 
     #pragma GCC ivdep
     for (; bytes >= 128; bytes -= 128, dest256 += 4, src256 += 4) {
-      XOR_AVX2 x0 = _mm256_xor_si256(_mm256_loadu_si256(dest256), _mm256_loadu_si256(src256));
-      XOR_AVX2 x1 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 1), _mm256_loadu_si256(src256 + 1));
-      XOR_AVX2 x2 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 2), _mm256_loadu_si256(src256 + 2));
-      XOR_AVX2 x3 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 3), _mm256_loadu_si256(src256 + 3));
+      XOREC_AVX2 x0 = _mm256_xor_si256(_mm256_loadu_si256(dest256), _mm256_loadu_si256(src256));
+      XOREC_AVX2 x1 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 1), _mm256_loadu_si256(src256 + 1));
+      XOREC_AVX2 x2 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 2), _mm256_loadu_si256(src256 + 2));
+      XOREC_AVX2 x3 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 3), _mm256_loadu_si256(src256 + 3));
       _mm256_storeu_si256(dest256, x0);
       _mm256_storeu_si256(dest256 + 1, x1);
       _mm256_storeu_si256(dest256 + 2, x2);
@@ -86,8 +86,8 @@ static void inline XOR_xor_blocks_avx2(void * XOR_RESTRICT dest, const void * XO
     }
 
     if (bytes > 0) {
-      XOR_AVX2 x0 = _mm256_xor_si256(_mm256_loadu_si256(dest256), _mm256_loadu_si256(src256));
-      XOR_AVX2 x1 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 1), _mm256_loadu_si256(src256 + 1));
+      XOREC_AVX2 x0 = _mm256_xor_si256(_mm256_loadu_si256(dest256), _mm256_loadu_si256(src256));
+      XOREC_AVX2 x1 = _mm256_xor_si256(_mm256_loadu_si256(dest256 + 1), _mm256_loadu_si256(src256 + 1));
       _mm256_storeu_si256(dest256, x0);
       _mm256_storeu_si256(dest256 + 1, x1);
     }
@@ -97,17 +97,17 @@ static void inline XOR_xor_blocks_avx2(void * XOR_RESTRICT dest, const void * XO
   #endif
 }
 
-static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
-  #if defined(TRY_XOR_AVX)
-    XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
-    const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
+static void inline xorec_xor_blocks_avx(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
+  #if defined(TRY_XOREC_AVX)
+    XOREC_AVX * XOREC_RESTRICT dest128 = reinterpret_cast<XOREC_AVX*>(dest);
+    const XOREC_AVX * XOREC_RESTRICT src128 = reinterpret_cast<const XOREC_AVX*>(src);
 
     #pragma GCC ivdep
     for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
-      XOR_AVX x0 = _mm_xor_si128(_mm_loadu_si128(dest128), _mm_loadu_si128(src128));
-      XOR_AVX x1 = _mm_xor_si128(_mm_loadu_si128(dest128 + 1), _mm_loadu_si128(src128 + 1));
-      XOR_AVX x2 = _mm_xor_si128(_mm_loadu_si128(dest128 + 2), _mm_loadu_si128(src128 + 2));
-      XOR_AVX x3 = _mm_xor_si128(_mm_loadu_si128(dest128 + 3), _mm_loadu_si128(src128 + 3));
+      XOREC_AVX x0 = _mm_xor_si128(_mm_loadu_si128(dest128), _mm_loadu_si128(src128));
+      XOREC_AVX x1 = _mm_xor_si128(_mm_loadu_si128(dest128 + 1), _mm_loadu_si128(src128 + 1));
+      XOREC_AVX x2 = _mm_xor_si128(_mm_loadu_si128(dest128 + 2), _mm_loadu_si128(src128 + 2));
+      XOREC_AVX x3 = _mm_xor_si128(_mm_loadu_si128(dest128 + 3), _mm_loadu_si128(src128 + 3));
       _mm_storeu_si128(dest128, x0);
       _mm_storeu_si128(dest128 + 1, x1);
       _mm_storeu_si128(dest128 + 2, x2);
@@ -121,9 +121,9 @@ static void inline XOR_xor_blocks_avx(void * XOR_RESTRICT dest, const void * XOR
 
 #pragma GCC push_options
 #pragma GCC optimize ("no-tree-vectorize")
-static void inline XOR_xor_blocks_scalar(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
-  uint64_t * XOR_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
-  const uint64_t * XOR_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
+static void inline xorec_xor_blocks_scalar(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
+  uint64_t * XOREC_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
+  const uint64_t * XOREC_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
 
   for (; bytes >= 32; bytes -= 32, dest64 += 4, src64 += 4) {
     *dest64 ^= *src64;
@@ -134,10 +134,10 @@ static void inline XOR_xor_blocks_scalar(void * XOR_RESTRICT dest, const void * 
 }
 #pragma GCC pop_options
 
-static void inline XOR_copy_blocks_avx2(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
-  #if defined(TRY_XOR_AVX2)
-    XOR_AVX2 * XOR_RESTRICT dest256 = reinterpret_cast<XOR_AVX2*>(dest);
-    const XOR_AVX2 * XOR_RESTRICT src256 = reinterpret_cast<const XOR_AVX2*>(src);
+static void inline xorec_copy_blocks_avx2(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
+  #if defined(TRY_XOREC_AVX2)
+    XOREC_AVX2 * XOREC_RESTRICT dest256 = reinterpret_cast<XOREC_AVX2*>(dest);
+    const XOREC_AVX2 * XOREC_RESTRICT src256 = reinterpret_cast<const XOREC_AVX2*>(src);
 
     #pragma GCC ivdep
     for (; bytes >= 128; bytes -= 128, dest256 += 4, src256 += 4) {
@@ -157,10 +157,10 @@ static void inline XOR_copy_blocks_avx2(void * XOR_RESTRICT dest, const void * X
   #endif
 }
 
-static void inline XOR_copy_blocks_avx(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) {
-  #if defined(TRY_XOR_AVX)
-    XOR_AVX * XOR_RESTRICT dest128 = reinterpret_cast<XOR_AVX*>(dest);
-    const XOR_AVX * XOR_RESTRICT src128 = reinterpret_cast<const XOR_AVX*>(src);
+static void inline xorec_copy_blocks_avx(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
+  #if defined(TRY_XOREC_AVX)
+    XOREC_AVX * XOREC_RESTRICT dest128 = reinterpret_cast<XOREC_AVX*>(dest);
+    const XOREC_AVX * XOREC_RESTRICT src128 = reinterpret_cast<const XOREC_AVX*>(src);
 
     #pragma GCC ivdep
     for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
@@ -175,7 +175,7 @@ static void inline XOR_copy_blocks_avx(void * XOR_RESTRICT dest, const void * XO
   #endif
 }
 
-static void inline XOR_copy_blocks_scalar(void * XOR_RESTRICT dest, const void * XOR_RESTRICT src, uint32_t bytes) { memcpy(dest, src, bytes); }
+static void inline xorec_copy_blocks_scalar(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) { memcpy(dest, src, bytes); }
 
 
 /**
@@ -184,17 +184,17 @@ static void inline XOR_copy_blocks_scalar(void * XOR_RESTRICT dest, const void *
  * @param src Pointer to the source block.
  * @param bytes Number of bytes to XOR.
  */
-static void inline XOR_xor_blocks(
-  void * XOR_RESTRICT dest,
-  const void * XOR_RESTRICT src,
+static void inline xorec_xor_blocks(
+  void * XOREC_RESTRICT dest,
+  const void * XOREC_RESTRICT src,
   uint32_t bytes
 ) {
-  #if defined(TRY_XOR_AVX2)
-    XOR_xor_blocks_avx2(dest, src, bytes);
-  #elif defined(TRY_XOR_AVX)
-    XOR_xor_blocks_avx(dest, src, bytes);
+  #if defined(TRY_XOREC_AVX2)
+    xorec_xor_blocks_avx2(dest, src, bytes);
+  #elif defined(TRY_XOREC_AVX)
+    xorec_xor_blocks_avx(dest, src, bytes);
   #else
-    XOR_xor_blocks_scalar(dest, src, bytes);
+    xorec_xor_blocks_scalar(dest, src, bytes);
   #endif
 }
 
@@ -205,17 +205,17 @@ static void inline XOR_xor_blocks(
  * @param src Pointer to the source block.
  * @param bytes Number of bytes to copy.
  */
-static void inline XOR_copy_blocks(
-  void * XOR_RESTRICT dest,
-  const void * XOR_RESTRICT src,
+static void inline xorec_copy_blocks(
+  void * XOREC_RESTRICT dest,
+  const void * XOREC_RESTRICT src,
   uint32_t bytes
 ) {
-  #if defined(TRY_XOR_AVX2)
-    XOR_copy_blocks_avx2(dest, src, bytes);
-  #elif defined(TRY_XOR_AVX)
-    XOR_copy_blocks_avx(dest, src, bytes);
+  #if defined(TRY_XOREC_AVX2)
+    xorec_copy_blocks_avx2(dest, src, bytes);
+  #elif defined(TRY_XOREC_AVX)
+    xorec_copy_blocks_avx(dest, src, bytes);
   #else
-    XOR_copy_blocks_scalar(dest, src, bytes);
+    xorec_copy_blocks_scalar(dest, src, bytes);
   #endif
 }
 

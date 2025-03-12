@@ -7,6 +7,7 @@
 
 #include <bitset>
 #include <cstdint>
+#include <array>
 
 #define XOREC_RESTRICT __restrict
 
@@ -20,10 +21,8 @@ constexpr uint32_t XOREC_MAX_PARITY_BLOCKS = 128;
 constexpr uint32_t XOREC_MAX_TOTAL_BLOCKS = 256;
 
 /// Bitmap to check if all data blocks are available (no recovery needed)
-const std::bitset<XOREC_MAX_TOTAL_BLOCKS> COMPLETE_DATA_BITMAP =(
-  std::bitset<256>(0xFFFFFFFFFFFFFFFFULL)<<64) |
-  std::bitset<256>(0xFFFFFFFFFFFFFFFFULL
-  );
+std::array<uint8_t, XOREC_MAX_TOTAL_BLOCKS> COMPLETE_DATA_BITMAP = { 0 };
+
 
   /**
  * @enum XORResult
