@@ -59,7 +59,7 @@ const std::unordered_map<std::string, std::string> benchmark_names = {
   { "xorec-scalar-gpu-ptr", "XOR-EC (Scalar, GPU Pointer)"  },
   { "xorec-avx-gpu-ptr",    "XOR-EC (AVX, GPU Pointer)"     },
   { "xorec-avx2-gpu-ptr",   "XOR-EC (AVX2, GPU Pointer)"    },
-  { "xor-ec-gpu-cmp",       "XOR-EC (GPU Computation)"      }
+  { "xorec-gpu-cmp",        "XOR-EC (GPU Computation)"      }
 };
 
 bool is_gpu_benchmark(const std::string& name) {
@@ -95,7 +95,7 @@ static void usage() {
             << "      --xorec-avx-gpu-ptr                 run the AVX XOR-EC implementation (data buffer on GPU)\n"
             << "      --xorec-avx2-gpu-ptr                run the AVX2 XOR-EC implementation (data buffer on GPU)\n"
 
-            << "      --xorec--gpu-cmp                    run the XOR-EC implementation (data buffer, parity buffer\n"
+            << "      --xorec-gpu-cmp                    run the XOR-EC implementation (data buffer, parity buffer\n"
             << "                                          & computation on GPU)\n"
             
             << " *If no algorithm is specified, all algorithms will be run.*\n";
