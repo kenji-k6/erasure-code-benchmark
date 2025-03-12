@@ -13,7 +13,8 @@
 #include <unordered_map>
 
 // Function declarations
-void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs);
+void parse_args(int argc, char** argv);
+void get_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs);
 void run_benchmarks(std::vector<BenchmarkConfig>& configs);
 
 #endif // BENCHMARK_UTILS_H
