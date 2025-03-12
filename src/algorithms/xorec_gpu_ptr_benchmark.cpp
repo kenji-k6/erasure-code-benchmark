@@ -31,7 +31,7 @@ void XorecBenchmarkGPUPtr::simulate_data_loss() noexcept {
   for (unsigned i = 0; i < num_total_blocks_; ++i) {
     if (loss_idx < num_lost_blocks_ && lost_block_idxs_[loss_idx] == i) {
       if (i < num_original_blocks_) {
-        memset(data_buffer_ + i * block_size_, 0, block_size_);
+        memset(&data_buffer_[i * block_size_], 0, block_size_);
       } else {
         memset(&parity_buffer_[(i - num_original_blocks_) * block_size_], 0, block_size_);
       }
@@ -42,7 +42,7 @@ void XorecBenchmarkGPUPtr::simulate_data_loss() noexcept {
     if (i < num_original_blocks_) {
       block_bitmap_[i] = 1;
     } else {
-      block_bitmap_[XOREC_MAX_DATA_BLOCKS + i] = 1;
+      block_bitmap_[i-num_original_blocks_ + XOREC_MAX_DATA_BLOCKS] = 1;
     }
   }
 }
