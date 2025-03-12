@@ -75,4 +75,8 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
 
 // Helper function to throw an error with a message
 [[noreturn]] void throw_error(const std::string& message);
+
+
+// Helper function to make a string lowercase
+std::string to_lower(std::string str);
 #endif // UTILS_H

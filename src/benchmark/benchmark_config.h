@@ -26,7 +26,7 @@ struct BenchmarkConfig {
   } computed;
 
   bool gpu_mem;                                   ///< Flag to indicate GPU memory usage
-  bool mem_cold;                                  ///< Flag to indicate GPU memory warmup
+  bool touch_gpu_mem;                             ///< Flag to indicate GPU memory warmup
 
   BenchmarkProgressReporter *progress_reporter = nullptr;
 };

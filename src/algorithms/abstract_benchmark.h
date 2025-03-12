@@ -63,7 +63,7 @@ public:
    * 
    * If not overwritten it doesn nothing.
    */
-  virtual void make_memory_cold() noexcept {};
+  virtual void touch_gpu_memory() noexcept {};
 
 protected:
   explicit ECBenchmark(const BenchmarkConfig& config) noexcept

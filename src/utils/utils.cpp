@@ -116,3 +116,9 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
 [[noreturn]] void throw_error(const std::string& message) {
   throw std::runtime_error(message);
 }
+
+std::string to_lower(std::string str) {
+  std::transform(str.begin(), str.end(), str.begin(),
+    [](unsigned char c){ return std::tolower(c); });
+  return str;
+}

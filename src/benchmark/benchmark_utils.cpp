@@ -16,10 +16,22 @@ constexpr const char* OUTPUT_FILE_DIR = "../results/raw/";
 std::string output_file_name = "benchmark_results.csv";
 bool FULL_BENCHMARK = false;
 bool OVERWRITE_FILE = true;
-bool CPU_MEM = true;
-bool GPU_MEM = false;
-bool MEM_WARM = false;
-bool MEM_COLD = true;
+
+enum class DataBufferAllocation {
+  USE_MEMORY_CPU = 0,
+  USE_MEMORY_GPU = 1,
+  USE_MEMORY_ALL = 2
+};
+
+enum class TouchGPUMemory {
+  TOUCH_GPU_MEM_TRUE = 0,
+  TOUCH_GPU_MEM_FALSE = 1,
+  TOUCH_GPU_MEM_ALL = 2
+};
+
+DataBufferAllocation DATA_BUFFER_ALLOCATION = DataBufferAllocation::USE_MEMORY_CPU;
+TouchGPUMemory TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_FALSE;
+
 
 std::unordered_set<std::string> selected_benchmarks;
 const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
@@ -34,10 +46,10 @@ const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = 
 };
 
 const std::unordered_map<std::string, BenchmarkFunction> available_gpu_benchmarks = {
-  { "xor-ec",         BM_XOREC_GPU        },
-  { "xor-ec-scalar",  BM_XOREC_Scalar_GPU },
-  { "xor-ec-avx",     BM_XOREC_AVX_GPU    },
-  { "xor-ec-avx2",    BM_XOREC_AVX2_GPU   }
+  { "xor-ec",         BM_XOREC_GPU_Pointer        },
+  { "xor-ec-scalar",  BM_XOREC_Scalar_GPU_Pointer },
+  { "xor-ec-avx",     BM_XOREC_AVX_GPU_Pointer    },
+  { "xor-ec-avx2",    BM_XOREC_AVX2_GPU_Pointer   }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
@@ -55,45 +67,45 @@ static void usage() {
   std::cerr << "Usage: ec-benchmark [options]\n\n"
 
             << " Help Option:\n"
-            << "  -h, --help                          show this help message\n\n"
+            << "  -h, --help                              show this help message\n\n"
             
             << " Benchmark Options:\n"
-            << "  -i, --iterations=<num>              number of benchmark iterations (default 10)\n"
-            << "      --full                          run the full benchmark suite, write results to CSV,\n"
-            << "                                      any specifed benchmark config parameters will be ignored\n\n"
+            << "  -i, --iterations=<num>                  number of benchmark iterations (default 10)\n"
+            << "      --full                              run the full benchmark suite, write results to CSV,\n"
+            << "                                          any specifed benchmark config parameters will be ignored\n\n"
       
             << " Algorithm Selection:\n"
-            << "      --xor-ec                        run the XOR-EC benchmark (automatically chooses between\n"
-            << "                                      the Scalar, AVX, and AVX2 implementations according\n"
-            << "                                      to the system specification)\n"
-            << "      --xor-ec-scalar                 run the scalar XOR-EC implementation\n"
-            << "                                      (SIMD optimizations disabled)\n"
-            << "      --xor-ec-avx                    run the AVX XOR-EC implementation\n"
-            << "      --xor-ec-avx2                   run the AVX2 XOR-EC implementation\n"
-            << "      --cm256                         run the CM256 benchmark\n"
-            << "      --isa-l                         run the ISA-L benchmark\n"
-            << "      --leopard                       run the Leopard benchmark\n"
-            << "      --wirehair                      run the Wirehair benchmark\n"
+            << "      --xor-ec                            run the XOR-EC benchmark (automatically chooses between\n"
+            << "                                          the Scalar, AVX, and AVX2 implementations according\n"
+            << "                                          to the system specification)\n"
+            << "      --xor-ec-scalar                     run the scalar XOR-EC implementation\n"
+            << "                                          (SIMD optimizations disabled)\n"
+            << "      --xor-ec-avx                        run the AVX XOR-EC implementation\n"
+            << "      --xor-ec-avx2                       run the AVX2 XOR-EC implementation\n"
+            << "      --cm256                             run the CM256 benchmark\n"
+            << "      --isa-l                             run the ISA-L benchmark\n"
+            << "      --leopard                           run the Leopard benchmark\n"
+            << "      --wirehair                          run the Wirehair benchmark\n"
             << " *If no algorithm is specified, all algorithms will be run.*\n\n"
 
             << " Full Suite Options:\n"
-            << "      --file=<file_name>              specify output file name\n"
-            << "      --append                        append results to the output file (default: overwrite)\n"
-            << "      --memory <gpu|cpu|all>          allocate the data buffers of the specified algorithms\n"
-            << "                                      in GPU or CPU memory, or both (default: CPU)\n"
-            << "      --memory-state <warm|cold|all>  whether to simulate cold CPU memory or warm CPU memory\n"
-            << "                                      for encoding and decoding benchmarks (default: cold)\n"
-            << "                                      *only relevant if --memory=gpu or --memory=all*\n"
+            << "      --file=<file_name>                  specify output file name\n"
+            << "      --append                            append results to the output file (default: overwrite)\n"
+            << "      --buffer-allocation <gpu|cpu|all>   allocate the data buffers of the specified algorithms\n"
+            << "                                          in GPU or CPU memory, or both (default: CPU)\n"
+            << "      --touch-gpu-memory <true|false|all> whether to touch GPU memory before encoding/decoding\n"
+            << "                                          (default: false)\n"
+            << "                                          *only relevant if --memory=gpu or --memory=all*\n"
 
             << " Single Run Options:\n"
-            << "  -s, --size=<size>                   total size of original data in bytes\n"
-            << "                                      default: " << FIXED_BUFFFER_SIZE << " B\n"
-            << "  -b, --block-size=<size>             size of each block in bytes\n"
-            << "                                      default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << " B\n"
-            << "  -l, --lost_blocks=<num>             number of lost blocks\n"
-            << "                                      default: " << FIXED_NUM_LOST_BLOCKS << '\n'
-            << "  -r, --redundancy=<ratio>            redundancy ratio (#recovery blocks / #original blocks)\n"
-            << "                                      default= " << FIXED_PARITY_RATIO << "\n\n";
+            << "  -s, --size=<size>                       total size of original data in bytes\n"
+            << "                                          default: " << FIXED_BUFFFER_SIZE << " B\n"
+            << "  -b, --block-size=<size>                 size of each block in bytes\n"
+            << "                                          default: " << FIXED_BUFFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS << " B\n"
+            << "  -l, --lost_blocks=<num>                 number of lost blocks\n"
+            << "                                          default: " << FIXED_NUM_LOST_BLOCKS << '\n'
+            << "  -r, --redundancy=<ratio>                redundancy ratio (#recovery blocks / #original blocks)\n"
+            << "                                          default= " << FIXED_PARITY_RATIO << "\n\n";
   exit(0);
 }
 
@@ -233,24 +245,24 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
     };
     
 
-    if (CPU_MEM) {
+    if (DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_CPU || DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_ALL) {
       BenchmarkConfig cpu_config = config;
       cpu_config.gpu_mem = false;
       configs.push_back(cpu_config);
     }
 
-    if (GPU_MEM) {
+    if (DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_GPU || DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_ALL) {
       BenchmarkConfig gpu_config = config;
       gpu_config.gpu_mem = true;
 
-      if (MEM_WARM) {
+      if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_TRUE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
         BenchmarkConfig warm_config = gpu_config;
-        warm_config.mem_cold = false;
+        warm_config.touch_gpu_mem = true;
         configs.push_back(warm_config);
       }
-      if (MEM_COLD) {
+      if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_FALSE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
         BenchmarkConfig cold_config = gpu_config;
-        cold_config.mem_cold = true;
+        cold_config.touch_gpu_mem = false;
         configs.push_back(cold_config);
       }
     }
@@ -272,24 +284,24 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
       nullptr
     };
 
-    if (CPU_MEM) {
+    if (DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_CPU || DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_ALL) {
       BenchmarkConfig cpu_config = config;
       cpu_config.gpu_mem = false;
       configs.push_back(cpu_config);
     }
 
-    if (GPU_MEM) {
+    if (DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_GPU || DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_ALL) {
       BenchmarkConfig gpu_config = config;
       gpu_config.gpu_mem = true;
 
-      if (MEM_WARM) {
+      if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_TRUE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
         BenchmarkConfig warm_config = gpu_config;
-        warm_config.mem_cold = false;
+        warm_config.touch_gpu_mem = true;
         configs.push_back(warm_config);
       }
-      if (MEM_COLD) {
+      if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_FALSE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
         BenchmarkConfig cold_config = gpu_config;
-        cold_config.mem_cold = true;
+        cold_config.touch_gpu_mem = false;
         configs.push_back(cold_config);
       }
     }
@@ -320,24 +332,24 @@ static void get_full_benchmark_configs(int num_iterations, std::vector<Benchmark
       nullptr
     };
 
-    if (CPU_MEM) {
+    if (DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_CPU || DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_ALL) {
       BenchmarkConfig cpu_config = config;
       cpu_config.gpu_mem = false;
       configs.push_back(cpu_config);
     }
 
-    if (GPU_MEM) {
+    if (DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_GPU || DATA_BUFFER_ALLOCATION == DataBufferAllocation::USE_MEMORY_ALL) {
       BenchmarkConfig gpu_config = config;
       gpu_config.gpu_mem = true;
 
-      if (MEM_WARM) {
+      if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_TRUE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
         BenchmarkConfig warm_config = gpu_config;
-        warm_config.mem_cold = false;
+        warm_config.touch_gpu_mem = true;
         configs.push_back(warm_config);
       }
-      if (MEM_COLD) {
+      if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_FALSE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
         BenchmarkConfig cold_config = gpu_config;
-        cold_config.mem_cold = true;
+        cold_config.touch_gpu_mem = false;
         configs.push_back(cold_config);
       }
     }
@@ -391,26 +403,26 @@ static void inline add_benchmark(std::string name) {
 
 void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
   struct option long_options[] = {
-    { "help",             no_argument,        nullptr, 'h'  },
-    { "iterations",       required_argument,  nullptr, 'i'  },
-    { "full",             no_argument,        nullptr,  0   },
-    { "memory",           required_argument,  nullptr,  0   },
-    { "memory-state",     required_argument,  nullptr,  0   },
-    { "file",             required_argument,  nullptr,  0   },
-    { "append",           no_argument,        nullptr,  0   },
-    { "xor-ec",           no_argument,        nullptr,  0   },
-    { "xor-ec-scalar",    no_argument,        nullptr,  0   },
-    { "xor-ec-avx",       no_argument,        nullptr,  0   },
-    { "xor-ec-avx2",      no_argument,        nullptr,  0   },
-    { "cm256",            no_argument,        nullptr,  0   },
-    { "isa-l",            no_argument,        nullptr,  0   },
-    { "leopard",          no_argument,        nullptr,  0   },
-    { "wirehair",         no_argument,        nullptr,  0   },
-    { "size",             no_argument,        nullptr, 's'  },
-    { "block-size",       no_argument,        nullptr, 'b'  },
-    { "lost-blocks",      no_argument,        nullptr, 'l'  },
-    { "redundancy",       no_argument,        nullptr, 'r'  },
-    { nullptr,            0,                  nullptr,  0   }
+    { "help",               no_argument,        nullptr, 'h'  },
+    { "iterations",         required_argument,  nullptr, 'i'  },
+    { "full",               no_argument,        nullptr,  0   },
+    { "buffer-allocation",  required_argument,  nullptr,  0   },
+    { "touch-gpu-memory",   required_argument,  nullptr,  0   },
+    { "file",               required_argument,  nullptr,  0   },
+    { "append",             no_argument,        nullptr,  0   },
+    { "xor-ec",             no_argument,        nullptr,  0   },
+    { "xor-ec-scalar",      no_argument,        nullptr,  0   },
+    { "xor-ec-avx",         no_argument,        nullptr,  0   },
+    { "xor-ec-avx2",        no_argument,        nullptr,  0   },
+    { "cm256",              no_argument,        nullptr,  0   },
+    { "isa-l",              no_argument,        nullptr,  0   },
+    { "leopard",            no_argument,        nullptr,  0   },
+    { "wirehair",           no_argument,        nullptr,  0   },
+    { "size",               no_argument,        nullptr, 's'  },
+    { "block-size",         no_argument,        nullptr, 'b'  },
+    { "lost-blocks",        no_argument,        nullptr, 'l'  },
+    { "redundancy",         no_argument,        nullptr, 'r'  },
+    { nullptr,              0,                  nullptr,  0   }
   };
 
   uint64_t s = FIXED_BUFFFER_SIZE;
@@ -448,35 +460,29 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
         if (name == "full") {
           FULL_BENCHMARK = true;
 
-        } else if (name == "memory") {
-          auto arg = std::string(optarg);
+        } else if (name == "buffer-allocation") {
+          auto arg = to_lower(std::string(optarg));
           if (arg == "gpu") {
-            CPU_MEM = false;
-            GPU_MEM = true;
+            DATA_BUFFER_ALLOCATION = DataBufferAllocation::USE_MEMORY_GPU;
           } else if (arg == "cpu") {
-            CPU_MEM = true;
-            GPU_MEM = false;
+            DATA_BUFFER_ALLOCATION = DataBufferAllocation::USE_MEMORY_CPU;
           } else if (arg == "all") {
-            CPU_MEM = true;
-            GPU_MEM = true;
+            DATA_BUFFER_ALLOCATION = DataBufferAllocation::USE_MEMORY_ALL;
           } else {
             std::cerr << "Error: --memory option must be either 'gpu', 'cpu', or 'all'.\n";
             exit(0);
           }
 
-        } else if (name == "memory-state") {
-          auto arg = std::string(optarg);
-          if (arg == "warm") {
-            MEM_WARM = true;
-            MEM_COLD = false;
-          } else if (arg == "cold") {
-            MEM_WARM = false;
-            MEM_COLD = true;
+        } else if (name == "touch-gpu-memory") {
+          auto arg = to_lower(std::string(optarg));
+          if (arg == "true" || arg == "1") {
+            TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_TRUE;
+          } else if (arg == "false" || arg == "0") {
+            TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_FALSE;
           } else if (arg == "all") {
-            MEM_WARM = true;
-            MEM_COLD = true;
+            TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_ALL;
           } else {
-            std::cerr << "Error: --memory-state option must be either 'warm', 'cold', or 'all'.\n";
+            std::cerr << "Error: --memory-state option must be either 'true', 'false', or 'all'.\n";
             exit(0);
           }
 
@@ -509,14 +515,14 @@ void get_configs(int argc, char** argv, std::vector<BenchmarkConfig>& configs, s
   }
 }
 
-static std::string get_benchmark_name(std::string inp, bool gpu_mem, bool mem_cold) {
+static std::string get_benchmark_name(std::string inp, bool gpu_mem, bool touch_gpu_mem) {
   std::string full_name = "";
   if (gpu_mem) {
     full_name += "GPU, ";
-    if (mem_cold) {
-      full_name += "Cold — ";
+    if (touch_gpu_mem) {
+      full_name += "Touched — ";
     } else {
-      full_name += "Warm — ";
+      full_name += "Untouched — ";
     }
   }
   full_name += benchmark_names.at(inp);
@@ -535,7 +541,7 @@ static void register_benchmarks(std::vector<BenchmarkConfig>& configs, Benchmark
     config.progress_reporter = console_reporter;
 
     for (auto& inp_name : selected_benchmarks) {
-      auto bm_name = get_benchmark_name(inp_name, config.gpu_mem, config.mem_cold);
+      auto bm_name = get_benchmark_name(inp_name, config.gpu_mem, config.touch_gpu_mem);
       auto bm_func = get_benchmark_func(inp_name, config.gpu_mem);
 
       benchmark::RegisterBenchmark(bm_name, bm_func, config)->UseManualTime()->Iterations(config.num_iterations);
