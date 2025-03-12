@@ -26,23 +26,23 @@ find_package(OpenMP REQUIRED) # needed for leopard
 
 # Add source files
 set (SOURCES
-  src/main.cpp
-  src/benchmark/benchmark_functions.cpp
-  src/benchmark/benchmark_reporters.cpp
-  src/benchmark/benchmark_utils.cpp
-
-  src/utils/utils.cpp
-  src/utils/cuda_utils.cu
-
-  src/xorec/xorec.cpp
-  src/xorec/xorec_gpu.cpp
-  src/xorec/xorec_gpu_kernels.cu
-
-  src/algorithms/xorec_benchmark.cpp
   src/algorithms/cm256_benchmark.cpp
   src/algorithms/isal_benchmark.cpp
   src/algorithms/leopard_benchmark.cpp
   src/algorithms/wirehair_benchmark.cpp
+  src/algorithms/xorec_benchmark.cpp
+  src/algorithms/xorec_gpu_cmp_benchmark.cpp
+  src/algorithms/xorec_gpu_ptr_benchmark.cpp
+
+  src/utils/cuda_utils.cu
+  src/utils/utils.cpp
+
+  src/xorec/xorec_gpu_gmp.cpp
+  src/xorec/xorec_gpu_gmp.cu
+  src/xorec/xorec_utils.cpp
+  src/xorec/xorec.cpp
+
+  src/main.cpp
 )
 
 
