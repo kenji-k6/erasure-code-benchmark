@@ -19,10 +19,6 @@ constexpr uint32_t XOREC_MIN_PARITY_BLOCKS = 1;
 constexpr uint32_t XOREC_MAX_PARITY_BLOCKS = 128;
 constexpr uint32_t XOREC_MAX_TOTAL_BLOCKS = 256;
 
-/// Bitmap to check if all data blocks are available (no recovery needed)
-std::array<uint8_t, XOREC_MAX_TOTAL_BLOCKS> COMPLETE_DATA_BITMAP = { 0 };
-
-
   /**
  * @enum XORResult
  * @brief Represents the result status of encoding and decoding operations.
@@ -46,6 +42,8 @@ enum class XorecVersion {
   AVX2 = 2
 };
 
+std::array<uint8_t, XOREC_MAX_DATA_BLOCKS> COMPLETE_DATA_BITMAP = {0};
+
 
 static XorecResult inline xorec_check_args(uint32_t block_size, uint32_t num_data_blocks, uint32_t num_parity_blocks) {
   if (block_size < XOREC_MIN_BLOCK_SIZE || block_size % XOREC_BLOCK_SIZE_MULTIPLE != 0) {
@@ -66,7 +64,7 @@ static XorecResult inline xorec_check_args(uint32_t block_size, uint32_t num_dat
   return XorecResult::Success;
 }
 
-static void inline and_bitmap(uint8_t * dst, const uint8_t *src1, const uint8_t *src2, uint32_t len) {
+static void inline and_bitmap(uint8_t *XOREC_RESTRICT dst, const uint8_t *XOREC_RESTRICT src1, const uint8_t *XOREC_RESTRICT src2, uint32_t len) {
   uint64_t * dst_64 = reinterpret_cast<uint64_t*>(dst);
   const uint64_t * src1_64 = reinterpret_cast<const uint64_t*>(src1);
   const uint64_t * src2_64 = reinterpret_cast<const uint64_t*>(src2);
@@ -82,7 +80,7 @@ static void inline and_bitmap(uint8_t * dst, const uint8_t *src1, const uint8_t 
   }
 }
 
-static int inline bit_count(const uint8_t * bitmap, uint32_t len) {
+static int inline bit_count(const uint8_t *XOREC_RESTRICT bitmap, uint32_t len) {
   int count = 0;
   const uint32_t * bitmap_32 = reinterpret_cast<const uint32_t*>(bitmap);
 
@@ -98,4 +96,31 @@ static int inline bit_count(const uint8_t * bitmap, uint32_t len) {
   }
   return count;
 }
+
+static bool inline recovery_needed(const uint8_t * XOREC_RESTRICT block_bitmap) {
+  std::array<uint8_t, XOREC_MAX_DATA_BLOCKS> temp = {0};
+  and_bitmap(temp.data(), block_bitmap, COMPLETE_DATA_BITMAP.data(), XOREC_MAX_DATA_BLOCKS);
+
+  return bit_count(temp.data(), XOREC_MAX_DATA_BLOCKS) != XOREC_MAX_DATA_BLOCKS;
+}
+
+// checks if the scenario is recoverable
+static bool inline is_recoverable(const uint8_t * XOREC_RESTRICT block_bitmap, uint32_t num_data_blocks, uint32_t num_parity_blocks) {
+  std::array<uint8_t, XOREC_MAX_PARITY_BLOCKS> parity_needed = {0}; // indicate for each parity block if recovery has to happen
+
+  for (unsigned i = 0; i < num_parity_blocks; ++i) {
+    if (block_bitmap[XOREC_MAX_PARITY_BLOCKS + i]) parity_needed[i] = 1;
+  }
+
+  for (unsigned j = 0; j < num_data_blocks; ++j) {
+    uint32_t parity_idx = j % num_parity_blocks;
+
+    if (!block_bitmap[j]) {
+      if (parity_needed[parity_idx]) return false;
+      parity_needed[parity_idx] = 1;
+    }
+  }
+  return true;
+}
+
 #endif // XOREC_UTILS_HPP

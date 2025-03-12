@@ -27,8 +27,6 @@
   #define XOREC_AVX __m128i
 #endif
 
-
-
 /**
  * @brief Encodes data using XOR-based erasure coding.
  * @param data_buffer Pointer to the data buffer.
