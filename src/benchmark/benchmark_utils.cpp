@@ -95,12 +95,8 @@ static void usage() {
             << "      --xorec-avx-gpu-ptr                 run the AVX XOR-EC implementation (data buffer on GPU)\n"
             << "      --xorec-avx2-gpu-ptr                run the AVX2 XOR-EC implementation (data buffer on GPU)\n"
 
-            << "      --xorec-scalar-gpu-cmp              run the scalar XOR-EC implementation (data buffer,\n"
-            << "                                          parity buffer & computation on GPU)\n"
-            << "      --xorec-avx-gpu-cmp                 run the AVX XOR-EC implementation (data buffer,\n"
-            << "                                          parity buffer & computation on GPU)\n"
-            << "      --xorec-avx2-gpu-cmp                run the AVX2 XOR-EC implementation (data buffer,\n"
-            << "                                          parity buffer & computation on GPU)\n"
+            << "      --xorec--gpu-cmp                    run the XOR-EC implementation (data buffer, parity buffer\n"
+            << "                                          & computation on GPU)\n"
             
             << " *If no algorithm is specified, all algorithms will be run.*\n";
   exit(0);
@@ -356,7 +352,7 @@ void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
   int argc = 2;
   char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
 
-  int tot_iterations = NUM_ITERATIONS * (NUM_BASE_CONFIGS * selected_cpu_benchmarks.size()) + ((configs.size() - NUM_BASE_CONFIGS) * selected_gpu_benchmarks.size()); 
+  int tot_iterations = NUM_ITERATIONS * ((NUM_BASE_CONFIGS * selected_cpu_benchmarks.size()) + ((configs.size() - NUM_BASE_CONFIGS) * selected_gpu_benchmarks.size())); 
 
   std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(tot_iterations);
   std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(OUTPUT_FILE_DIR + output_file_name, OVERWRITE_FILE);
