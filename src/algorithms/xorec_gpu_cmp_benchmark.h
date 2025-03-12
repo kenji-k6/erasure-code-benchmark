@@ -4,13 +4,14 @@
 #include "abstract_benchmark.h"
 
 class XorecBenchmarkGPUCmp : public ECBenchmark {
-  public:
+public:
   explicit XorecBenchmarkGPUCmp(const BenchmarkConfig& config) noexcept;
   ~XorecBenchmarkGPUCmp() noexcept = default;
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
   bool check_for_corruption() const noexcept override;
+  void touch_gpu_memory() noexcept override;
 
 protected:
   uint32_t num_total_blocks_;

@@ -41,7 +41,7 @@ void XorecBenchmarkGPUPtr::simulate_data_loss() noexcept {
     if (i < num_original_blocks_) {
       block_bitmap_[i] = 1;
     } else {
-      block_bitmap_[128 + i] = 1;
+      block_bitmap_[XOREC_MAX_DATA_BLOCKS + i] = 1;
     }
   }
 }

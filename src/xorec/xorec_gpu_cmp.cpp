@@ -1,4 +1,4 @@
-#include "xorec_utils.h"
+#include "xorec_gpu_cmp.h"
 #include <cuda_runtime.h>
 #include "utils.h"
 

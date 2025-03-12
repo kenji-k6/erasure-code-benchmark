@@ -1,4 +1,5 @@
-#include "xorec_gpu.cuh"
+#include "xorec_gpu_cmp.cuh"
+#include "xorec_gpu_cmp.h"
 #include <iostream>
 #include "utils.h"
 
