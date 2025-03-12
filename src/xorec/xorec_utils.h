@@ -79,20 +79,37 @@ static XorecResult inline xorec_check_args(uint32_t block_size, uint32_t num_dat
   return XorecResult::Success;
 }
 
-static void inline and_bitmap(uint8_t * dst, const uint8_t *src1, const uint8_t *src2, uint32_t count) {
+static void inline and_bitmap(uint8_t * dst, const uint8_t *src1, const uint8_t *src2, uint32_t len) {
   uint64_t * dst_64 = reinterpret_cast<uint64_t*>(dst);
   const uint64_t * src1_64 = reinterpret_cast<const uint64_t*>(src1);
   const uint64_t * src2_64 = reinterpret_cast<const uint64_t*>(src2);
   uint32_t i;
 
-  for (i = 0; i < count/4; ++i) {
+  for (i = 0; i < len/sizeof(uint64_t); ++i) {
     dst_64[i] = src1_64[i] & src2_64[i];
   }
 
-  i *= 4;
-  for (; i < count; ++i) {
+  i *= sizeof(uint64_t);
+  for (; i < len; ++i) {
     dst[i] = src1[i] & src2[i];
   }
+}
+
+static int inline bit_count(const uint8_t * bitmap, uint32_t len) {
+  int count = 0;
+  const uint32_t * bitmap_32 = reinterpret_cast<const uint32_t*>(bitmap);
+
+  uint32_t i;
+
+  for (i = 0; i < len/sizeof(uint32_t); ++i) {
+    count += __builtin_popcount(bitmap_32[i]);
+  }
+
+  i *= sizeof(uint32_t);
+  for (; i < len; ++i) {
+    count += __builtin_popcount(bitmap[i]);
+  }
+  return count;
 }
 
 
