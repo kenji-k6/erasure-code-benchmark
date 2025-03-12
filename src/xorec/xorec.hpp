@@ -64,7 +64,7 @@ XorecResult xorec_decode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  uint8_t *block_bitmap,   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
+  const uint8_t * XOREC_RESTRICT block_bitmap, ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
   XorecVersion version
 );
 
@@ -176,4 +176,5 @@ static void inline xorec_copy_blocks_avx(void * XOREC_RESTRICT dest, const void 
 }
 
 static void inline xorec_copy_blocks_scalar(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) { memcpy(dest, src, bytes); }
+
 #endif // XOREC_HPP
