@@ -4,7 +4,7 @@
  */
 
 
-#include "benchmark_reporters.h"
+#include "benchmark_reporters.hpp"
 #include <stdexcept>
 
 

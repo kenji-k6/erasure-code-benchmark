@@ -1,10 +1,10 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef UTILS_HPP
+#define UTILS_HPP
 
 #include <cstddef>
 #include <cstdint>
 #include <vector>
-#include "benchmark_reporters.h"
+#include "benchmark_reporters.hpp"
 
 // Constants
 constexpr size_t ALIGNMENT_BYTES = 64;
@@ -79,4 +79,4 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
 
 // Helper function to make a string lowercase
 std::string to_lower(std::string str);
-#endif // UTILS_H
+#endif // UTILS_HPP

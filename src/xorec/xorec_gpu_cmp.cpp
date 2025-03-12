@@ -1,6 +1,6 @@
-#include "xorec_gpu_cmp.h"
+#include "xorec_gpu_cmp.hpp"
 #include <cuda_runtime.h>
-#include "utils.h"
+#include "utils.hpp"
 
 uint32_t DEVICE_ID;
 uint32_t MAX_THREADS_PER_BLOCK; // 1024

@@ -1,8 +1,8 @@
 
-#include "xorec.h"
-#include "xorec_gpu_ptr_benchmark.h"
+#include "xorec.hpp"
+#include "xorec_gpu_ptr_benchmark.hpp"
 #include "cuda_utils.cuh"
-#include "utils.h"
+#include "utils.hpp"
 
 XorecBenchmarkGPUPtr::XorecBenchmarkGPUPtr(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
   num_total_blocks_ = num_original_blocks_ + num_recovery_blocks_;

@@ -1,7 +1,7 @@
-#ifndef ABSTRACT_BENCHMARK_H
-#define ABSTRACT_BENCHMARK_H
+#ifndef ABSTRACT_BENCHMARK_HPP
+#define ABSTRACT_BENCHMARK_HPP
 
-#include "benchmark_utils.h"
+#include "benchmark_utils.hpp"
 #include <cstddef>
 #include <iostream>
 
@@ -80,4 +80,4 @@ protected:
   const std::vector<uint32_t>& lost_block_idxs_;
 };
 
-#endif // ABSTRACT_BENCHMARK_H
+#endif // ABSTRACT_BENCHMARK_HPP

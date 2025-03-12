@@ -1,7 +1,7 @@
-#ifndef XOREC_BENCHMARK_H
-#define XOREC_BENCHMARK_H
+#ifndef XOREC_BENCHMARK_HPP
+#define XOREC_BENCHMARK_HPP
 
-#include "abstract_benchmark.h"
+#include "abstract_benchmark.hpp"
 
 
 /**
@@ -62,4 +62,4 @@ public:
   int decode() noexcept override;
 };
 
-#endif // XOREC_BENCHMARK_H
+#endif // XOREC_BENCHMARK_HPP

@@ -4,7 +4,7 @@
  */
 
 
-#include "xorec.h"
+#include "xorec.hpp"
 #include <cstring>
 #include <iostream>
 

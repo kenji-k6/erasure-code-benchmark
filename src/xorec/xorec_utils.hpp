@@ -1,11 +1,10 @@
-#ifndef XOREC_UTILS_H
-#define XOREC_UTILS_H
+#ifndef XOREC_UTILS_HPP
+#define XOREC_UTILS_HPP
 /**
  * @file xorec_utils.h
  * @brief Provides utility constants for both the CPU and the GPU-based XOR-EC implementations.
  */
 
-#include <bitset>
 #include <cstdint>
 #include <array>
 
@@ -99,4 +98,4 @@ static int inline bit_count(const uint8_t * bitmap, uint32_t len) {
   }
   return count;
 }
-#endif // XOREC_UTILS_H
+#endif // XOREC_UTILS_HPP

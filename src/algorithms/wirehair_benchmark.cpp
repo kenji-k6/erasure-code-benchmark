@@ -6,9 +6,9 @@
  */
 
 
-#include "wirehair_benchmark.h"
+#include "wirehair_benchmark.hpp"
 
-#include "utils.h"
+#include "utils.hpp"
 #include <cstring>
 #include <iostream>
 

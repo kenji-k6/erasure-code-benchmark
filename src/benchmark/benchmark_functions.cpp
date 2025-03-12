@@ -3,15 +3,15 @@
  * @brief Implements benchmark functions for different EC algorithms.
  */
 
-#include "benchmark_functions.h"
-#include "benchmark_generic_runner.h"
-#include "cm256_benchmark.h"
-#include "isal_benchmark.h"
-#include "leopard_benchmark.h"
-#include "wirehair_benchmark.h"
-#include "xorec_benchmark.h"
-#include "xorec_gpu_ptr_benchmark.h"
-#include "xorec_gpu_cmp_benchmark.h"
+#include "benchmark_functions.hpp"
+#include "benchmark_generic_runner.hpp"
+#include "cm256_benchmark.hpp"
+#include "isal_benchmark.hpp"
+#include "leopard_benchmark.hpp"
+#include "wirehair_benchmark.hpp"
+#include "xorec_benchmark.hpp"
+#include "xorec_gpu_ptr_benchmark.hpp"
+#include "xorec_gpu_cmp_benchmark.hpp"
 
 
 

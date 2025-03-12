@@ -6,10 +6,10 @@
  */
 
 
-#include "leopard_benchmark.h"
+#include "leopard_benchmark.hpp"
 
 #include "leopard.h"
-#include "utils.h"
+#include "utils.hpp"
 #include <cstring>
 #include <iostream>
 

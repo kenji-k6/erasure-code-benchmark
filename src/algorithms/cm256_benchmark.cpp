@@ -6,8 +6,8 @@
  */
 
  
-#include "cm256_benchmark.h"
-#include "utils.h"
+#include "cm256_benchmark.hpp"
+#include "utils.hpp"
 #include <iostream>
 #include <memory>
 

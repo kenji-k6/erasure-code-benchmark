@@ -1,7 +1,7 @@
-#ifndef XOREC_GPU_CMP_BENCHMARK_H
-#define XOREC_GPU_CMP_BENCHMARK_H
+#ifndef XOREC_GPU_CMP_BENCHMARK_HPP
+#define XOREC_GPU_CMP_BENCHMARK_HPP
 
-#include "abstract_benchmark.h"
+#include "abstract_benchmark.hpp"
 
 class XorecBenchmarkGPUCmp : public ECBenchmark {
 public:
@@ -21,4 +21,4 @@ protected:
   std::unique_ptr<uint8_t[]> block_bitmap_; ///< Bitmap to check if all data arrived
 };
 
-#endif // XOREC_GPU_CMP_BENCHMARK_H
+#endif // XOREC_GPU_CMP_BENCHMARK_HPP

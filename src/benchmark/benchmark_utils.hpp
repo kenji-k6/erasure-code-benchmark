@@ -3,11 +3,11 @@
  * @brief Utility functions and constants for parsing and validating command-line arguments
  */
 
-#ifndef BENCHMARK_UTILS_H
-#define BENCHMARK_UTILS_H
+#ifndef BENCHMARK_UTILS_HPP
+#define BENCHMARK_UTILS_HPP
 
-#include "benchmark_config.h"
-#include "benchmark_reporters.h"
+#include "benchmark_config.hpp"
+#include "benchmark_reporters.hpp"
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
@@ -17,4 +17,4 @@ void parse_args(int argc, char** argv);
 void get_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs);
 void run_benchmarks(std::vector<BenchmarkConfig>& configs);
 
-#endif // BENCHMARK_UTILS_H
+#endif // BENCHMARK_UTILS_HPP

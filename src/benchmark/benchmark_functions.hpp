@@ -4,11 +4,11 @@
  */
 
 
-#ifndef BENCHMARK_FUNCTIONS_H
-#define BENCHMARK_FUNCTIONS_H
+#ifndef BENCHMARK_FUNCTIONS_HPP
+#define BENCHMARK_FUNCTIONS_HPP
 
 #include <benchmark/benchmark.h>
-#include "benchmark_config.h"
+#include "benchmark_config.hpp"
 
 /// Benchmark function declarations
 void BM_CM256(benchmark::State& state, const BenchmarkConfig& config);
@@ -26,4 +26,4 @@ void BM_XOREC_AVX_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config
 void BM_XOREC_AVX2_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config);
 
 void BM_XOREC_GPU_CMP(benchmark::State& state, const BenchmarkConfig& config);
-#endif // BENCHMARK_FUNCTIONS_H
+#endif // BENCHMARK_FUNCTIONS_HPP

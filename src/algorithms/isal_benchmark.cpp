@@ -6,10 +6,10 @@
  */
 
 
-#include "isal_benchmark.h"
+#include "isal_benchmark.hpp"
 
 #include "erasure_code.h"
-#include "utils.h"
+#include "utils.hpp"
 #include <cstring>
 #include <iostream>
 

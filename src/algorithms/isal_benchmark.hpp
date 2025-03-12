@@ -1,8 +1,8 @@
-#ifndef ISAL_BENCHMARK_H
-#define ISAL_BENCHMARK_H
+#ifndef ISAL_BENCHMARK_HPP
+#define ISAL_BENCHMARK_HPP
 
-#include "abstract_benchmark.h"
-#include "utils.h"
+#include "abstract_benchmark.hpp"
+#include "utils.hpp"
 #include <cstdint>
 
 
@@ -59,4 +59,4 @@ int gf_gen_decode_matrix_simple(
   const int nerrs, const int k, [[maybe_unused]] const int m
 );
 
-#endif // ISAL_BENCHMARK_H
+#endif // ISAL_BENCHMARK_HPP

@@ -1,7 +1,7 @@
-#ifndef LEOPARD_BENCHMARK_H
-#define LEOPARD_BENCHMARK_H
+#ifndef LEOPARD_BENCHMARK_HPP
+#define LEOPARD_BENCHMARK_HPP
 
-#include "abstract_benchmark.h"
+#include "abstract_benchmark.hpp"
 #include <cstdint>
 #include <vector>
 
@@ -39,4 +39,4 @@ private:
   std::vector<uint8_t*> decode_work_ptrs_;    ///< Pointers to the decoded data blocks
 };
 
-#endif // LEOPARD_BENCHMARK_H
+#endif // LEOPARD_BENCHMARK_HPP

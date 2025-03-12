@@ -1,7 +1,7 @@
-#ifndef XOREC_H
-#define XOREC_H
+#ifndef XOREC_HPP
+#define XOREC_HPP
 
-#include "xorec_utils.h"
+#include "xorec_utils.hpp"
 #include <cstdint>
 #include <cstring>
 #include <array>
@@ -176,4 +176,4 @@ static void inline xorec_copy_blocks_avx(void * XOREC_RESTRICT dest, const void 
 }
 
 static void inline xorec_copy_blocks_scalar(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) { memcpy(dest, src, bytes); }
-#endif // XOREC_H
+#endif // XOREC_HPP

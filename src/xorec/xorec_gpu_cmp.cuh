@@ -2,7 +2,7 @@
 #define XOREC_GPU_CMP_CUH
 
 #include <cuda_runtime.h>
-#include "xorec_utils.h"
+#include "xorec_utils.hpp"
 
 
 __host__ XorecResult xorec_gpu_encode(

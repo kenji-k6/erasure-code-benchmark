@@ -6,9 +6,9 @@
  */
 
 
-#include "xorec_benchmark.h"
-#include "xorec.h"
-#include "utils.h"
+#include "xorec_benchmark.hpp"
+#include "xorec.hpp"
+#include "utils.hpp"
 #include <cstring>
 
 

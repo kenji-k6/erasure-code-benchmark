@@ -3,10 +3,10 @@
  * @brief Defines the BenchmarkConfig struct and related constants.
  */
 
-#ifndef BENCHMARK_CONFIG_H
-#define BENCHMARK_CONFIG_H
+#ifndef BENCHMARK_CONFIG_HPP
+#define BENCHMARK_CONFIG_HPP
 
-#include "benchmark_reporters.h"
+#include "benchmark_reporters.hpp"
 #include <cstdint>
 #include <vector>
 
@@ -44,4 +44,4 @@ const std::vector<uint64_t> VAR_BUFFER_SIZE = { 134217728, 67108864, 33554432, 1
 const std::vector<uint32_t> VAR_NUM_RECOVERY_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
 const std::vector<uint32_t> VAR_NUM_LOST_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
 
-#endif // BENCHMARK_CONFIG_H
+#endif // BENCHMARK_CONFIG_HPP

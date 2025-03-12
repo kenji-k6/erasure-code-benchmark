@@ -1,7 +1,7 @@
-#ifndef XOREC_GPU_PTR_BENCHMARK_H
-#define XOREC_GPU_PTR_BENCHMARK_H
+#ifndef XOREC_GPU_PTR_BENCHMARK_HPP
+#define XOREC_GPU_PTR_BENCHMARK_HPP
 
-#include "abstract_benchmark.h"
+#include "abstract_benchmark.hpp"
 
 
 /**
@@ -51,4 +51,4 @@ class XorecBenchmarkAVX2GPUPtr : public XorecBenchmarkGPUPtr {
     int decode() noexcept override;
 };
 
-#endif // XOREC_GPU_PTR_BENCHMARK_H
+#endif // XOREC_GPU_PTR_BENCHMARK_HPP

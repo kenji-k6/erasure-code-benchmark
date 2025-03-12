@@ -1,5 +1,5 @@
-#ifndef PROGRESSBAR_H
-#define PROGRESSBAR_H
+#ifndef PROGRESSBAR_HPP
+#define PROGRESSBAR_HPP
 
 #include <iostream>
 #include <ostream>
@@ -144,4 +144,4 @@ private:
   }
 };
 
-#endif // PROGRESSBAR_H
+#endif // PROGRESSBAR_HPP
