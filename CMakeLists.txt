@@ -37,9 +37,7 @@ set (SOURCES
   src/utils/cuda_utils.cu
   src/utils/utils.cpp
 
-  src/xorec/xorec_gpu_gmp.cpp
-  src/xorec/xorec_gpu_gmp.cu
-  src/xorec/xorec_utils.cpp
+  src/xorec/xorec_gpu_cmp.cu
   src/xorec/xorec.cpp
 
   src/main.cpp

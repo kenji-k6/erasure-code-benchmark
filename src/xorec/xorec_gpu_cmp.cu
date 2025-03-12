@@ -1,11 +1,38 @@
 #include "xorec_gpu_cmp.cuh"
-#include "xorec_gpu_cmp.hpp"
 #include <iostream>
 #include "utils.hpp"
 
+int DEVICE_ID;
+int MAX_THREADS_PER_BLOCK; 
 
+__constant__ int WARP_SIZE;
 
-__host__ XorecResult xorec_gpu_encode(
+static bool XOREC_GPU_INIT_CALLED = false;
+
+void xorec_gpu_init() {
+  if (XOREC_GPU_INIT_CALLED) return;
+  XOREC_GPU_INIT_CALLED = true;
+
+  int device_count = -1;
+
+  cudaGetDeviceCount(&device_count);
+
+  if (device_count <= 0) throw_error("No CUDA devices found");
+
+  DEVICE_ID = 0;
+  
+  cudaDeviceProp device_prop;
+  cudaGetDeviceProperties(&device_prop, DEVICE_ID);
+  MAX_THREADS_PER_BLOCK = device_prop.maxThreadsPerBlock;
+  int warp_size = device_prop.warpSize;
+
+  std::fill_n(COMPLETE_DATA_BITMAP.begin(), XOREC_MAX_DATA_BLOCKS, 1);
+
+  cudaMemcpyToSymbol(WARP_SIZE, &warp_size, sizeof(int));
+  cudaSetDevice(DEVICE_ID);
+}
+
+XorecResult xorec_gpu_encode(
   const uint8_t *XOREC_RESTRICT data_buffer,
   uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,
@@ -21,7 +48,7 @@ __host__ XorecResult xorec_gpu_encode(
 }
 
 
-__host__ XorecResult xorec_gpu_decode(
+XorecResult xorec_gpu_decode(
   uint8_t *XOREC_RESTRICT data_buffer,
   const uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,
@@ -43,6 +70,8 @@ __host__ XorecResult xorec_gpu_decode(
     cudaMemcpy(recover_block, parity_block, block_size, cudaMemcpyDeviceToDevice);
     xorec_gpu_decode_kernel<<<1, MAX_THREADS_PER_BLOCK>>>(data_buffer, parity_buffer, block_size, num_data_blocks, num_parity_blocks, i, i%num_parity_blocks);
   }
+
+  return XorecResult::Success;
 }
 
 __global__ void xorec_gpu_decode_kernel(

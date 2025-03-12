@@ -6,7 +6,7 @@
 class XorecBenchmarkGPUCmp : public ECBenchmark {
 public:
   explicit XorecBenchmarkGPUCmp(const BenchmarkConfig& config) noexcept;
-  ~XorecBenchmarkGPUCmp() noexcept = default;
+  ~XorecBenchmarkGPUCmp() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;

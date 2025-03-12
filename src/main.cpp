@@ -1,4 +1,4 @@
-#include "benchmark_utils.h"
+#include "benchmark_utils.hpp"
 
 int main (int argc, char** argv) {
   std::vector<BenchmarkConfig> configs;

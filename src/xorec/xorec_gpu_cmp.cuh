@@ -4,8 +4,9 @@
 #include <cuda_runtime.h>
 #include "xorec_utils.hpp"
 
+void xorec_gpu_init();
 
-__host__ XorecResult xorec_gpu_encode(
+XorecResult xorec_gpu_encode(
   const uint8_t *XOREC_RESTRICT data_buffer,
   uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,
@@ -13,7 +14,7 @@ __host__ XorecResult xorec_gpu_encode(
   uint32_t num_parity_blocks
 );
 
-__host__ XorecResult xorec_gpu_decode(
+XorecResult xorec_gpu_decode(
   uint8_t *XOREC_RESTRICT data_buffer,
   const uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,
