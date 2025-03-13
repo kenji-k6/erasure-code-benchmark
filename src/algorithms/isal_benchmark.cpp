@@ -74,7 +74,7 @@ int ISALBenchmark::decode() noexcept {
     m_block_err_list.push_back(static_cast<uint8_t>(idx));
   }
   // Generate decoding matrix
-  if (gf_gen_m_decode_matrixsimple(m_encode_matrix, m_decode_matrix, m_invert_matrix,
+  if (gf_gen_decode_matrix_simple(m_encode_matrix, m_decode_matrix, m_invert_matrix,
                                   m_temp_matrix, m_decode_index, m_block_err_list,
                                   m_num_lost_blocks, m_num_original_blocks, m_num_total_blocks)) {
     return -1;
@@ -120,7 +120,7 @@ bool ISALBenchmark::check_for_corruption() const noexcept {
 }
 
 
-int gf_gen_m_decode_matrixsimple(
+int gf_gen_decode_matrix_simple(
   const std::unique_ptr<uint8_t[]>& encode_matrix,
   std::unique_ptr<uint8_t[]>& decode_matrix,
   std::unique_ptr<uint8_t[]>& invert_matrix,
