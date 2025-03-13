@@ -28,14 +28,14 @@ public:
   bool check_for_corruption() const noexcept override;
 
 private:
-  uint32_t num_total_blocks_;
+  uint32_t m_num_total_blocks;
 
-  std::unique_ptr<uint8_t[]> original_buffer_;    ///< Buffer for the original data we want to transmit
-  std::unique_ptr<uint8_t[]> encode_buffer_;      ///< Buffer for the encoded data
-  std::unique_ptr<uint8_t[]> decode_buffer_;      ///< Buffer for the decoded data
+  std::unique_ptr<uint8_t[]> m_original_buffer;    ///< Buffer for the original data we want to transmit
+  std::unique_ptr<uint8_t[]> m_encode_buffer;      ///< Buffer for the encoded data
+  std::unique_ptr<uint8_t[]> m_decode_buffer;      ///< Buffer for the decoded data
 
-  WirehairCodec encoder_;       ///< Wirehair encoder instance
-  WirehairCodec decoder_;       ///< Wirehair decoder instance
+  WirehairCodec m_encoder;       ///< Wirehair encoder instance
+  WirehairCodec m_decoder;       ///< Wirehair decoder instance
 };
 
 #endif // WIREHAIR_BENCHMARK_HPP

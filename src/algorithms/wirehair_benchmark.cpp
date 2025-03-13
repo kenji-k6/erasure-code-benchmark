@@ -14,38 +14,38 @@
 
 
 WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
-  num_total_blocks_ = num_original_blocks_ + num_recovery_blocks_;
+  m_num_total_blocks = m_num_original_blocks + m_num_recovery_blocks;
   if (wirehair_init()) throw_error("Wirehair: Initialization failed.");
 
   // Allocate buffers
-  original_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_original_blocks_);
-  encode_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_total_blocks_);
-  decode_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_original_blocks_);
+  m_original_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_original_blocks);
+  m_encode_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_total_blocks);
+  m_decode_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_original_blocks);
 
-  if (!original_buffer_ || !encode_buffer_ || !decode_buffer_) throw_error("Wirehair: Failed to allocate buffer(s).");
+  if (!m_original_buffer || !m_encode_buffer || !m_decode_buffer) throw_error("Wirehair: Failed to allocate buffer(s).");
 
-  decoder_ = wirehair_decoder_create(nullptr, block_size_ * num_original_blocks_, block_size_);
-  if (!decoder_) throw_error("Wirehair: Failed to create decoder instance.");
+  m_decoder = wirehair_decoder_create(nullptr, m_block_size * m_num_original_blocks, m_block_size);
+  if (!m_decoder) throw_error("Wirehair: Failed to create decoder instance.");
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    int write_res = write_validation_pattern(i, &original_buffer_[i * block_size_], block_size_);
+  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
+    int write_res = write_validation_pattern(i, &m_original_buffer[i * m_block_size], m_block_size);
     if (write_res) throw_error("Wirehair: Failed to write random checking packet.");
   }
 }
 
 WirehairBenchmark::~WirehairBenchmark() noexcept {
-  if (encoder_) wirehair_free(encoder_);
-  if (decoder_) wirehair_free(decoder_);
+  if (m_encoder) wirehair_free(m_encoder);
+  if (m_decoder) wirehair_free(m_decoder);
 }
 
 int WirehairBenchmark::encode() noexcept {
-  encoder_ = wirehair_encoder_create(nullptr, original_buffer_.get(), num_original_blocks_ * block_size_, block_size_);
-  if (!encoder_) return -1;
+  m_encoder = wirehair_encoder_create(nullptr, m_original_buffer.get(), m_num_original_blocks * m_block_size, m_block_size);
+  if (!m_encoder) return -1;
   uint32_t write_len = 0;
-  for (size_t i = 0; i < num_original_blocks_ + num_recovery_blocks_; i++) {
-    if (wirehair_encode(encoder_, i, &encode_buffer_[i * block_size_],
-                        block_size_, &write_len) != Wirehair_Success) return -1;
+  for (size_t i = 0; i < m_num_original_blocks + m_num_recovery_blocks; i++) {
+    if (wirehair_encode(m_encoder, i, &m_encode_buffer[i * m_block_size],
+                        m_block_size, &write_len) != Wirehair_Success) return -1;
   }
   return 0;
 }
@@ -55,30 +55,30 @@ int WirehairBenchmark::decode() noexcept {
   WirehairResult decode_result = Wirehair_NeedMore;
   unsigned loss_idx = 0;
 
-  for (unsigned i = 0; i < num_total_blocks_; i++) {
-    if (loss_idx < num_lost_blocks_ && i == lost_block_idxs_[loss_idx]) {
+  for (unsigned i = 0; i < m_num_total_blocks; i++) {
+    if (loss_idx < m_num_lost_blocks && i == m_lost_block_idxs[loss_idx]) {
       loss_idx++;
       continue;
     }
 
-    decode_result = wirehair_decode(decoder_, i, &encode_buffer_[i * block_size_], block_size_);
+    decode_result = wirehair_decode(m_decoder, i, &m_encode_buffer[i * m_block_size], m_block_size);
     if (decode_result == Wirehair_Success) break;
   }
 
-  return wirehair_recover(decoder_, decode_buffer_.get(), block_size_ * num_original_blocks_);
+  return wirehair_recover(m_decoder, m_decode_buffer.get(), m_block_size * m_num_original_blocks);
 }
 
 
 void WirehairBenchmark::simulate_data_loss() noexcept {
-  for (auto idx : lost_block_idxs_) {
-    memset(&encode_buffer_[idx * block_size_], 0, block_size_);
+  for (auto idx : m_lost_block_idxs) {
+    memset(&m_encode_buffer[idx * m_block_size], 0, m_block_size);
   }
 }
 
 
 bool WirehairBenchmark::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < num_original_blocks_; i++) {
-    if (!validate_block(&decode_buffer_[i * block_size_], block_size_)) return false;
+  for (unsigned i = 0; i < m_num_original_blocks; i++) {
+    if (!validate_block(&m_decode_buffer[i * m_block_size], m_block_size)) return false;
   }
   return true;
 }
