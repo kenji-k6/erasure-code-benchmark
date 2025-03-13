@@ -27,12 +27,12 @@ public:
 
 private:
   // Data Buffers
-  std::unique_ptr<uint8_t[]> original_buffer_;
-  std::unique_ptr<uint8_t[]> decode_buffer_;
+  std::unique_ptr<uint8_t[]> m_original_buffer;
+  std::unique_ptr<uint8_t[]> m_decode_buffer;
 
   // CM256 Internals
-  cm256_encoder_params params_;       ///< cm256 internal parameters
-  std::vector<cm256_block> blocks_;   ///< vector of cm256 blocks (keeps track of pointers and indices)
+  cm256_encoder_params m_params;       ///< cm256 internal parameters
+  std::vector<cm256_block> m_blocks;   ///< vector of cm256 blocks (keeps track of pointers and indices)
 };
 
 #endif // CM256_BENCHMARK_HPP
