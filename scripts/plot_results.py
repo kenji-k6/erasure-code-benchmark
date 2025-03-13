@@ -1,3 +1,4 @@
+from cProfile import label
 import os
 import argparse
 import cpuinfo
@@ -8,6 +9,7 @@ import seaborn as sns
 import numpy as np
 from collections import namedtuple
 from enum import Enum
+import matplotlib.ticker as ticker
 
 # File / directory paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -259,6 +261,16 @@ def write_scatter_plot(df: pd.DataFrame, x_ax: AxType, y_ax: AxType, y_scale: st
   plt.title(get_plot_title(df, plot_id, cpu_info), fontsize=12)
 
   plot_xticks(df, x_ax)
+
+  if y_scale == "log":
+    ax = plt.gca()
+    ax.tick_params(axis="y",
+                   which="minor",
+                   left=True)
+    ax.yaxis.set_minor_formatter(ticker.LogFormatter())
+    ax.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]))
+
+
 
   plot_confidence_intervals(df, x_ax, y_ax)
 
