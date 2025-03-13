@@ -8,74 +8,74 @@
 XorecBenchmarkGPUCmp::XorecBenchmarkGPUCmp(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
   xorec_gpu_init();
 
-  num_total_blocks_ = num_original_blocks_ + num_recovery_blocks_;
+  m_num_total_blocks = m_num_original_blocks + m_num_recovery_blocks;
 
-  cudaError_t err = cudaMallocManaged(reinterpret_cast<void**>(&data_buffer_), block_size_ * num_original_blocks_, cudaMemAttachHost);
+  cudaError_t err = cudaMallocManaged(reinterpret_cast<void**>(&m_data_buffer), m_block_size * m_num_original_blocks, cudaMemAttachHost);
   if (err != cudaSuccess) throw_error("Xorec (GPU Computation): Failed to allocate data buffer.");
 
-  err = cudaMallocManaged(reinterpret_cast<void**>(&parity_buffer_), block_size_ * num_recovery_blocks_, cudaMemAttachHost);
+  err = cudaMallocManaged(reinterpret_cast<void**>(&m_parity_buffer), m_block_size * m_num_recovery_blocks, cudaMemAttachHost);
 
   if (err != cudaSuccess) throw_error("Xorec (GPU Computation): Failed to allocate parity buffer.");
 
-  block_bitmap_ = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
+  m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
 
-  for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    int write_res = write_validation_pattern(i, &data_buffer_[i * block_size_], block_size_);
+  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
+    int write_res = write_validation_pattern(i, &m_data_buffer[i * m_block_size], m_block_size);
     if (write_res) throw_error("Xorec (GPU Computation): Failed to write random checking packet.");
   }
 }
 
 XorecBenchmarkGPUCmp::~XorecBenchmarkGPUCmp() noexcept {
-  if (data_buffer_) cudaFree(data_buffer_);
-  if (parity_buffer_) cudaFree(parity_buffer_);
+  if (m_data_buffer) cudaFree(m_data_buffer);
+  if (m_parity_buffer) cudaFree(m_parity_buffer);
 }
 
 int XorecBenchmarkGPUCmp::encode() noexcept {
-  xorec_gpu_encode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_);
+  xorec_gpu_encode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks);
   cudaDeviceSynchronize();
   return 0;
 }
 
 int XorecBenchmarkGPUCmp::decode() noexcept {
-  xorec_gpu_decode(data_buffer_, parity_buffer_, block_size_, num_original_blocks_, num_recovery_blocks_, block_bitmap_.get());
+  xorec_gpu_decode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get());
   cudaDeviceSynchronize();
   return 0;
 }
 
 void XorecBenchmarkGPUCmp::simulate_data_loss() noexcept {
   uint32_t loss_idx = 0;
-  for (unsigned i = 0; i < num_total_blocks_; ++i) {
-    if (loss_idx < num_lost_blocks_ && lost_block_idxs_[loss_idx] == i) {
+  for (unsigned i = 0; i < m_num_total_blocks; ++i) {
+    if (loss_idx < m_num_lost_blocks && m_lost_block_idxs[loss_idx] == i) {
 
-      if (i < num_original_blocks_) {
-        cudaError_t err = cudaMemset(&data_buffer_[i * block_size_], 0, block_size_);
+      if (i < m_num_original_blocks) {
+        cudaError_t err = cudaMemset(&m_data_buffer[i * m_block_size], 0, m_block_size);
         if (err != cudaSuccess) throw_error("Xorec (GPU Computation): Failed to memset data buffer.");
-        block_bitmap_[i] = 0;
+        m_block_bitmap[i] = 0;
       } else {
-        cudaError_t err = cudaMemset(&parity_buffer_[(i - num_original_blocks_) * block_size_], 0, block_size_);
+        cudaError_t err = cudaMemset(&m_parity_buffer[(i - m_num_original_blocks) * m_block_size], 0, m_block_size);
         if (err != cudaSuccess) throw_error("Xorec (GPU Computation): Failed to memset parity buffer.");
-        block_bitmap_[i-num_original_blocks_ + XOREC_MAX_DATA_BLOCKS] = 0;
+        m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 0;
       }
 
       ++loss_idx;
       continue;
     }
-    if (i < num_original_blocks_) {
-      block_bitmap_[i] = 1;
+    if (i < m_num_original_blocks) {
+      m_block_bitmap[i] = 1;
     } else {
-      block_bitmap_[i-num_original_blocks_ + XOREC_MAX_DATA_BLOCKS] = 1;
+      m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 1;
     }
   }
 }
 
 bool XorecBenchmarkGPUCmp::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    if (!validate_block(&data_buffer_[i * block_size_], block_size_)) return false;
+  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
+    if (!validate_block(&m_data_buffer[i * m_block_size], m_block_size)) return false;
   }
   return true;
 }
 
 void XorecBenchmarkGPUCmp::touch_gpu_memory() noexcept {
-  touch_memory(data_buffer_, block_size_ * num_original_blocks_);
-  touch_memory(parity_buffer_, block_size_ * num_recovery_blocks_);
+  touch_memory(m_data_buffer, m_block_size * m_num_original_blocks);
+  touch_memory(m_parity_buffer, m_block_size * m_num_recovery_blocks);
 }

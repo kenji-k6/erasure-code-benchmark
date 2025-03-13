@@ -18,11 +18,11 @@ public:
 protected:
   explicit XorecBenchmarkGPUPtr(const BenchmarkConfig& config) noexcept;
 
-  uint32_t num_total_blocks_;
+  uint32_t m_num_total_blocks;
   // Data Buffers
-  uint8_t *data_buffer_;          ///< Buffer for the original data we want to transmit
-  std::unique_ptr<uint8_t[]> parity_buffer_;        ///< Buffer for the decoded data
-  std::unique_ptr<uint8_t[]> block_bitmap_; ///< Bitmap to check if all data arrived
+  uint8_t *m_data_buffer;          ///< Buffer for the original data we want to transmit
+  std::unique_ptr<uint8_t[]> m_parity_buffer;        ///< Buffer for the decoded data
+  std::unique_ptr<uint8_t[]> m_block_bitmap; ///< Bitmap to check if all data arrived
 };
 
 
