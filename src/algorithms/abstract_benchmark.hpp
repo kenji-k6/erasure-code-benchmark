@@ -67,17 +67,17 @@ public:
 
 protected:
   explicit ECBenchmark(const BenchmarkConfig& config) noexcept
-    : block_size_(config.block_size),
-      num_original_blocks_(config.computed.num_original_blocks),
-      num_recovery_blocks_(config.computed.num_recovery_blocks),
-      num_lost_blocks_(config.num_lost_blocks),
-      lost_block_idxs_(config.lost_block_idxs) {};
+    : m_block_size(config.block_size),
+      m_num_original_blocks(config.computed.num_original_blocks),
+      m_num_recovery_blocks(config.computed.num_recovery_blocks),
+      m_num_lost_blocks(config.num_lost_blocks),
+      m_lost_block_idxs(config.lost_block_idxs) {};
 
-  uint64_t block_size_;
-  uint32_t num_original_blocks_;
-  uint32_t num_recovery_blocks_;
-  uint64_t num_lost_blocks_;
-  const std::vector<uint32_t>& lost_block_idxs_;
+  uint64_t m_block_size;
+  uint32_t m_num_original_blocks;
+  uint32_t m_num_recovery_blocks;
+  uint64_t m_num_lost_blocks;
+  const std::vector<uint32_t>& m_lost_block_idxs;
 };
 
 #endif // ABSTRACT_BENCHMARK_HPP
