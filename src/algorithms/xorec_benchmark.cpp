@@ -35,8 +35,10 @@ void XorecBenchmark::simulate_data_loss() noexcept {
     if (loss_idx < num_lost_blocks_ && lost_block_idxs_[loss_idx] == i) {
       if (i < num_original_blocks_) {
         memset(&data_buffer_[i * block_size_], 0, block_size_);
+        block_bitmap_[i] = 0;
       } else {
-        memset(&parity_buffer_[(i - num_original_blocks_) * block_size_], 0, block_size_);
+        memset(&parity_buffer_[(i-num_original_blocks_ + XOREC_MAX_DATA_BLOCKS) * block_size_], 0, block_size_);
+        block_bitmap_[i-num_original_blocks_ + XOREC_MAX_DATA_BLOCKS] = 0;
       }
 
       ++loss_idx;

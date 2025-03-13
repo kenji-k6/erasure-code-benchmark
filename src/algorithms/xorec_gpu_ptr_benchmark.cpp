@@ -31,9 +31,12 @@ void XorecBenchmarkGPUPtr::simulate_data_loss() noexcept {
   for (unsigned i = 0; i < num_total_blocks_; ++i) {
     if (loss_idx < num_lost_blocks_ && lost_block_idxs_[loss_idx] == i) {
       if (i < num_original_blocks_) {
-        memset(&data_buffer_[i * block_size_], 0, block_size_);
+        cudaError_t err = cudaMemset(&data_buffer_[i * block_size_], 0, block_size_);
+        if (err != cudaSuccess) throw_error("Xorec: Failed to memset data buffer.");
+        block_bitmap_[i] = 0;
       } else {
         memset(&parity_buffer_[(i - num_original_blocks_) * block_size_], 0, block_size_);
+        block_bitmap_[i-num_original_blocks_ + XOREC_MAX_DATA_BLOCKS] = 0;
       }
 
       ++loss_idx;
