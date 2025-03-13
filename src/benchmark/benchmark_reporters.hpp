@@ -42,7 +42,7 @@ public:
   bool ReportContext(const Context& context) override;
 
 private:
-  std::ofstream file; ///< Output file stream for writing benchmark results.
+  std::ofstream m_file; ///< Output file stream for writing benchmark results.
 };
 
 
@@ -60,7 +60,7 @@ public:
   void update_bar();
 
 private:
-  ProgressBar bar_;
+  ProgressBar m_bar;
 };
 
 #endif // BENCHMARK_REPORTERS_HPP

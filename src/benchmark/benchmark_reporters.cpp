@@ -10,15 +10,15 @@
 
 BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool overwrite_file) {
   std::ios_base::openmode mode = overwrite_file ? std::ios::out : std::ios::app;
-  file.open(output_file, mode);
+  m_file.open(output_file, mode);
 
-  if (!file.is_open()) {
+  if (!m_file.is_open()) {
     throw std::runtime_error("Error opening file: " + output_file);
   }
 
   // Write CSV header only if overwriting the file
   if (overwrite_file) {
-    file  << "plot_id,"
+    m_file  << "plot_id,"
           << "name,"
           << "err_msg,"
 
@@ -46,12 +46,12 @@ BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool 
 }
 
 BenchmarkCSVReporter::~BenchmarkCSVReporter() {
-  if (file.is_open()) file.close();
+  if (m_file.is_open()) m_file.close();
 }
 
 void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
   for (const auto& run : runs) {
-    file  << static_cast<uint32_t>(run.counters.find("plot_id")->second.value) << ","
+    m_file  << static_cast<uint32_t>(run.counters.find("plot_id")->second.value) << ","
           << "\"" << run.benchmark_name() << "\","
           << run.skip_message << ","
 
@@ -85,8 +85,8 @@ bool BenchmarkCSVReporter::ReportContext([[maybe_unused]]const Context& _) { ret
 
 
 
-BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs) : bar_(num_runs, std::cout) { }
-void BenchmarkProgressReporter::update_bar() { bar_.update(); }
+BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs) : m_bar(num_runs, std::cout) { }
+void BenchmarkProgressReporter::update_bar() { m_bar.update(); }
 BenchmarkProgressReporter::~BenchmarkProgressReporter() {}
 void BenchmarkProgressReporter::ReportRuns([[maybe_unused]] const std::vector<Run>& runs) { return; }
 bool BenchmarkProgressReporter::ReportContext([[maybe_unused]] const Context& _) {
@@ -102,6 +102,6 @@ bool BenchmarkProgressReporter::ReportContext([[maybe_unused]] const Context& _)
   #else
       std::cout << "Unknown Compiler\n";
   #endif
-  bar_.update();
+  m_bar.update();
   return true; 
 }
