@@ -311,9 +311,9 @@ void get_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<
 std::string get_benchmark_name(const std::string inp_name, bool gpu_mem, bool touch_gpu_mem) {
   std::string name = benchmark_names.at(inp_name);
   if (gpu_mem && touch_gpu_mem) {
-    name += " (memory touched)";
+    name += "\n(memory touched)";
   } else if (gpu_mem && !touch_gpu_mem) {
-    name += " (memory untouched)";
+    name += "\n(memory untouched)";
   }
   return name;
 }

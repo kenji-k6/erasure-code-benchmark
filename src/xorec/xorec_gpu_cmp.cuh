@@ -4,6 +4,8 @@
 #include <cuda_runtime.h>
 #include "xorec_utils.hpp"
 
+#define CUDA_ATOMIC_XOR_T unsigned long long int
+
 void xorec_gpu_init();
 
 XorecResult xorec_gpu_encode(
