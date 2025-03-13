@@ -25,18 +25,18 @@ public:
   bool check_for_corruption() const noexcept override;
 
 private:
-  uint32_t encode_work_count_ = 0;
-  uint32_t decode_work_count_ = 0;
+  uint32_t m_encode_work_count = 0;
+  uint32_t m_decode_work_count = 0;
 
   // Data Buffers
-  std::unique_ptr<uint8_t[]> original_buffer_;  ///< Buffer for the original data we want to transmit
-  std::unique_ptr<uint8_t[]> encode_buffer_;    ///< Buffer for the encoded data
-  std::unique_ptr<uint8_t[]> decode_buffer_;    ///< Buffer for the decoded data
+  std::unique_ptr<uint8_t[]> m_original_buffer;  ///< Buffer for the original data we want to transmit
+  std::unique_ptr<uint8_t[]> m_encode_buffer;    ///< Buffer for the encoded data
+  std::unique_ptr<uint8_t[]> m_decode_buffer;    ///< Buffer for the decoded data
 
   // Pointer vectors
-  std::vector<uint8_t*> original_ptrs_;       ///< Pointers to the original data blocks
-  std::vector<uint8_t*> encode_work_ptrs_;    ///< Pointers to the encoded data blocks
-  std::vector<uint8_t*> decode_work_ptrs_;    ///< Pointers to the decoded data blocks
+  std::vector<uint8_t*> m_original_ptrs;       ///< Pointers to the original data blocks
+  std::vector<uint8_t*> m_encode_work_ptrs;    ///< Pointers to the encoded data blocks
+  std::vector<uint8_t*> m_decode_work_ptrs;    ///< Pointers to the decoded data blocks
 };
 
 #endif // LEOPARD_BENCHMARK_HPP
