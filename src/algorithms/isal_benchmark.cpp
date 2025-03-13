@@ -15,89 +15,89 @@
 
 
 ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
-  num_total_blocks_ = num_original_blocks_ + num_recovery_blocks_;
+  m_num_total_blocks = m_num_original_blocks + m_num_recovery_blocks;
   // Allocate matrices etc.
-  encode_matrix_ = std::make_unique<uint8_t[]>(num_total_blocks_ * num_original_blocks_);
-  decode_matrix_ = std::make_unique<uint8_t[]>(num_total_blocks_ * num_original_blocks_);
-  invert_matrix_ = std::make_unique<uint8_t[]>(num_total_blocks_ * num_original_blocks_);
-  temp_matrix_ = std::make_unique<uint8_t[]>(num_total_blocks_ * num_original_blocks_);
-  g_tbls_ = std::make_unique<uint8_t[]>(num_total_blocks_ * num_original_blocks_ * 32);
+  m_encode_matrix = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks);
+  m_decode_matrix = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks);
+  m_invert_matrix = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks);
+  m_temp_matrix = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks);
+  m_g_tbls = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks * 32);
 
-  original_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_total_blocks_);
-  recovery_outp_buffer_ = std::make_unique<uint8_t[]>(block_size_ * num_recovery_blocks_);
+  m_original_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_total_blocks);
+  m_recovery_outp_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_recovery_blocks);
 
-  if (!encode_matrix_ || !decode_matrix_ || !invert_matrix_ || !temp_matrix_ || !g_tbls_ ||
-      !original_buffer_ || !recovery_outp_buffer_) {
+  if (!m_encode_matrix || !m_decode_matrix || !m_invert_matrix || !m_temp_matrix || !m_g_tbls ||
+      !m_original_buffer || !m_recovery_outp_buffer) {
     throw_error("ISAL: Failed to allocate memory.");
   }
 
   // Initialize Pointer vectors
-  original_ptrs_.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  recovery_src_ptrs_.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  recovery_outp_ptrs_.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  decode_index_.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
+  m_original_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
+  m_recovery_src_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
+  m_recovery_outp_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
+  m_decode_index.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
 
-  for (unsigned i = 0; i < num_total_blocks_; ++i) {
-    original_ptrs_[i] = &original_buffer_[i * block_size_];
+  for (unsigned i = 0; i < m_num_total_blocks; ++i) {
+    m_original_ptrs[i] = &m_original_buffer[i * m_block_size];
   }
 
-  for (unsigned i = 0; i < num_original_blocks_; ++i) {
-    recovery_outp_ptrs_[i] = &recovery_outp_buffer_[i * block_size_];
+  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
+    m_recovery_outp_ptrs[i] = &m_recovery_outp_buffer[i * m_block_size];
   }
 
-  // Generate encode matricx, can be precomputed as it is fixed for a given num_original_blocks_
-  gf_gen_cauchy1_matrix(encode_matrix_.get(), num_total_blocks_, num_original_blocks_);
+  // Generate encode matricx, can be precomputed as it is fixed for a given m_num_original_blocks
+  gf_gen_cauchy1_matrix(m_encode_matrix.get(), m_num_total_blocks, m_num_original_blocks);
 
-  // Initialize generator tables for encoding, can be precomputed as it is fixed for a given num_original_blocks_
-  ec_init_tables(num_original_blocks_, num_recovery_blocks_, &encode_matrix_[num_original_blocks_ * num_original_blocks_], g_tbls_.get());
+  // Initialize generator tables for encoding, can be precomputed as it is fixed for a given m_num_original_blocks
+  ec_init_tables(m_num_original_blocks, m_num_recovery_blocks, &m_encode_matrix[m_num_original_blocks * m_num_original_blocks], m_g_tbls.get());
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < num_original_blocks_; i++) {
-    int write_res = write_validation_pattern(i, original_ptrs_[i], block_size_);
+  for (unsigned i = 0; i < m_num_original_blocks; i++) {
+    int write_res = write_validation_pattern(i, m_original_ptrs[i], m_block_size);
     if (write_res) throw_error("ISAL: Failed to write random checking packet.");
   }
 }
 
 int ISALBenchmark::encode() noexcept {
-  ec_encode_data(block_size_, num_original_blocks_, num_recovery_blocks_,
-                 g_tbls_.get(), original_ptrs_.data(), original_ptrs_.data() + num_original_blocks_);
+  ec_encode_data(m_block_size, m_num_original_blocks, m_num_recovery_blocks,
+                 m_g_tbls.get(), m_original_ptrs.data(), m_original_ptrs.data() + m_num_original_blocks);
   return 0;
 }
 
 
 
 int ISALBenchmark::decode() noexcept {
-  if (num_lost_blocks_ == 0) return 0;
+  if (m_num_lost_blocks == 0) return 0;
 
   // Copy lost block indices (in reality this would be done by iterating and checking for lost blocks)
-  for (auto idx : lost_block_idxs_) {
-    block_err_list_.push_back(static_cast<uint8_t>(idx));
+  for (auto idx : m_lost_block_idxs) {
+    m_block_err_list.push_back(static_cast<uint8_t>(idx));
   }
   // Generate decoding matrix
-  if (gf_gen_decode_matrix_simple(encode_matrix_, decode_matrix_, invert_matrix_,
-                                  temp_matrix_, decode_index_, block_err_list_,
-                                  num_lost_blocks_, num_original_blocks_, num_total_blocks_)) {
+  if (gf_gen_m_decode_matrixsimple(m_encode_matrix, m_decode_matrix, m_invert_matrix,
+                                  m_temp_matrix, m_decode_index, m_block_err_list,
+                                  m_num_lost_blocks, m_num_original_blocks, m_num_total_blocks)) {
     return -1;
   }
   // Set up recovery pointers
-  for (unsigned i = 0; i < num_original_blocks_; i++) {
-    recovery_src_ptrs_[i] = original_ptrs_[decode_index_[i]];
+  for (unsigned i = 0; i < m_num_original_blocks; i++) {
+    m_recovery_src_ptrs[i] = m_original_ptrs[m_decode_index[i]];
   }
   // Initialize tables and perform recovery
-  ec_init_tables(num_original_blocks_, num_lost_blocks_, decode_matrix_.get(), g_tbls_.get());
-  ec_encode_data(block_size_, num_original_blocks_, num_lost_blocks_,
-                 g_tbls_.get(), recovery_src_ptrs_.data(), recovery_outp_ptrs_.data());
+  ec_init_tables(m_num_original_blocks, m_num_lost_blocks, m_decode_matrix.get(), m_g_tbls.get());
+  ec_encode_data(m_block_size, m_num_original_blocks, m_num_lost_blocks,
+                 m_g_tbls.get(), m_recovery_src_ptrs.data(), m_recovery_outp_ptrs.data());
                  
   return 0;
 }
 
 
 void ISALBenchmark::simulate_data_loss() noexcept {
-  for (auto idx : lost_block_idxs_) {
-    memset(original_ptrs_[idx], 0, block_size_);
-    original_ptrs_[idx] = nullptr;
-    if (idx > num_original_blocks_) {
-      memset(recovery_outp_ptrs_[idx - num_original_blocks_], 0, block_size_);
+  for (auto idx : m_lost_block_idxs) {
+    memset(m_original_ptrs[idx], 0, m_block_size);
+    m_original_ptrs[idx] = nullptr;
+    if (idx > m_num_original_blocks) {
+      memset(m_recovery_outp_ptrs[idx - m_num_original_blocks], 0, m_block_size);
     }
   }
 }
@@ -105,13 +105,13 @@ void ISALBenchmark::simulate_data_loss() noexcept {
 
 bool ISALBenchmark::check_for_corruption() const noexcept {
   unsigned loss_idx = 0;
-  for (unsigned i = 0; i < num_original_blocks_; i++) {
+  for (unsigned i = 0; i < m_num_original_blocks; i++) {
     bool res = false;
-    if (loss_idx < num_lost_blocks_ && i == lost_block_idxs_[loss_idx]) {
-      res = validate_block(recovery_outp_ptrs_[loss_idx], block_size_);
+    if (loss_idx < m_num_lost_blocks && i == m_lost_block_idxs[loss_idx]) {
+      res = validate_block(m_recovery_outp_ptrs[loss_idx], m_block_size);
       loss_idx++;
     } else {
-      res = validate_block(original_ptrs_[i], block_size_);
+      res = validate_block(m_original_ptrs[i], m_block_size);
     }
 
     if (!res) return false;
@@ -120,7 +120,7 @@ bool ISALBenchmark::check_for_corruption() const noexcept {
 }
 
 
-int gf_gen_decode_matrix_simple(
+int gf_gen_m_decode_matrixsimple(
   const std::unique_ptr<uint8_t[]>& encode_matrix,
   std::unique_ptr<uint8_t[]>& decode_matrix,
   std::unique_ptr<uint8_t[]>& invert_matrix,

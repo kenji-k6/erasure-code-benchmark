@@ -25,27 +25,27 @@ public:
   bool check_for_corruption() const noexcept override;
   
 private:
-  uint32_t num_total_blocks_;
+  uint32_t m_num_total_blocks;
 
   // Data Buffers
-  std::unique_ptr<uint8_t[]> original_buffer_; ///< Buffer for the original data we want to transmit
-  std::unique_ptr<uint8_t[]> recovery_outp_buffer_; ///< Buffer for recovery of corrupted data
+  std::unique_ptr<uint8_t[]> m_original_buffer; ///< Buffer for the original data we want to transmit
+  std::unique_ptr<uint8_t[]> m_recovery_outp_buffer; ///< Buffer for recovery of corrupted data
 
   // Data Block Pointers
-  std::vector<uint8_t*> original_ptrs_;
-  std::vector<uint8_t*> recovery_src_ptrs_;
-  std::vector<uint8_t*> recovery_outp_ptrs_;
+  std::vector<uint8_t*> m_original_ptrs;
+  std::vector<uint8_t*> m_recovery_src_ptrs;
+  std::vector<uint8_t*> m_recovery_outp_ptrs;
   
 
   // Erasure and Coefficient Matrices
-  std::unique_ptr<uint8_t[]> encode_matrix_;
-  std::unique_ptr<uint8_t[]> decode_matrix_;
-  std::unique_ptr<uint8_t[]> invert_matrix_;
-  std::unique_ptr<uint8_t[]> temp_matrix_;
-  std::unique_ptr<uint8_t[]> g_tbls_; ///< Generator tables for encoding
+  std::unique_ptr<uint8_t[]> m_encode_matrix;
+  std::unique_ptr<uint8_t[]> m_decode_matrix;
+  std::unique_ptr<uint8_t[]> m_invert_matrix;
+  std::unique_ptr<uint8_t[]> m_temp_matrix;
+  std::unique_ptr<uint8_t[]> m_g_tbls; ///< Generator tables for encoding
 
-  std::vector<uint8_t> block_err_list_; ///< Array containing the indices of lost blocks
-  std::vector<uint8_t> decode_index_;  ///< Array containing the indices of the blocks to decode
+  std::vector<uint8_t> m_block_err_list; ///< Array containing the indices of lost blocks
+  std::vector<uint8_t> m_decode_index;  ///< Array containing the indices of the blocks to decode
 };
 
 // Helper function for generating the decode matrix (simple version, implementation from ISA-L Github repository)
