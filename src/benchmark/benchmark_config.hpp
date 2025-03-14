@@ -26,6 +26,8 @@ struct BenchmarkConfig {
     uint32_t num_recovery_blocks;                 ///< Number of recovery blocks
   } computed;
 
+  bool is_xorec_config;                           ///< Flag to indicate whether this configuration is for XOR-EC algorithm(s)
+
   struct {
     XorecVersion version;                         ///< Version of the XOR-EC algorithm
 
