@@ -12,7 +12,7 @@
 
 static bool XOREC_INIT_CALLED = false;
 
-static uint64_t PREFETCH_SIZE = 4096; // 4096B
+static uint64_t NUM_PREFETCHED_BLOCKS = 64;
 
 
 void xorec_init() {
@@ -36,25 +36,22 @@ XorecResult xorec_encode(
 
   std::memset(parity_buffer, 0, block_size * num_parity_blocks);
 
-  for (uint32_t i = 0; i < num_parity_blocks; ++i) {
-    void * XOREC_RESTRICT parity_block = reinterpret_cast<void*>(parity_buffer + i * block_size);
+  for (uint32_t i = 0; i < num_data_blocks; ++i) {
+    void * XOREC_RESTRICT parity_block = reinterpret_cast<void*>(parity_buffer + (i % num_parity_blocks) * block_size);
+    const void * XOREC_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + i * block_size);
 
-    for (uint32_t j = i; j < num_data_blocks; j += num_parity_blocks) {
-      const void * XOREC_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + j * block_size);
-      switch (version) {
-        case XorecVersion::Scalar:
-          xorec_xor_blocks_scalar(parity_block, data_block, block_size);
-          break;
-        case XorecVersion::AVX:
-          xorec_xor_blocks_avx(parity_block, data_block, block_size);
-          break;
-        case XorecVersion::AVX2:
-          xorec_xor_blocks_avx2(parity_block, data_block, block_size);
-          break;
-      }
+    switch (version) {
+      case XorecVersion::Scalar:
+        xorec_xor_blocks_scalar(parity_block, data_block, block_size);
+        break;
+      case XorecVersion::AVX:
+        xorec_xor_blocks_avx(parity_block, data_block, block_size);
+        break;
+      case XorecVersion::AVX2:
+        xorec_xor_blocks_avx2(parity_block, data_block, block_size);
+        break;
     }
-  }
-  
+  }  
   return XorecResult::Success;  
 }
 
@@ -82,17 +79,7 @@ XorecResult xorec_decode(
     const void * XOREC_RESTRICT parity_block = reinterpret_cast<const void*>(parity_buffer + (i % num_parity_blocks) * block_size);
 
     // Copy the parity block to the recover block
-    switch (version) {
-      case XorecVersion::Scalar:
-        xorec_copy_blocks_scalar(recover_block, parity_block, block_size);
-        break;
-      case XorecVersion::AVX:
-        xorec_copy_blocks_avx(recover_block, parity_block, block_size);
-        break;
-      case XorecVersion::AVX2:
-        xorec_copy_blocks_avx2(recover_block, parity_block, block_size);
-        break;
-    }
+    memcpy(recover_block, parity_block, block_size);
 
     // XOR the recover block with the other data blocks
     for (uint32_t j = i % num_parity_blocks; j < num_data_blocks; j += num_parity_blocks) {
@@ -131,46 +118,32 @@ XorecResult xorec_pipelined_encode(
   if (!XOREC_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_pipelined_encode()");
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
   
-  uint64_t prefetched_bytes = 0;
   cudaStream_t prefetch_stream;
-  bool do_synchronize = true;
 
   cudaError_t err = cudaStreamCreate(&prefetch_stream);
   if (err != cudaSuccess) throw_error("cudaStreamCreate() failed: " + std::string(cudaGetErrorString(err)));
 
-  err = cudaMemPrefetchAsync(data_buffer, PREFETCH_SIZE, cudaCpuDeviceId, prefetch_stream);
+  err = cudaMemPrefetchAsync(data_buffer, block_size*NUM_PREFETCHED_BLOCKS, cudaCpuDeviceId, prefetch_stream);
   if (err != cudaSuccess) throw_error("cudaMemPrefetchAsync() failed: " + std::string(cudaGetErrorString(err)));
   
-
   std::memset(parity_buffer, 0, block_size * num_parity_blocks);
 
   for (uint32_t i = 0; i < num_data_blocks; ++i) {
-
-    if (do_synchronize) { // synchronize previous prefetch
+    if (i % NUM_PREFETCHED_BLOCKS == 0) { // We are at a prefetch interval
       err = cudaStreamSynchronize(prefetch_stream);
       if (err != cudaSuccess) throw_error("cudaStreamSynchronize() failed: " + std::string(cudaGetErrorString(err)));
-      prefetched_bytes += PREFETCH_SIZE;
-      err = cudaStreamDestroy(prefetch_stream);
-      if (err != cudaSuccess) throw_error("cudaStreamDestroy() failed: " + std::string(cudaGetErrorString(err)));
-      do_synchronize = false;
-    }
 
-    uint32_t curr_byte = i * block_size;
-    if (curr_byte >= prefetched_bytes - PREFETCH_SIZE) { // prefetch if needed
-      uint32_t prefetch_amt =  (prefetched_bytes + PREFETCH_SIZE < num_data_blocks * block_size) ? PREFETCH_SIZE : num_data_blocks * block_size - prefetched_bytes;
-      
-      err = cudaStreamCreate(&prefetch_stream);
-      if (err != cudaSuccess) throw_error("cudaStreamCreate() failed: " + std::string(cudaGetErrorString(err)));
-
-      err = cudaMemPrefetchAsync(data_buffer + prefetched_bytes, prefetch_amt, cudaCpuDeviceId, prefetch_stream);
-      if (err != cudaSuccess) throw_error("cudaMemPrefetchAsync() failed: " + std::string(cudaGetErrorString(err)));
-      do_synchronize = true;
+      if (i + NUM_PREFETCHED_BLOCKS < num_data_blocks) {
+        int prefetch_blks = (i + 2*NUM_PREFETCHED_BLOCKS <= num_data_blocks) ? NUM_PREFETCHED_BLOCKS : num_data_blocks - (i + NUM_PREFETCHED_BLOCKS);  
+        err = cudaMemPrefetchAsync(data_buffer + (i+NUM_PREFETCHED_BLOCKS) * block_size, prefetch_blks * block_size, 0, prefetch_stream);
+        if (err != cudaSuccess) throw_error("cudaMemPrefetchAsync() failed: " + std::string(cudaGetErrorString(err)));
+      }
     }
 
     void * XOREC_RESTRICT parity_block = reinterpret_cast<void*>(parity_buffer + (i % num_parity_blocks) * block_size);
     const void * XOREC_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + i * block_size);
 
-    switch (version) {
+    switch(version) {
       case XorecVersion::Scalar:
         xorec_xor_blocks_scalar(parity_block, data_block, block_size);
         break;
@@ -182,6 +155,9 @@ XorecResult xorec_pipelined_encode(
         break;
     }
   }
+
+  err = cudaStreamDestroy(prefetch_stream);
+  if (err != cudaSuccess) throw_error("cudaStreamDestroy() failed: " + std::string(cudaGetErrorString(err)));
   return XorecResult::Success;
 }
 

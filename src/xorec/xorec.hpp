@@ -177,47 +177,5 @@ static void inline xorec_xor_blocks_scalar(void * XOREC_RESTRICT dest, const voi
 }
 #pragma GCC pop_options
 
-static void inline xorec_copy_blocks_avx2(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
-  #if defined(TRY_XOREC_AVX2)
-    XOREC_AVX2 * XOREC_RESTRICT dest256 = reinterpret_cast<XOREC_AVX2*>(dest);
-    const XOREC_AVX2 * XOREC_RESTRICT src256 = reinterpret_cast<const XOREC_AVX2*>(src);
-
-    #pragma GCC ivdep
-    for (; bytes >= 128; bytes -= 128, dest256 += 4, src256 += 4) {
-      _mm256_storeu_si256(dest256, _mm256_loadu_si256(src256));
-      _mm256_storeu_si256(dest256 + 1, _mm256_loadu_si256(src256 + 1));
-      _mm256_storeu_si256(dest256 + 2, _mm256_loadu_si256(src256 + 2));
-      _mm256_storeu_si256(dest256 + 3, _mm256_loadu_si256(src256 + 3));
-    }
-
-    if (bytes > 0) {
-      _mm256_storeu_si256(dest256, _mm256_loadu_si256(src256));
-      _mm256_storeu_si256(dest256 + 1, _mm256_loadu_si256(src256 + 1));
-    }
-  #else
-    std::cerr << "AVX2 not supported\n";
-    exit(1);
-  #endif
-}
-
-static void inline xorec_copy_blocks_avx(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
-  #if defined(TRY_XOREC_AVX)
-    XOREC_AVX * XOREC_RESTRICT dest128 = reinterpret_cast<XOREC_AVX*>(dest);
-    const XOREC_AVX * XOREC_RESTRICT src128 = reinterpret_cast<const XOREC_AVX*>(src);
-
-    #pragma GCC ivdep
-    for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
-      _mm_storeu_si128(dest128, _mm_loadu_si128(src128));
-      _mm_storeu_si128(dest128 + 1, _mm_loadu_si128(src128 + 1));
-      _mm_storeu_si128(dest128 + 2, _mm_loadu_si128(src128 + 2));
-      _mm_storeu_si128(dest128 + 3, _mm_loadu_si128(src128 + 3));
-    }
-  #else
-    std::cerr << "AVX2 not supported\n";
-    exit(1);
-  #endif
-}
-
-static void inline xorec_copy_blocks_scalar(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) { memcpy(dest, src, bytes); }
 
 #endif // XOREC_HPP
