@@ -12,7 +12,6 @@
 
 static bool XOREC_INIT_CALLED = false;
 
-static uint64_t NUM_PREFETCHED_BLOCKS = 64;
 
 
 void xorec_init() {
@@ -113,30 +112,77 @@ XorecResult xorec_prefetch_encode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
+  // const uint32_t num_prefetch,
+  const uint32_t prefetch_bytes,
   XorecVersion version
 ) {
+  // if (!XOREC_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_pipelined_encode()");
+  // if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
+
+  // cudaStream_t prefetch_stream;
+  // cudaStreamCreate(&prefetch_stream);
+  // cudaMemPrefetchAsync(data_buffer, block_size*num_prefetch, cudaCpuDeviceId, prefetch_stream);
+  
+  // std::memset(parity_buffer, 0, block_size * num_parity_blocks);
+
+
+
+  // for (uint32_t i = 0; i < num_data_blocks; ++i) {
+  //   if (i % num_prefetch == 0) { // We are at a prefetch interval
+  //     cudaStreamSynchronize(prefetch_stream);
+
+  //     if (i + num_prefetch < num_data_blocks) {
+  //       int prefetch_blks = (i + 2*num_prefetch <= num_data_blocks) ? num_prefetch : num_data_blocks - (i + num_prefetch);  
+  //       cudaMemPrefetchAsync(data_buffer + (i+num_prefetch) * block_size, prefetch_blks * block_size, 0, prefetch_stream);
+  //     }
+  //   }
+
+  //   void * XOREC_RESTRICT parity_block = reinterpret_cast<void*>(parity_buffer + (i % num_parity_blocks) * block_size);
+  //   const void * XOREC_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + i * block_size);
+
+  //   switch(version) {
+  //     case XorecVersion::Scalar:
+  //       xorec_xor_blocks_scalar(parity_block, data_block, block_size);
+  //       break;
+  //     case XorecVersion::AVX:
+  //       xorec_xor_blocks_avx(parity_block, data_block, block_size);
+  //       break;
+  //     case XorecVersion::AVX2:
+  //       xorec_xor_blocks_avx2(parity_block, data_block, block_size);
+  //       break;
+  //   }
+  // }
+
+  // cudaStreamDestroy(prefetch_stream);
+
+
+  // return XorecResult::Success;
+
   if (!XOREC_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_pipelined_encode()");
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
-  
+
+  uint32_t prefetch_blocks = prefetch_bytes / block_size;
+  if (prefetch_blocks == 0) prefetch_blocks = 1;
+
   cudaStream_t prefetch_stream;
+  cudaStreamCreate(&prefetch_stream);
 
-  cudaError_t err = cudaStreamCreate(&prefetch_stream);
-  if (err != cudaSuccess) throw_error("cudaStreamCreate() failed: " + std::string(cudaGetErrorString(err)));
 
-  err = cudaMemPrefetchAsync(data_buffer, block_size*NUM_PREFETCHED_BLOCKS, cudaCpuDeviceId, prefetch_stream);
-  if (err != cudaSuccess) throw_error("cudaMemPrefetchAsync() failed: " + std::string(cudaGetErrorString(err)));
+  uint32_t initial_prefetch_bytes = std::min(prefetch_blocks * block_size, num_data_blocks * block_size);
+  cudaMemPrefetchAsync(data_buffer, initial_prefetch_bytes, cudaCpuDeviceId, prefetch_stream);
   
   std::memset(parity_buffer, 0, block_size * num_parity_blocks);
 
-  for (uint32_t i = 0; i < num_data_blocks; ++i) {
-    if (i % NUM_PREFETCHED_BLOCKS == 0) { // We are at a prefetch interval
-      err = cudaStreamSynchronize(prefetch_stream);
-      if (err != cudaSuccess) throw_error("cudaStreamSynchronize() failed: " + std::string(cudaGetErrorString(err)));
 
-      if (i + NUM_PREFETCHED_BLOCKS < num_data_blocks) {
-        int prefetch_blks = (i + 2*NUM_PREFETCHED_BLOCKS <= num_data_blocks) ? NUM_PREFETCHED_BLOCKS : num_data_blocks - (i + NUM_PREFETCHED_BLOCKS);  
-        err = cudaMemPrefetchAsync(data_buffer + (i+NUM_PREFETCHED_BLOCKS) * block_size, prefetch_blks * block_size, 0, prefetch_stream);
-        if (err != cudaSuccess) throw_error("cudaMemPrefetchAsync() failed: " + std::string(cudaGetErrorString(err)));
+
+  for (uint32_t i = 0; i < num_data_blocks; ++i) {
+    if (i % prefetch_blocks == 0) { // We are at a prefetch interval
+      cudaStreamSynchronize(prefetch_stream);
+
+      if (i + prefetch_blocks < num_data_blocks) {
+        uint32_t remaining_blocks = num_data_blocks - (i + prefetch_blocks);
+        uint32_t prefetch_blks = std::min(prefetch_blocks, remaining_blocks);
+        cudaMemPrefetchAsync(data_buffer + (i+prefetch_blocks) * block_size, prefetch_blks * block_size, cudaCpuDeviceId, prefetch_stream);
       }
     }
 
@@ -156,8 +202,9 @@ XorecResult xorec_prefetch_encode(
     }
   }
 
-  err = cudaStreamDestroy(prefetch_stream);
-  if (err != cudaSuccess) throw_error("cudaStreamDestroy() failed: " + std::string(cudaGetErrorString(err)));
+  cudaStreamDestroy(prefetch_stream);
+
+
   return XorecResult::Success;
 }
 
@@ -171,4 +218,7 @@ XorecResult xorec_prefetch_decode(
   uint32_t num_parity_blocks,
   const uint8_t * XOREC_RESTRICT block_bitmap,
   XorecVersion version
-);
+) {
+  
+  return XorecResult::Success;
+}

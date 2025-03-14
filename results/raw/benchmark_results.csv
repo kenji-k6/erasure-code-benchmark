@@ -1,0 +1,2 @@
+plot_id,name,err_msg,num_iterations,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio,num_data_blocks,num_parity_blocks,time_ns,encode_time_ns,encode_time_ns_stddev,encode_throughput_Gbps,encode_throughput_Gbps_stddev,decode_time_ns,decode_time_ns_stddev,decode_throughput_Gbps,decode_throughput_Gbps_stddev
+0,"CM256/iterations:10/real_time",,10,134217728,1048576,1,0.03125,128,4,4.06459e+08,5.87381e+07,97029,18.2802,0.0302087,1.38226e+07,8882.68,77.6803,0.0499155

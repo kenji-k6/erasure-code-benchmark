@@ -87,6 +87,7 @@ XorecResult xorec_prefetch_encode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
+  const uint32_t num_prefetch, // Number of blocks to prefetch
   XorecVersion version
 );
 
@@ -107,6 +108,7 @@ XorecResult xorec_prefetch_decode(
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
   const uint8_t * XOREC_RESTRICT block_bitmap,
+  const uint32_t num_prefetch, // Number of blocks to prefetch
   XorecVersion version
 );
 
