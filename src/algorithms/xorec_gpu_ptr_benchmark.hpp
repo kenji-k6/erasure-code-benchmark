@@ -36,19 +36,29 @@ public:
 
 
 class XorecBenchmarkAVXGPUPtr : public XorecBenchmarkGPUPtr {
-  public:
-    explicit XorecBenchmarkAVXGPUPtr(const BenchmarkConfig& config) noexcept;
-  
-    int encode() noexcept override;
-    int decode() noexcept override;
+public:
+  explicit XorecBenchmarkAVXGPUPtr(const BenchmarkConfig& config) noexcept;
+
+  int encode() noexcept override;
+  int decode() noexcept override;
 };
 
 class XorecBenchmarkAVX2GPUPtr : public XorecBenchmarkGPUPtr {
-  public:
-    explicit XorecBenchmarkAVX2GPUPtr(const BenchmarkConfig& config) noexcept;
-  
-    int encode() noexcept override;
-    int decode() noexcept override;
+public:
+  explicit XorecBenchmarkAVX2GPUPtr(const BenchmarkConfig& config) noexcept;
+
+  int encode() noexcept override;
+  int decode() noexcept override;
+};
+
+
+/* temp */
+class XorecBenchmarkScalarPipelinedGPUPtr : public XorecBenchmarkGPUPtr {
+public:
+  explicit XorecBenchmarkScalarPipelinedGPUPtr(const BenchmarkConfig& config) noexcept;
+
+  int encode() noexcept override;
+  int decode() noexcept override;
 };
 
 #endif // XOREC_GPU_PTR_BENCHMARK_HPP

@@ -45,6 +45,7 @@ const std::unordered_map<std::string, BenchmarkFunction> available_gpu_benchmark
   { "xorec-scalar-gpu-ptr",   BM_XOREC_SCALAR_GPU_PTR },
   { "xorec-avx-gpu-ptr",      BM_XOREC_AVX_GPU_PTR    },
   { "xorec-avx2-gpu-ptr",     BM_XOREC_AVX2_GPU_PTR   },
+  { "xorec-scalar-pipelined-gpu-ptr", BM_XOREC_SCALAR_PIPELINED_GPU_PTR }, // temp
   { "xorec-gpu-cmp",          BM_XOREC_GPU_CMP        }
 };
 
@@ -59,6 +60,7 @@ const std::unordered_map<std::string, std::string> benchmark_names = {
   { "xorec-scalar-gpu-ptr", "XOR-EC (Scalar, GPU Pointer)"  },
   { "xorec-avx-gpu-ptr",    "XOR-EC (AVX, GPU Pointer)"     },
   { "xorec-avx2-gpu-ptr",   "XOR-EC (AVX2, GPU Pointer)"    },
+  { "xorec-scalar-pipelined-gpu-ptr", "XOR-EC (Scalar, Pipelined, GPU Pointer)" }, // temp
   { "xorec-gpu-cmp",        "XOR-EC (GPU Computation)"      }
 };
 
@@ -130,6 +132,7 @@ void parse_args(int argc, char** argv) {
     { "xorec-scalar-gpu-ptr", no_argument,        nullptr,  0   },
     { "xorec-avx-gpu-ptr",    no_argument,        nullptr,  0   },
     { "xorec-avx2-gpu-ptr",   no_argument,        nullptr,  0   },
+    { "xorec-scalar-pipelined-gpu-ptr", no_argument, nullptr,  0   }, // temp
     { "xorec-gpu-cmp",        no_argument,        nullptr,  0   },
     { nullptr,                0,                  nullptr,  0   }
   };

@@ -26,4 +26,6 @@ void BM_XOREC_AVX_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config
 void BM_XOREC_AVX2_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config);
 
 void BM_XOREC_GPU_CMP(benchmark::State& state, const BenchmarkConfig& config);
+
+void BM_XOREC_SCALAR_PIPLINED_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config); // temp
 #endif // BENCHMARK_FUNCTIONS_HPP

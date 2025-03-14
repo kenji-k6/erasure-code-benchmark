@@ -30,6 +30,7 @@
 void xorec_init();
 
 
+
 /**
  * @brief Encodes data using XOR-based erasure coding.
  * @param data_buffer Pointer to the data buffer.
@@ -68,6 +69,47 @@ XorecResult xorec_decode(
   const uint8_t * XOREC_RESTRICT block_bitmap, ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
   XorecVersion version
 );
+
+
+
+/**
+ * @brief Encodes data using XOR-based erasure coding.
+ * @param data_buffer Pointer to the data buffer.
+ * @param parity_buffer Pointer to the parity buffer.
+ * @param block_size Size of each block in bytes.
+ * @param num_data_blocks Number of data blocks.
+ * @param num_parity_blocks Number of parity blocks.
+ * @return XorecResult XorecResult indicating success or failure.
+ */
+XorecResult xorec_pipelined_encode(
+  const uint8_t *XOREC_RESTRICT data_buffer,
+  uint8_t *XOREC_RESTRICT parity_buffer,
+  uint32_t block_size,
+  uint32_t num_data_blocks,
+  uint32_t num_parity_blocks,
+  XorecVersion version
+);
+
+/**
+ * @brief Decodes data using XOR-based erasure coding.
+ * @param data_buffer Pointer to the data buffer.
+ * @param parity_buffer Pointer to the parity buffer.
+ * @param block_size Size of each block in bytes.
+ * @param num_data_blocks Number of data blocks.
+ * @param num_parity_blocks Number of parity blocks.
+ * @param block_bitmap A bitmap indicating which blocks are present.
+ * @return XorecResult XorecResult indicating success or failure.
+ */
+XorecResult xorec_pipeline_decode(
+  uint8_t *XOREC_RESTRICT data_buffer,
+  const uint8_t *XOREC_RESTRICT parity_buffer,
+  uint32_t block_size,
+  uint32_t num_data_blocks,
+  uint32_t num_parity_blocks,
+  const uint8_t * XOREC_RESTRICT block_bitmap,
+  XorecVersion version
+);
+
 
 static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
   #if defined(TRY_XOREC_AVX2)
