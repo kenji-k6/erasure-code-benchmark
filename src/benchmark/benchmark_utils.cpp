@@ -398,7 +398,7 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       *(it++),
       { FIXED_NUM_ORIGINAL_BLOCKS, FIXED_NUM_RECOVERY_BLOCKS },
       false,
-      { XorecVersion::Scalar, false, false, false },
+      { XorecVersion::Scalar, false, 0, false, false },
       nullptr
     };
     configs.push_back(config);
@@ -416,7 +416,7 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       *(it++),
       { FIXED_NUM_ORIGINAL_BLOCKS, num_rec_blocks },
       false,
-      { XorecVersion::Scalar, false, false, false },
+      { XorecVersion::Scalar, false, 0, false, false },
       nullptr
     };
     configs.push_back(config);
@@ -434,7 +434,7 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       *(it++),
       { FIXED_NUM_ORIGINAL_BLOCKS, FIXED_NUM_ORIGINAL_BLOCKS },
       false,
-      { XorecVersion::Scalar, false, false, false },
+      { XorecVersion::Scalar, false, 0, false, false },
       nullptr
     };
     configs.push_back(config);
