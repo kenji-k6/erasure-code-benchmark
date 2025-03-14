@@ -47,14 +47,14 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
   for (auto _ : state) {
     BenchmarkType bench(config);
-    if (config.gpu_mem && config.touch_gpu_mem) bench.touch_gpu_memory();
+    if (config.is_xorec_config && config.xorec_params.gpu_mem && config.xorec_params.touch_gpu_mem) bench.touch_gpu_memory();
 
     auto start_encode = std::chrono::steady_clock::now();
     bench.encode();
     auto end_encode = std::chrono::steady_clock::now();
 
     bench.simulate_data_loss();
-    if (config.gpu_mem && config.touch_gpu_mem) bench.touch_gpu_memory();
+    if (config.is_xorec_config && config.xorec_params.gpu_mem && config.xorec_params.touch_gpu_mem) bench.touch_gpu_memory();
     
     auto start_decode = std::chrono::steady_clock::now();
     bench.decode();
