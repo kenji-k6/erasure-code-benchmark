@@ -18,6 +18,7 @@ XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBench
   m_data_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_original_blocks);
   m_parity_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_recovery_blocks);
   m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
+  m_version = config.xorec_params.version;
 
 
   if (!m_data_buffer || !m_parity_buffer) throw_error("Xorec: Failed to allocate buffer(s).");
@@ -28,6 +29,17 @@ XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBench
     if (write_res) throw_error("Xorec: Failed to write random checking packet.");
   }
 }
+
+int XorecBenchmark::encode() noexcept {
+  xorec_encode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
+  return 0;
+}
+
+int XorecBenchmark::decode() noexcept {
+  xorec_decode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
+  return 0;
+}
+
 
 void XorecBenchmark::simulate_data_loss() noexcept {
   uint32_t loss_idx = 0;
@@ -58,37 +70,3 @@ bool XorecBenchmark::check_for_corruption() const noexcept {
   }
   return true;
 }
-
-
-
-XorecBenchmarkScalar::XorecBenchmarkScalar(const BenchmarkConfig& config) noexcept : XorecBenchmark(config) {}
-int XorecBenchmarkScalar::encode() noexcept {
-  xorec_encode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, XorecVersion::Scalar);
-  return 0;
-}
-int XorecBenchmarkScalar::decode() noexcept {
-  xorec_decode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), XorecVersion::Scalar);
-  return 0;
-}
-
-
-XorecBenchmarkAVX::XorecBenchmarkAVX(const BenchmarkConfig& config) noexcept : XorecBenchmark(config) {}
-int XorecBenchmarkAVX::encode() noexcept {
-  xorec_encode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, XorecVersion::AVX);
-  return 0;
-}
-int XorecBenchmarkAVX::decode() noexcept {
-  xorec_decode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), XorecVersion::AVX);
-  return 0;
-}
-
-XorecBenchmarkAVX2::XorecBenchmarkAVX2(const BenchmarkConfig& config) noexcept : XorecBenchmark(config) {}
-int XorecBenchmarkAVX2::encode() noexcept {
-  xorec_encode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, XorecVersion::AVX2);
-  return 0;
-}
-int XorecBenchmarkAVX2::decode() noexcept {
-  xorec_decode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), XorecVersion::AVX2);
-  return 0;
-}
-

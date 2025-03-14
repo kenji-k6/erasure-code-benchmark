@@ -14,7 +14,8 @@ XorecBenchmarkGPUPtr::XorecBenchmarkGPUPtr(const BenchmarkConfig& config) noexce
   if (!m_parity_buffer) throw_error("Xorec: Failed to allocate parity buffer.");
 
   m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
-
+  m_version = config.xorec_params.version;
+  m_prefetch = config.xorec_params.prefetch;
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < m_num_original_blocks; ++i) {
     int write_res = write_validation_pattern(i, &m_data_buffer[i * m_block_size], m_block_size);
@@ -24,6 +25,24 @@ XorecBenchmarkGPUPtr::XorecBenchmarkGPUPtr(const BenchmarkConfig& config) noexce
 
 XorecBenchmarkGPUPtr::~XorecBenchmarkGPUPtr() noexcept {
   if (m_data_buffer) cudaFree(m_data_buffer);
+}
+
+int XorecBenchmarkGPUPtr::encode() noexcept {
+  if (m_prefetch) {
+    xorec_prefetch_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
+  } else {
+    xorec_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
+  }
+  return 0;
+}
+
+int XorecBenchmarkGPUPtr::decode() noexcept {
+  if (m_prefetch) {
+    xorec_prefetch_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
+  } else {
+    xorec_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
+  }
+  return 0;
 }
 
 void XorecBenchmarkGPUPtr::simulate_data_loss() noexcept {
@@ -59,37 +78,4 @@ bool XorecBenchmarkGPUPtr::check_for_corruption() const noexcept {
 
 void XorecBenchmarkGPUPtr::touch_gpu_memory() noexcept {
   touch_memory(m_data_buffer, m_block_size * m_num_original_blocks);
-}
-
-
-
-
-XorecBenchmarkScalarGPUPtr::XorecBenchmarkScalarGPUPtr(const BenchmarkConfig& config) noexcept : XorecBenchmarkGPUPtr(config) {}
-int XorecBenchmarkScalarGPUPtr::encode() noexcept {
-  xorec_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, XorecVersion::Scalar);
-  return 0;
-}
-int XorecBenchmarkScalarGPUPtr::decode() noexcept {
-  xorec_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), XorecVersion::Scalar);
-  return 0;
-}
-
-XorecBenchmarkAVXGPUPtr::XorecBenchmarkAVXGPUPtr(const BenchmarkConfig& config) noexcept : XorecBenchmarkGPUPtr(config) {}
-int XorecBenchmarkAVXGPUPtr::encode() noexcept {
-  xorec_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, XorecVersion::AVX);
-  return 0;
-}
-int XorecBenchmarkAVXGPUPtr::decode() noexcept {
-  xorec_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), XorecVersion::AVX);
-  return 0;
-}
-
-XorecBenchmarkAVX2GPUPtr::XorecBenchmarkAVX2GPUPtr(const BenchmarkConfig& config) noexcept : XorecBenchmarkGPUPtr(config) {}
-int XorecBenchmarkAVX2GPUPtr::encode() noexcept {
-  xorec_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, XorecVersion::AVX2);
-  return 0;
-}
-int XorecBenchmarkAVX2GPUPtr::decode() noexcept {
-  xorec_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), XorecVersion::AVX2);
-  return 0;
 }

@@ -7,6 +7,7 @@
 #define BENCHMARK_CONFIG_HPP
 
 #include "benchmark_reporters.hpp"
+#include "xorec_utils.hpp"
 #include <cstdint>
 #include <vector>
 
@@ -25,8 +26,14 @@ struct BenchmarkConfig {
     uint32_t num_recovery_blocks;                 ///< Number of recovery blocks
   } computed;
 
-  bool gpu_mem;                                   ///< Flag to indicate GPU memory allocation
-  bool touch_gpu_mem;                             ///< Flag to indicate GPU memory warmup
+  struct {
+    XorecVersion version;                         ///< Version of the XOR-EC algorithm
+
+    bool prefetch;                                ///< Flag to indicate prefetching
+
+    bool gpu_mem;                                 ///< Flag to indicate GPU memory a llocation
+    bool touch_gpu_mem;                           ///< Flag to indicate GPU memory warmup
+  } xorec_params;
 
   BenchmarkProgressReporter *progress_reporter = nullptr;
 };
