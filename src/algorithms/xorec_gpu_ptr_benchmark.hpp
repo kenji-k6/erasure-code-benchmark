@@ -28,6 +28,7 @@ protected:
 
   XorecVersion m_version;
   bool m_prefetch;
+  uint64_t m_prefetch_bytes;
 };
 
 #endif // XOREC_GPU_PTR_BENCHMARK_HPP

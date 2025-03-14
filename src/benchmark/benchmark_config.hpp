@@ -32,6 +32,7 @@ struct BenchmarkConfig {
     XorecVersion version;                         ///< Version of the XOR-EC algorithm
 
     bool prefetch;                                ///< Flag to indicate prefetching
+    uint32_t prefetch_bytes;                      ///< Number of bytes to prefetch
 
     bool gpu_mem;                                 ///< Flag to indicate GPU memory a llocation
     bool touch_gpu_mem;                           ///< Flag to indicate GPU memory warmup
@@ -52,5 +53,6 @@ constexpr uint64_t FIXED_NUM_LOST_BLOCKS = 1;
 const std::vector<uint64_t> VAR_BUFFER_SIZE = { 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144 };
 const std::vector<uint32_t> VAR_NUM_RECOVERY_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
 const std::vector<uint32_t> VAR_NUM_LOST_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
+const std::vector<uint32_t> VAR_NUM_PREFETCH_BYTES = { 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152};
 
 #endif // BENCHMARK_CONFIG_HPP

@@ -16,6 +16,7 @@ XorecBenchmarkGPUPtr::XorecBenchmarkGPUPtr(const BenchmarkConfig& config) noexce
   m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
   m_version = config.xorec_params.version;
   m_prefetch = config.xorec_params.prefetch;
+  m_prefetch_bytes = config.xorec_params.prefetch_bytes;
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < m_num_original_blocks; ++i) {
     int write_res = write_validation_pattern(i, &m_data_buffer[i * m_block_size], m_block_size);
@@ -29,7 +30,7 @@ XorecBenchmarkGPUPtr::~XorecBenchmarkGPUPtr() noexcept {
 
 int XorecBenchmarkGPUPtr::encode() noexcept {
   if (m_prefetch) {
-    xorec_prefetch_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
+    xorec_prefetch_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_prefetch_bytes, m_version);
   } else {
     xorec_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
   }

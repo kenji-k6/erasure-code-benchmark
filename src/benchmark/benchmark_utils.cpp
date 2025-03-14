@@ -32,6 +32,7 @@ bool INIT_BASE_CONFIGS = false;
 bool INIT_XOREC_CPU_CONFIGS = false;
 bool INIT_XOREC_GPU_PTR_CONFIGS = false;
 
+uint64_t PREFETCH_BYTES = 0;
 
 enum class TouchGPUMemory {
   TOUCH_GPU_MEM_TRUE = 0,
@@ -115,7 +116,9 @@ static void usage() {
             << "      --touch-gpu-memory <true|false|all> whether to touch GPU memory before encoding/decoding\n"
             << "                                          (default: false)\n"
             << "      --prefetch <true|false|all>         whether to prefetch data blocks to GPU memory, or fetch them on-demand,\n"
-            << "                                          only relevant if --xorec-gpu-ptr is specified (default: false)\n\n";
+            << "                                          only relevant if --xorec-gpu-ptr is specified (default: false)\n"
+            << "  -p, --prefetch-bytes <num>              number of bytes to prefetch, only relevant if --prefetch=true or --prefetch=all\n"
+            << "                                          (default: sweep over range of values)\n\n";
   exit(0);
 }
 
@@ -148,6 +151,7 @@ void parse_args(int argc, char** argv) {
 
     { "touch-gpu-memory",     required_argument,  nullptr,  0   },
     { "prefetch",             required_argument,  nullptr,  0   },
+    { "prefetch-bytes",       required_argument,  nullptr, 'p'  },
     { nullptr,                0,                  nullptr,  0   }
   };
 
@@ -168,6 +172,14 @@ void parse_args(int argc, char** argv) {
         break;
       case 'a':
         OVERWRITE_FILE = false;
+        break;
+      case 'p':
+        PREFETCH_BYTES = std::stoul(optarg);
+        if (PREFETCH_BYTES == 0) {
+          throw_error("Prefetch bytes must be greater than 0.");
+        } else if (PREFETCH_BYTES % 1024 != 0) {
+          throw_error("Prefetch bytes must be a multiple of 1 KiB.");
+        }
         break;
       case 0:
         flag = std::string(long_options[option_index].name);
@@ -290,7 +302,7 @@ static void get_xorec_gpu_cmp_configs(std::vector<BenchmarkConfig>& configs) {
 static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_CPU_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
 
-  std::vector<BenchmarkConfig> temp_configs;
+  std::vector<BenchmarkConfig> prefetch_configs;
   for (uint32_t i = NUM_BASE_CONFIGS; i < NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++i) {
     BenchmarkConfig xor_config = configs[i];
     xor_config.xorec_params.gpu_mem = true;
@@ -298,27 +310,43 @@ static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
     if (PREFETCH == XorecPrefetch::XOREC_PREFETCH  || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
       BenchmarkConfig config = xor_config;
       config.xorec_params.prefetch = true;
-      temp_configs.push_back(config);
+      config.xorec_params.prefetch_bytes = PREFETCH_BYTES;
+      prefetch_configs.push_back(config);
     }
 
     if (PREFETCH == XorecPrefetch::XOREC_NO_PREFETCH || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
       BenchmarkConfig config = xor_config;
       config.xorec_params.prefetch = false;
-      temp_configs.push_back(config);
+      prefetch_configs.push_back(config);
     }
   }
 
-  for (BenchmarkConfig temp : temp_configs) {
+  std::vector<BenchmarkConfig> touch_configs;
+  for (BenchmarkConfig temp : prefetch_configs) {
     BenchmarkConfig config = temp;
 
     if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_TRUE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
       config.xorec_params.touch_gpu_mem = true;
-      configs.push_back(config);
-      ++NUM_XOREC_GPU_PTR_CONFIGS;
+      touch_configs.push_back(config);
     }
 
     if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_FALSE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
       config.xorec_params.touch_gpu_mem = false;
+      touch_configs.push_back(config);
+    }
+  }
+
+  if (PREFETCH_BYTES == 0) {
+    for (auto num_bytes : VAR_NUM_PREFETCH_BYTES) {
+      for (auto config : touch_configs) {
+        BenchmarkConfig final_config = config;
+        final_config.xorec_params.prefetch_bytes = num_bytes;
+        configs.push_back(final_config);
+        ++NUM_XOREC_GPU_PTR_CONFIGS;
+      }
+    }
+  } else {
+    for (auto config : touch_configs) {
       configs.push_back(config);
       ++NUM_XOREC_GPU_PTR_CONFIGS;
     }
@@ -437,7 +465,7 @@ std::string get_benchmark_name(const std::string inp_name, BenchmarkConfig confi
         name += ",\n Touched";
       }
       if (config.xorec_params.prefetch) {
-        name += ",\n Prefetched";
+        name += ",\n Prefetched (" + std::to_string(config.xorec_params.prefetch_bytes/1024) + " KiB)";
       }
     }
   }
