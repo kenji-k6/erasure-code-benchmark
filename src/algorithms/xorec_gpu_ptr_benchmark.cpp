@@ -38,7 +38,8 @@ int XorecBenchmarkGPUPtr::encode() noexcept {
 
 int XorecBenchmarkGPUPtr::decode() noexcept {
   if (m_prefetch) {
-    xorec_prefetch_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
+    // xorec_prefetch_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
+    xorec_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
   } else {
     xorec_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
   }

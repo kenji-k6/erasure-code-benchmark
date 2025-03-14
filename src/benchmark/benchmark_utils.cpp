@@ -114,8 +114,8 @@ static void usage() {
             << " XOR-EC GPU Options: (relevant if --xorec-gpu-ptr or --xorec-gpu-cmp specified)\n"
             << "      --touch-gpu-memory <true|false|all> whether to touch GPU memory before encoding/decoding\n"
             << "                                          (default: false)\n"
-            << "      --prefetch <true|false|all>            whether to prefetch data blocks to GPU memory, or fetch them on-demand,\n"
-            << "                                           only relevant if --xorec-gpu-ptr is specified (default: false)\n\n";
+            << "      --prefetch <true|false|all>         whether to prefetch data blocks to GPU memory, or fetch them on-demand,\n"
+            << "                                          only relevant if --xorec-gpu-ptr is specified (default: false)\n\n";
   exit(0);
 }
 
