@@ -81,7 +81,7 @@ XorecResult xorec_decode(
  * @param num_parity_blocks Number of parity blocks.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_pipelined_encode(
+XorecResult xorec_prefetch_encode(
   const uint8_t *XOREC_RESTRICT data_buffer,
   uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,
@@ -100,7 +100,7 @@ XorecResult xorec_pipelined_encode(
  * @param block_bitmap A bitmap indicating which blocks are present.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_pipeline_decode(
+XorecResult xorec_prefetch_decode(
   uint8_t *XOREC_RESTRICT data_buffer,
   const uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,

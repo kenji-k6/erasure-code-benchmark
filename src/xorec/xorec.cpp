@@ -107,7 +107,7 @@ XorecResult xorec_decode(
 
 
 
-XorecResult xorec_pipelined_encode(
+XorecResult xorec_prefetch_encode(
   const uint8_t *XOREC_RESTRICT data_buffer,  // unified memory
   uint8_t *XOREC_RESTRICT parity_buffer,      // host memory
   uint32_t block_size,
@@ -163,7 +163,7 @@ XorecResult xorec_pipelined_encode(
 
 
 
-XorecResult xorec_pipeline_decode(
+XorecResult xorec_prefetch_decode(
   uint8_t *XOREC_RESTRICT data_buffer,
   const uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,

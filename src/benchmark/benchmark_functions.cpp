@@ -31,7 +31,7 @@ void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<WirehairBenchmark>(state, config);
 }
 
-void BM_XOREC_SCALAR(benchmark::State& state, const BenchmarkConfig& config) {
+void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmark>(state, config);
 }
 

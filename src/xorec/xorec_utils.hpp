@@ -43,6 +43,8 @@ enum class XorecVersion {
   AVX2 = 2
 };
 
+std::string get_version_name(XorecVersion version);
+
 extern std::array<uint8_t, XOREC_MAX_DATA_BLOCKS> COMPLETE_DATA_BITMAP;
 
 

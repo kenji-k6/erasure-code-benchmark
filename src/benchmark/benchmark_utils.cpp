@@ -14,9 +14,23 @@
 // Global variable definitions
 constexpr const char* OUTPUT_FILE_DIR = "../results/raw/";
 std::string output_file_name = "benchmark_results.csv";
+
 bool OVERWRITE_FILE = true;
 int NUM_ITERATIONS = 10;
+
 uint32_t NUM_BASE_CONFIGS = 0;
+uint32_t NUM_XOREC_CPU_CONFIGS = 0;
+uint32_t NUM_XOREC_GPU_PTR_CONFIGS = 0;
+uint32_t NUM_XOREC_GPU_CMP_CONFIGS = 0;
+
+bool RUN_XOREC_SCALAR = false;
+bool RUN_XOREC_AVX = false;
+bool RUN_XOREC_AVX2 = false;
+
+
+bool INIT_BASE_CONFIGS = false;
+bool INIT_XOREC_CPU_CONFIGS = false;
+bool INIT_XOREC_GPU_PTR_CONFIGS = false;
 
 
 enum class TouchGPUMemory {
@@ -25,46 +39,44 @@ enum class TouchGPUMemory {
   TOUCH_GPU_MEM_ALL = 2
 };
 
+enum class XorecPrefetch {
+  XOREC_PREFETCH = 0,
+  XOREC_NO_PREFETCH = 1,
+  XOREC_ALL_PREFETCH = 2
+};
+
+using BenchmarkTuple = std::tuple<std::string, BenchmarkFunction, BenchmarkConfig>;
+
 TouchGPUMemory TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_FALSE;
+XorecPrefetch PREFETCH = XorecPrefetch::XOREC_NO_PREFETCH;
 
 
-std::unordered_set<std::string> selected_cpu_benchmarks;
-std::unordered_set<std::string> selected_gpu_benchmarks;
+std::unordered_set<std::string> selected_base_benchmarks;
+std::unordered_set<std::string> selected_xorec_benchmarks;
 
-const std::unordered_map<std::string, BenchmarkFunction> available_cpu_benchmarks = {
+const std::unordered_map<std::string, BenchmarkFunction> available_base_benchmarks = {
   { "cm256",                  BM_CM256                },
   { "isal",                   BM_ISAL                 },
   { "leopard",                BM_Leopard              },
-  { "wirehair",               BM_Wirehair             },
-  { "xorec-scalar",           BM_XOREC_SCALAR         },
-  { "xorec-avx",              BM_XOREC_AVX            },
-  { "xorec-avx2",             BM_XOREC_AVX2           },
+  { "wirehair",               BM_Wirehair             }
 };
 
-const std::unordered_map<std::string, BenchmarkFunction> available_gpu_benchmarks = {
-  { "xorec-scalar-gpu-ptr",   BM_XOREC_SCALAR_GPU_PTR },
-  { "xorec-avx-gpu-ptr",      BM_XOREC_AVX_GPU_PTR    },
-  { "xorec-avx2-gpu-ptr",     BM_XOREC_AVX2_GPU_PTR   },
-  { "xorec-gpu-cmp",          BM_XOREC_GPU_CMP        }
+const std::unordered_map<std::string, BenchmarkFunction> available_xorec_benchmarks = {
+  { "xorec",                  BM_XOREC         },
+  { "xorec-gpu-ptr",          BM_XOREC_GPU_PTR },
+  { "xorec-gpu-cmp",          BM_XOREC_GPU_CMP }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
-  { "cm256",                "CM256"                         },
-  { "isal",                 "ISA-L"                         },
-  { "leopard",              "Leopard"                       },
-  { "wirehair",             "Wirehair"                      },
-  { "xorec-scalar",         "XOR-EC (Scalar)"               },
-  { "xorec-avx",            "XOR-EC (AVX)"                  },
-  { "xorec-avx2",           "XOR-EC (AVX2)"                 },
-  { "xorec-scalar-gpu-ptr", "XOR-EC (Scalar, GPU Pointer)"  },
-  { "xorec-avx-gpu-ptr",    "XOR-EC (AVX, GPU Pointer)"     },
-  { "xorec-avx2-gpu-ptr",   "XOR-EC (AVX2, GPU Pointer)"    },
-  { "xorec-gpu-cmp",        "XOR-EC (GPU Computation)"      }
+  { "cm256",                "CM256"             },
+  { "isal",                 "ISA-L"             },
+  { "leopard",              "Leopard"           },
+  { "wirehair",             "Wirehair"          },
+  { "xorec",                "XOR-EC"            },
+  { "xorec-gpu-ptr",        "XOR-EC (GPU Ptr)"  },
+  { "xorec-gpu-cmp",        "XOR-EC (GPU Cmp)"  }
 };
 
-bool is_gpu_benchmark(const std::string& name) {
-  return available_gpu_benchmarks.find(name) != available_gpu_benchmarks.end();
-}
 
 static void usage() {
   std::cerr << "Usage: ec-benchmark [options]\n\n"
@@ -75,40 +87,43 @@ static void usage() {
             << " Benchmark Options:\n"
             << "  -i, --iterations=<num>                  number of benchmark iterations (default 10)\n"
             << "  -f, --file=<file_name>                  specify output file name\n"
-            << "  -a, --append                            append results to the output file (default: overwrite)\n"
-            << "      --touch-gpu-memory <true|false|all> whether to touch GPU memory before encoding/decoding\n"
-            << "                                          (default: false)\n"
-            << "                                          *only relevant if a GPU benchmark was specified*\n\n"
+            << "  -a, --append                            append results to the output file (default: overwrite)\n\n"
       
-            << " CPU Algorithm Selection:\n"
+            << " Base Algorithm Selection:\n"
             << "      --cm256                             run the CM256 benchmark\n"
             << "      --isal                              run the ISA-L benchmark\n"
             << "      --leopard                           run the Leopard benchmark\n"
-            << "      --wirehair                          run the Wirehair benchmark\n"
+            << "      --wirehair                          run the Wirehair benchmark\n\n"
 
-            << "      --xorec-scalar                      run the scalar XOR-EC implementation (data buffer on CPU)\n"
-            << "      --xorec-avx                         run the AVX XOR-EC implementation (data buffer on CPU)\n"
-            << "      --xorec-avx2                        run the AVX2 XOR-EC implementation (data buffer on CPU)\n\n"
+            << " XOR-EC Algorithm Selection:\n"
+            << "      --xorec                             run the XOR-EC implementation (data buffer, parity buffer\n"
+            << "                                          & computation on CPU)\n"
+            << "      --xorec-gpu-ptr                     run the XOR-EC implementation (data buffer in unified memory,\n"
+            << "                                          parity buffer & computation on CPU)\n"
+            << "      --xorec-gpu-cmp                     run the XOR-EC implementation (data buffer, parity buffer\n"
+            << "                                          & computation on GPU)\n\n"
 
-            << " GPU Algorithm Selection:\n"
-            << "      --xorec-scalar-gpu-ptr              run the scalar XOR-EC implementation (data buffer on GPU)\n"
-            << "      --xorec-avx-gpu-ptr                 run the AVX XOR-EC implementation (data buffer on GPU)\n"
-            << "      --xorec-avx2-gpu-ptr                run the AVX2 XOR-EC implementation (data buffer on GPU)\n"
+            << " *If no algorithm is specified, all algorithms will be run.*\n\n"
 
-            << "      --xorec-gpu-cmp                    run the XOR-EC implementation (data buffer, parity buffer\n"
-            << "                                          & computation on GPU)\n"
-            
-            << " *If no algorithm is specified, all algorithms will be run.*\n";
+            << " XOR-EC Version Options: (relevant if --xorec or --xorec-gpu-ptr specified)\n"
+            << "      --scalar                             run the scalar XOR-EC implementation\n"
+            << "      --avx                                run the AVX XOR-EC implementation\n"
+            << "      --avx2                               run the AVX2 XOR-EC implementation\n\n"
+            << " *If no versions are specified all 3 will be run.*\n\n"
+
+            << " XOR-EC GPU Options: (relevant if --xorec-gpu-ptr or --xorec-gpu-cmp specified)\n"
+            << "      --touch-gpu-memory <true|false|all> whether to touch GPU memory before encoding/decoding\n"
+            << "                                          (default: false)\n"
+            << "      --prefetch <true|false|all>            whether to prefetch data blocks to GPU memory, or fetch them on-demand,\n"
+            << "                                           only relevant if --xorec-gpu-ptr is specified (default: false)\n\n";
   exit(0);
 }
 
 static void inline add_benchmark(std::string name) {
-  if (available_gpu_benchmarks.find(name) != available_gpu_benchmarks.end()) {
-    selected_gpu_benchmarks.insert(name);
-  } else if (available_cpu_benchmarks.find(name) != available_cpu_benchmarks.end()) {
-    selected_cpu_benchmarks.insert(name);
+  if (available_base_benchmarks.find(name) != available_base_benchmarks.end()) {
+    selected_base_benchmarks.insert(name);
   } else {
-    throw_error("Invalid benchmark name: " + name);
+    selected_xorec_benchmarks.insert(name);
   }
 }
 
@@ -118,19 +133,21 @@ void parse_args(int argc, char** argv) {
     { "iterations",           required_argument,  nullptr, 'i'  },
     { "file",                 required_argument,  nullptr, 'f'  },
     { "append",               no_argument,        nullptr, 'a'  },
-    { "touch-gpu-memory",     required_argument,  nullptr,  0   },
     { "cm256",                no_argument,        nullptr,  0   },
     { "isal",                 no_argument,        nullptr,  0   },
     { "leopard",              no_argument,        nullptr,  0   },
     { "wirehair",             no_argument,        nullptr,  0   },
+
     { "xorec",                no_argument,        nullptr,  0   },
-    { "xorec-scalar",         no_argument,        nullptr,  0   },
-    { "xorec-avx",            no_argument,        nullptr,  0   },
-    { "xorec-avx2",           no_argument,        nullptr,  0   },
-    { "xorec-scalar-gpu-ptr", no_argument,        nullptr,  0   },
-    { "xorec-avx-gpu-ptr",    no_argument,        nullptr,  0   },
-    { "xorec-avx2-gpu-ptr",   no_argument,        nullptr,  0   },
+    { "xorec-gpu-ptr",        no_argument,        nullptr,  0   },
     { "xorec-gpu-cmp",        no_argument,        nullptr,  0   },
+
+    { "scalar",               no_argument,        nullptr,  0   },
+    { "avx",                  no_argument,        nullptr,  0   },
+    { "avx2",                 no_argument,        nullptr,  0   },
+
+    { "touch-gpu-memory",     required_argument,  nullptr,  0   },
+    { "prefetch",             required_argument,  nullptr,  0   },
     { nullptr,                0,                  nullptr,  0   }
   };
 
@@ -154,8 +171,14 @@ void parse_args(int argc, char** argv) {
         break;
       case 0:
         flag = std::string(long_options[option_index].name);
-
-        if (flag == "touch-gpu-memory") {
+        
+        if (flag == "scalar") {
+          RUN_XOREC_SCALAR = true;
+        } else if (flag == "avx") {
+          RUN_XOREC_AVX = true;
+        } else if (flag == "avx2") {
+          RUN_XOREC_AVX2 = true;
+        } else if (flag == "touch-gpu-memory") {
           auto arg = to_lower(std::string(optarg));
           if (arg == "true" || arg == "1") {
             TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_TRUE;
@@ -165,6 +188,18 @@ void parse_args(int argc, char** argv) {
             TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_ALL;
           } else {
             std::cerr << "Error: --touch-gpu-memory option must be either 'true', 'false', or 'all'.\n";
+            exit(0);
+          }
+        }  else if (flag == "prefetch"){
+          auto arg = to_lower(std::string(optarg));
+          if (arg == "true" || arg == "1") {
+            PREFETCH = XorecPrefetch::XOREC_PREFETCH;
+          } else if (arg == "false" || arg == "0") {
+            PREFETCH = XorecPrefetch::XOREC_NO_PREFETCH;
+          } else if (arg == "all") {
+            PREFETCH = XorecPrefetch::XOREC_ALL_PREFETCH;
+          } else {
+            std::cerr << "Error: --prefetch option must be either 'true', 'false', or 'all'.\n";
             exit(0);
           }
         } else {
@@ -177,12 +212,18 @@ void parse_args(int argc, char** argv) {
     }
   }
 
-  if (selected_cpu_benchmarks.empty() && selected_gpu_benchmarks.empty()) {
-    for (const auto& [name, _] : available_cpu_benchmarks) {
+  if (!RUN_XOREC_SCALAR && !RUN_XOREC_AVX && !RUN_XOREC_AVX2) {
+    RUN_XOREC_SCALAR = true;
+    RUN_XOREC_AVX = true;
+    RUN_XOREC_AVX2 = true;
+  }
+
+  if (selected_base_benchmarks.empty() && selected_xorec_benchmarks.empty()) {
+    for (const auto& [name, _] : available_base_benchmarks) {
       add_benchmark(name);
     }
 
-    for (const auto& [name, _] : available_gpu_benchmarks) {
+    for (const auto& [name, _] : available_xorec_benchmarks) {
       add_benchmark(name);
     }
   }
@@ -223,26 +264,100 @@ static void init_lost_block_idxs(std::vector<std::vector<uint32_t>>& lost_block_
   }
 }
 
-static void get_gpu_configs(std::vector<BenchmarkConfig>& configs, uint32_t num_base_configs) {
-  for (uint32_t i = 0; i < num_base_configs; ++i) {
-    BenchmarkConfig base_config = configs[i];
-    base_config.gpu_mem = true;
+static void get_xorec_gpu_cmp_configs(std::vector<BenchmarkConfig>& configs) {
+  if (!INIT_XOREC_GPU_PTR_CONFIGS) throw_error("XOR-EC GPU Pointer configurations must be initialized before XOR-EC GPU Computation configurations.");
+
+  for (uint32_t i = 0; i < NUM_BASE_CONFIGS; ++i) {
+    BenchmarkConfig config = configs[i];
+    config.is_xorec_config = true;
+    config.xorec_params.gpu_mem = true;
 
     if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_TRUE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
-      BenchmarkConfig config = base_config;
-      config.touch_gpu_mem = true;
+      config.xorec_params.touch_gpu_mem = true;
       configs.push_back(config);
+      ++NUM_XOREC_GPU_CMP_CONFIGS;
     }
 
     if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_FALSE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
-      BenchmarkConfig config = base_config;
-      config.touch_gpu_mem = false;
+      config.xorec_params.touch_gpu_mem = false;
       configs.push_back(config);
+      ++NUM_XOREC_GPU_CMP_CONFIGS;
     }
+
   }
 }
 
+static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
+  if (!INIT_XOREC_CPU_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
+
+  std::vector<BenchmarkConfig> temp_configs;
+  for (uint32_t i = NUM_BASE_CONFIGS; i < NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++i) {
+    BenchmarkConfig xor_config = configs[i];
+    xor_config.xorec_params.gpu_mem = true;
+
+    if (PREFETCH == XorecPrefetch::XOREC_PREFETCH  || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
+      BenchmarkConfig config = xor_config;
+      config.xorec_params.prefetch = true;
+      temp_configs.push_back(config);
+    }
+
+    if (PREFETCH == XorecPrefetch::XOREC_NO_PREFETCH || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
+      BenchmarkConfig config = xor_config;
+      config.xorec_params.prefetch = false;
+      temp_configs.push_back(config);
+    }
+  }
+
+  for (BenchmarkConfig temp : temp_configs) {
+    BenchmarkConfig config = temp;
+
+    if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_TRUE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
+      config.xorec_params.touch_gpu_mem = true;
+      configs.push_back(config);
+      ++NUM_XOREC_GPU_PTR_CONFIGS;
+    }
+
+    if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_FALSE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
+      config.xorec_params.touch_gpu_mem = false;
+      configs.push_back(config);
+      ++NUM_XOREC_GPU_PTR_CONFIGS;
+    }
+  }
+
+  INIT_XOREC_GPU_PTR_CONFIGS = true;
+}
+
+static void get_xorec_cpu_configs(std::vector<BenchmarkConfig>& configs) {
+  if (!INIT_BASE_CONFIGS) throw_error("Base configurations must be initialized before XOR-EC CPU configurations.");
+
+  for (uint32_t i = 0; i < NUM_BASE_CONFIGS; ++i) {
+    BenchmarkConfig base_config = configs[i];
+    base_config.is_xorec_config = true;
+    
+    if (RUN_XOREC_SCALAR) {
+      BenchmarkConfig config = base_config;
+      config.xorec_params.version = XorecVersion::Scalar;
+      configs.push_back(config);
+      ++NUM_XOREC_CPU_CONFIGS;
+    }
+    if (RUN_XOREC_AVX) {
+      BenchmarkConfig config = base_config;
+      config.xorec_params.version = XorecVersion::AVX;
+      configs.push_back(config);
+      ++NUM_XOREC_CPU_CONFIGS;
+    }
+    if (RUN_XOREC_AVX2) {
+      BenchmarkConfig config = base_config;
+      config.xorec_params.version = XorecVersion::AVX2;
+      configs.push_back(config);
+      ++NUM_XOREC_CPU_CONFIGS;
+    }
+  }
+  INIT_XOREC_CPU_CONFIGS = true;
+}
+
 static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
+
   auto it = lost_block_idxs.begin();
   for (auto buf_size : VAR_BUFFER_SIZE) {
     BenchmarkConfig config {
@@ -255,10 +370,11 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       *(it++),
       { FIXED_NUM_ORIGINAL_BLOCKS, FIXED_NUM_RECOVERY_BLOCKS },
       false,
-      false,
+      { XorecVersion::Scalar, false, false, false },
       nullptr
     };
     configs.push_back(config);
+    ++NUM_BASE_CONFIGS;
   }
 
   for (auto num_rec_blocks : VAR_NUM_RECOVERY_BLOCKS) {
@@ -272,10 +388,11 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       *(it++),
       { FIXED_NUM_ORIGINAL_BLOCKS, num_rec_blocks },
       false,
-      false,
+      { XorecVersion::Scalar, false, false, false },
       nullptr
     };
     configs.push_back(config);
+    ++NUM_BASE_CONFIGS;
   }
 
   for (auto num_lost_blocks : VAR_NUM_LOST_BLOCKS) {
@@ -289,11 +406,14 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       *(it++),
       { FIXED_NUM_ORIGINAL_BLOCKS, FIXED_NUM_ORIGINAL_BLOCKS },
       false,
-      false,
+      { XorecVersion::Scalar, false, false, false },
       nullptr
     };
     configs.push_back(config);
+    ++NUM_BASE_CONFIGS;
   }
+
+  INIT_BASE_CONFIGS = true;
 }
 
 void get_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
@@ -301,49 +421,79 @@ void get_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<
 
   get_base_configs(configs, lost_block_idxs);
 
-  NUM_BASE_CONFIGS = configs.size();
-  
-  if (selected_gpu_benchmarks.size() > 0) {
-    get_gpu_configs(configs, NUM_BASE_CONFIGS);
+  if (selected_xorec_benchmarks.size() > 0) {
+    get_xorec_cpu_configs(configs);
+    get_xorec_gpu_ptr_configs(configs);
+    get_xorec_gpu_cmp_configs(configs);
   }
 }
 
-std::string get_benchmark_name(const std::string inp_name, bool gpu_mem, bool touch_gpu_mem) {
+std::string get_benchmark_name(const std::string inp_name, BenchmarkConfig config) {
   std::string name = benchmark_names.at(inp_name);
-  if (gpu_mem && touch_gpu_mem) {
-    name += "\n(memory touched)";
-  } else if (gpu_mem && !touch_gpu_mem) {
-    name += "\n(memory untouched)";
+  if (config.is_xorec_config) {
+    name += ", " + get_version_name(config.xorec_params.version);
+    if (config.xorec_params.gpu_mem) {
+      if (config.xorec_params.touch_gpu_mem) {
+        name += ",\n Touched";
+      }
+      if (config.xorec_params.prefetch) {
+        name += ",\n Prefetched";
+      }
+    }
   }
+
   return name;
 }
 
 BenchmarkFunction get_benchmark_func(const std::string& name) {
-  if (is_gpu_benchmark(name)) {
-    return available_gpu_benchmarks.at(name);
+  // todo
+  if (available_base_benchmarks.find(name) != available_base_benchmarks.end()) {
+    return available_base_benchmarks.at(name);
   } else {
-    return available_cpu_benchmarks.at(name);
+    return available_xorec_benchmarks.at(name);
   }
 }
 
 
-static void register_benchmarks(std::vector<BenchmarkConfig>& configs, BenchmarkProgressReporter *console_reporter) {
-  for (auto& config: configs) {
-    config.progress_reporter = console_reporter;
-    if (!config.gpu_mem) {
-      for (auto& inp_name : selected_cpu_benchmarks) {
-        auto bm_name = get_benchmark_name(inp_name, config.gpu_mem, config.touch_gpu_mem);
-        auto bm_func = get_benchmark_func(inp_name);
-        benchmark::RegisterBenchmark(bm_name, bm_func, config)->UseManualTime()->Iterations(config.num_iterations);
-      }
-    } else {
-      for (auto& inp_name : selected_gpu_benchmarks) {
-        auto bm_name = get_benchmark_name(inp_name, config.gpu_mem, config.touch_gpu_mem);
-        auto bm_func = get_benchmark_func(inp_name);
-        benchmark::RegisterBenchmark(bm_name, bm_func, config)->UseManualTime()->Iterations(config.num_iterations);
-      }
+static std::vector<BenchmarkTuple> get_benchmarks(std::vector<BenchmarkConfig>& configs) {
+  std::vector<BenchmarkTuple> benchmarks;
+
+  auto it = configs.begin();
+  // Base benchmarks
+  for (; it != configs.begin()+NUM_BASE_CONFIGS; ++it) {
+    for (auto& inp_name : selected_base_benchmarks) {
+      auto bm_name = get_benchmark_name(inp_name, *it);
+      auto bm_func = get_benchmark_func(inp_name);
+      benchmarks.push_back({ bm_name, bm_func, *it });
     }
   }
+
+  // XOR-EC CPU benchmarks
+  for (; it != configs.begin()+NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++it) {
+    if (selected_xorec_benchmarks.find("xorec") != selected_xorec_benchmarks.end()) {
+      auto bm_name = get_benchmark_name("xorec", *it);
+      auto bm_func = get_benchmark_func("xorec");
+      benchmarks.push_back({ bm_name, bm_func, *it });
+    }
+  }
+
+  // XOR-EC GPU Pointer benchmarks
+  for (; it != configs.begin()+NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS+NUM_XOREC_GPU_PTR_CONFIGS; ++it) {
+    if (selected_xorec_benchmarks.find("xorec-gpu-ptr") != selected_xorec_benchmarks.end()) {
+      auto bm_name = get_benchmark_name("xorec-gpu-ptr", *it);
+      auto bm_func = get_benchmark_func("xorec-gpu-ptr");
+      benchmarks.push_back({ bm_name, bm_func, *it });
+    }
+  }
+
+  for (; it != configs.end(); ++it) {
+    if (selected_xorec_benchmarks.find("xorec-gpu-cmp") != selected_xorec_benchmarks.end()) {
+      auto bm_name = get_benchmark_name("xorec-gpu-cmp", *it);
+      auto bm_func = get_benchmark_func("xorec-gpu-cmp");
+      benchmarks.push_back({ bm_name, bm_func, *it });
+    }
+  }
+  return benchmarks;
 }
 
 void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
@@ -351,14 +501,20 @@ void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
 
   int argc = 2;
   char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
+  
+  std::vector<BenchmarkTuple> benchmarks = get_benchmarks(configs);
 
-  int tot_iterations = NUM_ITERATIONS * ((NUM_BASE_CONFIGS * selected_cpu_benchmarks.size()) + ((configs.size() - NUM_BASE_CONFIGS) * selected_gpu_benchmarks.size())); 
-
-  std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(tot_iterations);
+  
+  std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(NUM_ITERATIONS * benchmarks.size());
   std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(OUTPUT_FILE_DIR + output_file_name, OVERWRITE_FILE);
 
-
-  register_benchmarks(configs, console_reporter.get());
+  for (auto [name, func, conf] : benchmarks) {
+    conf.progress_reporter = console_reporter.get();
+    
+    benchmark::RegisterBenchmark(name, func, conf)
+      ->UseRealTime()
+      ->Iterations(NUM_ITERATIONS);
+  }
 
   benchmark::Initialize(&argc, argv);
   if (benchmark::ReportUnrecognizedArguments(argc, argv)) return;
