@@ -254,8 +254,8 @@ def write_scatter_plot(df: pd.DataFrame, x_ax: AxType, y_ax: AxType, y_scale: st
   plt.xscale("log", base=2)
   plt.yscale(y_scale)
 
-  if x_ax == AxType.BUF_SIZE: plot_cache_sizes(cpu_info)
-  plot_avx_avx2_xor(df, x_ax, y_ax, cpu_info.clock_speed_GHz)
+  # if x_ax == AxType.BUF_SIZE: plot_cache_sizes(cpu_info)
+  # plot_avx_avx2_xor(df, x_ax, y_ax, cpu_info.clock_speed_GHz)
 
   plt.legend(title="Libraries", bbox_to_anchor=(1.05, 1), loc="upper left")
   plt.title(get_plot_title(df, plot_id, cpu_info), fontsize=12)
@@ -365,20 +365,20 @@ if __name__ == "__main__":
   for x_ax, y_ax, scale, plot_id in plot_params:
     write_scatter_plot(dfs[plot_id], x_ax, y_ax, scale, plot_id, False)
 
-  xor_only_plot_params = [
-    # X: Buffer Size, Y: Encode/Decode Time
-    (AxType.BUF_SIZE, AxType.ENCODE_T, "linear", 0, True),
-    (AxType.BUF_SIZE, AxType.DECODE_T, "linear", 0, True),
-    (AxType.BUF_SIZE, AxType.ENCODE_T, "log", 0, True),
-    (AxType.BUF_SIZE, AxType.DECODE_T, "log", 0, True),
+  # xor_only_plot_params = [
+  #   # X: Buffer Size, Y: Encode/Decode Time
+  #   (AxType.BUF_SIZE, AxType.ENCODE_T, "linear", 0, True),
+  #   (AxType.BUF_SIZE, AxType.DECODE_T, "linear", 0, True),
+  #   (AxType.BUF_SIZE, AxType.ENCODE_T, "log", 0, True),
+  #   (AxType.BUF_SIZE, AxType.DECODE_T, "log", 0, True),
 
-    # X: Buffer Size, Y: Encode/Decode Throughput
-    (AxType.BUF_SIZE, AxType.ENCODE_TP, "linear", 0, True),
-    (AxType.BUF_SIZE, AxType.DECODE_TP, "linear", 0, True),
-    (AxType.BUF_SIZE, AxType.ENCODE_TP, "log", 0, True),
-    (AxType.BUF_SIZE, AxType.DECODE_TP, "log", 0, True)
-  ]
+  #   # X: Buffer Size, Y: Encode/Decode Throughput
+  #   (AxType.BUF_SIZE, AxType.ENCODE_TP, "linear", 0, True),
+  #   (AxType.BUF_SIZE, AxType.DECODE_TP, "linear", 0, True),
+  #   (AxType.BUF_SIZE, AxType.ENCODE_TP, "log", 0, True),
+  #   (AxType.BUF_SIZE, AxType.DECODE_TP, "log", 0, True)
+  # ]
 
-  for x_ax, y_ax, scale, plot_id, xor_only in xor_only_plot_params:
-    write_scatter_plot(xor_dfs[plot_id], x_ax, y_ax, scale, plot_id, xor_only)
+  # for x_ax, y_ax, scale, plot_id, xor_only in xor_only_plot_params:
+  #   write_scatter_plot(xor_dfs[plot_id], x_ax, y_ax, scale, plot_id, xor_only)
   

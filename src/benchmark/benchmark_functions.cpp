@@ -61,8 +61,3 @@ void BM_XOREC_AVX2_GPU_PTR(benchmark::State& state, const BenchmarkConfig& confi
 void BM_XOREC_GPU_CMP(benchmark::State&state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmarkGPUCmp>(state, config);
 }
-
-// temp
-void BM_XOREC_SCALAR_PIPELINED_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XorecBenchmarkScalarPipelinedGPUPtr>(state, config);
-}
