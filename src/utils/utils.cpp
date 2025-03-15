@@ -11,6 +11,7 @@
 #include <iostream>
 #include <algorithm>
 #include <numeric>
+#include <chrono>
 
 
 // PCGRandom class implementation
@@ -89,7 +90,10 @@ void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_bloc
     exit(0);
   }
 
-  PCGRandom rng(RANDOM_SEED+num_recovery_blocks+num_lost_blocks, 1);
+  auto now = std::chrono::system_clock::now(); // used as seed for random number generator
+  uint64_t time_seed = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+
+  PCGRandom rng(RANDOM_SEED+time_seed, 1);
   // Vector of valid indices to remove
   std::vector<uint32_t> valid_idxs(max_idx);
   std::iota(valid_idxs.begin(), valid_idxs.end(), 0);
