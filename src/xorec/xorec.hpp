@@ -87,12 +87,15 @@ XorecResult xorec_prefetch_encode(
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
-  const uint32_t prefetch_bytes,
+  uint32_t prefetch_bytes,
   XorecVersion version
 );
 
 /**
  * @brief Decodes data using XOR-based erasure coding.
+ * 
+ * @attention LOST BLOCKS MUST BE ZEROED OUT IN THE DATA BUFFER
+ * 
  * @param data_buffer Pointer to the data buffer.
  * @param parity_buffer Pointer to the parity buffer.
  * @param block_size Size of each block in bytes.
@@ -103,7 +106,7 @@ XorecResult xorec_prefetch_encode(
  */
 XorecResult xorec_prefetch_decode(
   uint8_t *XOREC_RESTRICT data_buffer,
-  const uint8_t *XOREC_RESTRICT parity_buffer,
+  uint8_t *XOREC_RESTRICT parity_buffer,
   uint32_t block_size,
   uint32_t num_data_blocks,
   uint32_t num_parity_blocks,
