@@ -462,10 +462,10 @@ std::string get_benchmark_name(const std::string inp_name, BenchmarkConfig confi
     name += ", " + get_version_name(config.xorec_params.version);
     if (config.xorec_params.gpu_mem) {
       if (config.xorec_params.touch_gpu_mem) {
-        name += ",\n Touched";
+        name += ",\nTouched";
       }
       if (config.xorec_params.prefetch) {
-        name += ",\n Prefetched (" + std::to_string(config.xorec_params.prefetch_bytes/1024) + " KiB)";
+        name += ",Pref. (" + std::to_string(config.xorec_params.prefetch_bytes/1024) + " KiB)";
       }
     }
   }
