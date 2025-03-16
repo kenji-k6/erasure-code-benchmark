@@ -10,7 +10,6 @@
 
 #include "leopard.h"
 #include "utils.hpp"
-#include <cstring>
 
 
 LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {

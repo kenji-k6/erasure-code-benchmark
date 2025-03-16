@@ -2,6 +2,7 @@
 #define ABSTRACT_BENCHMARK_HPP
 
 #include "benchmark_config.hpp"
+#include <cstring>
 
 /**
  * @class ECBenchmark

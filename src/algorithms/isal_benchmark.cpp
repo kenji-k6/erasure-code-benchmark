@@ -10,7 +10,6 @@
 
 #include "erasure_code.h"
 #include "utils.hpp"
-#include <cstring>
 
 
 ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {

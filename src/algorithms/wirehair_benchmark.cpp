@@ -9,7 +9,6 @@
 #include "wirehair_benchmark.hpp"
 
 #include "utils.hpp"
-#include <cstring>
 
 
 WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
