@@ -7,10 +7,10 @@ OUTPUT_DIR = None
 INPUT_FILE = None
 
 
-AVX_XOR_CPI_XEON = 0.33
-AVX_COLOR = "cornflowerblue"
 AVX_BITS = 128
+AVX_XOR_CPI = 0.33
+AVX_COLOR = "cornflowerblue"
 
-AVX2_XOR_CPI_XEON = 0.33
 AVX2_BITS = 256
+AVX2_XOR_CPI = 0.33
 AVX2_COLOR = "indigo"
