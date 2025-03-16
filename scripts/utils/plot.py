@@ -1,4 +1,3 @@
-from turtle import left
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -7,13 +6,11 @@ from utils.config import AVX_BITS, AVX_XOR_CPI, AVX_COLOR, AVX2_BITS, AVX2_XOR_C
 from utils.hardware_info import CPUInfo, get_cpu_info
 from utils.theoretical_bounds import get_theoretical_bound_func
 from utils.utils import AxType, get_output_path, get_col_name, get_ax_label, get_plot_id, get_plot_title
-from typing import List
 
 def plot_cache_sizes(cpu_info: CPUInfo) -> None:
   """Plot the cache sizes on the graph."""
-  plt.axvline(x=cpu_info.l2_cache_size_KiB, colo="red", linestyle="--", label="L2 Cache Size")
-  plt.axvline(x=cpu_info.l3_cache_size_KiB, colo="green", linestyle="--", label="L3 Cache Size")
-  return
+  plt.axvline(x=cpu_info.l2_cache_size_KiB, color="red", linestyle="--", label="L2 Cache Size")
+  plt.axvline(x=cpu_info.l3_cache_size_KiB, color="green", linestyle="--", label="L3 Cache Size")
 
 
 def plot_xticks(df: pd.DataFrame, x_axis: AxType) -> None:
@@ -31,7 +28,6 @@ def plot_xticks(df: pd.DataFrame, x_axis: AxType) -> None:
 
   ax.set_xticks(ticks=x_ticks, labels=x_ticklabels, rotation=rot)
   ax.set_xlim(left=x_ticks[0]/2, right=x_ticks[-1]*2)
-  return
 
 
 def plot_yticks() -> None:
@@ -44,7 +40,6 @@ def plot_yticks() -> None:
   )
   ax.yaxis.set_minor_formatter(ticker.LogFormatter())
   ax.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]))
-  return
 
 
 def plot_confidence_intervals(df: pd.DataFrame, x_axis: AxType, y_axis: AxType) -> None:
@@ -69,7 +64,6 @@ def plot_confidence_intervals(df: pd.DataFrame, x_axis: AxType, y_axis: AxType) 
       ].get_color(),
       capsize=5
     )
-  return
 
 
 def plot_avx_avx2_xor(df: pd.DataFrame, x_axis: AxType, y_axis: AxType, cpu_info: CPUInfo) -> None:
@@ -114,7 +108,6 @@ def plot_avx_avx2_xor(df: pd.DataFrame, x_axis: AxType, y_axis: AxType, cpu_info
   assert(len(x_values) == len(y_values_AVX) == len(y_values_AVX2))
   plt.plot(x_values, y_values_AVX, label="AVX XOR", color=AVX_COLOR, linestyle="--")
   plt.plot(x_values, y_values_AVX2, label="AVX2 XOR", color=AVX2_COLOR, linestyle="--")
-  return
 
 
 

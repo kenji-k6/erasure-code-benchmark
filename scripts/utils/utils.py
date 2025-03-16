@@ -1,12 +1,15 @@
 import os
 import pandas as pd
 from enum import Enum
+from typing import List
+
+import utils.config as cfg
 from utils.config import RAW_DIR, OUTPUT_DIR
 from utils.hardware_info import CPUInfo
 
 class AxType(Enum):
   ENCODE_T = 0
-  DECOCE_T = 1
+  DECODE_T = 1
   ENCODE_TP = 2
   DECODE_TP = 3
   BUF_SIZE = 4
@@ -50,11 +53,32 @@ PLOT_ID_MAP = {
   AxType.LOST_BLKS: 2
 }
 
+BM_NAME_MAP = {
+  "cm256": "CM256",
+  "isal": "ISA-L",
+  "leopard": "Leopard",
+  "wirehair": "Wirehair",
+  "xorec": "XOR-EC"
+}
 
-def ensure_dirs() -> None:
+AX_ARG_MAP = {
+  "buffer-size": AxType.BUF_SIZE,
+  "num-parity-blocks": AxType.PARITY_BLKS,
+  "num-lost-blocks": AxType.LOST_BLKS,
+  "encode-time": AxType.ENCODE_T,
+  "decode-time": AxType.DECODE_T,
+  "encode-throughput": AxType.ENCODE_TP,
+  "decode-throughput": AxType.DECODE_TP
+}
+
+
+def ensure_paths() -> None:
   """Ensure that the input/output directories exist."""
-  for dir in [RAW_DIR, OUTPUT_DIR]:
+  for dir in [cfg.RAW_DIR, cfg.OUTPUT_DIR]:
     os.makedirs(dir, exist_ok=True)
+  
+  os.path.isfile(cfg.INPUT_FILE)
+  return
 
 
 def get_output_path(x_axis: AxType, y_axis: AxType, y_scale: str) -> str:
@@ -63,7 +87,7 @@ def get_output_path(x_axis: AxType, y_axis: AxType, y_scale: str) -> str:
     raise ValueError(f"Unsupported y_scale: {y_scale}")
 
   file_name = f"{FILE_NAME_MAP[x_axis]}_vs_{FILE_NAME_MAP[y_axis]}_{y_scale}.png"
-  return os.path.join(OUTPUT_DIR, file_name)
+  return os.path.join(cfg.OUTPUT_DIR, file_name)
 
 
 def get_col_name(ax: AxType) -> str:
@@ -75,9 +99,6 @@ def get_ax_label(ax: AxType) -> str:
   """Returns the axis label for the given AxType."""
   return LABEL_MAP[ax]
 
-def get_plot_id(x_axis: AxType) -> int:
-  """Returns the plot_id for the given x_axis."""
-  return PLOT_ID_MAP[x_axis]
 
 def get_plot_title(df: pd.DataFrame, cpu_info: CPUInfo) -> str:
   """Generate a  plot title containing all the constant parameters."""
@@ -93,3 +114,18 @@ def get_plot_title(df: pd.DataFrame, cpu_info: CPUInfo) -> str:
   }
 
   return f"{titles[plot_id]}\n{cpu_title}"
+
+
+def get_plot_id(x_axis: AxType) -> int:
+  """Returns the plot_id for the given x_axis."""
+  return PLOT_ID_MAP[x_axis]
+
+
+def get_benchmark_names(bms: List[str]) -> List[str]:
+  """Extract the benchmark names from the input list."""
+  return [BM_NAME_MAP[bm] for bm in bms]
+
+
+def get_axes(axes: List[str]) -> List[AxType]:
+  """Extract the AxTypes from the input list."""
+  return [AX_ARG_MAP[ax] for ax in axes]

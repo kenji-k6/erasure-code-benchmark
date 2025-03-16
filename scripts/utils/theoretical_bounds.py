@@ -83,6 +83,7 @@ def get_theoretical_decode_throughput(
   decode_throughput_Gbps = (data_size_bits / 1e6) / decode_time_ms
   return decode_throughput_Gbps
 
+
 def get_theoretical_bound_func(ax: AxType) -> Callable[[float, int, float, int, int, int, int], float]:
   if ax == AxType.ENCODE_T: return get_theoretical_encode_time
   if ax == AxType.ENCODE_TP: return get_theoretical_encode_throughput
