@@ -50,7 +50,7 @@ public:
  * @param size Size of the block in bytes.
  * @return 0 on success, nonzero on failure.
  */
-int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, uint32_t size);
+int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, size_t bytes);
 
 
 /**
@@ -59,7 +59,7 @@ int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, uint32_t si
  * @param size Size of the block in bytes.
  * @return True if the block is not corrupted, false otherwise.
  */
-bool validate_block(const uint8_t* block_ptr, uint32_t size);
+bool validate_block(const uint8_t* block_ptr, size_t bytes);
 
 
 /**
@@ -70,7 +70,7 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size);
  * @param max_index Upper limit of the index range.
  * @param lost_block_idxs Pointer to the array to store the selected indices.
  */
-void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_blocks, uint32_t max_idx, std::vector<uint32_t>& lost_block_idxs);
+void select_lost_block_idxs(size_t num_recovery_blocks, size_t num_lost_blocks, uint32_t max_idx, std::vector<uint32_t>& lost_block_idxs);
 
 
 // Helper function to throw an error with a message

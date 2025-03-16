@@ -34,20 +34,20 @@ uint32_t PCGRandom::next() {
 
 
 // Utility functions
-int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, uint32_t size) {
-  if (size < 2) throw_error("write_validation_pattern: num_bytes must be at least 2");
+int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, size_t bytes) {
+  if (bytes < 2) throw_error("write_validation_pattern: num_bytes must be at least 2");
   
   PCGRandom rng(block_idx, 1);
 
-  if (size < 16) { // CRC check not viable
+  if (bytes < 16) { // CRC check not viable
     uint8_t val = static_cast<uint8_t>(rng.next());
-    std::fill(block_ptr, block_ptr + size, val);
+    std::fill(block_ptr, block_ptr + bytes, val);
   } else {
     // Apply CRC to the block if it is large enough
-    uint32_t crc = size;
-    *reinterpret_cast<uint32_t*>(block_ptr + 4) = size;
+    uint32_t crc = bytes;
+    *reinterpret_cast<uint32_t*>(block_ptr + 4) = bytes;
 
-    for (unsigned i = 8; i < size; i++) {
+    for (unsigned i = 8; i < bytes; i++) {
       uint8_t val = static_cast<uint8_t>(rng.next());
       block_ptr[i] = val;
       crc = (crc << 3) | (crc >> (32 - 3)); // Spread entropy
@@ -60,19 +60,19 @@ int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, uint32_t si
 }
 
 
-bool validate_block(const uint8_t* block_ptr, uint32_t size) {
-  if (size < 2) return false; // Invalid block size
+bool validate_block(const uint8_t* block_ptr, size_t bytes) {
+  if (bytes < 2) return false; // Invalid block size
 
-  if (size < 16) { // No CRC, check for uniform data
+  if (bytes < 16) { // No CRC, check for uniform data
     uint8_t val = block_ptr[0];
-    return std::all_of(block_ptr + 1, block_ptr + size, [val](uint8_t b) { return b == val; });
+    return std::all_of(block_ptr + 1, block_ptr + bytes, [val](uint8_t b) { return b == val; });
   }else {
-    uint32_t crc = size;
+    uint32_t crc = bytes;
     uint32_t read_bytes = *reinterpret_cast<const uint32_t*>(block_ptr + 4);
-    if (read_bytes != size) return false;
+    if (read_bytes != bytes) return false;
 
     // Recompute CRC
-    for (unsigned i = 8; i < size; i++) {
+    for (unsigned i = 8; i < bytes; i++) {
       uint8_t val = block_ptr[i];
       crc = (crc << 3) | (crc >> (32 - 3));
       crc += val;
@@ -84,7 +84,7 @@ bool validate_block(const uint8_t* block_ptr, uint32_t size) {
 }
 
 
-void select_lost_block_idxs(uint32_t num_recovery_blocks, uint32_t num_lost_blocks, uint32_t max_idx, std::vector<uint32_t>& lost_block_idxs) {
+void select_lost_block_idxs(size_t num_recovery_blocks, size_t num_lost_blocks, uint32_t max_idx, std::vector<uint32_t>& lost_block_idxs) {
   if (num_lost_blocks > num_recovery_blocks) {
     std::cerr << "select_lost_block_idxs: Number of lost blocks must be less than or equal to the number of recovery blocks\n";
     exit(0);
