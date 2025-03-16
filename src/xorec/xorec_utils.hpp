@@ -11,9 +11,9 @@
 
 #define XOREC_RESTRICT __restrict
 
+/// @brief Constants for the XOR-EC algorithm(s)
 constexpr size_t XOREC_BLOCK_SIZE_MULTIPLE = 64;
 constexpr size_t XOREC_MIN_BLOCK_SIZE = 64;
-
 constexpr size_t XOREC_MIN_DATA_BLOCKS = 1;
 constexpr size_t XOREC_MAX_DATA_BLOCKS = 128;
 constexpr size_t XOREC_MIN_PARITY_BLOCKS = 1;
@@ -43,11 +43,26 @@ enum class XorecVersion {
   AVX2 = 2
 };
 
+/**
+ * @brief Get the version name corresponding to the provided version
+ * 
+ * @param version 
+ * @return std::string 
+ */
 std::string get_version_name(XorecVersion version);
 
+
+/// @brief Auxiliary bitmap to check if all data blocks have been received
 extern std::array<uint8_t, XOREC_MAX_DATA_BLOCKS> COMPLETE_DATA_BITMAP;
 
-
+/**
+ * @brief Auxiliary function to check validity of the provided arguments
+ * 
+ * @param block_size Block size in bytes
+ * @param num_data_blocks Number of data blocks
+ * @param num_parity_blocks Number of parity blocks
+ * @return XorecResult 
+ */
 static XorecResult inline xorec_check_args(size_t block_size, size_t num_data_blocks, size_t num_parity_blocks) {
   if (block_size < XOREC_MIN_BLOCK_SIZE || block_size % XOREC_BLOCK_SIZE_MULTIPLE != 0) {
     return XorecResult::InvalidSize;
@@ -67,6 +82,15 @@ static XorecResult inline xorec_check_args(size_t block_size, size_t num_data_bl
   return XorecResult::Success;
 }
 
+
+/**
+ * @brief Auxiliary function to perform a bitwise AND operation between two bitmaps
+ * 
+ * @param dst Pointer to the destination bitmap
+ * @param src1 Pointer to the first source bitmap
+ * @param src2 Pointer to the second source bitmap
+ * @param bytes Number of bytes to process
+ */
 static void inline and_bitmap(uint8_t *XOREC_RESTRICT dst, const uint8_t *XOREC_RESTRICT src1, const uint8_t *XOREC_RESTRICT src2, size_t bytes) {
   uint64_t * dst_64 = reinterpret_cast<uint64_t*>(dst);
   const uint64_t * src1_64 = reinterpret_cast<const uint64_t*>(src1);
@@ -83,6 +107,13 @@ static void inline and_bitmap(uint8_t *XOREC_RESTRICT dst, const uint8_t *XOREC_
   }
 }
 
+/**
+ * @brief Counts thenumber of set bits in a bitmap
+ * 
+ * @param bitmap Pointer to the bitmap
+ * @param bytes Number of bytes to process
+ * @return int 
+ */
 static int inline bit_count(const uint8_t *XOREC_RESTRICT bitmap, size_t bytes) {
   int count = 0;
   const uint32_t * bitmap_32 = reinterpret_cast<const uint32_t*>(bitmap);
@@ -100,6 +131,13 @@ static int inline bit_count(const uint8_t *XOREC_RESTRICT bitmap, size_t bytes) 
   return count;
 }
 
+/**
+ * @brief Auxiliary function to check if recovery is needed
+ * 
+ * @param block_bitmap Pointer to the block bitmap
+ * @return true If recovery is needed
+ * @return false else
+ */
 static bool inline recovery_needed(const uint8_t * XOREC_RESTRICT block_bitmap) {
   std::array<uint8_t, XOREC_MAX_DATA_BLOCKS> temp = {0};
   and_bitmap(temp.data(), block_bitmap, COMPLETE_DATA_BITMAP.data(), XOREC_MAX_DATA_BLOCKS);
@@ -107,7 +145,15 @@ static bool inline recovery_needed(const uint8_t * XOREC_RESTRICT block_bitmap) 
   return bit_count(temp.data(), XOREC_MAX_DATA_BLOCKS) != XOREC_MAX_DATA_BLOCKS;
 }
 
-// checks if the scenario is recoverable
+/**
+ * @brief Auxiliary function to check if the data is recoverable
+ * 
+ * @param block_bitmap Pointer to the block bitmap
+ * @param num_data_blocks Number of data blocks
+ * @param num_parity_blocks Number of parity blocks
+ * @return true If the data is recoverable
+ * @return false else
+ */
 static bool inline is_recoverable(const uint8_t * XOREC_RESTRICT block_bitmap, size_t num_data_blocks, size_t num_parity_blocks) {
   std::array<uint8_t, XOREC_MAX_PARITY_BLOCKS> parity_needed = {0}; // indicate for each parity block if recovery has to happen
 

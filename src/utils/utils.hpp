@@ -4,12 +4,13 @@
 #include <vector>
 #include "benchmark_reporters.hpp"
 
-// Constants
+/// @brief Constants for fixed values
 constexpr size_t ALIGNMENT_BYTES = 64;
 constexpr size_t RANDOM_SEED = 1896;
 constexpr size_t MIN_DATA_BLOCK_SIZE = 2;
 
-// Erasure Code (EC) constraints
+
+/// @brief Constants for the XOR-EC algorithm
 namespace ECLimits {
   constexpr size_t XOREC_BLOCK_ALIGNMENT = 64;
 
@@ -36,7 +37,19 @@ private:
   uint64_t inc;   ///< Increment value (must be odd)
 
 public:
+  /**
+   * @brief Construct a new PCGRandom object
+   * 
+   * @param seed 
+   * @param seq 
+   */
   PCGRandom(uint64_t seed, uint64_t seq);
+
+  /**
+   * @brief Returns the next random number in the sequence.
+   * 
+   * @return uint32_t 
+   */
   uint32_t next();  ///< Generate a random 32-bit number
 };
 
@@ -71,10 +84,19 @@ bool validate_block(const uint8_t* block_ptr, size_t bytes);
 void select_lost_block_idxs(size_t num_recovery_blocks, size_t num_lost_blocks, uint32_t max_idx, std::vector<uint32_t>& lost_block_idxs);
 
 
-// Helper function to throw an error with a message
+/**
+ * @brief Helper function to throw an error message.
+ * 
+ * @param message 
+ */
 [[noreturn]] void throw_error(const std::string& message);
 
 
-// Helper function to make a string lowercase
+/**
+ * @brief Helper function to convert a string to lowercase.
+ * 
+ * @param str 
+ * @return std::string 
+ */
 std::string to_lower(std::string str);
 #endif // UTILS_HPP

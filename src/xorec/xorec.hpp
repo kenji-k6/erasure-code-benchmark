@@ -113,6 +113,13 @@ XorecResult xorec_prefetch_decode(
 );
 
 
+/**
+ * @brief XORs two blocks of data with AVX2 SIMD instructions.
+ * 
+ * @param dest Pointer to the destination block.
+ * @param src Pointer to the source block.
+ * @param bytes Number of bytes to XOR.
+ */
 static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, size_t bytes) {
   #if defined(TRY_XOREC_AVX2)
     XOREC_AVX2 * XOREC_RESTRICT dest256 = reinterpret_cast<XOREC_AVX2*>(dest);
@@ -142,6 +149,14 @@ static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void 
   #endif
 }
 
+
+/**
+ * @brief XORs two blocks of data with AVX SIMD instructions.
+ * 
+ * @param dest Pointer to the destination block.
+ * @param src Pointer to the source block.
+ * @param bytes Number of bytes to XOR.
+ */
 static void inline xorec_xor_blocks_avx(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, size_t bytes) {
   #if defined(TRY_XOREC_AVX)
     XOREC_AVX * XOREC_RESTRICT dest128 = reinterpret_cast<XOREC_AVX*>(dest);
@@ -164,6 +179,16 @@ static void inline xorec_xor_blocks_avx(void * XOREC_RESTRICT dest, const void *
   #endif
 }
 
+
+/**
+ * @brief XORs two blocks of data with scalar instructions.
+ * 
+ * @attention This explicitly prevents vectorization to ensure scalar instructions are used.
+ * 
+ * @param dest Pointer to the destination block.
+ * @param src Pointer to the source block.
+ * @param bytes Number of bytes to XOR.
+ */
 #pragma GCC push_options
 #pragma GCC optimize ("no-tree-vectorize")
 static void inline xorec_xor_blocks_scalar(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, size_t bytes) {

@@ -11,19 +11,23 @@
 #include <cstdint>
 #include <vector>
 
-/// @brief Configuration for a benchmark run
+/**
+ * @struct BenchmarkConfig
+ * 
+ * @brief Struct to hold the configuration for a single benchmark run
+ */
 struct BenchmarkConfig {
-  size_t data_size;                             ///< Total size of original data
-  size_t block_size;                            ///< Size of each block
-  size_t num_lost_blocks;                       ///< Number of total blocks lost (recovery + original)
+  size_t data_size;                               ///< Total size of original data (in bytes)
+  size_t block_size;                              ///< Size of each block (in bytes)
+  size_t num_lost_blocks;                         ///< Number of total blocks lost (recovery + original)
   double redundancy_ratio;                        ///< Recovery blocks / original blocks ratio
   int num_iterations;                             ///< Number of iterations to run the benchmark
   uint8_t plot_id;                                ///< Identifier for plotting
-  const std::vector<uint32_t>& lost_block_idxs;   ///< Pointer to the lost block indices array
+  const std::vector<uint32_t>& lost_block_idxs;   ///< Indices of lost blocks
 
   struct {
-    size_t num_original_blocks;                 ///< Number of original data blocks
-    size_t num_recovery_blocks;                 ///< Number of recovery blocks
+    size_t num_original_blocks;                   ///< Number of original data blocks
+    size_t num_recovery_blocks;                   ///< Number of recovery blocks
   } computed;
 
   bool is_xorec_config;                           ///< Flag to indicate whether this configuration is for XOR-EC algorithm(s)
@@ -32,7 +36,7 @@ struct BenchmarkConfig {
     XorecVersion version;                         ///< Version of the XOR-EC algorithm
 
     bool prefetch;                                ///< Flag to indicate prefetching
-    size_t prefetch_bytes;                      ///< Number of bytes to prefetch
+    size_t prefetch_bytes;                        ///< Number of bytes to prefetch
 
     bool gpu_mem;                                 ///< Flag to indicate GPU memory a llocation
     bool touch_gpu_mem;                           ///< Flag to indicate GPU memory warmup
@@ -41,10 +45,11 @@ struct BenchmarkConfig {
   BenchmarkProgressReporter *progress_reporter = nullptr;
 };
 
-/// @Brief Alias for benchmark function type
+/// @typedef BenchmarkFunction
+/// @brief Type definition for benchmark functions
 using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
 
-/// Constants for benchmark configurations (when running full benchmark)
+/// @brief Constants for fixed values
 constexpr size_t FIXED_NUM_ORIGINAL_BLOCKS = 128;
 constexpr size_t FIXED_NUM_RECOVERY_BLOCKS = 4;
 constexpr size_t FIXED_BUFFER_SIZE = 1048576; // 1 MiB

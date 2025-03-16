@@ -14,11 +14,13 @@
  * This function is templated to work with any class that implements
  * the `ECBenchmark` interface. It follows a standard benchmarking procedure:
  * 1. Pauses timing and sets up the benchmark environment
- * 2. Encodes data
- * 3. Simulates data loss (untimed)
- * 4. Decodes data
- * 5. Verifies the correctness of the decoded data (untimed)
- * 6. Cleans up the benchmark environment
+ * 2. Touches GPU memory if required
+ * 3. Encodes data
+ * 4. Simulates data loss (untimed)
+ * 5. Touches GPU memory if required
+ * 6. Decodes data
+ * 7. Verifies the correctness of the decoded data (untimed)
+ * 8. Cleans up the benchmark environment
  * 
  * If data corruption is detected after decoding, the benchmark run is skipped
  * with an error message
