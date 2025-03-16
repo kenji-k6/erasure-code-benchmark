@@ -280,7 +280,7 @@ static void init_lost_block_idxs(std::vector<std::vector<uint32_t>>& lost_block_
 static void get_xorec_gpu_cmp_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_GPU_PTR_CONFIGS) throw_error("XOR-EC GPU Pointer configurations must be initialized before XOR-EC GPU Computation configurations.");
 
-  for (int i = 0; i < NUM_BASE_CONFIGS; ++i) {
+  for (unsigned i = 0; i < NUM_BASE_CONFIGS; ++i) {
     BenchmarkConfig config = configs[i];
     config.is_xorec_config = true;
     config.xorec_params.gpu_mem = true;
@@ -304,7 +304,7 @@ static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_CPU_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
 
   std::vector<BenchmarkConfig> prefetch_configs;
-  for (int i = NUM_BASE_CONFIGS; i < NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++i) {
+  for (unsigned i = NUM_BASE_CONFIGS; i < NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++i) {
     BenchmarkConfig xor_config = configs[i];
     xor_config.xorec_params.gpu_mem = true;
 
@@ -359,7 +359,7 @@ static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
 static void get_xorec_cpu_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_BASE_CONFIGS) throw_error("Base configurations must be initialized before XOR-EC CPU configurations.");
 
-  for (int i = 0; i < NUM_BASE_CONFIGS; ++i) {
+  for (unsigned i = 0; i < NUM_BASE_CONFIGS; ++i) {
     BenchmarkConfig base_config = configs[i];
     base_config.is_xorec_config = true;
     

@@ -11,14 +11,14 @@
 
 #define XOREC_RESTRICT __restrict
 
-constexpr uint32_t XOREC_BLOCK_SIZE_MULTIPLE = 64;
-constexpr uint32_t XOREC_MIN_BLOCK_SIZE = 64;
+constexpr size_t XOREC_BLOCK_SIZE_MULTIPLE = 64;
+constexpr size_t XOREC_MIN_BLOCK_SIZE = 64;
 
-constexpr uint32_t XOREC_MIN_DATA_BLOCKS = 1;
-constexpr uint32_t XOREC_MAX_DATA_BLOCKS = 128;
-constexpr uint32_t XOREC_MIN_PARITY_BLOCKS = 1;
-constexpr uint32_t XOREC_MAX_PARITY_BLOCKS = 128;
-constexpr uint32_t XOREC_MAX_TOTAL_BLOCKS = 256;
+constexpr size_t XOREC_MIN_DATA_BLOCKS = 1;
+constexpr size_t XOREC_MAX_DATA_BLOCKS = 128;
+constexpr size_t XOREC_MIN_PARITY_BLOCKS = 1;
+constexpr size_t XOREC_MAX_PARITY_BLOCKS = 128;
+constexpr size_t XOREC_MAX_TOTAL_BLOCKS = 256;
 
   /**
  * @enum XORResult
@@ -48,7 +48,7 @@ std::string get_version_name(XorecVersion version);
 extern std::array<uint8_t, XOREC_MAX_DATA_BLOCKS> COMPLETE_DATA_BITMAP;
 
 
-static XorecResult inline xorec_check_args(uint32_t block_size, uint32_t num_data_blocks, uint32_t num_parity_blocks) {
+static XorecResult inline xorec_check_args(size_t block_size, size_t num_data_blocks, size_t num_parity_blocks) {
   if (block_size < XOREC_MIN_BLOCK_SIZE || block_size % XOREC_BLOCK_SIZE_MULTIPLE != 0) {
     return XorecResult::InvalidSize;
   }
@@ -67,34 +67,34 @@ static XorecResult inline xorec_check_args(uint32_t block_size, uint32_t num_dat
   return XorecResult::Success;
 }
 
-static void inline and_bitmap(uint8_t *XOREC_RESTRICT dst, const uint8_t *XOREC_RESTRICT src1, const uint8_t *XOREC_RESTRICT src2, uint32_t len) {
+static void inline and_bitmap(uint8_t *XOREC_RESTRICT dst, const uint8_t *XOREC_RESTRICT src1, const uint8_t *XOREC_RESTRICT src2, size_t bytes) {
   uint64_t * dst_64 = reinterpret_cast<uint64_t*>(dst);
   const uint64_t * src1_64 = reinterpret_cast<const uint64_t*>(src1);
   const uint64_t * src2_64 = reinterpret_cast<const uint64_t*>(src2);
   uint32_t i;
 
-  for (i = 0; i < len/sizeof(uint64_t); ++i) {
+  for (i = 0; i < bytes/sizeof(uint64_t); ++i) {
     dst_64[i] = src1_64[i] & src2_64[i];
   }
 
   i *= sizeof(uint64_t);
-  for (; i < len; ++i) {
+  for (; i < bytes; ++i) {
     dst[i] = src1[i] & src2[i];
   }
 }
 
-static int inline bit_count(const uint8_t *XOREC_RESTRICT bitmap, uint32_t len) {
+static int inline bit_count(const uint8_t *XOREC_RESTRICT bitmap, size_t bytes) {
   int count = 0;
   const uint32_t * bitmap_32 = reinterpret_cast<const uint32_t*>(bitmap);
 
   uint32_t i;
 
-  for (i = 0; i < len/sizeof(uint32_t); ++i) {
+  for (i = 0; i < bytes/sizeof(uint32_t); ++i) {
     count += __builtin_popcount(bitmap_32[i]);
   }
 
   i *= sizeof(uint32_t);
-  for (; i < len; ++i) {
+  for (; i < bytes; ++i) {
     count += __builtin_popcount(bitmap[i]);
   }
   return count;
@@ -108,7 +108,7 @@ static bool inline recovery_needed(const uint8_t * XOREC_RESTRICT block_bitmap) 
 }
 
 // checks if the scenario is recoverable
-static bool inline is_recoverable(const uint8_t * XOREC_RESTRICT block_bitmap, uint32_t num_data_blocks, uint32_t num_parity_blocks) {
+static bool inline is_recoverable(const uint8_t * XOREC_RESTRICT block_bitmap, size_t num_data_blocks, size_t num_parity_blocks) {
   std::array<uint8_t, XOREC_MAX_PARITY_BLOCKS> parity_needed = {0}; // indicate for each parity block if recovery has to happen
 
   for (unsigned i = 0; i < num_parity_blocks; ++i) {
