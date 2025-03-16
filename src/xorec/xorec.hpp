@@ -43,9 +43,9 @@ void xorec_init();
 XorecResult xorec_encode(
   const uint8_t *XOREC_RESTRICT data_buffer,
   uint8_t *XOREC_RESTRICT parity_buffer,
-  uint32_t block_size,
-  uint32_t num_data_blocks,
-  uint32_t num_parity_blocks,
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks,
   XorecVersion version
 );
 
@@ -63,9 +63,9 @@ XorecResult xorec_encode(
 XorecResult xorec_decode(
   uint8_t *XOREC_RESTRICT data_buffer,
   const uint8_t *XOREC_RESTRICT parity_buffer,
-  uint32_t block_size,
-  uint32_t num_data_blocks,
-  uint32_t num_parity_blocks,
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks,
   const uint8_t * XOREC_RESTRICT block_bitmap, ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
   XorecVersion version
 );
@@ -84,10 +84,10 @@ XorecResult xorec_decode(
 XorecResult xorec_prefetch_encode(
   const uint8_t *XOREC_RESTRICT data_buffer,
   uint8_t *XOREC_RESTRICT parity_buffer,
-  uint32_t block_size,
-  uint32_t num_data_blocks,
-  uint32_t num_parity_blocks,
-  uint32_t prefetch_bytes,
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks,
+  size_t prefetch_bytes,
   XorecVersion version
 );
 
@@ -107,16 +107,16 @@ XorecResult xorec_prefetch_encode(
 XorecResult xorec_prefetch_decode(
   uint8_t *XOREC_RESTRICT data_buffer,
   uint8_t *XOREC_RESTRICT parity_buffer,
-  uint32_t block_size,
-  uint32_t num_data_blocks,
-  uint32_t num_parity_blocks,
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks,
   const uint8_t * XOREC_RESTRICT block_bitmap,
-  const uint32_t prefetch_bytes,
+  size_t prefetch_bytes,
   XorecVersion version
 );
 
 
-static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
+static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, size_t bytes) {
   #if defined(TRY_XOREC_AVX2)
     XOREC_AVX2 * XOREC_RESTRICT dest256 = reinterpret_cast<XOREC_AVX2*>(dest);
     const XOREC_AVX2 * XOREC_RESTRICT src256 = reinterpret_cast<const XOREC_AVX2*>(src);
@@ -145,7 +145,7 @@ static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void 
   #endif
 }
 
-static void inline xorec_xor_blocks_avx(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
+static void inline xorec_xor_blocks_avx(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, size_t bytes) {
   #if defined(TRY_XOREC_AVX)
     XOREC_AVX * XOREC_RESTRICT dest128 = reinterpret_cast<XOREC_AVX*>(dest);
     const XOREC_AVX * XOREC_RESTRICT src128 = reinterpret_cast<const XOREC_AVX*>(src);
@@ -169,7 +169,7 @@ static void inline xorec_xor_blocks_avx(void * XOREC_RESTRICT dest, const void *
 
 #pragma GCC push_options
 #pragma GCC optimize ("no-tree-vectorize")
-static void inline xorec_xor_blocks_scalar(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, uint32_t bytes) {
+static void inline xorec_xor_blocks_scalar(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, size_t bytes) {
   uint64_t * XOREC_RESTRICT dest64 = reinterpret_cast<uint64_t*>(dest);
   const uint64_t * XOREC_RESTRICT src64 = reinterpret_cast<const uint64_t*>(src);
 
