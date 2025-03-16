@@ -5,9 +5,9 @@
  * @brief Provides utility constants for both the CPU and the GPU-based XOR-EC implementations.
  */
 
-#include <cstdint>
+#include <string>
 #include <array>
-#include <iostream>
+
 
 #define XOREC_RESTRICT __restrict
 

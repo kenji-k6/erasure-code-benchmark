@@ -1,5 +1,4 @@
 #include "xorec_gpu_cmp.cuh"
-#include <iostream>
 #include "utils.hpp"
 
 int DEVICE_ID;

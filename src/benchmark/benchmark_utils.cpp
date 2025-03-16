@@ -7,8 +7,6 @@
 #include "benchmark/benchmark.h"
 #include "benchmark_functions.hpp"
 #include "utils.hpp"
-#include <cmath>
-#include <iostream>
 #include <getopt.h>
 
 // Global variable definitions

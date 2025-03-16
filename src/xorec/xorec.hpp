@@ -2,10 +2,7 @@
 #define XOREC_HPP
 
 #include "xorec_utils.hpp"
-#include <cstdint>
-#include <cstring>
-#include <array>
-#include <iostream>
+
 
 /**
  * @file xorec.h

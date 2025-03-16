@@ -1,7 +1,5 @@
 #include "cuda_utils.cuh"
 #include "utils.hpp"
-#include <stdexcept>
-#include <cassert>
 
 /**
  * @attention COMMENTED IMPLEMENTATION IS INCORRECT

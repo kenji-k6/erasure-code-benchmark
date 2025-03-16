@@ -8,7 +8,6 @@
 
 #include "benchmark_config.hpp"
 #include "benchmark_reporters.hpp"
-#include <string>
 #include <unordered_set>
 #include <unordered_map>
 

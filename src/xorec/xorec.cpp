@@ -6,7 +6,6 @@
 
 #include "xorec.hpp"
 #include <cstring>
-#include <iostream>
 #include "utils.hpp"
 #include <cuda_runtime.h>
 

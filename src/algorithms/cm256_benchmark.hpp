@@ -2,10 +2,7 @@
 #define CM256_BENCHMARK_HPP
 
 #include "abstract_benchmark.hpp"
-#include "utils.hpp"
 #include "cm256.h"
-#include <vector>
-#include <memory>
 
 /**
  * @class CM256Benchmark

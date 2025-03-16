@@ -2,8 +2,6 @@
 #define LEOPARD_BENCHMARK_HPP
 
 #include "abstract_benchmark.hpp"
-#include <cstdint>
-#include <vector>
 
 
 /**

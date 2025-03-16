@@ -9,7 +9,6 @@
 #include "xorec_benchmark.hpp"
 #include "xorec.hpp"
 #include "utils.hpp"
-#include <cstring>
 
 
 XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {

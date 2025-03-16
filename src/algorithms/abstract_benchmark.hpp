@@ -1,9 +1,7 @@
 #ifndef ABSTRACT_BENCHMARK_HPP
 #define ABSTRACT_BENCHMARK_HPP
 
-#include "benchmark_utils.hpp"
-#include <cstddef>
-#include <iostream>
+#include "benchmark_config.hpp"
 
 /**
  * @class ECBenchmark

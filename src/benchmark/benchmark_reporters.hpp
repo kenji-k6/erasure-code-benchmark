@@ -4,7 +4,6 @@
 #include <benchmark/benchmark.h>
 #include "progressbar.hpp"
 #include <fstream>
-#include <string>
 
 /**
  * @class BenchmarkCSVReporter

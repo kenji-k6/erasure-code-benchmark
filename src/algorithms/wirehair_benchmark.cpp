@@ -10,7 +10,6 @@
 
 #include "utils.hpp"
 #include <cstring>
-#include <iostream>
 
 
 WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {

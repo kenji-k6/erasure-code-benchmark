@@ -2,8 +2,6 @@
 #define ISAL_BENCHMARK_HPP
 
 #include "abstract_benchmark.hpp"
-#include "utils.hpp"
-#include <cstdint>
 
 
 /**

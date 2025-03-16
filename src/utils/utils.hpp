@@ -1,8 +1,6 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <vector>
 #include "benchmark_reporters.hpp"
 

@@ -8,8 +8,6 @@
  
 #include "cm256_benchmark.hpp"
 #include "utils.hpp"
-#include <iostream>
-#include <memory>
 
 CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
   if (cm256_init()) throw_error("CM256: Initialization failed.");
