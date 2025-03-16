@@ -37,9 +37,9 @@ void xorec_gpu_init() {
 XorecResult xorec_gpu_encode(
   const uint8_t *XOREC_RESTRICT data_buffer,
   uint8_t *XOREC_RESTRICT parity_buffer,
-  uint32_t block_size,
-  uint32_t num_data_blocks,
-  uint32_t num_parity_blocks
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks
 ) {
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
   if (block_size % sizeof(CUDA_ATOMIC_XOR_T) != 0) return XorecResult::InvalidSize;
@@ -54,9 +54,9 @@ XorecResult xorec_gpu_encode(
 XorecResult xorec_gpu_decode(
   uint8_t *XOREC_RESTRICT data_buffer,
   const uint8_t *XOREC_RESTRICT parity_buffer,
-  uint32_t block_size,
-  uint32_t num_data_blocks,
-  uint32_t num_parity_blocks,
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks,
   const uint8_t *XOREC_RESTRICT block_bitmap   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
 ) {
   if (!recovery_needed(block_bitmap)) return XorecResult::Success;
@@ -79,25 +79,24 @@ XorecResult xorec_gpu_decode(
 __global__ void xorec_gpu_decode_kernel(
   uint8_t * XOREC_RESTRICT recover_block,
   const uint8_t *XOREC_RESTRICT data_buffer,
-  uint32_t block_size,
-  uint32_t num_data_blocks,
-  uint32_t num_parity_blocks,
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks,
   uint32_t lost_block_idx,
   uint32_t parity_idx
 ) {
-  uint32_t num_warps = blockDim.x / WARP_SIZE;
-  uint32_t warp_idx = threadIdx.x / WARP_SIZE;
+  unsigned num_warps = blockDim.x / WARP_SIZE;
+  unsigned warp_idx = threadIdx.x / WARP_SIZE;
 
-  uint32_t block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T); // number of 64-bit elements in a block
-  uint32_t thread_idx = threadIdx.x % WARP_SIZE;
+  unsigned block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T); // number of 64-bit elements in a block
+  unsigned thread_idx = threadIdx.x % WARP_SIZE;
   
   CUDA_ATOMIC_XOR_T * XOREC_RESTRICT recover_block_64 = reinterpret_cast<CUDA_ATOMIC_XOR_T*>(recover_block);
-  for (uint32_t i = parity_idx + warp_idx * num_parity_blocks; i < num_data_blocks; i += num_warps * num_parity_blocks) {
+  for (unsigned i = parity_idx + warp_idx * num_parity_blocks; i < num_data_blocks; i += num_warps * num_parity_blocks) {
     if (i == lost_block_idx) continue;
     const CUDA_ATOMIC_XOR_T * XOREC_RESTRICT data_block_64 = reinterpret_cast<const CUDA_ATOMIC_XOR_T*>(data_buffer + i * block_size);
 
     for (uint32_t j = thread_idx; j < block_elems; j += WARP_SIZE) {
-      // recover_block_64[j] ^= data_block_64[j];
       atomicXor(&recover_block_64[j], data_block_64[j]);
     }
   }
@@ -108,22 +107,21 @@ __global__ void xorec_gpu_decode_kernel(
 __global__ void xorec_gpu_encode_kernel(
   const uint8_t * XOREC_RESTRICT data_buffer,
   uint8_t * XOREC_RESTRICT parity_buffer,
-  uint32_t block_size,
-  uint32_t num_data_blocks,
-  uint32_t num_parity_blocks
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks
 ) {
-  uint32_t num_warps = blockDim.x / WARP_SIZE;
-  uint32_t warp_idx = threadIdx.x / WARP_SIZE;
+  unsigned num_warps = blockDim.x / WARP_SIZE;
+  unsigned warp_idx = threadIdx.x / WARP_SIZE;
 
-  uint32_t block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T); // number of 64-bit elements in a block
-  uint32_t thread_idx = threadIdx.x % WARP_SIZE;
+  unsigned block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T); // number of 64-bit elements in a block
+  unsigned thread_idx = threadIdx.x % WARP_SIZE;
 
-  for (uint32_t i = warp_idx; i < num_data_blocks; i += num_warps) {
+  for (unsigned i = warp_idx; i < num_data_blocks; i += num_warps) {
     const CUDA_ATOMIC_XOR_T * XOREC_RESTRICT data_block_64 = reinterpret_cast<const CUDA_ATOMIC_XOR_T*>(data_buffer + i * block_size);
     CUDA_ATOMIC_XOR_T * XOREC_RESTRICT parity_block_64 = reinterpret_cast<CUDA_ATOMIC_XOR_T*>(parity_buffer + (i%num_parity_blocks) * block_size);
 
-    for (uint32_t j = thread_idx; j < block_elems; j += WARP_SIZE) {
-      // parity_block_64[j] ^= data_block_64[j];
+    for (unsigned j = thread_idx; j < block_elems; j += WARP_SIZE) {
       atomicXor(&parity_block_64[j], data_block_64[j]);
     }
   }
