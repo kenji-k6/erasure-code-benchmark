@@ -18,10 +18,10 @@ std::string output_file_name = "benchmark_results.csv";
 bool OVERWRITE_FILE = true;
 int NUM_ITERATIONS = 10;
 
-uint32_t NUM_BASE_CONFIGS = 0;
-uint32_t NUM_XOREC_CPU_CONFIGS = 0;
-uint32_t NUM_XOREC_GPU_PTR_CONFIGS = 0;
-uint32_t NUM_XOREC_GPU_CMP_CONFIGS = 0;
+int NUM_BASE_CONFIGS = 0;
+int NUM_XOREC_CPU_CONFIGS = 0;
+int NUM_XOREC_GPU_PTR_CONFIGS = 0;
+int NUM_XOREC_GPU_CMP_CONFIGS = 0;
 
 bool RUN_XOREC_SCALAR = false;
 bool RUN_XOREC_AVX = false;
@@ -32,7 +32,7 @@ bool INIT_BASE_CONFIGS = false;
 bool INIT_XOREC_CPU_CONFIGS = false;
 bool INIT_XOREC_GPU_PTR_CONFIGS = false;
 
-uint64_t PREFETCH_BYTES = 0;
+size_t PREFETCH_BYTES = 0;
 
 enum class TouchGPUMemory {
   TOUCH_GPU_MEM_TRUE = 0,
@@ -107,9 +107,9 @@ static void usage() {
             << " *If no algorithm is specified, all algorithms will be run.*\n\n"
 
             << " XOR-EC Version Options: (relevant if --xorec or --xorec-gpu-ptr specified)\n"
-            << "      --scalar                             run the scalar XOR-EC implementation\n"
-            << "      --avx                                run the AVX XOR-EC implementation\n"
-            << "      --avx2                               run the AVX2 XOR-EC implementation\n\n"
+            << "      --scalar                            run the scalar XOR-EC implementation\n"
+            << "      --avx                               run the AVX XOR-EC implementation\n"
+            << "      --avx2                              run the AVX2 XOR-EC implementation\n\n"
             << " *If no versions are specified all 3 will be run.*\n\n"
 
             << " XOR-EC GPU Options: (relevant if --xorec-gpu-ptr or --xorec-gpu-cmp specified)\n"
@@ -159,6 +159,7 @@ void parse_args(int argc, char** argv) {
   int c;
   int option_index = 0;
   std::string flag;
+
   while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, &option_index)) != -1) {
     switch (c) {
       case 'h':
@@ -279,7 +280,7 @@ static void init_lost_block_idxs(std::vector<std::vector<uint32_t>>& lost_block_
 static void get_xorec_gpu_cmp_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_GPU_PTR_CONFIGS) throw_error("XOR-EC GPU Pointer configurations must be initialized before XOR-EC GPU Computation configurations.");
 
-  for (uint32_t i = 0; i < NUM_BASE_CONFIGS; ++i) {
+  for (int i = 0; i < NUM_BASE_CONFIGS; ++i) {
     BenchmarkConfig config = configs[i];
     config.is_xorec_config = true;
     config.xorec_params.gpu_mem = true;
@@ -303,7 +304,7 @@ static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_CPU_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
 
   std::vector<BenchmarkConfig> prefetch_configs;
-  for (uint32_t i = NUM_BASE_CONFIGS; i < NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++i) {
+  for (int i = NUM_BASE_CONFIGS; i < NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++i) {
     BenchmarkConfig xor_config = configs[i];
     xor_config.xorec_params.gpu_mem = true;
 
@@ -358,7 +359,7 @@ static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
 static void get_xorec_cpu_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_BASE_CONFIGS) throw_error("Base configurations must be initialized before XOR-EC CPU configurations.");
 
-  for (uint32_t i = 0; i < NUM_BASE_CONFIGS; ++i) {
+  for (int i = 0; i < NUM_BASE_CONFIGS; ++i) {
     BenchmarkConfig base_config = configs[i];
     base_config.is_xorec_config = true;
     
