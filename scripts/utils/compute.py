@@ -1,12 +1,18 @@
 import pandas as pd
 import numpy as np
-from typing import Dict
+from typing import Dict, List
 from utils.config import Z_VALUE
 
-def get_grouped_dataframes(inp_file: str) -> Dict[int, pd.DataFrame]:
+def get_grouped_dataframes(inp_file: str, algs: List[str]) -> Dict[int, pd.DataFrame]:
   df = pd.read_csv(inp_file)
+
+
   df["name"] = df["name"].str.split("/", n=1).str[0]
   df = df[df["err_msg"].isna()]
+
+  if algs:
+    pattern = '|'.join(algs)
+    df = df[df["name"].str.contains(pattern, na=False)]
 
   df.sort_values(by="name", ascending=True, inplace=True)
 

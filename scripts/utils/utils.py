@@ -44,6 +44,12 @@ LABEL_MAP = {
   AxType.LOST_BLKS: "#Lost Blocks"
 }
 
+PLOT_ID_MAP = {
+  AxType.BUF_SIZE: 0,
+  AxType.PARITY_BLKS: 1,
+  AxType.LOST_BLKS: 2
+}
+
 
 def ensure_dirs() -> None:
   """Ensure that the input/output directories exist."""
@@ -69,6 +75,9 @@ def get_ax_label(ax: AxType) -> str:
   """Returns the axis label for the given AxType."""
   return LABEL_MAP[ax]
 
+def get_plot_id(x_axis: AxType) -> int:
+  """Returns the plot_id for the given x_axis."""
+  return PLOT_ID_MAP[x_axis]
 
 def get_plot_title(df: pd.DataFrame, cpu_info: CPUInfo) -> str:
   """Generate a  plot title containing all the constant parameters."""

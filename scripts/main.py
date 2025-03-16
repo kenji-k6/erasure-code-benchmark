@@ -1,8 +1,7 @@
-from cProfile import label
+
 import os
 import argparse
-import cpuinfo
-import psutil
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
