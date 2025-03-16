@@ -20,7 +20,7 @@ public:
 
 protected:
 
-  uint32_t m_num_total_blocks;
+  size_t m_num_total_blocks;
   // Data Buffers
   uint8_t *m_data_buffer;          ///< Buffer for the original data we want to transmit
   std::unique_ptr<uint8_t[]> m_parity_buffer;        ///< Buffer for the decoded data
@@ -28,7 +28,7 @@ protected:
 
   XorecVersion m_version;
   bool m_prefetch;
-  uint64_t m_prefetch_bytes;
+  size_t m_prefetch_bytes;
 };
 
 #endif // XOREC_GPU_PTR_BENCHMARK_HPP

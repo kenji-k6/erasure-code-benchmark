@@ -43,7 +43,7 @@ int WirehairBenchmark::encode() noexcept {
   m_encoder = wirehair_encoder_create(nullptr, m_original_buffer.get(), m_num_original_blocks * m_block_size, m_block_size);
   if (!m_encoder) return -1;
   uint32_t write_len = 0;
-  for (size_t i = 0; i < m_num_original_blocks + m_num_recovery_blocks; i++) {
+  for (size_t i = 0; i < m_num_original_blocks + m_num_recovery_blocks; ++i) {
     if (wirehair_encode(m_encoder, i, &m_encode_buffer[i * m_block_size],
                         m_block_size, &write_len) != Wirehair_Success) return -1;
   }
@@ -55,7 +55,7 @@ int WirehairBenchmark::decode() noexcept {
   WirehairResult decode_result = Wirehair_NeedMore;
   unsigned loss_idx = 0;
 
-  for (unsigned i = 0; i < m_num_total_blocks; i++) {
+  for (unsigned i = 0; i < m_num_total_blocks; ++i) {
     if (loss_idx < m_num_lost_blocks && i == m_lost_block_idxs[loss_idx]) {
       loss_idx++;
       continue;
@@ -77,7 +77,7 @@ void WirehairBenchmark::simulate_data_loss() noexcept {
 
 
 bool WirehairBenchmark::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < m_num_original_blocks; i++) {
+  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
     if (!validate_block(&m_decode_buffer[i * m_block_size], m_block_size)) return false;
   }
   return true;

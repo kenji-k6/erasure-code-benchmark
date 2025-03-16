@@ -25,8 +25,8 @@ public:
   bool check_for_corruption() const noexcept override;
 
 private:
-  uint32_t m_encode_work_count = 0;
-  uint32_t m_decode_work_count = 0;
+  size_t m_encode_work_count = 0;
+  size_t m_decode_work_count = 0;
 
   // Data Buffers
   std::unique_ptr<uint8_t[]> m_original_buffer;  ///< Buffer for the original data we want to transmit

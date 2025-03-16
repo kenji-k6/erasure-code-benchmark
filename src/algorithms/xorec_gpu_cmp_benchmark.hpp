@@ -14,7 +14,7 @@ public:
   void touch_gpu_memory() noexcept override;
 
 protected:
-  uint32_t m_num_total_blocks;
+  size_t m_num_total_blocks;
   //  Buffers & Bitmap
   uint8_t *m_data_buffer;                ///< Buffer for the original data we want to transmit (allocated on unified memory)
   uint8_t *m_parity_buffer;              ///< Buffer for the decoded data (allocated on unified memory)

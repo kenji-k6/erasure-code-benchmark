@@ -52,7 +52,7 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchma
   ec_init_tables(m_num_original_blocks, m_num_recovery_blocks, &m_encode_matrix[m_num_original_blocks * m_num_original_blocks], m_g_tbls.get());
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < m_num_original_blocks; i++) {
+  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
     int write_res = write_validation_pattern(i, m_original_ptrs[i], m_block_size);
     if (write_res) throw_error("ISAL: Failed to write random checking packet.");
   }
@@ -80,7 +80,7 @@ int ISALBenchmark::decode() noexcept {
     return -1;
   }
   // Set up recovery pointers
-  for (unsigned i = 0; i < m_num_original_blocks; i++) {
+  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
     m_recovery_src_ptrs[i] = m_original_ptrs[m_decode_index[i]];
   }
   // Initialize tables and perform recovery

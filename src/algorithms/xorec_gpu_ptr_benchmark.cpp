@@ -47,7 +47,7 @@ int XorecBenchmarkGPUPtr::decode() noexcept {
 }
 
 void XorecBenchmarkGPUPtr::simulate_data_loss() noexcept {
-  uint32_t loss_idx = 0;
+  unsigned loss_idx = 0;
   for (unsigned i = 0; i < m_num_total_blocks; ++i) {
     if (loss_idx < m_num_lost_blocks && m_lost_block_idxs[loss_idx] == i) {
       if (i < m_num_original_blocks) {

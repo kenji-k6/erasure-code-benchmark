@@ -73,10 +73,10 @@ protected:
       m_num_lost_blocks(config.num_lost_blocks),
       m_lost_block_idxs(config.lost_block_idxs) {};
 
-  uint64_t m_block_size;
-  uint32_t m_num_original_blocks;
-  uint32_t m_num_recovery_blocks;
-  uint64_t m_num_lost_blocks;
+  size_t m_block_size;
+  size_t m_num_original_blocks;
+  size_t m_num_recovery_blocks;
+  size_t m_num_lost_blocks;
   const std::vector<uint32_t>& m_lost_block_idxs;
 };
 

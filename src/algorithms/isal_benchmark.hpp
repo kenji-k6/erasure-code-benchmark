@@ -25,7 +25,7 @@ public:
   bool check_for_corruption() const noexcept override;
   
 private:
-  uint32_t m_num_total_blocks;
+  size_t m_num_total_blocks;
 
   // Data Buffers
   std::unique_ptr<uint8_t[]> m_original_buffer; ///< Buffer for the original data we want to transmit

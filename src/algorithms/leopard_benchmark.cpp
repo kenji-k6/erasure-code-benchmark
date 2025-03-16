@@ -77,7 +77,7 @@ void LeopardBenchmark::simulate_data_loss() noexcept {
 
 
 bool LeopardBenchmark::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < m_num_original_blocks; i++) {
+  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
     if (!m_original_ptrs[i]) { // lost block
       if (!validate_block(m_decode_work_ptrs[i], m_block_size)) return false;
     } else { // block is intact
