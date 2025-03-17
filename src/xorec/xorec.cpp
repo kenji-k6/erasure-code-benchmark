@@ -156,6 +156,7 @@ XorecResult xorec_unified_prefetch_decode(
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
   if (!is_recoverable(block_bitmap, num_data_blocks, num_parity_blocks)) return XorecResult::DecodeFailure;
 
+  cudaDeviceSynchronize();
   for (unsigned i = 0; i < num_data_blocks; ++i) {
     if (block_bitmap[i]) continue;
 
@@ -163,7 +164,7 @@ XorecResult xorec_unified_prefetch_decode(
     const void * XOREC_RESTRICT parity_block = reinterpret_cast<const void*>(parity_buffer + (i % num_parity_blocks) * block_size);
 
     // Copy the parity block to the recover block
-    memcpy(recover_block, parity_block, block_size);
+    cudaMemcpy(recover_block, parity_block, block_size, cudaMemcpyHostToHost);
 
     // XOR the recover block with the other data blocks
     for (unsigned j = i % num_parity_blocks; j < num_data_blocks; j += num_parity_blocks) {
@@ -202,7 +203,6 @@ XorecResult xorec_gpu_prefetch_encode(
   XorecVersion version
 ) {
   cudaMemcpyAsync(cpu_data_buffer, gpu_data_buffer, num_data_blocks * block_size, cudaMemcpyDeviceToHost);
-
   if (!XOREC_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_gpu_prefetch_encode()");
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
 
@@ -254,11 +254,6 @@ XorecResult xorec_gpu_prefetch_decode(
 ) {
   cudaMemcpyAsync(cpu_data_buffer, gpu_data_buffer, num_data_blocks * block_size, cudaMemcpyDeviceToHost);
 
-  std::array<cudaStream_t, XOREC_MAX_DATA_BLOCKS> recover_streams;
-  for (unsigned i = 0; i < num_data_blocks; ++i) {
-    cudaStreamCreate(&recover_streams[i]);
-  }
-
 
   if (!XOREC_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_decode()");
   if (!recovery_needed(block_bitmap)) return XorecResult::Success;
@@ -266,13 +261,14 @@ XorecResult xorec_gpu_prefetch_decode(
   if (!is_recoverable(block_bitmap, num_data_blocks, num_parity_blocks)) return XorecResult::DecodeFailure;
   int num_lost_blocks = 0;
 
+  cudaDeviceSynchronize();
 
   for (unsigned i = 0; i < num_data_blocks; ++i) {
     if (block_bitmap[i]) continue;
     void * XOREC_RESTRICT recover_block = reinterpret_cast<void*>(cpu_data_buffer + i * block_size);
     const void * XOREC_RESTRICT parity_block = reinterpret_cast<const void*>(parity_buffer + (i % num_parity_blocks) * block_size);
 
-    memcpy(recover_block, parity_block, block_size);
+    cudaMemcpy(recover_block, parity_block, block_size, cudaMemcpyHostToHost);
 
     for (unsigned j = i % num_parity_blocks; j < num_data_blocks; j += num_parity_blocks) {
       if (i == j) continue;
@@ -291,13 +287,7 @@ XorecResult xorec_gpu_prefetch_decode(
       }
     }
     
-    cudaMemcpyAsync(gpu_data_buffer + i * block_size, recover_block, block_size, cudaMemcpyHostToDevice, recover_streams[num_lost_blocks++]);
+    cudaMemcpyAsync(gpu_data_buffer + i * block_size, recover_block, block_size, cudaMemcpyHostToDevice);
   }
-
-  for (unsigned i = 0; i < num_lost_blocks; ++i) {
-    cudaStreamSynchronize(recover_streams[i]);
-    cudaStreamDestroy(recover_streams[i]);
-  }
-
   return XorecResult::Success;
 }

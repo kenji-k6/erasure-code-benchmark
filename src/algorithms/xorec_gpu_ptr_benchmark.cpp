@@ -10,8 +10,8 @@ XorecBenchmarkGpuPtr::XorecBenchmarkGpuPtr(const BenchmarkConfig& config) noexce
   cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&m_gpu_data_buffer), m_block_size * m_num_original_blocks);
   if (err != cudaSuccess) throw_error("Xorec: Failed to allocate GPU data buffer.");
 
-  m_cpu_data_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_original_blocks);
-  if (!m_cpu_data_buffer) throw_error("Xorec: Failed to allocate CPU data buffer.");
+  err = cudaMallocHost(reinterpret_cast<void**>(&m_cpu_data_buffer), m_block_size * m_num_original_blocks);
+  if (err != cudaSuccess) throw_error("Xorec: Failed to allocate CPU data buffer.");
 
   m_parity_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_recovery_blocks);
   if (!m_parity_buffer) throw_error("Xorec: Failed to allocate parity buffer.");
@@ -24,10 +24,10 @@ XorecBenchmarkGpuPtr::XorecBenchmarkGpuPtr(const BenchmarkConfig& config) noexce
     if (write_res) throw_error("Xorec: Failed to write random checking packet.");
   }
 
-  err = cudaMemcpy(m_gpu_data_buffer, m_cpu_data_buffer.get(), m_block_size * m_num_original_blocks, cudaMemcpyHostToDevice);
+  err = cudaMemcpy(m_gpu_data_buffer, m_cpu_data_buffer, m_block_size * m_num_original_blocks, cudaMemcpyHostToDevice);
   if (err != cudaSuccess) throw_error("Xorec: Failed to copy data buffer to GPU.");
 
-  memset(m_cpu_data_buffer.get(), 0, m_block_size * m_num_original_blocks);
+  memset(m_cpu_data_buffer, 0, m_block_size * m_num_original_blocks);
   cudaDeviceSynchronize();
 }
 
@@ -37,12 +37,13 @@ XorecBenchmarkGpuPtr::~XorecBenchmarkGpuPtr() noexcept {
 }
 
 int XorecBenchmarkGpuPtr::encode() noexcept {
-  xorec_gpu_prefetch_encode(m_gpu_data_buffer, m_cpu_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, 0, m_version);
+  xorec_gpu_prefetch_encode(m_gpu_data_buffer, m_cpu_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, 0, m_version);
   return 0;
 }
 
 int XorecBenchmarkGpuPtr::decode() noexcept {
-  xorec_gpu_prefetch_decode(m_gpu_data_buffer, m_cpu_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), 0, m_version);
+  xorec_gpu_prefetch_decode(m_gpu_data_buffer, m_cpu_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), 0, m_version);
+  cudaDeviceSynchronize();
   return 0;
 }
 
@@ -71,7 +72,7 @@ void XorecBenchmarkGpuPtr::simulate_data_loss() noexcept {
 }
 
 bool XorecBenchmarkGpuPtr::check_for_corruption() const noexcept {
-  cudaMemcpy(m_cpu_data_buffer.get(), m_gpu_data_buffer, m_block_size * m_num_original_blocks, cudaMemcpyDeviceToHost);
+  cudaMemcpy(m_cpu_data_buffer, m_gpu_data_buffer, m_block_size * m_num_original_blocks, cudaMemcpyDeviceToHost);
   cudaDeviceSynchronize();
   for (unsigned i = 0; i < m_num_original_blocks; ++i) {
     if (!validate_block(&m_cpu_data_buffer[i * m_block_size], m_block_size)) return false;

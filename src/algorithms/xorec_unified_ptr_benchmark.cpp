@@ -20,12 +20,12 @@ XorecBenchmarkUnifiedPtr::XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config
     int write_res = write_validation_pattern(i, &m_data_buffer[i * m_block_size], m_block_size);
     if (write_res) throw_error("Xorec: Failed to write random checking packet.");
   }
-  // cudaDeviceSynchronize();
+  cudaDeviceSynchronize();
 }
 
 XorecBenchmarkUnifiedPtr::~XorecBenchmarkUnifiedPtr() noexcept {
   if (m_data_buffer) cudaFree(m_data_buffer);
-  // cudaDeviceSynchronize();
+  cudaDeviceSynchronize();
 }
 
 int XorecBenchmarkUnifiedPtr::encode() noexcept {
