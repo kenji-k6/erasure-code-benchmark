@@ -62,13 +62,13 @@ public:
    * 
    * If not overwritten it doesn nothing.
    */
-  virtual void touch_gpu_memory() noexcept {};
+  virtual void touch_unified_memory() noexcept {};
 
 protected:
   explicit ECBenchmark(const BenchmarkConfig& config) noexcept
     : m_block_size(config.block_size),
-      m_num_original_blocks(config.computed.num_original_blocks),
-      m_num_recovery_blocks(config.computed.num_recovery_blocks),
+      m_num_original_blocks(config.num_original_blocks),
+      m_num_recovery_blocks(config.num_recovery_blocks),
       m_num_lost_blocks(config.num_lost_blocks),
       m_lost_block_idxs(config.lost_block_idxs) {};
 

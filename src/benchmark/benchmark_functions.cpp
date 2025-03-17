@@ -11,6 +11,7 @@
 #include "wirehair_benchmark.hpp"
 #include "xorec_benchmark.hpp"
 #include "xorec_gpu_ptr_benchmark.hpp"
+#include "xorec_unified_ptr_benchmark.hpp"
 #include "xorec_gpu_cmp_benchmark.hpp"
 
 
@@ -35,10 +36,14 @@ void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmark>(state, config);
 }
 
+void BM_XOREC_UNIFIED_PTR(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkUnifiedPtr>(state, config);
+}
+
 void BM_XOREC_GPU_PTR(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XorecBenchmarkGPUPtr>(state, config);
+  BM_generic<XorecBenchmarkGpuPtr>(state, config);
 }
 
 void BM_XOREC_GPU_CMP(benchmark::State& state, const BenchmarkConfig& config) {
-  BM_generic<XorecBenchmarkGPUCmp>(state, config);
+  BM_generic<XorecBenchmarkGpuCmp>(state, config);
 }

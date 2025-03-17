@@ -31,8 +31,9 @@ set (SOURCES
   src/algorithms/leopard_benchmark.cpp
   src/algorithms/wirehair_benchmark.cpp
   src/algorithms/xorec_benchmark.cpp
-  src/algorithms/xorec_gpu_cmp_benchmark.cpp
+  src/algorithms/xorec_unified_ptr_benchmark.cpp
   src/algorithms/xorec_gpu_ptr_benchmark.cpp
+  src/algorithms/xorec_gpu_cmp_benchmark.cpp
 
   src/benchmark/benchmark_functions.cpp
   src/benchmark/benchmark_reporters.cpp

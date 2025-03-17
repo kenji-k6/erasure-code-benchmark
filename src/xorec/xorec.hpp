@@ -78,8 +78,51 @@ XorecResult xorec_decode(
  * @param num_parity_blocks Number of parity blocks.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_prefetch_encode(
+XorecResult xorec_unified_prefetch_encode(
   const uint8_t *XOREC_RESTRICT data_buffer,
+  uint8_t *XOREC_RESTRICT parity_buffer,
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks,
+  XorecVersion version
+);
+
+/**
+ * @brief Decodes data using XOR-based erasure coding.
+ * 
+ * @param data_buffer Pointer to the data buffer.
+ * @param parity_buffer Pointer to the parity buffer.
+ * @param block_size Size of each block in bytes.
+ * @param num_data_blocks Number of data blocks.
+ * @param num_parity_blocks Number of parity blocks.
+ * @param block_bitmap A bitmap indicating which blocks are present.
+ * @return XorecResult XorecResult indicating success or failure.
+ */
+XorecResult xorec_unified_prefetch_decode(
+  uint8_t *XOREC_RESTRICT data_buffer,
+  const uint8_t *XOREC_RESTRICT parity_buffer,
+  size_t block_size,
+  size_t num_data_blocks,
+  size_t num_parity_blocks,
+  const uint8_t * XOREC_RESTRICT block_bitmap,
+  XorecVersion version
+);
+
+
+/**
+ * @brief Encodes data using XOR-based erasure coding.
+ * 
+ * @param gpu_data_buffer Pointer to the data buffer in GPU memory.
+ * @param cpu_data_buffer Pointer to the data buffer in CPU memory (used for computation)
+ * @param parity_buffer Pointer to the parity buffer.
+ * @param block_size Size of each block in bytes.
+ * @param num_data_blocks Number of data blocks.
+ * @param num_parity_blocks Number of parity blocks.
+ * @return XorecResult XorecResult indicating success or failure.
+ */
+XorecResult xorec_gpu_prefetch_encode(
+  const uint8_t *XOREC_RESTRICT gpu_data_buffer,
+  uint8_t *XOREC_RESTRICT cpu_data_buffer,
   uint8_t *XOREC_RESTRICT parity_buffer,
   size_t block_size,
   size_t num_data_blocks,
@@ -91,9 +134,8 @@ XorecResult xorec_prefetch_encode(
 /**
  * @brief Decodes data using XOR-based erasure coding.
  * 
- * @attention LOST BLOCKS MUST BE ZEROED OUT IN THE DATA BUFFER
- * 
- * @param data_buffer Pointer to the data buffer.
+ * @param gpu_data_buffer Pointer to the data buffer in GPU memory.
+ * @param cpu_data_buffer Pointer to the data buffer in CPU memory (used for computation)
  * @param parity_buffer Pointer to the parity buffer.
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
@@ -101,9 +143,10 @@ XorecResult xorec_prefetch_encode(
  * @param block_bitmap A bitmap indicating which blocks are present.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_prefetch_decode(
-  uint8_t *XOREC_RESTRICT data_buffer,
-  uint8_t *XOREC_RESTRICT parity_buffer,
+XorecResult xorec_gpu_prefetch_decode(
+  uint8_t *XOREC_RESTRICT gpu_data_buffer,
+  uint8_t *XOREC_RESTRICT cpu_data_buffer,
+  const uint8_t *XOREC_RESTRICT parity_buffer,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
@@ -203,6 +246,9 @@ static void inline xorec_xor_blocks_scalar(void * XOREC_RESTRICT dest, const voi
   }
 }
 #pragma GCC pop_options
+
+
+
 
 
 #endif // XOREC_HPP

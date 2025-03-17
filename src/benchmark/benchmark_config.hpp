@@ -25,21 +25,20 @@ struct BenchmarkConfig {
   uint8_t plot_id;                                ///< Identifier for plotting
   const std::vector<uint32_t>& lost_block_idxs;   ///< Indices of lost blocks
 
-  struct {
-    size_t num_original_blocks;                   ///< Number of original data blocks
-    size_t num_recovery_blocks;                   ///< Number of recovery blocks
-  } computed;
+  size_t num_original_blocks;                   ///< Number of original data blocks
+  size_t num_recovery_blocks;                   ///< Number of recovery blocks
 
   bool is_xorec_config;                           ///< Flag to indicate whether this configuration is for XOR-EC algorithm(s)
 
   struct {
     XorecVersion version;                         ///< Version of the XOR-EC algorithm
+    bool gpu_cmp;                                 ///< Flag to indicate GPU computation
 
     bool prefetch;                                ///< Flag to indicate prefetching
-    size_t prefetch_bytes;                        ///< Number of bytes to prefetch
 
+    bool unified_mem;                             ///< Flag to indicate unified memory allocation
     bool gpu_mem;                                 ///< Flag to indicate GPU memory a llocation
-    bool touch_gpu_mem;                           ///< Flag to indicate GPU memory warmup
+    bool touch_unified_mem;                       ///< Flag to indicate GPU memory warmup
   } xorec_params;
 
   BenchmarkProgressReporter *progress_reporter = nullptr;
@@ -58,6 +57,5 @@ constexpr size_t FIXED_NUM_LOST_BLOCKS = 1;
 const std::vector<size_t> VAR_BUFFER_SIZE = { /*536870912, 268435456,*/ 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144 };
 const std::vector<size_t> VAR_NUM_RECOVERY_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
 const std::vector<size_t> VAR_NUM_LOST_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
-const std::vector<size_t> VAR_NUM_PREFETCH_BYTES = { 2097152, 4194304, 8388608, 16777216 };
 
 #endif // BENCHMARK_CONFIG_HPP

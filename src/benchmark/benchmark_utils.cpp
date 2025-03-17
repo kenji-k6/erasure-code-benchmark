@@ -18,6 +18,7 @@ int NUM_ITERATIONS = 10;
 
 int NUM_BASE_CONFIGS = 0;
 int NUM_XOREC_CPU_CONFIGS = 0;
+int NUM_XOREC_UNIFIED_PTR_CONFIGS = 0;
 int NUM_XOREC_GPU_PTR_CONFIGS = 0;
 int NUM_XOREC_GPU_CMP_CONFIGS = 0;
 
@@ -28,14 +29,14 @@ bool RUN_XOREC_AVX2 = false;
 
 bool INIT_BASE_CONFIGS = false;
 bool INIT_XOREC_CPU_CONFIGS = false;
+bool INIT_XOREC_UNIFIED_PTR_CONFIGS = false;
 bool INIT_XOREC_GPU_PTR_CONFIGS = false;
 
-size_t PREFETCH_BYTES = 0;
 
-enum class TouchGPUMemory {
-  TOUCH_GPU_MEM_TRUE = 0,
-  TOUCH_GPU_MEM_FALSE = 1,
-  TOUCH_GPU_MEM_ALL = 2
+enum class TouchUnifiedMemory {
+  TOUCH_UNIFIED_MEM_TRUE = 0,
+  TOUCH_UNIFIED_MEM_FALSE = 1,
+  TOUCH_UNIFIED_MEM_ALL = 2
 };
 
 enum class XorecPrefetch {
@@ -46,7 +47,7 @@ enum class XorecPrefetch {
 
 using BenchmarkTuple = std::tuple<std::string, BenchmarkFunction, BenchmarkConfig>;
 
-TouchGPUMemory TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_FALSE;
+TouchUnifiedMemory TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_FALSE;
 XorecPrefetch PREFETCH = XorecPrefetch::XOREC_NO_PREFETCH;
 
 
@@ -61,19 +62,21 @@ const std::unordered_map<std::string, BenchmarkFunction> available_base_benchmar
 };
 
 const std::unordered_map<std::string, BenchmarkFunction> available_xorec_benchmarks = {
-  { "xorec",                  BM_XOREC         },
-  { "xorec-gpu-ptr",          BM_XOREC_GPU_PTR },
-  { "xorec-gpu-cmp",          BM_XOREC_GPU_CMP }
+  { "xorec",                  BM_XOREC              },
+  { "xorec-unified-ptr",      BM_XOREC_UNIFIED_PTR  },
+  { "xorec-gpu-ptr",          BM_XOREC_GPU_PTR      },
+  { "xorec-gpu-cmp",          BM_XOREC_GPU_CMP      }
 };
 
 const std::unordered_map<std::string, std::string> benchmark_names = {
-  { "cm256",                "CM256"             },
-  { "isal",                 "ISA-L"             },
-  { "leopard",              "Leopard"           },
-  { "wirehair",             "Wirehair"          },
-  { "xorec",                "XOR-EC"            },
-  { "xorec-gpu-ptr",        "XOR-EC (GPU Ptr)"  },
-  { "xorec-gpu-cmp",        "XOR-EC (GPU Cmp)"  }
+  { "cm256",                "CM256"                 },
+  { "isal",                 "ISA-L"                 },
+  { "leopard",              "Leopard"               },
+  { "wirehair",             "Wirehair"              },
+  { "xorec",                "XOR-EC"                },
+  { "xorec-unified-ptr",    "XOR-EC (Unified Ptr)"  },
+  { "xorec-gpu-ptr",        "XOR-EC (GPU Ptr)"      },
+  { "xorec-gpu-cmp",        "XOR-EC (GPU Cmp)"      }
 };
 
 
@@ -97,10 +100,12 @@ static void usage() {
             << " XOR-EC Algorithm Selection:\n"
             << "      --xorec                             run the XOR-EC implementation (data buffer, parity buffer\n"
             << "                                          & computation on CPU)\n"
-            << "      --xorec-gpu-ptr                     run the XOR-EC implementation (data buffer in unified memory,\n"
+            << "      --xorec-unified-ptr                 run the XOR-EC implementation (data buffer in unified memory,\n"
+            << "                                          parity buffer & computation on CPU)\n"
+            << "      --xorec-gpu-ptr                     run the XOR-EC implementation (data buffer in GPU memory,\n"
             << "                                          parity buffer & computation on CPU)\n"
             << "      --xorec-gpu-cmp                     run the XOR-EC implementation (data buffer, parity buffer\n"
-            << "                                          & computation on GPU)\n\n"
+            << "                                          & computation in GPU memory, bitmap in CPU memory)\n\n"
 
             << " *If no algorithm is specified, all algorithms will be run.*\n\n"
 
@@ -111,12 +116,10 @@ static void usage() {
             << " *If no versions are specified all 3 will be run.*\n\n"
 
             << " XOR-EC GPU Options: (relevant if --xorec-gpu-ptr or --xorec-gpu-cmp specified)\n"
-            << "      --touch-gpu-memory <true|false|all> whether to touch GPU memory before encoding/decoding\n"
+            << "      --touch-unified-memory <true|false|all> whether to touch unified memory on the GPU before encoding/decoding\n"
             << "                                          (default: false)\n"
-            << "      --prefetch <true|false|all>         whether to prefetch data blocks to GPU memory, or fetch them on-demand,\n"
-            << "                                          only relevant if --xorec-gpu-ptr is specified (default: false)\n"
-            << "  -p, --prefetch-bytes <num>              number of bytes to prefetch, only relevant if --prefetch=true or --prefetch=all\n"
-            << "                                          (default: sweep over range of values)\n\n";
+            << "      --prefetch <true|false|all>         whether to prefetch data blocks from unified memory to CPU memory, or fetch them on-demand,\n"
+            << "                                          only relevant if --xorec-unified-ptr is specified (default: false)\n\n";
   exit(0);
 }
 
@@ -140,6 +143,7 @@ void parse_args(int argc, char** argv) {
     { "wirehair",             no_argument,        nullptr,  0   },
 
     { "xorec",                no_argument,        nullptr,  0   },
+    { "xorec-unified-ptr",    no_argument,        nullptr,  0   },
     { "xorec-gpu-ptr",        no_argument,        nullptr,  0   },
     { "xorec-gpu-cmp",        no_argument,        nullptr,  0   },
 
@@ -147,9 +151,8 @@ void parse_args(int argc, char** argv) {
     { "avx",                  no_argument,        nullptr,  0   },
     { "avx2",                 no_argument,        nullptr,  0   },
 
-    { "touch-gpu-memory",     required_argument,  nullptr,  0   },
+    { "touch-unified-memory",     required_argument,  nullptr,  0   },
     { "prefetch",             required_argument,  nullptr,  0   },
-    { "prefetch-bytes",       required_argument,  nullptr, 'p'  },
     { nullptr,                0,                  nullptr,  0   }
   };
 
@@ -172,14 +175,6 @@ void parse_args(int argc, char** argv) {
       case 'a':
         OVERWRITE_FILE = false;
         break;
-      case 'p':
-        PREFETCH_BYTES = std::stoul(optarg);
-        if (PREFETCH_BYTES == 0) {
-          throw_error("Prefetch bytes must be greater than 0.");
-        } else if (PREFETCH_BYTES % 1024 != 0) {
-          throw_error("Prefetch bytes must be a multiple of 1 KiB.");
-        }
-        break;
       case 0:
         flag = std::string(long_options[option_index].name);
         
@@ -189,14 +184,14 @@ void parse_args(int argc, char** argv) {
           RUN_XOREC_AVX = true;
         } else if (flag == "avx2") {
           RUN_XOREC_AVX2 = true;
-        } else if (flag == "touch-gpu-memory") {
+        } else if (flag == "touch-unified-memory") {
           auto arg = to_lower(std::string(optarg));
           if (arg == "true" || arg == "1") {
-            TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_TRUE;
+            TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_TRUE;
           } else if (arg == "false" || arg == "0") {
-            TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_FALSE;
+            TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_FALSE;
           } else if (arg == "all") {
-            TOUCH_GPU_MEM = TouchGPUMemory::TOUCH_GPU_MEM_ALL;
+            TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_ALL;
           } else {
             std::cerr << "Error: --touch-gpu-memory option must be either 'true', 'false', or 'all'.\n";
             exit(0);
@@ -277,106 +272,86 @@ static void init_lost_block_idxs(std::vector<std::vector<uint32_t>>& lost_block_
 
 static void get_xorec_gpu_cmp_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_GPU_PTR_CONFIGS) throw_error("XOR-EC GPU Pointer configurations must be initialized before XOR-EC GPU Computation configurations.");
-
+  
   for (int i = 0; i < NUM_BASE_CONFIGS; ++i) {
     BenchmarkConfig config = configs[i];
     config.is_xorec_config = true;
     config.xorec_params.gpu_mem = true;
+    config.xorec_params.gpu_cmp = true;
 
-    if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_TRUE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
-      config.xorec_params.touch_gpu_mem = true;
-      configs.push_back(config);
-      ++NUM_XOREC_GPU_CMP_CONFIGS;
-    }
-
-    if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_FALSE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
-      config.xorec_params.touch_gpu_mem = false;
-      configs.push_back(config);
-      ++NUM_XOREC_GPU_CMP_CONFIGS;
-    }
-
+    configs.push_back(config);
+    ++NUM_XOREC_GPU_CMP_CONFIGS;
   }
 }
 
 static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
-  if (!INIT_XOREC_CPU_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
-
-  std::vector<BenchmarkConfig> prefetch_configs;
-  std::vector<BenchmarkConfig> touch_configs;
+  if (!INIT_XOREC_UNIFIED_PTR_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
 
   for (int i = NUM_BASE_CONFIGS; i < NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++i) {
-    BenchmarkConfig xor_config = configs[i];
-    xor_config.xorec_params.gpu_mem = true;
-
-    if (PREFETCH == XorecPrefetch::XOREC_PREFETCH  || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
-      xor_config.xorec_params.prefetch = true;
-      xor_config.xorec_params.prefetch_bytes = PREFETCH_BYTES;
-      prefetch_configs.push_back(xor_config);
-    }
-
-    if (PREFETCH == XorecPrefetch::XOREC_NO_PREFETCH || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
-      xor_config.xorec_params.prefetch = false;
-      prefetch_configs.push_back(xor_config);
-    }
-  }
-
-  for (BenchmarkConfig prefetch_config : prefetch_configs) {
-    BenchmarkConfig config = prefetch_config;
-
-    if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_TRUE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
-      config.xorec_params.touch_gpu_mem = true;
-      touch_configs.push_back(config);
-    }
-
-    if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_FALSE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
-      config.xorec_params.touch_gpu_mem = false;
-      touch_configs.push_back(config);
-    }
-  }
-
-  for (BenchmarkConfig touch_config : touch_configs) {
-    if (touch_config.xorec_params.prefetch) {
-      if (PREFETCH_BYTES == 0) {
-        for (auto prefetch_b : VAR_NUM_PREFETCH_BYTES) {
-          BenchmarkConfig final_config = touch_config;
-          final_config.xorec_params.prefetch_bytes = prefetch_b;
-          configs.push_back(final_config);
-          ++NUM_XOREC_GPU_PTR_CONFIGS;
-        }
-      } else {
-        configs.push_back(touch_config);
-        ++NUM_XOREC_GPU_PTR_CONFIGS;
-      }
-    } else {
-      configs.push_back(touch_config);
-      ++NUM_XOREC_GPU_PTR_CONFIGS;
-    }
+    BenchmarkConfig config = configs[i];
+    config.xorec_params.gpu_mem = true;
+    configs.push_back(config);
+    ++NUM_XOREC_GPU_PTR_CONFIGS;
   }
 
   INIT_XOREC_GPU_PTR_CONFIGS = true;
+}
+
+static void get_xorec_unified_ptr_configs(std::vector<BenchmarkConfig>& configs) {
+  if (!INIT_XOREC_CPU_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
+
+  std::vector<BenchmarkConfig> prefetch_configs;
+
+  for (int i = NUM_BASE_CONFIGS; i < NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++i) {
+    BenchmarkConfig config = configs[i];
+    config.xorec_params.unified_mem = true;
+
+    if (PREFETCH == XorecPrefetch::XOREC_PREFETCH  || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
+      config.xorec_params.prefetch = true;
+      prefetch_configs.push_back(config);
+    }
+
+    if (PREFETCH == XorecPrefetch::XOREC_NO_PREFETCH || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
+      config.xorec_params.prefetch = false;
+      prefetch_configs.push_back(config);
+    }
+  }
+
+  for (BenchmarkConfig config : prefetch_configs) {
+    if (TOUCH_UNIFIED_MEM == TouchUnifiedMemory::TOUCH_UNIFIED_MEM_TRUE || TOUCH_UNIFIED_MEM == TouchUnifiedMemory::TOUCH_UNIFIED_MEM_ALL) {
+      config.xorec_params.touch_unified_mem = true;
+      configs.push_back(config);
+      ++NUM_XOREC_UNIFIED_PTR_CONFIGS;
+    }
+
+    if (TOUCH_UNIFIED_MEM == TouchUnifiedMemory::TOUCH_UNIFIED_MEM_FALSE || TOUCH_UNIFIED_MEM == TouchUnifiedMemory::TOUCH_UNIFIED_MEM_ALL) {
+      config.xorec_params.touch_unified_mem = false;
+      configs.push_back(config);
+      ++NUM_XOREC_UNIFIED_PTR_CONFIGS;
+    }
+  }
+  
+  INIT_XOREC_UNIFIED_PTR_CONFIGS = true;
 }
 
 static void get_xorec_cpu_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_BASE_CONFIGS) throw_error("Base configurations must be initialized before XOR-EC CPU configurations.");
 
   for (int i = 0; i < NUM_BASE_CONFIGS; ++i) {
-    BenchmarkConfig base_config = configs[i];
-    base_config.is_xorec_config = true;
+    BenchmarkConfig config = configs[i];
+    config.is_xorec_config = true;
     
     if (RUN_XOREC_SCALAR) {
-      BenchmarkConfig config = base_config;
       config.xorec_params.version = XorecVersion::Scalar;
       configs.push_back(config);
       ++NUM_XOREC_CPU_CONFIGS;
     }
     if (RUN_XOREC_AVX) {
-      BenchmarkConfig config = base_config;
       config.xorec_params.version = XorecVersion::AVX;
       configs.push_back(config);
       ++NUM_XOREC_CPU_CONFIGS;
     }
     if (RUN_XOREC_AVX2) {
-      BenchmarkConfig config = base_config;
       config.xorec_params.version = XorecVersion::AVX2;
       configs.push_back(config);
       ++NUM_XOREC_CPU_CONFIGS;
@@ -397,9 +372,10 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       NUM_ITERATIONS,
       0,
       *(it++),
-      { FIXED_NUM_ORIGINAL_BLOCKS, FIXED_NUM_RECOVERY_BLOCKS },
+      FIXED_NUM_ORIGINAL_BLOCKS,
+      FIXED_NUM_RECOVERY_BLOCKS,
       false,
-      { XorecVersion::Scalar, false, 0, false, false },
+      { XorecVersion::Scalar, false, false, false, false, false },
       nullptr
     };
     configs.push_back(config);
@@ -415,9 +391,10 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       NUM_ITERATIONS,
       1,
       *(it++),
-      { FIXED_NUM_ORIGINAL_BLOCKS, num_rec_blocks },
+      FIXED_NUM_ORIGINAL_BLOCKS,
+      FIXED_NUM_RECOVERY_BLOCKS,
       false,
-      { XorecVersion::Scalar, false, 0, false, false },
+      { XorecVersion::Scalar, false, false, false, false, false },
       nullptr
     };
     configs.push_back(config);
@@ -433,9 +410,10 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       NUM_ITERATIONS,
       2,
       *(it++),
-      { FIXED_NUM_ORIGINAL_BLOCKS, FIXED_NUM_ORIGINAL_BLOCKS },
+      FIXED_NUM_ORIGINAL_BLOCKS,
+      FIXED_NUM_RECOVERY_BLOCKS,
       false,
-      { XorecVersion::Scalar, false, 0, false, false },
+      { XorecVersion::Scalar, false, false, false, false, false },
       nullptr
     };
     configs.push_back(config);
@@ -452,6 +430,7 @@ void get_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<
 
   if (selected_xorec_benchmarks.size() > 0) {
     get_xorec_cpu_configs(configs);
+    get_xorec_unified_ptr_configs(configs);
     get_xorec_gpu_ptr_configs(configs);
     get_xorec_gpu_cmp_configs(configs);
   }
@@ -459,17 +438,22 @@ void get_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<
 
 std::string get_benchmark_name(const std::string inp_name, BenchmarkConfig config) {
   std::string name = benchmark_names.at(inp_name);
-  if (config.is_xorec_config) {
+  if (config.is_xorec_config && !config.xorec_params.gpu_cmp) {
     name += ", " + get_version_name(config.xorec_params.version);
-    if (config.xorec_params.gpu_mem) {
-      if (config.xorec_params.touch_gpu_mem) {
+
+    if (config.xorec_params.unified_mem) {
+      if (config.xorec_params.touch_unified_mem) {
         name += ",\nTouched";
       }
+
       if (config.xorec_params.prefetch) {
         name += ", prefetched";
-      } else if (config.xorec_params.prefetch_bytes > 0) {
+      } else {
         name += ", on demand";
       }
+
+    } else if (config.xorec_params.gpu_mem) {
+      name += ", prefetched";
     }
   }
 
@@ -507,8 +491,17 @@ static std::vector<BenchmarkTuple> get_benchmarks(std::vector<BenchmarkConfig>& 
     }
   }
 
+  // XOR-EC Unified memory Pointer benchmarks
+  for (; it != configs.begin()+NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS+NUM_XOREC_UNIFIED_PTR_CONFIGS; ++it) {
+    if (selected_xorec_benchmarks.find("xorec-unified-ptr") != selected_xorec_benchmarks.end()) {
+      auto bm_name = get_benchmark_name("xorec-unified-ptr", *it);
+      auto bm_func = get_benchmark_func("xorec-unified-ptr");
+      benchmarks.push_back({ bm_name, bm_func, *it });
+    }
+  }
+
   // XOR-EC GPU Pointer benchmarks
-  for (; it != configs.begin()+NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS+NUM_XOREC_GPU_PTR_CONFIGS; ++it) {
+  for (; it != configs.begin()+NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS+NUM_XOREC_UNIFIED_PTR_CONFIGS+NUM_XOREC_GPU_PTR_CONFIGS; ++it) {
     if (selected_xorec_benchmarks.find("xorec-gpu-ptr") != selected_xorec_benchmarks.end()) {
       auto bm_name = get_benchmark_name("xorec-gpu-ptr", *it);
       auto bm_func = get_benchmark_func("xorec-gpu-ptr");
@@ -531,9 +524,8 @@ void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
 
   int argc = 2;
   char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
-  
+
   std::vector<BenchmarkTuple> benchmarks = get_benchmarks(configs);
-  
   std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(NUM_ITERATIONS * benchmarks.size());
   std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(OUTPUT_FILE_DIR + output_file_name, OVERWRITE_FILE);
 
