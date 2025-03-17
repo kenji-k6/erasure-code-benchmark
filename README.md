@@ -14,8 +14,7 @@ and [Wirehair](https://github.com/catid/wirehair) as well as a custom baseline i
 * **Customizable Parameters**: Evaluate performance based on payload size, parity size,
 algorithm and SIMD (amongst others).
 
-* **GPU Memory Support** *(Upcoming!)*: Modify the best-performing EC library to enable GPU
-memory pointer inputs.
+* **GPU Memory Support**: The baseline XOR-EC algorithm also supports GPU operations. See the documentation in the xorec/ directory.
 
 * **Micro-Benchmarking Suite**: Optimized benchmarking framework in C++.
 
@@ -37,7 +36,7 @@ ran on [Swis National Supercomputing Centre's](https://www.cscs.ch/) nodes.
 
 * **SIMD Support**: AVX2 / AVX-512 recommended for best performance
 
-* **NVIDIA CUDA Toolkit** (for future GPU acceleration)
+* **NVIDIA CUDA Toolkit** CUDA 11.4.0+
 
 ### Building the Benchmark framework (Linux)
 1. **Clone the repository and update/initialize Git submodules**
@@ -69,7 +68,7 @@ mkdir build && cd build
 cmake ..
 make
 ```
-5. **(Optional) Change macros in **
+
 
 ### Building the the Result Analysis
 1. **Create and activate a Python virtual environment**
@@ -84,15 +83,4 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-
-## Usage
-
-## Results & Analysis
-
-## Roadmap
-
-## License
-
-## Contact
-
-
+3. **Run the plotting script by running python3 scripts/main.py**

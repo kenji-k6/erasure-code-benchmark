@@ -30,6 +30,8 @@ namespace ECLimits {
 /**
  * @class PCGRandom
  * @brief Implements the PCG random number generator for benchmarking.
+ * 
+ * @see https://www.pcg-random.org/
  */
 class PCGRandom {
 private:
