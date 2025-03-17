@@ -411,7 +411,7 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
       2,
       *(it++),
       FIXED_NUM_ORIGINAL_BLOCKS,
-      FIXED_NUM_RECOVERY_BLOCKS,
+      FIXED_NUM_ORIGINAL_BLOCKS,
       false,
       { XorecVersion::Scalar, false, false, false, false, false },
       nullptr
