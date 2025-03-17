@@ -466,7 +466,9 @@ std::string get_benchmark_name(const std::string inp_name, BenchmarkConfig confi
         name += ",\nTouched";
       }
       if (config.xorec_params.prefetch) {
-        name += ",Pref. (" + std::to_string(config.xorec_params.prefetch_bytes/1024) + " KiB)";
+        name += ", prefetched";
+      } else if (config.xorec_params.prefetch_bytes > 0) {
+        name += ", on demand";
       }
     }
   }
