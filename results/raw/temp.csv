@@ -1,6 +1,0 @@
-plot_id,name,err_msg,num_iterations,tot_data_size_B,block_size_B,num_lost_blocks,redundancy_ratio,num_data_blocks,num_parity_blocks,time_ns,encode_time_ns,encode_time_ns_stddev,encode_throughput_Gbps,encode_throughput_Gbps_stddev,decode_time_ns,decode_time_ns_stddev,decode_throughput_Gbps,decode_throughput_Gbps_stddev
-0,"XOR-EC, Scalar/iterations:1/real_time",,1,134217728,1048576,1,0.03125,128,4,3.59047e+08,1.69399e+07,-nan,63.3854,-nan,4.13421e+06,-nan,259.721,-nan
-0,"XOR-EC, AVX/iterations:1/real_time",,1,134217728,1048576,1,0.03125,128,4,3.54719e+08,1.49e+07,-nan,72.0634,-nan,3.70706e+06,-nan,289.648,-nan
-0,"XOR-EC, AVX2/iterations:1/real_time",,1,134217728,1048576,1,0.03125,128,4,3.53052e+08,1.45208e+07,-nan,73.9452,-nan,3.59709e+06,-nan,298.503,-nan
-0,"XOR-EC, Scalar/iterations:1/real_time",,1,67108864,524288,1,0.03125,128,4,1.77855e+08,8.67876e+06,-nan,61.8603,-nan,1.77688e+06,-nan,302.143,-nan
-0,"XOR-EC, AVX/iterations:1/real_time",,1,67108864,524288,1,0.03125,128,4,1.75529e+08,7.23105e+06,-nan,74.2452,-nan,1.37924e+06,-nan,389.25,-nan
