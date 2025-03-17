@@ -14,14 +14,14 @@ def main() -> None:
   parser.add_argument(
     "--input-file",
     type=str,
-    help="Input file name (in /results/raw/)",
+    help="input file name (in /results/raw/)",
     required=True
   )
 
   parser.add_argument(
     "--output-dir",
     type=str,
-    help="Optional output directory for the plots (created inside /results/plots/)",
+    help="optional output directory for the plots (created inside /results/plots/)",
     required=False
   )
 
@@ -34,7 +34,7 @@ def main() -> None:
       "num-lost-blocks"
     ],
     default="buffer-size",
-    help="X-axis parameter"
+    help="x-axis parameter"
   )
 
   parser.add_argument(
@@ -48,7 +48,7 @@ def main() -> None:
     ],
     nargs="+",
     default=["encode-time", "decode-time", "encode-throughput", "decode-throughput"],
-    help="Y-axis parameter(s)"
+    help="y-axis parameter(s)"
   )
 
   parser.add_argument(
@@ -56,7 +56,7 @@ def main() -> None:
     type=str,
     choices=["linear", "log"],
     default="log",
-    help="Y-axis scale"
+    help="y-axis scale"
   )
 
   parser.add_argument(
@@ -71,25 +71,25 @@ def main() -> None:
       "xorec"
     ],
     default=[],
-    help="List of benchmarks to plot"
+    help="list of benchmarks to plot"
   )
 
   parser.add_argument(
     "--confidence-intervals",
     action="store_true",
-    help="Include confidence intervals in the plots"
+    help="include confidence intervals in the plots"
   )
 
   parser.add_argument(
     "--cache-sizes",
     action="store_true",
-    help="Include cache sizes in the plots"
+    help="include cache sizes in the plots"
   )
 
   parser.add_argument(
     "--theoretical-bounds",
     action="store_true",
-    help="Include theoretical bounds (AVX, AVX2) in the plots"
+    help="include theoretical bounds (AVX, AVX2) in the plots"
   )
 
   args = parser.parse_args()
