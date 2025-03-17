@@ -99,4 +99,14 @@ void select_lost_block_idxs(size_t num_recovery_blocks, size_t num_lost_blocks, 
  * @return std::string 
  */
 std::string to_lower(std::string str);
+
+/**
+ * @brief Function to touch GPU memory, used to simulate
+ * a cold view of unified memory for the CPU computations
+ * 
+ * @param buffer Pointer to the memory to touch
+ * @param bytes Size of the memory region to be touched in bytes
+ */
+void touch_memory(uint8_t* buffer, size_t bytes);
+
 #endif // UTILS_HPP

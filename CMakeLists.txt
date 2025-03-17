@@ -38,7 +38,6 @@ set (SOURCES
   src/benchmark/benchmark_reporters.cpp
   src/benchmark/benchmark_utils.cpp
 
-  src/utils/cuda_utils.cu
   src/utils/utils.cpp
 
   src/xorec/xorec_gpu_cmp.cu

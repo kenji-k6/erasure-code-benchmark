@@ -1,8 +1,7 @@
-
 #include "xorec.hpp"
 #include "xorec_gpu_ptr_benchmark.hpp"
-#include "cuda_utils.cuh"
 #include "utils.hpp"
+#include <cuda_runtime.h>
 
 XorecBenchmarkGPUPtr::XorecBenchmarkGPUPtr(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
   xorec_init();

@@ -1,6 +1,5 @@
 #include "xorec_gpu_cmp_benchmark.hpp"
 #include "xorec_gpu_cmp.cuh"
-#include "cuda_utils.cuh"
 #include "utils.hpp"
 
 XorecBenchmarkGPUCmp::XorecBenchmarkGPUCmp(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {

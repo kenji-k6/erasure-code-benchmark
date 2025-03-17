@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <numeric>
 #include <chrono>
+#include <cuda_runtime.h>
 
 
 // PCGRandom class implementation
@@ -125,4 +126,12 @@ std::string to_lower(std::string str) {
   std::transform(str.begin(), str.end(), str.begin(),
     [](unsigned char c){ return std::tolower(c); });
   return str;
+}
+
+void touch_memory(uint8_t* buffer, size_t bytes) {
+  int device_id = 0;
+  cudaError_t err = cudaMemPrefetchAsync(buffer, bytes, device_id);
+  if (err != cudaSuccess) throw_error("touch_memory: cudaMemPrefetchAsync failed");
+  err = cudaDeviceSynchronize();
+  if (err != cudaSuccess) throw_error("touch_memory: cudaDeviceSynchronize failed");
 }
