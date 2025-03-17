@@ -453,7 +453,7 @@ std::string get_benchmark_name(const std::string inp_name, BenchmarkConfig confi
       }
 
     } else if (config.xorec_params.gpu_mem) {
-      name += ", prefetched";
+      name += ",\nprefetched";
     }
   }
 
