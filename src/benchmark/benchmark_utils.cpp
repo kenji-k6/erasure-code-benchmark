@@ -302,27 +302,26 @@ static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_CPU_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
 
   std::vector<BenchmarkConfig> prefetch_configs;
+  std::vector<BenchmarkConfig> touch_configs;
+
   for (int i = NUM_BASE_CONFIGS; i < NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++i) {
     BenchmarkConfig xor_config = configs[i];
     xor_config.xorec_params.gpu_mem = true;
 
     if (PREFETCH == XorecPrefetch::XOREC_PREFETCH  || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
-      BenchmarkConfig config = xor_config;
-      config.xorec_params.prefetch = true;
-      config.xorec_params.prefetch_bytes = PREFETCH_BYTES;
-      prefetch_configs.push_back(config);
+      xor_config.xorec_params.prefetch = true;
+      xor_config.xorec_params.prefetch_bytes = PREFETCH_BYTES;
+      prefetch_configs.push_back(xor_config);
     }
 
     if (PREFETCH == XorecPrefetch::XOREC_NO_PREFETCH || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
-      BenchmarkConfig config = xor_config;
-      config.xorec_params.prefetch = false;
-      prefetch_configs.push_back(config);
+      xor_config.xorec_params.prefetch = false;
+      prefetch_configs.push_back(xor_config);
     }
   }
 
-  std::vector<BenchmarkConfig> touch_configs;
-  for (BenchmarkConfig temp : prefetch_configs) {
-    BenchmarkConfig config = temp;
+  for (BenchmarkConfig prefetch_config : prefetch_configs) {
+    BenchmarkConfig config = prefetch_config;
 
     if (TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_TRUE || TOUCH_GPU_MEM == TouchGPUMemory::TOUCH_GPU_MEM_ALL) {
       config.xorec_params.touch_gpu_mem = true;
@@ -335,18 +334,21 @@ static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
     }
   }
 
-  if (PREFETCH_BYTES == 0) {
-    for (auto num_bytes : VAR_NUM_PREFETCH_BYTES) {
-      for (auto config : touch_configs) {
-        BenchmarkConfig final_config = config;
-        final_config.xorec_params.prefetch_bytes = num_bytes;
-        configs.push_back(final_config);
+  for (BenchmarkConfig touch_config : touch_configs) {
+    if (touch_config.xorec_params.prefetch) {
+      if (PREFETCH_BYTES == 0) {
+        for (auto prefetch_b : VAR_NUM_PREFETCH_BYTES) {
+          BenchmarkConfig final_config = touch_config;
+          final_config.xorec_params.prefetch_bytes = prefetch_b;
+          configs.push_back(final_config);
+          ++NUM_XOREC_GPU_PTR_CONFIGS;
+        }
+      } else {
+        configs.push_back(touch_config);
         ++NUM_XOREC_GPU_PTR_CONFIGS;
       }
-    }
-  } else {
-    for (auto config : touch_configs) {
-      configs.push_back(config);
+    } else {
+      configs.push_back(touch_config);
       ++NUM_XOREC_GPU_PTR_CONFIGS;
     }
   }
@@ -473,7 +475,6 @@ std::string get_benchmark_name(const std::string inp_name, BenchmarkConfig confi
 }
 
 BenchmarkFunction get_benchmark_func(const std::string& name) {
-  // todo
   if (available_base_benchmarks.find(name) != available_base_benchmarks.end()) {
     return available_base_benchmarks.at(name);
   } else {
@@ -530,7 +531,6 @@ void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
   char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
   
   std::vector<BenchmarkTuple> benchmarks = get_benchmarks(configs);
-
   
   std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(NUM_ITERATIONS * benchmarks.size());
   std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(OUTPUT_FILE_DIR + output_file_name, OVERWRITE_FILE);
