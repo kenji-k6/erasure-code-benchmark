@@ -8,11 +8,11 @@ INPUT_FILE = None
 
 
 AVX_BITS = 128
-AVX_XOR_CPI = 0.33
+AVX_XOR_CPI = 1
 AVX_COLOR = "cornflowerblue"
 
 AVX2_BITS = 256
-AVX2_XOR_CPI = 0.33
+AVX2_XOR_CPI = 1
 AVX2_COLOR = "indigo"
 
 # Z value used for plotting the confidence intervals

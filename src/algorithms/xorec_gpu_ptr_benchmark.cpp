@@ -33,6 +33,7 @@ XorecBenchmarkGpuPtr::XorecBenchmarkGpuPtr(const BenchmarkConfig& config) noexce
 
 XorecBenchmarkGpuPtr::~XorecBenchmarkGpuPtr() noexcept {
   if (m_gpu_data_buffer) cudaFree(m_gpu_data_buffer);
+  if (m_cpu_data_buffer) cudaFreeHost(m_cpu_data_buffer);
   cudaDeviceSynchronize();
 }
 
