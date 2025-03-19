@@ -53,6 +53,9 @@ XorecResult xorec_encode(
       case XorecVersion::AVX2:
         xorec_xor_blocks_avx2(parity_block, data_block, block_size);
         break;
+      case XorecVersion::AVX512:
+        xorec_xor_blocks_avx512(parity_block, data_block, block_size);
+        break;
     }
   }  
   return XorecResult::Success;  
@@ -99,6 +102,9 @@ XorecResult xorec_decode(
         case XorecVersion::AVX2:
           xorec_xor_blocks_avx2(recover_block, data_block, block_size);
           break;
+        case XorecVersion::AVX512:
+          xorec_xor_blocks_avx512(recover_block, data_block, block_size);
+          break;
       }
     }
   }
@@ -135,6 +141,9 @@ XorecResult xorec_unified_prefetch_encode(
         break;
       case XorecVersion::AVX2:
         xorec_xor_blocks_avx2(parity_block, data_block, block_size);
+        break;
+      case XorecVersion::AVX512:
+        xorec_xor_blocks_avx512(parity_block, data_block, block_size);
         break;
     }
   }
@@ -186,6 +195,9 @@ XorecResult xorec_unified_prefetch_decode(
         case XorecVersion::AVX2:
           xorec_xor_blocks_avx2(recover_block, data_block, block_size);
           break;
+        case XorecVersion::AVX512:
+          xorec_xor_blocks_avx512(recover_block, data_block, block_size);
+          break;
       }
     }
   }
@@ -229,6 +241,9 @@ XorecResult xorec_gpu_prefetch_encode(
       case XorecVersion::AVX2:
         xorec_xor_blocks_avx2(parity_block, data_block, block_size);
         break;
+      case XorecVersion::AVX512:
+        xorec_xor_blocks_avx512(parity_block, data_block, block_size);
+        break;
     }
   }  
   return XorecResult::Success;
@@ -264,7 +279,6 @@ XorecResult xorec_gpu_prefetch_decode(
   if (!recovery_needed(block_bitmap)) return XorecResult::Success;
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
   if (!is_recoverable(block_bitmap, num_data_blocks, num_parity_blocks)) return XorecResult::DecodeFailure;
-  int num_lost_blocks = 0;
 
   cudaDeviceSynchronize();
 
@@ -288,6 +302,9 @@ XorecResult xorec_gpu_prefetch_decode(
           break;
         case XorecVersion::AVX2:
           xorec_xor_blocks_avx2(recover_block, data_block, block_size);
+          break;
+        case XorecVersion::AVX512:
+          xorec_xor_blocks_avx512(recover_block, data_block, block_size);
           break;
       }
     }

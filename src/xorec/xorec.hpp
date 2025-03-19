@@ -9,19 +9,27 @@
  * @brief Provides encoding and decoding functions for custom XOR-based erasure coding.
  * 
  * This header defines the XOR-based erasure encoding and decoding functions,
- * optimized with SIMD intrinsics when available. It supports AVX and AVX2
+ * optimized with SIMD intrinsics when available. It supports AVX, AVX2 and AVX512
  */
 
+
+
+#if defined(__AVX__)
+  #define TRY_XOREC_AVX
+  #include <immintrin.h>
+  #define XOREC_AVX __m128i
+#endif
 
 #if defined(__AVX2__)
   #define TRY_XOREC_AVX2
   #include <immintrin.h>
   #define XOREC_AVX2 __m256i
 #endif
-#if defined(__AVX__)
-  #define TRY_XOREC_AVX
+
+#if defined(__AVX512F__)
+  #define TRY_XOREC_AVX512
   #include <immintrin.h>
-  #define XOREC_AVX __m128i
+  #define XOREC_AVX512 __m512i
 #endif
 
 void xorec_init();
@@ -154,6 +162,50 @@ XorecResult xorec_gpu_prefetch_decode(
   size_t prefetch_bytes,
   XorecVersion version
 );
+
+/**
+ * @brief XORs two blocks of data with AVX512 SIMD instructions.
+ * 
+ * @param dest Pointer to the destination block.
+ * @param src Pointer to the source block.
+ * @param bytes Number of bytes to XOR.
+ */
+static void inline xorec_xor_blocks_avx512(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, size_t bytes) {
+  #if defined(TRY_XOREC_AVX512)
+    XOREC_AVX512 * XOREC_RESTRICT dest512 = reinterpret_cast<XOREC_AVX512*>(dest);
+    const XOREC_AVX512 * XOREC_RESTRICT src512 = reinterpret_cast<const XOREC_AVX512*>(src);
+
+    #pragma GCC ivdep
+    for (; bytes >= 256; bytes -= 256, dest512 += 4, src512 += 4) {
+      XOREC_AVX512 x0 = _mm512_xor_si512(_mm512_loadu_si512(dest512), _mm512_loadu_si512(src512));
+      XOREC_AVX512 x1 = _mm512_xor_si512(_mm512_loadu_si512(dest512 + 1), _mm512_loadu_si512(src512 + 1));
+      XOREC_AVX512 x2 = _mm512_xor_si512(_mm512_loadu_si512(dest512 + 2), _mm512_loadu_si512(src512 + 2));
+      XOREC_AVX512 x3 = _mm512_xor_si512(_mm512_loadu_si512(dest512 + 3), _mm512_loadu_si512(src512 + 3));
+      _mm512_storeu_si512(dest512, x0);
+      _mm512_storeu_si512(dest512 + 1, x1);
+      _mm512_storeu_si512(dest512 + 2, x2);
+      _mm512_storeu_si512(dest512 + 3, x3);
+    }
+
+    if (bytes > 64) {
+      XOREC_AVX512 x0 = _mm512_xor_si512(_mm512_loadu_si512(dest512), _mm512_loadu_si512(src512));
+      XOREC_AVX512 x1 = _mm512_xor_si512(_mm512_loadu_si512(dest512 + 1), _mm512_loadu_si512(src512 + 1));
+      _mm512_storeu_si512(dest512, x0);
+      _mm512_storeu_si512(dest512 + 1, x1);
+      dest512 += 2;
+      src512 += 2;
+    }
+
+    if (bytes > 0) {
+      XOREC_AVX512 x0 = _mm512_xor_si512(_mm512_loadu_si512(dest512), _mm512_loadu_si512(src512));
+      _mm512_storeu_si512(dest512, x0);
+    }
+    
+  #else
+    std::cerr << "AVX512 not supported\n";
+    exit(1);
+  #endif
+}
 
 
 /**

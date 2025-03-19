@@ -25,6 +25,7 @@ int NUM_XOREC_GPU_CMP_CONFIGS = 0;
 bool RUN_XOREC_SCALAR = false;
 bool RUN_XOREC_AVX = false;
 bool RUN_XOREC_AVX2 = false;
+bool RUN_XOREC_AVX512 = false;
 
 
 bool INIT_BASE_CONFIGS = false;
@@ -112,7 +113,8 @@ static void usage() {
             << " XOR-EC Version Options: (relevant if --xorec or --xorec-gpu-ptr specified)\n"
             << "      --scalar                            run the scalar XOR-EC implementation\n"
             << "      --avx                               run the AVX XOR-EC implementation\n"
-            << "      --avx2                              run the AVX2 XOR-EC implementation\n\n"
+            << "      --avx2                              run the AVX2 XOR-EC implementation\n"
+            << "      --avx512                            run the AVX512 XOR-EC implementation\n\n"
             << " *If no versions are specified all 3 will be run.*\n\n"
 
             << " XOR-EC GPU Options: (relevant if --xorec-gpu-ptr or --xorec-gpu-cmp specified)\n"
@@ -150,6 +152,7 @@ void parse_args(int argc, char** argv) {
     { "scalar",               no_argument,        nullptr,  0   },
     { "avx",                  no_argument,        nullptr,  0   },
     { "avx2",                 no_argument,        nullptr,  0   },
+    { "avx512",               no_argument,        nullptr,  0   },
 
     { "touch-unified-memory",     required_argument,  nullptr,  0   },
     { "prefetch",             required_argument,  nullptr,  0   },
@@ -184,6 +187,8 @@ void parse_args(int argc, char** argv) {
           RUN_XOREC_AVX = true;
         } else if (flag == "avx2") {
           RUN_XOREC_AVX2 = true;
+        } else if (flag == "avx512") {
+          RUN_XOREC_AVX512 = true;
         } else if (flag == "touch-unified-memory") {
           auto arg = to_lower(std::string(optarg));
           if (arg == "true" || arg == "1") {
@@ -218,10 +223,11 @@ void parse_args(int argc, char** argv) {
     }
   }
 
-  if (!RUN_XOREC_SCALAR && !RUN_XOREC_AVX && !RUN_XOREC_AVX2) {
+  if (!RUN_XOREC_SCALAR && !RUN_XOREC_AVX && !RUN_XOREC_AVX2 && !RUN_XOREC_AVX512) {
     RUN_XOREC_SCALAR = true;
     RUN_XOREC_AVX = true;
     RUN_XOREC_AVX2 = true;
+    RUN_XOREC_AVX512 = true;
   }
 
   if (selected_base_benchmarks.empty() && selected_xorec_benchmarks.empty()) {
@@ -353,6 +359,11 @@ static void get_xorec_cpu_configs(std::vector<BenchmarkConfig>& configs) {
     }
     if (RUN_XOREC_AVX2) {
       config.xorec_params.version = XorecVersion::AVX2;
+      configs.push_back(config);
+      ++NUM_XOREC_CPU_CONFIGS;
+    }
+    if (RUN_XOREC_AVX512) {
+      config.xorec_params.version = XorecVersion::AVX512;
       configs.push_back(config);
       ++NUM_XOREC_CPU_CONFIGS;
     }

@@ -40,7 +40,8 @@ enum class XorecResult {
 enum class XorecVersion {
   Scalar = 0,
   AVX = 1,
-  AVX2 = 2
+  AVX2 = 2,
+  AVX512 = 3
 };
 
 /**

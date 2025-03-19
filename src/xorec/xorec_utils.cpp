@@ -9,6 +9,8 @@ std::string get_version_name(XorecVersion version) {
       return "AVX";
     case XorecVersion::AVX2:
       return "AVX2";
+    case XorecVersion::AVX512:
+      return "AVX512";
   }
   throw_error("Invalid XorecVersion");
 }
