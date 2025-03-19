@@ -43,52 +43,19 @@ XorecResult xorec_gpu_encode(
  */
 XorecResult xorec_gpu_decode(
   uint8_t *XOREC_RESTRICT data_buffer,
-  const uint8_t *XOREC_RESTRICT parity_buffer,
+  uint8_t *XOREC_RESTRICT parity_buffer,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
   const uint8_t *block_bitmap
 );
 
-/**
- * @brief CUDA kernel for XOR encoding.
- * 
- * @param data_buffer 
- * @param parity_buffer 
- * @param block_size 
- * @param num_data_blocks 
- * @param num_parity_blocks 
- * @return __global__ 
- */
-__global__ void xorec_gpu_encode_kernel(
+__global__ void xorec_gpu_xor_parity_kernel(
   const uint8_t * XOREC_RESTRICT data_buffer,
   uint8_t * XOREC_RESTRICT parity_buffer,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks
-);
-
-
-/**
- * @brief CUDA kernel for XOR decoding.
- * 
- * @param recover_block 
- * @param data_buffer 
- * @param block_size 
- * @param num_data_blocks 
- * @param num_parity_blocks 
- * @param lost_block_idx 
- * @param parity_idx 
- * @return __global__ 
- */
-__global__ void xorec_gpu_decode_kernel(
-  uint8_t * XOREC_RESTRICT recover_block,
-  const uint8_t *XOREC_RESTRICT data_buffer,
-  size_t block_size,
-  size_t num_data_blocks,
-  size_t num_parity_blocks,
-  uint32_t lost_block_idx,
-  uint32_t parity_idx
 );
 
 
