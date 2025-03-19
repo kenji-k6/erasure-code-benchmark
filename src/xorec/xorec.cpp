@@ -115,19 +115,14 @@ XorecResult xorec_unified_prefetch_encode(
   size_t num_parity_blocks,
   XorecVersion version
 ) {
-  // copy first num_parity_blocks data blocks directly to parity_buffer (reduce number of XOR's)
-  cudaMemcpyAsync(parity_buffer, data_buffer, num_parity_blocks * block_size, cudaMemcpyDeviceToHost);
-
-  // Prefetch rest of data blocks
-  cudaMemPrefetchAsync(data_buffer+num_parity_blocks*block_size, (num_data_blocks-num_parity_blocks) * block_size, cudaCpuDeviceId);
-
+  cudaMemPrefetchAsync(data_buffer, num_data_blocks * block_size, cudaCpuDeviceId);
   if (!XOREC_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_unified_prefetch_encode()");
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
-  
+
+  std::memset(parity_buffer, 0, block_size * num_parity_blocks);
   cudaDeviceSynchronize();
-  
-  
-  for (unsigned i = num_parity_blocks; i < num_data_blocks; ++i) {
+
+  for (unsigned i = 0; i < num_data_blocks; ++i) {
     void * XOREC_RESTRICT parity_block = reinterpret_cast<void*>(parity_buffer + (i % num_parity_blocks) * block_size);
     const void * XOREC_RESTRICT data_block = reinterpret_cast<const void*>(data_buffer + i * block_size);
 
@@ -212,15 +207,7 @@ XorecResult xorec_gpu_prefetch_encode(
   size_t prefetch_bytes,
   XorecVersion version
 ) {
-
-
-
-  // copy first num_parity_blocks data blocks directly to parity_buffer (reduce number of XOR's)
-  cudaMemcpyAsync(parity_buffer, gpu_data_buffer, num_parity_blocks * block_size, cudaMemcpyDeviceToHost);
-
-  // Copy rest of data to data buffer
-  cudaMemcpyAsync(cpu_data_buffer+num_parity_blocks*block_size, gpu_data_buffer+num_parity_blocks*block_size, (num_data_blocks-num_parity_blocks) * block_size, cudaMemcpyDeviceToHost);
-
+  cudaMemcpyAsync(cpu_data_buffer, gpu_data_buffer, num_data_blocks * block_size, cudaMemcpyDeviceToHost);
   if (!XOREC_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_gpu_prefetch_encode()");
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
 
@@ -228,7 +215,7 @@ XorecResult xorec_gpu_prefetch_encode(
 
   cudaDeviceSynchronize();
 
-  for (unsigned i = num_parity_blocks; i < num_data_blocks; ++i) {
+  for (unsigned i = 0; i < num_data_blocks; ++i) {
     void * XOREC_RESTRICT parity_block = reinterpret_cast<void*>(parity_buffer + (i % num_parity_blocks) * block_size);
     const void * XOREC_RESTRICT data_block = reinterpret_cast<const void*>(cpu_data_buffer + i * block_size);
 

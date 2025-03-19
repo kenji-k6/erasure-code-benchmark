@@ -69,7 +69,7 @@ void XorecBenchmarkUnifiedPtr::simulate_data_loss() noexcept {
     }
   }
 
-  // cudaDeviceSynchronize();
+  cudaDeviceSynchronize();
 }
 
 bool XorecBenchmarkUnifiedPtr::check_for_corruption() const noexcept {
