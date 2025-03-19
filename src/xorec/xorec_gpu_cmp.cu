@@ -44,7 +44,7 @@ XorecResult xorec_gpu_encode(
   if (block_size % sizeof(CUDA_ATOMIC_XOR_T) != 0) return XorecResult::InvalidSize;
 
   cudaMemset(parity_buffer, 0, block_size * num_parity_blocks);
-  xorec_gpu_encode_kernel<<<1, MAX_THREADS_PER_BLOCK>>>(data_buffer, parity_buffer, block_size, num_data_blocks, num_parity_blocks);
+  xorec_gpu_encode_kernel<<<512, MAX_THREADS_PER_BLOCK/32>>>(data_buffer, parity_buffer, block_size, num_data_blocks, num_parity_blocks);
 
   return XorecResult::Success;
 }
@@ -69,7 +69,7 @@ XorecResult xorec_gpu_decode(
     uint8_t * XOREC_RESTRICT recover_block = data_buffer + i * block_size;
     const uint8_t * XOREC_RESTRICT parity_block = parity_buffer + (i % num_parity_blocks) * block_size;
     cudaMemcpy(recover_block, parity_block, block_size, cudaMemcpyDeviceToDevice);
-    xorec_gpu_decode_kernel<<<1, MAX_THREADS_PER_BLOCK>>>(recover_block, data_buffer, block_size, num_data_blocks, num_parity_blocks, i, i%num_parity_blocks);
+    xorec_gpu_decode_kernel<<<512, MAX_THREADS_PER_BLOCK/32>>>(recover_block, data_buffer, block_size, num_data_blocks, num_parity_blocks, i, i%num_parity_blocks);
   }
 
   return XorecResult::Success;
@@ -84,18 +84,19 @@ __global__ void xorec_gpu_decode_kernel(
   uint32_t lost_block_idx,
   uint32_t parity_idx
 ) {
-  unsigned num_warps = blockDim.x / WARP_SIZE;
-  unsigned warp_idx = threadIdx.x / WARP_SIZE;
+  unsigned num_warps = (blockDim.x / WARP_SIZE)*gridDim.x;
+  unsigned glbl_thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned warp_idx = glbl_thread_idx / WARP_SIZE;
+  unsigned local_thread_idx = threadIdx.x % WARP_SIZE; 
 
   unsigned block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T); // number of 64-bit elements in a block
-  unsigned thread_idx = threadIdx.x % WARP_SIZE;
   
   CUDA_ATOMIC_XOR_T * XOREC_RESTRICT recover_block_64 = reinterpret_cast<CUDA_ATOMIC_XOR_T*>(recover_block);
   for (unsigned i = parity_idx + warp_idx * num_parity_blocks; i < num_data_blocks; i += num_warps * num_parity_blocks) {
     if (i == lost_block_idx) continue;
     const CUDA_ATOMIC_XOR_T * XOREC_RESTRICT data_block_64 = reinterpret_cast<const CUDA_ATOMIC_XOR_T*>(data_buffer + i * block_size);
 
-    for (uint32_t j = thread_idx; j < block_elems; j += WARP_SIZE) {
+    for (uint32_t j = local_thread_idx; j < block_elems; j += WARP_SIZE) {
       atomicXor(&recover_block_64[j], data_block_64[j]);
     }
   }
@@ -110,17 +111,18 @@ __global__ void xorec_gpu_encode_kernel(
   size_t num_data_blocks,
   size_t num_parity_blocks
 ) {
-  unsigned num_warps = blockDim.x / WARP_SIZE;
-  unsigned warp_idx = threadIdx.x / WARP_SIZE;
+
+  unsigned num_warps = (blockDim.x / WARP_SIZE)*gridDim.x;
+  unsigned glbl_thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned warp_idx = glbl_thread_idx / WARP_SIZE;
+  unsigned local_thread_idx = threadIdx.x % WARP_SIZE; 
 
   unsigned block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T); // number of 64-bit elements in a block
-  unsigned thread_idx = threadIdx.x % WARP_SIZE;
 
   for (unsigned i = warp_idx; i < num_data_blocks; i += num_warps) {
     const CUDA_ATOMIC_XOR_T * XOREC_RESTRICT data_block_64 = reinterpret_cast<const CUDA_ATOMIC_XOR_T*>(data_buffer + i * block_size);
     CUDA_ATOMIC_XOR_T * XOREC_RESTRICT parity_block_64 = reinterpret_cast<CUDA_ATOMIC_XOR_T*>(parity_buffer + (i%num_parity_blocks) * block_size);
-
-    for (unsigned j = thread_idx; j < block_elems; j += WARP_SIZE) {
+    for (unsigned j = local_thread_idx; j < block_elems; j += WARP_SIZE) {
       atomicXor(&parity_block_64[j], data_block_64[j]);
     }
   }

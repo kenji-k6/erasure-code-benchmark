@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
-from utils.config import AVX_BITS, AVX_XOR_CPI, AVX_COLOR, AVX2_BITS, AVX2_XOR_CPI, AVX2_COLOR
+from utils.config import AVX_BITS, AVX_XOR_LATENCY, AVX_XOR_CPI, AVX_COLOR, AVX2_BITS, AVX2_XOR_LATENCY, AVX2_XOR_CPI, AVX2_COLOR
 from utils.hardware_info import CPUInfo, get_cpu_info
 from utils.theoretical_bounds import get_theoretical_bound_func
 from utils.utils import AxType, get_output_path, get_col_name, get_ax_label, get_plot_id, get_plot_title
@@ -71,6 +71,7 @@ def plot_avx_avx2_xor(df: pd.DataFrame, x_axis: AxType, y_axis: AxType, cpu_info
   func = get_theoretical_bound_func(y_axis)
 
   params_df = df[[
+    "tot_data_size_KiB",
     "block_size_B",
     "num_data_blocks",
     "num_parity_blocks",
@@ -81,9 +82,10 @@ def plot_avx_avx2_xor(df: pd.DataFrame, x_axis: AxType, y_axis: AxType, cpu_info
 
   y_values_AVX = params_df.apply(
     lambda row: func(
+      AVX_XOR_LATENCY,
       AVX_XOR_CPI,
       AVX_BITS,
-      cpu_info.clock_speed_GHz,
+      cpu_info.clock_rate_GHz,
       row["block_size_B"],
       row["num_data_blocks"],
       row["num_parity_blocks"],
@@ -94,9 +96,10 @@ def plot_avx_avx2_xor(df: pd.DataFrame, x_axis: AxType, y_axis: AxType, cpu_info
 
   y_values_AVX2 = params_df.apply(
     lambda row: func(
+      AVX2_XOR_LATENCY,
       AVX2_XOR_CPI,
       AVX2_BITS,
-      cpu_info.clock_speed_GHz,
+      cpu_info.clock_rate_GHz,
       row["block_size_B"],
       row["num_data_blocks"],
       row["num_parity_blocks"],
