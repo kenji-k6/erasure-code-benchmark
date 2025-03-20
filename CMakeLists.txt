@@ -58,9 +58,19 @@ add_executable(ec-benchmark ${SOURCES})
 # Maybe in the future: link necessary libraries / check if submodules are initialized
 set_target_properties(ec-benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 
+
+# Add libpfm
+add_library(PFM STATIC IMPORTED)
+set_target_properties(PFM PROPERTIES
+  IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/lib/libpfm.a
+)
+
 # Google benchmarking library
-set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
+# Enable libpfm for benchmarking (needed for counting cycles, instructions, etc.)
 set(CMAKE_BUILD_TYPE Release)
+set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON CACHE BOOL "Enable downloading of dependencies" FORCE)
+set(BENCHMARK_ENABLE_LIBPFM ON CACHE BOOL "Enable libpfm support" FORCE)
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable testing in Google Benchmark" FORCE)
 add_subdirectory(libraries/google_benchmark)
 
 # leopard
@@ -70,7 +80,7 @@ add_subdirectory(libraries/leopard)
 add_subdirectory(libraries/cm256)
 
 # wirehair (have to set BUILD_TESTS to OFF)
-set(BUILD_TESTS OFF)
+set(BUILD_TESTS OFF CACHE BOOL "Disable tests in Wirehair" FORCE)
 message(STATUS "BUILD_TESTS in wirehair: ${BUILD_TESTS}")
 add_subdirectory(libraries/wirehair)
 
@@ -80,14 +90,6 @@ set_target_properties(isal PROPERTIES
   IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/isa-l/.libs/libisal.a
 )
 
-# Add libpfm
-add_library(PFM STATIC IMPORTED)
-set_target_properties(PFM PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/lib/libpfm.a
-)
-
-# Enable libpfm for benchmarking (needed for counting cycles, instructions, etc.)
-set(BENCHMARK_ENABLE_LIBPFM ON CACHE BOOL "Enable libpfm for performance counters")
 
 
 
