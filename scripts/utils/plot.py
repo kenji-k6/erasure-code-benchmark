@@ -17,6 +17,7 @@ THEORETICAL_BOUND_COLORS = {
 
 def plot_cache_sizes(cpu_info: CPUInfo) -> None:
   """Plot the cache sizes on the graph."""
+  plt.axvline(x=cpu_info.l1_cache_size_KiB, color="blue", linestyle="--", label="L1 Cache Size")
   plt.axvline(x=cpu_info.l2_cache_size_KiB, color="red", linestyle="--", label="L2 Cache Size")
   plt.axvline(x=cpu_info.l3_cache_size_KiB, color="green", linestyle="--", label="L3 Cache Size")
 
@@ -75,6 +76,8 @@ def plot_confidence_intervals(ec_df: pd.DataFrame, x_axis: AxType, y_axis: AxTyp
 
 
 def plot_theoretical_bounds(ec_df: pd.DataFrame, perf_dfs: Dict[int, pd.DataFrame], x_axis: AxType, y_axis: AxType, cpu_info: CPUInfo) -> None:
+  if cpu_info.clock_rate_GHz <= 0:
+    return
   x_col = get_col_name(x_axis)
   func = get_theoretical_bound_func(y_axis)
 
