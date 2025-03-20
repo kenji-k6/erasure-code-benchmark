@@ -1,10 +1,11 @@
 #include "bm_utils.hpp"
 
 int main (int argc, char** argv) {
-  std::vector<BenchmarkConfig> configs;
+  std::vector<BenchmarkConfig> ec_configs;
+  std::vector<BenchmarkConfig> perf_configs;
   std::vector<std::vector<uint32_t>> lost_block_idxs;
   
   parse_args(argc, argv);
-  get_configs(configs, lost_block_idxs);
-  run_benchmarks(configs);
+  get_configs(ec_configs, lost_block_idxs, perf_configs);
+  run_benchmarks(ec_configs, perf_configs);
 }
