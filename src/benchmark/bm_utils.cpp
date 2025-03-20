@@ -7,11 +7,14 @@
 #include "benchmark/benchmark.h"
 #include "bm_functions.hpp"
 #include "utils.hpp"
+#include <filesystem>
 #include <getopt.h>
 
 // Global variable definitions
-constexpr const char* OUTPUT_FILE_DIR = "../results/raw/";
-std::string output_file_name = "benchmark_results.csv";
+constexpr const char* RAW_DIR = "../results/raw/";
+std::string RESULT_DIR = "";
+std::string EC_OUTPUT_FILE_NAME = "ec_results.csv";
+std::string PERF_OUTPUT_FILE_NAME = "perf_results.csv";
 
 bool OVERWRITE_FILE = true;
 int NUM_ITERATIONS = 10;
@@ -27,11 +30,14 @@ bool RUN_XOREC_AVX = false;
 bool RUN_XOREC_AVX2 = false;
 bool RUN_XOREC_AVX512 = false;
 
+bool RUN_PERF_BM = false;
+bool RUN_EC_BM = false;
 
 bool INIT_BASE_CONFIGS = false;
 bool INIT_XOREC_CPU_CONFIGS = false;
 bool INIT_XOREC_UNIFIED_PTR_CONFIGS = false;
 bool INIT_XOREC_GPU_PTR_CONFIGS = false;
+
 
 
 enum class TouchUnifiedMemory {
@@ -52,24 +58,24 @@ TouchUnifiedMemory TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_FAL
 XorecPrefetch PREFETCH = XorecPrefetch::XOREC_NO_PREFETCH;
 
 
-std::unordered_set<std::string> selected_base_benchmarks;
-std::unordered_set<std::string> selected_xorec_benchmarks;
+std::unordered_set<std::string> selected_base_ec_benchmarks;
+std::unordered_set<std::string> selected_xorec_ec_benchmarks;
 
-const std::unordered_map<std::string, BenchmarkFunction> available_base_benchmarks = {
+const std::unordered_map<std::string, BenchmarkFunction> available_base_ec_benchmarks = {
   { "cm256",                  BM_CM256                },
   { "isal",                   BM_ISAL                 },
   { "leopard",                BM_Leopard              },
   { "wirehair",               BM_Wirehair             }
 };
 
-const std::unordered_map<std::string, BenchmarkFunction> available_xorec_benchmarks = {
+const std::unordered_map<std::string, BenchmarkFunction> available_xorec_ec_benchmarks = {
   { "xorec",                  BM_XOREC              },
   { "xorec-unified-ptr",      BM_XOREC_UNIFIED_PTR  },
   { "xorec-gpu-ptr",          BM_XOREC_GPU_PTR      },
   { "xorec-gpu-cmp",          BM_XOREC_GPU_CMP      }
 };
 
-const std::unordered_map<std::string, std::string> benchmark_names = {
+const std::unordered_map<std::string, std::string> ec_benchmark_names = {
   { "cm256",                "CM256"                 },
   { "isal",                 "ISA-L"                 },
   { "leopard",              "Leopard"               },
@@ -80,6 +86,22 @@ const std::unordered_map<std::string, std::string> benchmark_names = {
   { "xorec-gpu-cmp",        "XOR-EC (GPU Cmp)"      }
 };
 
+std::unordered_set<std::string> selected_perf_benchmarks;
+
+const std::unordered_map<std::string, BenchmarkFunction> available_perf_benchmarks = {
+  { "perf-xorec-scalar", BM_XOR_BLOCKS_SCALAR },
+  { "perf-xorec-avx",    BM_XOR_BLOCKS_AVX    },
+  { "perf-xorec-avx2",   BM_XOR_BLOCKS_AVX2   },
+  { "perf-xorec-avx512", BM_XOR_BLOCKS_AVX512 }
+};
+
+const std::unordered_map<std::string, std::string> perf_benchmark_names = {
+  { "perf-xorec-scalar", "Theoretical XOR-EC (SCALAR)" },
+  { "perf-xorec-avx",    "Theoretical XOR-EC (AVX)"    },
+  { "perf-xorec-avx2",   "Theoretical XOR-EC (AVX2)"   },
+  { "perf-xorec-avx512", "Theoretical XOR-EC (AVX512)" }
+};
+
 
 static void usage() {
   std::cerr << "Usage: ec-benchmark [options]\n\n"
@@ -88,10 +110,13 @@ static void usage() {
             << "  -h, --help                              show this help message\n\n"
             
             << " Benchmark Options:\n"
-            << "  -i, --iterations=<num>                  number of benchmark iterations (default 10)\n"
-            << "  -f, --file=<file_name>                  specify output file name\n"
-            << "  -a, --append                            append results to the output file (default: overwrite)\n\n"
-      
+            << "  -r, --result-dir=<dir_name>             specify output result subdirectory (inside /results/raw/),\n"
+            << "                                          will be created if it doesn't exist\n"
+            << "  -a, --append                            append results to the output file (default: overwrite)\n"
+            << "  -b, --benchmark=<ec|perf|all>           specify the type of benchmark to run (default: all)\n\n"
+
+            << " Erase Code Benchmarking Option\n"
+            << "  -i, --iterations=<num>                  number of benchmark iterations (default 10)\n\n"
             << " Base Algorithm Selection:\n"
             << "      --cm256                             run the CM256 benchmark\n"
             << "      --isal                              run the ISA-L benchmark\n"
@@ -115,34 +140,46 @@ static void usage() {
             << "      --avx                               run the AVX XOR-EC implementation\n"
             << "      --avx2                              run the AVX2 XOR-EC implementation\n"
             << "      --avx512                            run the AVX512 XOR-EC implementation\n\n"
-            << " *If no versions are specified all 3 will be run.*\n\n"
+            << " *If no versions are specified all 4 will be run.*\n\n"
 
             << " XOR-EC GPU Options: (relevant if --xorec-gpu-ptr or --xorec-gpu-cmp specified)\n"
             << "      --touch-unified-memory <true|false|all> whether to touch unified memory on the GPU before encoding/decoding\n"
             << "                                          (default: false)\n"
             << "      --prefetch <true|false|all>         whether to prefetch data blocks from unified memory to CPU memory, or fetch them on-demand,\n"
-            << "                                          only relevant if --xorec-unified-ptr is specified (default: false)\n\n";
+            << "                                          only relevant if --xorec-unified-ptr is specified (default: false)\n"
+
+            << " Performance Benchmark Selection (if none are selected, none are run):\n"
+            << "      --perf-xorec-scalar                 run the theoretical XOR-EC (SCALAR) performance benchmark\n"
+            << "      --perf-xorec-avx                    run the theoretical XOR-EC (AVX) performance benchmark\n"
+            << "      --perf-xorec-avx2                   run the theoretical XOR-EC (AVX2) performance benchmark\n"
+            << "      --perf-xorec-avx512                 run the theoretical XOR-EC (AVX512) performance benchmark\n\n"
+            << " *If no versions are specified all 4 will be run.*\n\n";
   exit(0);
 }
 
 static void inline add_benchmark(std::string name) {
-  if (available_base_benchmarks.find(name) != available_base_benchmarks.end()) {
-    selected_base_benchmarks.insert(name);
+  if (available_base_ec_benchmarks.find(name) != available_base_ec_benchmarks.end()) {
+    selected_base_ec_benchmarks.insert(name);
+  } else if (available_xorec_ec_benchmarks.find(name) != available_xorec_ec_benchmarks.end()) {
+    selected_xorec_ec_benchmarks.insert(name);
   } else {
-    selected_xorec_benchmarks.insert(name);
+    selected_perf_benchmarks.insert(name);
   }
 }
 
 void parse_args(int argc, char** argv) {
   struct option long_options[] = {
     { "help",                 no_argument,        nullptr, 'h'  },
-    { "iterations",           required_argument,  nullptr, 'i'  },
-    { "file",                 required_argument,  nullptr, 'f'  },
+    { "result-dir",           required_argument,  nullptr, 'r'  },
     { "append",               no_argument,        nullptr, 'a'  },
+    { "benchmark",            required_argument,  nullptr, 'b'  },
+
     { "cm256",                no_argument,        nullptr,  0   },
     { "isal",                 no_argument,        nullptr,  0   },
     { "leopard",              no_argument,        nullptr,  0   },
     { "wirehair",             no_argument,        nullptr,  0   },
+    
+    { "iterations",           required_argument,  nullptr, 'i'  },
 
     { "xorec",                no_argument,        nullptr,  0   },
     { "xorec-unified-ptr",    no_argument,        nullptr,  0   },
@@ -156,6 +193,11 @@ void parse_args(int argc, char** argv) {
 
     { "touch-unified-memory",     required_argument,  nullptr,  0   },
     { "prefetch",             required_argument,  nullptr,  0   },
+
+    { "perf-xorec-scalar",    no_argument,        nullptr,  0   },
+    { "perf-xorec-avx",       no_argument,        nullptr,  0   },
+    { "perf-xorec-avx2",      no_argument,        nullptr,  0   },
+    { "perf-xorec-avx512",    no_argument,        nullptr,  0   },
     { nullptr,                0,                  nullptr,  0   }
   };
 
@@ -163,6 +205,7 @@ void parse_args(int argc, char** argv) {
   int c;
   int option_index = 0;
   std::string flag;
+  std::string arg;
 
   while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, &option_index)) != -1) {
     switch (c) {
@@ -172,11 +215,27 @@ void parse_args(int argc, char** argv) {
       case 'i':
         NUM_ITERATIONS = std::stoi(optarg);
         break;
-      case 'f':
-        output_file_name = std::string(optarg);
+      case 'r':
+        RESULT_DIR = std::string(optarg) + "/";
         break;
       case 'a':
         OVERWRITE_FILE = false;
+        break;
+      case 'b':
+        arg = to_lower(std::string(optarg));
+        if (arg == "ec") {
+          RUN_EC_BM = true;
+          RUN_PERF_BM = false;
+        } else if (arg == "perf") {
+          RUN_EC_BM = false;
+          RUN_PERF_BM = true;
+        } else if (arg == "all") {
+          RUN_PERF_BM = true;
+          RUN_EC_BM = true;
+        } else {
+          std::cerr << "Error: --benchmark option must be either 'ec', 'perf', or 'all'.\n";
+          exit(0);
+        }
         break;
       case 0:
         flag = std::string(long_options[option_index].name);
@@ -190,7 +249,7 @@ void parse_args(int argc, char** argv) {
         } else if (flag == "avx512") {
           RUN_XOREC_AVX512 = true;
         } else if (flag == "touch-unified-memory") {
-          auto arg = to_lower(std::string(optarg));
+          arg = to_lower(std::string(optarg));
           if (arg == "true" || arg == "1") {
             TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_TRUE;
           } else if (arg == "false" || arg == "0") {
@@ -202,7 +261,7 @@ void parse_args(int argc, char** argv) {
             exit(0);
           }
         }  else if (flag == "prefetch"){
-          auto arg = to_lower(std::string(optarg));
+          arg = to_lower(std::string(optarg));
           if (arg == "true" || arg == "1") {
             PREFETCH = XorecPrefetch::XOREC_PREFETCH;
           } else if (arg == "false" || arg == "0") {
@@ -230,12 +289,18 @@ void parse_args(int argc, char** argv) {
     RUN_XOREC_AVX512 = true;
   }
 
-  if (selected_base_benchmarks.empty() && selected_xorec_benchmarks.empty()) {
-    for (const auto& [name, _] : available_base_benchmarks) {
+  if (selected_base_ec_benchmarks.empty() && selected_xorec_ec_benchmarks.empty()) {
+    for (const auto& [name, _] : available_base_ec_benchmarks) {
       add_benchmark(name);
     }
 
-    for (const auto& [name, _] : available_xorec_benchmarks) {
+    for (const auto& [name, _] : available_xorec_ec_benchmarks) {
+      add_benchmark(name);
+    }
+  }
+
+  if (selected_perf_benchmarks.empty()) {
+    for (const auto& [name, _] : available_perf_benchmarks) {
       add_benchmark(name);
     }
   }
@@ -434,12 +499,12 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
   INIT_BASE_CONFIGS = true;
 }
 
-void get_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
+static void get_ec_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
   init_lost_block_idxs(lost_block_idxs);
 
   get_base_configs(configs, lost_block_idxs);
 
-  if (selected_xorec_benchmarks.size() > 0) {
+  if (selected_xorec_ec_benchmarks.size() > 0) {
     get_xorec_cpu_configs(configs);
     get_xorec_unified_ptr_configs(configs);
     get_xorec_gpu_ptr_configs(configs);
@@ -447,8 +512,29 @@ void get_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<
   }
 }
 
-std::string get_benchmark_name(const std::string inp_name, BenchmarkConfig config) {
-  std::string name = benchmark_names.at(inp_name);
+static void get_perf_configs(std::vector<BenchmarkConfig>& configs) {
+  for (auto data_size : VAR_BUFFER_SIZE) {
+    size_t block_size = data_size / FIXED_NUM_ORIGINAL_BLOCKS;
+    BenchmarkConfig config {
+      0,
+      block_size,
+      0,
+      0.0,
+      0,
+      0xFF,
+      {},
+      FIXED_NUM_ORIGINAL_BLOCKS,
+      FIXED_NUM_RECOVERY_BLOCKS,
+      false,
+      { XorecVersion::Scalar, false, false, false, false, false },
+      nullptr
+    };
+    configs.push_back(config);
+  }
+}
+
+static std::string get_ec_benchmark_name(const std::string inp_name, BenchmarkConfig config) {
+  std::string name = ec_benchmark_names.at(inp_name);
   if (config.is_xorec_config && !config.xorec_params.gpu_cmp) {
     name += ", " + get_version_name(config.xorec_params.version);
 
@@ -471,79 +557,103 @@ std::string get_benchmark_name(const std::string inp_name, BenchmarkConfig confi
   return name;
 }
 
-BenchmarkFunction get_benchmark_func(const std::string& name) {
-  if (available_base_benchmarks.find(name) != available_base_benchmarks.end()) {
-    return available_base_benchmarks.at(name);
+static BenchmarkFunction get_ec_benchmark_func(const std::string& name) {
+  if (available_base_ec_benchmarks.find(name) != available_base_ec_benchmarks.end()) {
+    return available_base_ec_benchmarks.at(name);
   } else {
-    return available_xorec_benchmarks.at(name);
+    return available_xorec_ec_benchmarks.at(name);
   }
 }
 
 
-static std::vector<BenchmarkTuple> get_benchmarks(std::vector<BenchmarkConfig>& configs) {
+static std::string get_perf_benchmark_name(const std::string inp_name) {
+  return perf_benchmark_names.at(inp_name);
+}
+
+static BenchmarkFunction get_perf_benchmark_func(const std::string& name) {
+  return available_perf_benchmarks.at(name);
+}
+
+
+static std::vector<BenchmarkTuple> get_ec_benchmarks(std::vector<BenchmarkConfig>& configs) {
   std::vector<BenchmarkTuple> benchmarks;
 
   auto it = configs.begin();
   // Base benchmarks
   for (; it != configs.begin()+NUM_BASE_CONFIGS; ++it) {
-    for (auto& inp_name : selected_base_benchmarks) {
-      auto bm_name = get_benchmark_name(inp_name, *it);
-      auto bm_func = get_benchmark_func(inp_name);
+    for (auto& inp_name : selected_base_ec_benchmarks) {
+      auto bm_name = get_ec_benchmark_name(inp_name, *it);
+      auto bm_func = get_ec_benchmark_func(inp_name);
       benchmarks.push_back({ bm_name, bm_func, *it });
     }
   }
 
   // XOR-EC CPU benchmarks
   for (; it != configs.begin()+NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++it) {
-    if (selected_xorec_benchmarks.find("xorec") != selected_xorec_benchmarks.end()) {
-      auto bm_name = get_benchmark_name("xorec", *it);
-      auto bm_func = get_benchmark_func("xorec");
+    if (selected_xorec_ec_benchmarks.find("xorec") != selected_xorec_ec_benchmarks.end()) {
+      auto bm_name = get_ec_benchmark_name("xorec", *it);
+      auto bm_func = get_ec_benchmark_func("xorec");
       benchmarks.push_back({ bm_name, bm_func, *it });
     }
   }
 
   // XOR-EC Unified memory Pointer benchmarks
   for (; it != configs.begin()+NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS+NUM_XOREC_UNIFIED_PTR_CONFIGS; ++it) {
-    if (selected_xorec_benchmarks.find("xorec-unified-ptr") != selected_xorec_benchmarks.end()) {
-      auto bm_name = get_benchmark_name("xorec-unified-ptr", *it);
-      auto bm_func = get_benchmark_func("xorec-unified-ptr");
+    if (selected_xorec_ec_benchmarks.find("xorec-unified-ptr") != selected_xorec_ec_benchmarks.end()) {
+      auto bm_name = get_ec_benchmark_name("xorec-unified-ptr", *it);
+      auto bm_func = get_ec_benchmark_func("xorec-unified-ptr");
       benchmarks.push_back({ bm_name, bm_func, *it });
     }
   }
 
   // XOR-EC GPU Pointer benchmarks
   for (; it != configs.begin()+NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS+NUM_XOREC_UNIFIED_PTR_CONFIGS+NUM_XOREC_GPU_PTR_CONFIGS; ++it) {
-    if (selected_xorec_benchmarks.find("xorec-gpu-ptr") != selected_xorec_benchmarks.end()) {
-      auto bm_name = get_benchmark_name("xorec-gpu-ptr", *it);
-      auto bm_func = get_benchmark_func("xorec-gpu-ptr");
+    if (selected_xorec_ec_benchmarks.find("xorec-gpu-ptr") != selected_xorec_ec_benchmarks.end()) {
+      auto bm_name = get_ec_benchmark_name("xorec-gpu-ptr", *it);
+      auto bm_func = get_ec_benchmark_func("xorec-gpu-ptr");
       benchmarks.push_back({ bm_name, bm_func, *it });
     }
   }
 
   for (; it != configs.end(); ++it) {
-    if (selected_xorec_benchmarks.find("xorec-gpu-cmp") != selected_xorec_benchmarks.end()) {
-      auto bm_name = get_benchmark_name("xorec-gpu-cmp", *it);
-      auto bm_func = get_benchmark_func("xorec-gpu-cmp");
+    if (selected_xorec_ec_benchmarks.find("xorec-gpu-cmp") != selected_xorec_ec_benchmarks.end()) {
+      auto bm_name = get_ec_benchmark_name("xorec-gpu-cmp", *it);
+      auto bm_func = get_ec_benchmark_func("xorec-gpu-cmp");
       benchmarks.push_back({ bm_name, bm_func, *it });
     }
   }
   return benchmarks;
 }
 
-void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
-  if (configs.empty()) throw_error("No benchmark configurations found.");
+static std::vector<BenchmarkTuple> get_perf_benchmarks(std::vector<BenchmarkConfig>& configs) {
+  std::vector<BenchmarkTuple> benchmarks;
+  for (auto config : configs) {
+    for (auto& inp_name : selected_perf_benchmarks) {
+      auto bm_name = get_perf_benchmark_name(inp_name);
+      auto bm_func = get_perf_benchmark_func(inp_name);
+      benchmarks.push_back({ bm_name, bm_func, config });
+    }
+  }
+  return benchmarks;
+}
+
+
+static void run_ec_benchmarks(std::vector<BenchmarkConfig>& configs) {
+  if (configs.empty()) throw_error("No EC benchmark configurations found.");
 
   int argc = 2;
   char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
 
-  std::vector<BenchmarkTuple> benchmarks = get_benchmarks(configs);
+  std::vector<BenchmarkTuple> benchmarks = get_ec_benchmarks(configs);
   std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(NUM_ITERATIONS * benchmarks.size());
-  std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(OUTPUT_FILE_DIR + output_file_name, OVERWRITE_FILE);
+  std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(RAW_DIR + RESULT_DIR + EC_OUTPUT_FILE_NAME, OVERWRITE_FILE);
 
-  for (auto [name, func, conf] : benchmarks) {
-    conf.progress_reporter = console_reporter.get();
+  benchmark::ClearRegisteredBenchmarks();
+
+  for (auto [name, func, cfg] : benchmarks) {
+    cfg.progress_reporter = console_reporter.get();
     
-    benchmark::RegisterBenchmark(name, func, conf)
+    benchmark::RegisterBenchmark(name, func, cfg)
       ->UseRealTime()
       ->Iterations(NUM_ITERATIONS);
   }
@@ -552,4 +662,50 @@ void run_benchmarks(std::vector<BenchmarkConfig>& configs) {
   if (benchmark::ReportUnrecognizedArguments(argc, argv)) return;
   benchmark::RunSpecifiedBenchmarks(console_reporter.get(), csv_reporter.get());
   benchmark::Shutdown();
+}
+
+
+static void run_perf_benchmarks(std::vector<BenchmarkConfig>& configs) {
+  if (configs.empty()) return;
+
+  int argc = 3;
+  char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console", (char*)"--benchmark_perf_counters=CYCLES,INSTRUCTIONS"};
+
+  std::vector<BenchmarkTuple> benchmarks = get_perf_benchmarks(configs);
+  // For the performance benchmarks we only report the runs, not the individual iterations
+  std::unique_ptr<PerfBenchmarkProgressReporter> console_reporter = std::make_unique<PerfBenchmarkProgressReporter>(benchmarks.size());
+  std::unique_ptr<PerfBenchmarkCSVReporter> csv_reporter = std::make_unique<PerfBenchmarkCSVReporter>(RAW_DIR + RESULT_DIR + PERF_OUTPUT_FILE_NAME, OVERWRITE_FILE);
+
+  benchmark::ClearRegisteredBenchmarks();
+
+  for (auto [name, func, cfg] : benchmarks) {
+    benchmark::RegisterBenchmark(name, func, cfg);
+  }
+
+  benchmark::Initialize(&argc, argv);
+  if (benchmark::ReportUnrecognizedArguments(argc, argv)) return;
+  benchmark::RunSpecifiedBenchmarks(console_reporter.get(), csv_reporter.get());
+  benchmark::Shutdown();
+}
+
+static void ensure_result_dir() {
+  namespace fs = std::filesystem;
+  std::string dir = RAW_DIR + RESULT_DIR;
+
+  if (!fs::exists(dir)) {
+    fs::create_directories(dir);
+  }
+}
+
+
+
+void get_configs(std::vector<BenchmarkConfig>& ec_configs, std::vector<std::vector<uint32_t>>& lost_block_idxs, std::vector<BenchmarkConfig>& perf_configs) {
+  if (RUN_EC_BM) get_ec_configs(ec_configs, lost_block_idxs);
+  if (RUN_PERF_BM) get_perf_configs(perf_configs);
+}
+
+void run_benchmarks(std::vector<BenchmarkConfig>& ec_configs, std::vector<BenchmarkConfig>& perf_configs) {
+  ensure_result_dir();
+  if (RUN_EC_BM) run_ec_benchmarks(ec_configs);
+  if (RUN_PERF_BM) run_perf_benchmarks(perf_configs);
 }
