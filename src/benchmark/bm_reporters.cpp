@@ -8,7 +8,10 @@
 #include <stdexcept>
 
 
-BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool overwrite_file) {
+BenchmarkCSVReporter::BenchmarkCSVReporter(const std::string& output_file, bool overwrite_file)
+    : m_header_written(false), 
+      m_overwrite_file(overwrite_file) 
+{
   std::ios_base::openmode mode = overwrite_file ? std::ios::out : std::ios::app;
   m_file.open(output_file, mode);
 
@@ -122,7 +125,7 @@ void PerfBenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
 
   for (const auto& run : runs) {
     m_file  << "\"" << run.benchmark_name() << "\","
-            << static_cast<uint32_t>(run.counters.find("xorec_version")->second.value) << ","
+            << static_cast<int>(run.counters.find("xorec_version")->second.value) << ","
             << run.iterations << ","
             << static_cast<uint64_t>(run.counters.find("block_size_B")->second.value) << ","
             << run.counters.find("CYCLES")->second.value << ","

@@ -41,9 +41,9 @@ public:
   bool ReportContext(const Context& context) override;
 
 protected:
-  std::ofstream m_file;           ///< Output file stream for writing benchmark results
-  bool m_header_written = false;  ///< Flag to indicate whether the CSV header has been written.
-  bool m_overwrite_file;          ///< Flag to indicate whether to overwrite the file.
+  std::ofstream m_file;         ///< Output file stream for writing benchmark results
+  bool m_header_written;        ///< Flag to indicate whether the CSV header has been written.
+  bool m_overwrite_file;        ///< Flag to indicate whether to overwrite the file.
   virtual void write_header();
 };
 

@@ -104,7 +104,7 @@ const std::unordered_map<std::string, std::string> perf_benchmark_names = {
 
 const std::unordered_map<std::string, XorecVersion> perf_benchmark_version = {
   { "perf-xorec-scalar", XorecVersion::Scalar },
-  { "perf-xorec-avx",    XorecVersion::AVX2   },
+  { "perf-xorec-avx",    XorecVersion::AVX   },
   { "perf-xorec-avx2",   XorecVersion::AVX2   },
   { "perf-xorec-avx512", XorecVersion::AVX512 }
 };
