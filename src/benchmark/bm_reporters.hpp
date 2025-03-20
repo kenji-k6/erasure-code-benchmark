@@ -6,8 +6,8 @@
 #include <fstream>
 
 /**
- * @class BenchmarkCSVReporter
- * @brief Custom benchmark reporter that outputs results in CSV format.
+ * @class ECBenchmarkCSVReporter
+ * @brief Custom benchmark reporter that outputs results in CSV format. (used for EC benchmarks)
  * 
  * This class extends `benchmark::BenchmarkReporter` to write benchmark results
  * to a CSV file. It supports appending to an existing file or overwriting it.
@@ -40,8 +40,11 @@ public:
    */
   bool ReportContext(const Context& context) override;
 
-private:
-  std::ofstream m_file; ///< Output file stream for writing benchmark results.
+protected:
+  std::ofstream m_file;           ///< Output file stream for writing benchmark results
+  bool m_header_written = false;  ///< Flag to indicate whether the CSV header has been written.
+  bool m_overwrite_file;          ///< Flag to indicate whether to overwrite the file.
+  virtual void write_header();
 };
 
 
@@ -58,8 +61,34 @@ public:
 
   void update_bar();
 
-private:
+protected:
   ProgressBar m_bar;
 };
+
+
+/**
+ * @class PerfBenchmarkCSVReporter
+ * @brief Custom benchmark reporter that outputs results in CSV format. (used for performance benchmarks)
+ * 
+ * This class extends `benchmark::BenchmarkReporter` to write benchmark results
+ * to a CSV file. It supports appending to an existing file or overwriting it.
+ */
+class PerfBenchmarkCSVReporter : public BenchmarkCSVReporter {
+public:
+  explicit PerfBenchmarkCSVReporter(const std::string& output_file, bool overwrite_file) : BenchmarkCSVReporter(output_file, overwrite_file) { };
+  void ReportRuns(const std::vector<Run>& runs) override;
+
+protected:
+  void write_header() override;
+};
+
+
+class PerfBenchmarkProgressReporter : public BenchmarkProgressReporter {
+public:
+  explicit PerfBenchmarkProgressReporter(int num_runs) : BenchmarkProgressReporter(num_runs) { };
+  void ReportRuns(const std::vector<Run>& runs) override;
+  bool ReportContext(const Context& context) override;
+};
+
 
 #endif // BM_REPORTERS_HPP
