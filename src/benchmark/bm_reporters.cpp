@@ -122,6 +122,7 @@ void PerfBenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
 
   for (const auto& run : runs) {
     m_file  << "\"" << run.benchmark_name() << "\","
+            << static_cast<uint32_t>(run.counters.find("xorec_version")->second.value) << ","
             << run.iterations << ","
             << static_cast<uint64_t>(run.counters.find("block_size_B")->second.value) << ","
             << run.counters.find("CYCLES")->second.value << ","
@@ -131,6 +132,7 @@ void PerfBenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
 }
 void PerfBenchmarkCSVReporter::write_header() {
   m_file << "name,"
+         << "xorec_version,"
          << "num_iterations,"
          << "block_size_B,"
          << "num_cycles,"

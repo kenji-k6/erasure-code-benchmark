@@ -102,6 +102,12 @@ const std::unordered_map<std::string, std::string> perf_benchmark_names = {
   { "perf-xorec-avx512", "Theoretical XOR-EC (AVX512)" }
 };
 
+const std::unordered_map<std::string, XorecVersion> perf_benchmark_version = {
+  { "perf-xorec-scalar", XorecVersion::Scalar },
+  { "perf-xorec-avx",    XorecVersion::AVX2   },
+  { "perf-xorec-avx2",   XorecVersion::AVX2   },
+  { "perf-xorec-avx512", XorecVersion::AVX512 }
+};
 
 static void usage() {
   std::cerr << "Usage: ec-benchmark [options]\n\n"
@@ -525,7 +531,7 @@ static void get_perf_configs(std::vector<BenchmarkConfig>& configs) {
       {},
       FIXED_NUM_ORIGINAL_BLOCKS,
       FIXED_NUM_RECOVERY_BLOCKS,
-      false,
+      true,
       { XorecVersion::Scalar, false, false, false, false, false },
       nullptr
     };
@@ -631,6 +637,7 @@ static std::vector<BenchmarkTuple> get_perf_benchmarks(std::vector<BenchmarkConf
     for (auto& inp_name : selected_perf_benchmarks) {
       auto bm_name = get_perf_benchmark_name(inp_name);
       auto bm_func = get_perf_benchmark_func(inp_name);
+      config.xorec_params.version = perf_benchmark_version.at(inp_name);
       benchmarks.push_back({ bm_name, bm_func, config });
     }
   }

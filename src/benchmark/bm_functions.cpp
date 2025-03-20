@@ -51,6 +51,11 @@ void BM_XOREC_GPU_CMP(benchmark::State& state, const BenchmarkConfig& config) {
 
 
 
+static void perf_bm_set_counters(benchmark::State& state, const BenchmarkConfig& config) {
+  state.counters["block_size_B"] = config.block_size;
+  state.counters["xorec_version"] = static_cast<int>(config.xorec_params.version);
+}
+
 void BM_XOR_BLOCKS_SCALAR(benchmark::State& state, const BenchmarkConfig& config) {
   std::unique_ptr<uint8_t[]> src(new uint8_t[config.block_size]);
   std::unique_ptr<uint8_t[]> dest(new uint8_t[config.block_size]);
@@ -60,7 +65,7 @@ void BM_XOR_BLOCKS_SCALAR(benchmark::State& state, const BenchmarkConfig& config
     xorec_xor_blocks_scalar(dest.get(), src.get(), block_size);
   }
 
-  state.counters["block_size_B"] = config.block_size;
+  perf_bm_set_counters(state, config);
 }
 
 void BM_XOR_BLOCKS_AVX(benchmark::State& state, const BenchmarkConfig& config) {
@@ -72,7 +77,7 @@ void BM_XOR_BLOCKS_AVX(benchmark::State& state, const BenchmarkConfig& config) {
     xorec_xor_blocks_avx(dest.get(), src.get(), block_size);
   }
 
-  state.counters["block_size_B"] = config.block_size;
+  perf_bm_set_counters(state, config);
 }
 
 void BM_XOR_BLOCKS_AVX2(benchmark::State& state, const BenchmarkConfig& config) {
@@ -84,7 +89,7 @@ void BM_XOR_BLOCKS_AVX2(benchmark::State& state, const BenchmarkConfig& config) 
     xorec_xor_blocks_avx2(dest.get(), src.get(), block_size);
   }
 
-  state.counters["block_size_B"] = config.block_size;
+  perf_bm_set_counters(state, config);
 }
 
 void BM_XOR_BLOCKS_AVX512(benchmark::State& state, const BenchmarkConfig& config) {
@@ -96,5 +101,5 @@ void BM_XOR_BLOCKS_AVX512(benchmark::State& state, const BenchmarkConfig& config
     xorec_xor_blocks_avx512(dest.get(), src.get(), block_size);
   }
 
-  state.counters["block_size_B"] = config.block_size;
+  perf_bm_set_counters(state, config);
 }
