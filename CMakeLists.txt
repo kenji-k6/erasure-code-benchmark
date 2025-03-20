@@ -79,6 +79,13 @@ set_target_properties(isal PROPERTIES
   IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/isa-l/.libs/libisal.a
 )
 
+# Add libpf,
+add_library(libpfm STATIC IMPORTED)
+set_target_properties(libpfm PROPERTIES
+  IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/lib/libpfm.a
+)
+
+
 
 
 # Include directories
@@ -89,11 +96,11 @@ target_include_directories(ec-benchmark PRIVATE
   ${CMAKE_SOURCE_DIR}/src/benchmark
   ${CMAKE_SOURCE_DIR}/libraries/leopard
   ${CMAKE_SOURCE_DIR}/libraries/isa-l/include
+  ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/include
 )
 
 
 # CUDA Stuff
-set(CUDA_TOOLKIT_ROOT_DIR /apps/ault/spack/opt/spack/linux-centos8-zen2/gcc-10.2.0/cuda-11.4.0-udyaakpt7oztg7gnj764dhkhdf5ory5d)
 find_package(CUDA REQUIRED)
 
 # Include CUDA headers and libraries
@@ -106,6 +113,7 @@ target_link_libraries(ec-benchmark PRIVATE
   cm256
   wirehair
   isal
+  libpfm
   benchmark::benchmark
   OpenMP::OpenMP_CXX
   ${CUDA_LIBRARIES}
