@@ -95,7 +95,7 @@ def plot_theoretical_bounds(ec_df: pd.DataFrame, perf_dfs: Dict[int, pd.DataFram
 
   for version in available_version:
     perf_df = perf_dfs[version.value]
-    label = perf_dfs.at[0, "name"]
+    label = perf_df.iloc[0]["name"]
     color = THEORETICAL_BOUND_COLORS[version]
     y_values = params_df.apply(
       lambda row: func(
