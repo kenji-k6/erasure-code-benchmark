@@ -79,11 +79,16 @@ set_target_properties(isal PROPERTIES
   IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/isa-l/.libs/libisal.a
 )
 
-# Add libpf,
-add_library(libpfm STATIC IMPORTED)
-set_target_properties(libpfm PROPERTIES
+# Add libpfm
+add_library(PFM STATIC IMPORTED)
+set_target_properties(PFM PROPERTIES
   IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/lib/libpfm.a
 )
+
+# Enable libpfm for benchmarking (needed for counting cycles, instructions, etc.)
+set(BENCHMARK_ENABLE_LIBPFM ON CACHE BOOL "Enable libpfm for performance counters")
+
+
 
 
 
@@ -113,7 +118,7 @@ target_link_libraries(ec-benchmark PRIVATE
   cm256
   wirehair
   isal
-  libpfm
+  PFM
   benchmark::benchmark
   OpenMP::OpenMP_CXX
   ${CUDA_LIBRARIES}
