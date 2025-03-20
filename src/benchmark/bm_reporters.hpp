@@ -51,7 +51,7 @@ protected:
 
 class BenchmarkProgressReporter : public benchmark::BenchmarkReporter {
 public:
-  explicit BenchmarkProgressReporter(int num_runs);
+  explicit BenchmarkProgressReporter(int num_runs, std::chrono::system_clock::time_point start_time);
 
   ~BenchmarkProgressReporter() override;
 
@@ -85,7 +85,7 @@ protected:
 
 class PerfBenchmarkProgressReporter : public BenchmarkProgressReporter {
 public:
-  explicit PerfBenchmarkProgressReporter(int num_runs) : BenchmarkProgressReporter(num_runs) { };
+  explicit PerfBenchmarkProgressReporter(int num_runs, std::chrono::system_clock::time_point start_time) : BenchmarkProgressReporter(num_runs, start_time) { };
   void ReportRuns(const std::vector<Run>& runs) override;
   bool ReportContext(const Context& context) override;
 };

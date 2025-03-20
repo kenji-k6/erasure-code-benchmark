@@ -21,12 +21,12 @@ public:
    * @param total_steps The total number of iterations (must be > 0).
    * @param out The output stream to print the progress bar (default: std::cerr).
    */
-  explicit ProgressBar(int total_steps, std::ostream& out=std::cerr)
-    : total_steps_(total_steps),
-      output_(out),
-      start_time_(std::chrono::system_clock::now()) {
+  explicit ProgressBar(int total_steps, std::chrono::system_clock::time_point start_time=std::chrono::system_clock::now(), std::ostream& out=std::cerr)
+    : m_total_steps(total_steps),
+      m_start_time(start_time),
+      m_output(out) {
     
-    if (total_steps_ <= 0) throw std::invalid_argument("Number of iterations must be > 0");
+    if (m_total_steps <= 0) throw std::invalid_argument("Number of iterations must be > 0");
     }
   
 
@@ -41,9 +41,9 @@ public:
    * @brief Resets the progress bar state.
    */
   void reset() {
-    current_step_ = 0;
-    last_percentage_ = 0;
-    first_update_called_ = false;
+    m_current_step = 0;
+    m_last_percentage = 0;
+    m_first_update_called = false;
   }
 
 
@@ -51,48 +51,47 @@ public:
    * @brief Updates the progress bar with the current step.
    */
   void update() {
-    if (!first_update_called_) {
+    if (!m_first_update_called) {
       initialize_bar();
-      first_update_called_ = true;
+      m_first_update_called = true;
     } else {
-      ++current_step_;
+      ++m_current_step;
     }
 
-    int percentage = (current_step_ * 100) / (total_steps_ - 1);
-    if (percentage < last_percentage_) return;
+    int percentage = (m_current_step * 100) / (m_total_steps - 1);
+    if (percentage < m_last_percentage) return;
     if (percentage > 100) percentage = 100;
 
     redraw_bar(percentage);
     print_elapsed_time();
 
-    last_percentage_ = percentage;
-    output_ << std::flush;
+    m_last_percentage = percentage;
+    m_output << std::flush;
   }
 
 
 private:
-  int current_step_ = 0;                              ///< Current progress step.
-  int total_steps_;                                   ///< Total steps in the process.
-  int last_percentage_ = 0;                           ///< Last printed percentage to avoid redundant updates.
-  bool first_update_called_ = false;                  ///< Flag to check if the first update is called.
+  int m_current_step = 0;                              ///< Current progress step.
+  int m_total_steps;                                   ///< Total steps in the process.
+  int m_last_percentage = 0;                           ///< Last printed percentage to avoid redundant updates.
+  bool m_first_update_called = false;                  ///< Flag to check if the first update is called.
 
-  const std::string done_char_ = "█";                 ///< Character for completed part of the progress bar.
-  const std::string todo_char_ = " ";                 ///< Character for remaining part of the progress bar.
-  const std::string open_bracket_ = "[";              ///< Left boundary of the progress bar.
-  const std::string close_bracket_ = "]";             ///< Right boundary of the progress bar.
+  const std::string m_done_char = "█";                 ///< Character for completed part of the progress bar.
+  const std::string m_todo_char = " ";                 ///< Character for remaining part of the progress bar.
+  const std::string m_open_bracket = "[";              ///< Left boundary of the progress bar.
+  const std::string m_close_bracket = "]";             ///< Right boundary of the progress bar.
 
-  std::ostream& output_;                              ///< Output stream for the progress bar.
-  std::chrono::system_clock::time_point start_time_;  ///< Start time for elapsed time tracking.
+  std::chrono::system_clock::time_point m_start_time;  ///< Start time for elapsed time tracking.
+  std::ostream& m_output;                              ///< Output stream for the progress bar.
 
 
   /**
    * @brief Initializes the progress bar on the first udate call.
    */
   void initialize_bar() {
-    output_ << '\n' << open_bracket_;
-    for (int i = 0; i < 50; ++i) output_ << todo_char_;
-    output_ << close_bracket_ << "\033[1;31m" << " 0%" << "\033[1;33m" << " (" << 0 << '/' << total_steps_ << ')' << "\033[0m" << '\n';
-    start_time_ = std::chrono::system_clock::now();
+    m_output << '\n' << m_open_bracket;
+    for (int i = 0; i < 50; ++i) m_output << m_todo_char;
+    m_output << m_close_bracket << "\033[1;31m" << " 0%" << "\033[1;33m" << " (" << 0 << '/' << m_total_steps << ')' << "\033[0m" << '\n';
   }
 
 
@@ -101,23 +100,23 @@ private:
    * @param percentage The progress percentage to display
    */
   void redraw_bar(int percentage) {
-    output_ << "\033[A\033[K\033[A\033[K\033[A\033[K\n"; // Clear previous output
-    output_ << open_bracket_;
+    m_output << "\033[A\033[K\033[A\033[K\033[A\033[K\n"; // Clear previous output
+    m_output << m_open_bracket;
 
     // Compute filled portion of the progress bar
     int completed = percentage / 2;
 
-    output_ << "\033[32m"; // Green color for completed part
-    for (int i = 0; i < completed; ++i) output_ << done_char_;
-    output_ << "\033[0m"; // Reset color
+    m_output << "\033[32m"; // Green color for completed part
+    for (int i = 0; i < completed; ++i) m_output << m_done_char;
+    m_output << "\033[0m"; // Reset color
 
-    for (int i = completed; i < 50; ++i) output_ << todo_char_;
+    for (int i = completed; i < 50; ++i) m_output << m_todo_char;
     
-    output_ << close_bracket_                                       // Close progress bar
+    m_output << m_close_bracket                                       // Close progress bar
             << "\033[1;39m"                                         // Bold, red text for percentage
             << ' ' << percentage << '%'                             // Print percentage
             << "\033[1;33m"                                         // Bold, yellow text for progress relative
-            << " (" << current_step_ << '/' << total_steps_ << ')'  // Print progress relative to total iterations
+            << " (" << m_current_step << '/' << m_total_steps << ')'  // Print progress relative to total iterations
             << "\033[0m"                                            // Reset text style
             << '\n';                                                // Move to next line
   
@@ -129,13 +128,13 @@ private:
    */
   void print_elapsed_time() {
     auto now = std::chrono::system_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - start_time_);
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - m_start_time);
 
     int hours = static_cast<int>(duration.count() / 3600);
     int minutes = static_cast<int>((duration.count() % 3600) / 60);
     int seconds = static_cast<int>(duration.count() % 60);
 
-    output_ << "\033[1;31m" << "Elapsed time: " << "\033[33m"
+    m_output << "\033[1;31m" << "Elapsed time: " << "\033[33m"
             << std::setw(2) << std::setfill('0') << hours << ':'
             << std::setw(2) << std::setfill('0') << minutes << ':'
             << std::setw(2) << std::setfill('0') << seconds

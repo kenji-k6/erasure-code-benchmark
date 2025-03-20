@@ -93,7 +93,7 @@ void BenchmarkCSVReporter::write_header() {
 
 
 
-BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs) : m_bar(num_runs, std::cout) { }
+BenchmarkProgressReporter::BenchmarkProgressReporter(int num_runs, std::chrono::system_clock::time_point start_time) : m_bar(num_runs, start_time, std::cout) { }
 void BenchmarkProgressReporter::update_bar() { m_bar.update(); }
 BenchmarkProgressReporter::~BenchmarkProgressReporter() {}
 void BenchmarkProgressReporter::ReportRuns([[maybe_unused]] const std::vector<Run>& runs) { return; }

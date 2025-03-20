@@ -38,6 +38,8 @@ bool INIT_XOREC_CPU_CONFIGS = false;
 bool INIT_XOREC_UNIFIED_PTR_CONFIGS = false;
 bool INIT_XOREC_GPU_PTR_CONFIGS = false;
 
+std::chrono::system_clock::time_point START_TIME;
+
 
 
 enum class TouchUnifiedMemory {
@@ -652,7 +654,7 @@ static void run_ec_benchmarks(std::vector<BenchmarkConfig>& configs) {
   char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
 
   std::vector<BenchmarkTuple> benchmarks = get_ec_benchmarks(configs);
-  std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(NUM_ITERATIONS * benchmarks.size());
+  std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(NUM_ITERATIONS * benchmarks.size(), START_TIME);
   std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(RAW_DIR + RESULT_DIR + EC_OUTPUT_FILE_NAME, OVERWRITE_FILE);
 
   benchmark::ClearRegisteredBenchmarks();
@@ -680,7 +682,7 @@ static void run_perf_benchmarks(std::vector<BenchmarkConfig>& configs) {
 
   std::vector<BenchmarkTuple> benchmarks = get_perf_benchmarks(configs);
   // For the performance benchmarks we only report the runs, not the individual iterations
-  std::unique_ptr<PerfBenchmarkProgressReporter> console_reporter = std::make_unique<PerfBenchmarkProgressReporter>(benchmarks.size());
+  std::unique_ptr<PerfBenchmarkProgressReporter> console_reporter = std::make_unique<PerfBenchmarkProgressReporter>(benchmarks.size(), START_TIME);
   std::unique_ptr<PerfBenchmarkCSVReporter> csv_reporter = std::make_unique<PerfBenchmarkCSVReporter>(RAW_DIR + RESULT_DIR + PERF_OUTPUT_FILE_NAME, OVERWRITE_FILE);
 
   benchmark::ClearRegisteredBenchmarks();
@@ -712,6 +714,7 @@ void get_configs(std::vector<BenchmarkConfig>& ec_configs, std::vector<std::vect
 }
 
 void run_benchmarks(std::vector<BenchmarkConfig>& ec_configs, std::vector<BenchmarkConfig>& perf_configs) {
+  START_TIME = std::chrono::system_clock::now();
   ensure_result_dir();
   if (RUN_EC_BM) run_ec_benchmarks(ec_configs);
   if (RUN_PERF_BM) run_perf_benchmarks(perf_configs);
