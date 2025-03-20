@@ -1,12 +1,12 @@
 /**
- * @file cm256_benchmark.cpp
+ * @file cm256_bm.cpp
  * @brief Benchmark implementation for the CM256 EC Library
  * 
- * Documentation can be found in cm256_benchmark.h and abstract_benchmark.h
+ * Documentation can be found in cm256_bm.h and abstract_bm.h
  */
 
  
-#include "cm256_benchmark.hpp"
+#include "cm256_bm.hpp"
 #include "utils.hpp"
 
 CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {

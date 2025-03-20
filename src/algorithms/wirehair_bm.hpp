@@ -1,7 +1,7 @@
-#ifndef WIREHAIR_BENCHMARK_HPP
-#define WIREHAIR_BENCHMARK_HPP
+#ifndef WIREHAIR_BM_HPP
+#define WIREHAIR_BM_HPP
 
-#include "abstract_benchmark.hpp"
+#include "abstract_bm.hpp"
 #include "wirehair/wirehair.h"
 
 
@@ -38,4 +38,4 @@ private:
   WirehairCodec m_decoder;       ///< Wirehair decoder instance
 };
 
-#endif // WIREHAIR_BENCHMARK_HPP
+#endif // WIREHAIR_BM_HPP

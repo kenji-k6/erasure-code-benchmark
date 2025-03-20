@@ -1,7 +1,7 @@
-#ifndef CM256_BENCHMARK_HPP
-#define CM256_BENCHMARK_HPP
+#ifndef CM256_BM_HPP
+#define CM256_BM_HPP
 
-#include "abstract_benchmark.hpp"
+#include "abstract_bm.hpp"
 #include "cm256.h"
 
 /**
@@ -32,4 +32,4 @@ private:
   std::vector<cm256_block> m_blocks;   ///< vector of cm256 blocks (keeps track of pointers and indices)
 };
 
-#endif // CM256_BENCHMARK_HPP
+#endif // CM256_BM_HPP

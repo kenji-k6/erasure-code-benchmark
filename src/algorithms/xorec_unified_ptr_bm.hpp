@@ -1,7 +1,7 @@
-#ifndef XOREC_UNIFIED_PTR_BENCHMARK_HPP
-#define XOREC_UNIFIED_PTR_BENCHMARK_HPP
+#ifndef XOREC_UNIFIED_PTR_BM_HPP
+#define XOREC_UNIFIED_PTR_BM_HPP
 
-#include "abstract_benchmark.hpp"
+#include "abstract_bm.hpp"
 
 
 /**
@@ -29,4 +29,4 @@ protected:
   bool m_prefetch;
 };
 
-#endif // XOREC_UNIFIED_PTR_BENCHMARK_HPP
+#endif // XOREC_UNIFIED_PTR_BM_HPP

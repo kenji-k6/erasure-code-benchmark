@@ -2,6 +2,7 @@
 #define XOREC_HPP
 
 #include "xorec_utils.hpp"
+#include "utils.hpp"
 
 
 /**
@@ -202,8 +203,7 @@ static void inline xorec_xor_blocks_avx512(void * XOREC_RESTRICT dest, const voi
     }
     
   #else
-    std::cerr << "AVX512 not supported\n";
-    exit(1);
+    throw_error("AVX512 not supported");
   #endif
 }
 
@@ -239,8 +239,7 @@ static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void 
       _mm256_storeu_si256(dest256 + 1, x1);
     }
   #else
-    std::cerr << "AVX2 not supported\n";
-    exit(1);
+    throw_error("AVX2 not supported");
   #endif
 }
 
@@ -269,8 +268,7 @@ static void inline xorec_xor_blocks_avx(void * XOREC_RESTRICT dest, const void *
       _mm_storeu_si128(dest128 + 3, x3);
     }
   #else
-    std::cerr << "AVX not supported\n";
-    exit(1);
+    throw_error("AVX not supported");
   #endif
 }
 
@@ -298,9 +296,5 @@ static void inline xorec_xor_blocks_scalar(void * XOREC_RESTRICT dest, const voi
   }
 }
 #pragma GCC pop_options
-
-
-
-
 
 #endif // XOREC_HPP

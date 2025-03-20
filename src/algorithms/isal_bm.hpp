@@ -1,7 +1,7 @@
-#ifndef ISAL_BENCHMARK_HPP
-#define ISAL_BENCHMARK_HPP
+#ifndef ISAL_BM_HPP
+#define ISAL_BM_HPP
 
-#include "abstract_benchmark.hpp"
+#include "abstract_bm.hpp"
 
 
 /**
@@ -57,4 +57,4 @@ int gf_gen_decode_matrix_simple(
   const int nerrs, const int k, [[maybe_unused]] const int m
 );
 
-#endif // ISAL_BENCHMARK_HPP
+#endif // ISAL_BM_HPP

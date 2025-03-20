@@ -1,4 +1,4 @@
-#include "xorec_gpu_cmp_benchmark.hpp"
+#include "xorec_gpu_cmp_bm.hpp"
 #include "xorec_gpu_cmp.cuh"
 #include "utils.hpp"
 

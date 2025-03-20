@@ -1,18 +1,18 @@
 /**
- * @file benchmark_functions.cpp
+ * @file bm_functions.cpp
  * @brief Implements benchmark functions for different EC algorithms.
  */
 
-#include "benchmark_functions.hpp"
-#include "benchmark_generic_runner.hpp"
-#include "cm256_benchmark.hpp"
-#include "isal_benchmark.hpp"
-#include "leopard_benchmark.hpp"
-#include "wirehair_benchmark.hpp"
-#include "xorec_benchmark.hpp"
-#include "xorec_gpu_ptr_benchmark.hpp"
-#include "xorec_unified_ptr_benchmark.hpp"
-#include "xorec_gpu_cmp_benchmark.hpp"
+#include "bm_functions.hpp"
+#include "bm_generic_runner.hpp"
+#include "cm256_bm.hpp"
+#include "isal_bm.hpp"
+#include "leopard_bm.hpp"
+#include "wirehair_bm.hpp"
+#include "xorec_bm.hpp"
+#include "xorec_gpu_ptr_bm.hpp"
+#include "xorec_unified_ptr_bm.hpp"
+#include "xorec_gpu_cmp_bm.hpp"
 
 
 

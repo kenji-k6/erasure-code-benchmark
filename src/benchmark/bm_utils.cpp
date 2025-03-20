@@ -3,9 +3,9 @@
  * @brief Implementations of utility functions for parsing and validating command-line arguments
  */
 
-#include "benchmark_utils.hpp"
+#include "bm_utils.hpp"
 #include "benchmark/benchmark.h"
-#include "benchmark_functions.hpp"
+#include "bm_functions.hpp"
 #include "utils.hpp"
 #include <getopt.h>
 

@@ -1,12 +1,12 @@
 /**
- * @file benchmark_config.cppm
+ * @file bm_config.hpp
  * @brief Defines the BenchmarkConfig struct and related constants.
  */
 
-#ifndef BENCHMARK_CONFIG_HPP
-#define BENCHMARK_CONFIG_HPP
+#ifndef BM_CONFIG_HPP
+#define BM_CONFIG_HPP
 
-#include "benchmark_reporters.hpp"
+#include "bm_reporters.hpp"
 #include "xorec_utils.hpp"
 #include <cstdint>
 #include <vector>
@@ -58,4 +58,4 @@ const std::vector<size_t> VAR_BUFFER_SIZE = { 134217728, 67108864, 33554432, 167
 const std::vector<size_t> VAR_NUM_RECOVERY_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
 const std::vector<size_t> VAR_NUM_LOST_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
 
-#endif // BENCHMARK_CONFIG_HPP
+#endif // BM_CONFIG_HPP

@@ -1,6 +1,6 @@
-#ifndef XOREC_GPU_PTR_BENCHMARK_HPP
-#define XOREC_GPU_PTR_BENCHMARK_HPP
-#include "abstract_benchmark.hpp"
+#ifndef XOREC_GPU_PTR_BM_HPP
+#define XOREC_GPU_PTR_BM_HPP
+#include "abstract_bm.hpp"
 
 /**
  * @class XorecBenchmarkGPUPtr
@@ -28,4 +28,4 @@
     XorecVersion m_version;
   };
 
-#endif // XOREC_GPU_PTR_BENCHMARK_HPP
+#endif // XOREC_GPU_PTR_BM_HPP

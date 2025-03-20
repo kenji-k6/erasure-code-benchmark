@@ -2,7 +2,7 @@
 #define UTILS_HPP
 
 #include <vector>
-#include "benchmark_reporters.hpp"
+#include "bm_reporters.hpp"
 
 /// @brief Constants for fixed values
 constexpr size_t ALIGNMENT_BYTES = 64;

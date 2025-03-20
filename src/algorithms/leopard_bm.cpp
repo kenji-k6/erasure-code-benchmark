@@ -1,12 +1,12 @@
 /**
- * @file leopard_benchmark.cpp
+ * @file leopard_bm.cpp
  * @brief Benchmark implementation for the Leopard EC library
  * 
- * Documentation can be found in leopard_benchmark.h and abstract_benchmark.h
+ * Documentation can be found in leopard_bm.h and abstract_bm.h
  */
 
 
-#include "leopard_benchmark.hpp"
+#include "leopard_bm.hpp"
 
 #include "leopard.h"
 #include "utils.hpp"

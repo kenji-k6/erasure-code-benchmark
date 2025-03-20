@@ -1,10 +1,10 @@
 /**
- * @file benchmark_reporters.cpp
+ * @file bm_reporters.cpp
  * @brief Reporter implementations for writing to the CSV output file and displaying the progress bar
  */
 
 
-#include "benchmark_reporters.hpp"
+#include "bm_reporters.hpp"
 #include <stdexcept>
 
 

@@ -1,7 +1,7 @@
-#ifndef ABSTRACT_BENCHMARK_HPP
-#define ABSTRACT_BENCHMARK_HPP
+#ifndef ABSTRACT_BM_HPP
+#define ABSTRACT_BM_HPP
 
-#include "benchmark_config.hpp"
+#include "bm_config.hpp"
 #include <cstring>
 
 /**
@@ -79,4 +79,4 @@ protected:
   const std::vector<uint32_t>& m_lost_block_idxs;
 };
 
-#endif // ABSTRACT_BENCHMARK_HPP
+#endif // ABSTRACT_BM_HPP

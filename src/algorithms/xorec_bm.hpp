@@ -1,7 +1,7 @@
-#ifndef XOREC_BENCHMARK_HPP
-#define XOREC_BENCHMARK_HPP
+#ifndef XOREC_BM_HPP
+#define XOREC_BM_HPP
 
-#include "abstract_benchmark.hpp"
+#include "abstract_bm.hpp"
 
 
 /**
@@ -31,4 +31,4 @@ protected:
   XorecVersion m_version;
 };
 
-#endif // XOREC_BENCHMARK_HPP
+#endif // XOREC_BM_HPP

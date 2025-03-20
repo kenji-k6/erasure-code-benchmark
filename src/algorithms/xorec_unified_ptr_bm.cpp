@@ -1,5 +1,5 @@
 #include "xorec.hpp"
-#include "xorec_unified_ptr_benchmark.hpp"
+#include "xorec_unified_ptr_bm.hpp"
 #include "utils.hpp"
 #include <cuda_runtime.h>
 

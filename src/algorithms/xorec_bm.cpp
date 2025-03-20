@@ -1,12 +1,12 @@
 /**
- * @file xorec_benchmark.cpp
+ * @file xorec_bm.cpp
  * @brief Benchmark implementation for the XOR-EC implementation.
  * 
- * Documentation can be found in xorec.h and abstract_benchmark.h
+ * Documentation can be found in xorec.h and abstract_bm.h
  */
 
 
-#include "xorec_benchmark.hpp"
+#include "xorec_bm.hpp"
 #include "xorec.hpp"
 #include "utils.hpp"
 

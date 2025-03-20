@@ -1,5 +1,5 @@
-#ifndef BENCHMARK_REPORTERS_HPP
-#define BENCHMARK_REPORTERS_HPP
+#ifndef BM_REPORTERS_HPP
+#define BM_REPORTERS_HPP
 
 #include <benchmark/benchmark.h>
 #include "progressbar.hpp"
@@ -62,4 +62,4 @@ private:
   ProgressBar m_bar;
 };
 
-#endif // BENCHMARK_REPORTERS_HPP
+#endif // BM_REPORTERS_HPP

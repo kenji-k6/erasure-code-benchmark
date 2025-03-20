@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
+set(CMAKE_BUILD_TYPE Release)
 
 # Prevent in-source builds
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
@@ -26,18 +27,18 @@ find_package(OpenMP REQUIRED) # needed for leopard
 
 # Add source files
 set (SOURCES
-  src/algorithms/cm256_benchmark.cpp
-  src/algorithms/isal_benchmark.cpp
-  src/algorithms/leopard_benchmark.cpp
-  src/algorithms/wirehair_benchmark.cpp
-  src/algorithms/xorec_benchmark.cpp
-  src/algorithms/xorec_unified_ptr_benchmark.cpp
-  src/algorithms/xorec_gpu_ptr_benchmark.cpp
-  src/algorithms/xorec_gpu_cmp_benchmark.cpp
+  src/algorithms/cm256_bm.cpp
+  src/algorithms/isal_bm.cpp
+  src/algorithms/leopard_bm.cpp
+  src/algorithms/wirehair_bm.cpp
+  src/algorithms/xorec_bm.cpp
+  src/algorithms/xorec_unified_ptr_bm.cpp
+  src/algorithms/xorec_gpu_ptr_bm.cpp
+  src/algorithms/xorec_gpu_cmp_bm.cpp
 
-  src/benchmark/benchmark_functions.cpp
-  src/benchmark/benchmark_reporters.cpp
-  src/benchmark/benchmark_utils.cpp
+  src/benchmark/bm_functions.cpp
+  src/benchmark/bm_reporters.cpp
+  src/benchmark/bm_utils.cpp
 
   src/utils/utils.cpp
 

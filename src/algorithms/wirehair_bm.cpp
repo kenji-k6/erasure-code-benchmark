@@ -1,12 +1,12 @@
 /**
- * @file wirehair_benchmark.cpp
+ * @file wirehair_bm.cpp
  * @brief Benchmark implementation for the Wirehair EC library
  * 
- * Documentation can be found in wirehair_benchmark.h and abstract_benchmark.h
+ * Documentation can be found in wirehair_bm.h and abstract_bm.h
  */
 
 
-#include "wirehair_benchmark.hpp"
+#include "wirehair_bm.hpp"
 
 #include "utils.hpp"
 
