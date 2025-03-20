@@ -44,6 +44,7 @@ struct BenchmarkConfig {
   BenchmarkProgressReporter *progress_reporter = nullptr;
 };
 
+
 /// @typedef BenchmarkFunction
 /// @brief Type definition for benchmark functions
 using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
