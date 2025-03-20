@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
 from typing import Dict, List
+
+from psutil.tests.test_posix import df
 from utils.config import Z_VALUE
 
-def get_grouped_dataframes(inp_file: str, selected_benchmarks: List[str]) -> Dict[int, pd.DataFrame]:
-  df = pd.read_csv(inp_file)
+def get_ec_dfs(ec_file: str, selected_benchmarks: List[str]) -> Dict[int, pd.DataFrame]:
+  df = pd.read_csv(ec_file)
 
 
   df["name"] = df["name"].str.split("/", n=1).str[0]
@@ -31,4 +33,9 @@ def get_grouped_dataframes(inp_file: str, selected_benchmarks: List[str]) -> Dic
     df[f"{col}_ms_upper"] = df[f"{col}_ms_upper"] / 1e6
   
   dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
+  return dfs
+
+def get_perf_dfs(perf_file: str) -> Dict[int, pd.DataFrame]:
+  df = pd.read_csv(perf_file)
+  dfs = {xorec_version: group for xorec_version, group in df.groupby("xorec_version")}
   return dfs

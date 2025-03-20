@@ -1,10 +1,9 @@
 import argparse
 import os
-import pandas as pd
-from utils.compute import get_grouped_dataframes
+from utils.compute import get_ec_dfs, get_perf_dfs
 import utils.config as cfg
 from utils.plot import write_plot
-from utils.utils import AxType, get_benchmark_names, get_axes, ensure_paths, get_plot_id
+from utils.utils import get_benchmark_names, get_axes, ensure_paths, get_plot_id
 
 
 
@@ -12,10 +11,10 @@ from utils.utils import AxType, get_benchmark_names, get_axes, ensure_paths, get
 def main() -> None:
   parser = argparse.ArgumentParser(description="Plot benchmark results")
   parser.add_argument(
-    "--input-file",
+    "--input-dir",
     type=str,
-    help="input file name (in /results/raw/)",
-    required=True
+    help="input directory name (in /results/raw/)",
+    required=False
   )
 
   parser.add_argument(
@@ -89,12 +88,16 @@ def main() -> None:
   parser.add_argument(
     "--theoretical-bounds",
     action="store_true",
-    help="include theoretical bounds (AVX, AVX2) in the plots"
+    help="include theoretical bounds (Scalar, AVX, AVX2, AVX512) in the plots"
   )
 
   args = parser.parse_args()
 
-  cfg.INPUT_FILE = os.path.join(cfg.RAW_DIR, args.input_file)
+  if args.input_dir:
+    cfg.INPUT_DIR = args.input_dir
+
+  cfg.EC_INPUT_FILE = os.path.join(cfg.RAW_DIR, cfg.INPUT_DIR, cfg.EC_FILE_NAME)
+  cfg.PERF_INPUT_FILE = os.path.join(cfg.RAW_DIR, cfg.INPUT_DIR, cfg.PERF_FILE_NAME)
 
   if args.output_dir:
     cfg.OUTPUT_DIR = os.path.join(cfg.PLOT_DIR, args.output_dir)
@@ -114,14 +117,16 @@ def main() -> None:
   theoretical_bounds = args.theoretical_bounds
 
 
-  ensure_paths()
-  dfs = get_grouped_dataframes(cfg.INPUT_FILE, selected_benchmarks)
+  ensure_paths(check_perf_file=theoretical_bounds)
+  ec_dfs = get_ec_dfs(cfg.EC_INPUT_FILE, selected_benchmarks)
+  perf_dfs = get_perf_dfs(cfg.PERF_INPUT_FILE) if theoretical_bounds else None
 
   for x_axis in x_axes:
     plot_id = get_plot_id(x_axis)
     for y_axis in y_axes:
       write_plot(
-        df=dfs[plot_id],
+        ec_df=ec_dfs[plot_id],
+        perf_dfs=perf_dfs,
         x_axis=x_axis,
         y_axis=y_axis,
         y_scale=y_scale,
@@ -130,7 +135,6 @@ def main() -> None:
         theoretical_bounds=theoretical_bounds
       )
   return
-
 
 if __name__ == "__main__":
   main()
