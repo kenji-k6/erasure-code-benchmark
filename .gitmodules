@@ -16,3 +16,6 @@
 [submodule "libraries/google_benchmark"]
 	path = libraries/google_benchmark
 	url = https://github.com/google/benchmark.git
+[submodule "libraries/perfmon2-libpfm4"]
+	path = libraries/perfmon2-libpfm4
+	url = https://git.code.sf.net/p/perfmon2/libpfm4
