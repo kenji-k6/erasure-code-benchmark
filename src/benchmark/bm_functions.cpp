@@ -59,6 +59,8 @@ void BM_XOR_BLOCKS_SCALAR(benchmark::State& state, const BenchmarkConfig& config
   for (auto _ : state) {
     xorec_xor_blocks_scalar(dest.get(), src.get(), block_size);
   }
+
+  state.counters["block_size_B"] = config.block_size;
 }
 
 void BM_XOR_BLOCKS_AVX(benchmark::State& state, const BenchmarkConfig& config) {
@@ -69,6 +71,8 @@ void BM_XOR_BLOCKS_AVX(benchmark::State& state, const BenchmarkConfig& config) {
   for (auto _ : state) {
     xorec_xor_blocks_avx(dest.get(), src.get(), block_size);
   }
+
+  state.counters["block_size_B"] = config.block_size;
 }
 
 void BM_XOR_BLOCKS_AVX2(benchmark::State& state, const BenchmarkConfig& config) {
@@ -79,6 +83,8 @@ void BM_XOR_BLOCKS_AVX2(benchmark::State& state, const BenchmarkConfig& config) 
   for (auto _ : state) {
     xorec_xor_blocks_avx2(dest.get(), src.get(), block_size);
   }
+
+  state.counters["block_size_B"] = config.block_size;
 }
 
 void BM_XOR_BLOCKS_AVX512(benchmark::State& state, const BenchmarkConfig& config) {
@@ -89,4 +95,6 @@ void BM_XOR_BLOCKS_AVX512(benchmark::State& state, const BenchmarkConfig& config
   for (auto _ : state) {
     xorec_xor_blocks_avx512(dest.get(), src.get(), block_size);
   }
+
+  state.counters["block_size_B"] = config.block_size;
 }
