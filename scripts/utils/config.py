@@ -3,23 +3,12 @@ import os
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), 'results')
 RAW_DIR = os.path.join(RESULTS_DIR, 'raw')
 PLOT_DIR = os.path.join(RESULTS_DIR, 'plots')
+EC_FILE_NAME = "ec_results.csv"
+PERF_FILE_NAME = "perf_results.csv"
+INPUT_DIR = ""
 OUTPUT_DIR = None
-INPUT_FILE = None
-
-
-AVX_BITS = 128
-AVX_XOR_LATENCY = 1
-AVX_XOR_CPI = 0.33
-AVX_COLOR = "cornflowerblue"
-
-
-
-AVX2_BITS = 256
-AVX2_XOR_LATENCY = 1
-AVX2_XOR_CPI = 0.33
-AVX2_COLOR = "indigo"
-
-
+EC_INPUT_FILE = None
+PERF_INPUT_FILE = None
 
 
 # Z value used for plotting the confidence intervals

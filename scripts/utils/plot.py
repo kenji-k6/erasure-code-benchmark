@@ -2,10 +2,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
-from utils.config import AVX_BITS, AVX_XOR_LATENCY, AVX_XOR_CPI, AVX_COLOR, AVX2_BITS, AVX2_XOR_LATENCY, AVX2_XOR_CPI, AVX2_COLOR
 from utils.hardware_info import CPUInfo, get_cpu_info
 from utils.theoretical_bounds import get_theoretical_bound_func
-from utils.utils import AxType, get_output_path, get_col_name, get_ax_label, get_plot_id, get_plot_title
+from utils.utils import AxType, XorecVersion, get_output_path, get_col_name, get_ax_label, get_plot_id, get_plot_title
+from typing import Dict
+
+THEORETICAL_BOUND_COLORS = {
+  XorecVersion.Scalar: "cornflowerblue",
+  XorecVersion.AVX: "indigo",
+  XorecVersion.AVX2: "mediumslateblue",
+  XorecVersion.AVX512: "mediumorchid"
+}
+
 
 def plot_cache_sizes(cpu_info: CPUInfo) -> None:
   """Plot the cache sizes on the graph."""
@@ -13,11 +21,11 @@ def plot_cache_sizes(cpu_info: CPUInfo) -> None:
   plt.axvline(x=cpu_info.l3_cache_size_KiB, color="green", linestyle="--", label="L3 Cache Size")
 
 
-def plot_xticks(df: pd.DataFrame, x_axis: AxType) -> None:
+def plot_xticks(ec_df: pd.DataFrame, x_axis: AxType) -> None:
   """Plot the x-axis ticks."""
   ax = plt.gca()
   x_col = get_col_name(x_axis)
-  x_ticks = sorted(df[x_col].unique())
+  x_ticks = sorted(ec_df[x_col].unique())
 
   if x_axis == AxType.BUF_SIZE:
     x_ticklabels = [(lambda x: f"{x//1024} MiB" if x >= 1024 else f"{x} KiB")(x) for x in x_ticks]
@@ -42,7 +50,7 @@ def plot_yticks() -> None:
   ax.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]))
 
 
-def plot_confidence_intervals(df: pd.DataFrame, x_axis: AxType, y_axis: AxType) -> None:
+def plot_confidence_intervals(ec_df: pd.DataFrame, x_axis: AxType, y_axis: AxType) -> None:
   """Plot the confidence intervals."""
   x_col = get_col_name(x_axis)
   y_col = get_col_name(y_axis)
@@ -50,14 +58,14 @@ def plot_confidence_intervals(df: pd.DataFrame, x_axis: AxType, y_axis: AxType) 
   up_err_col = f"{y_col}_upper"
   ax = plt.gca()
 
-  for name, group in df.groupby("name"):
+  for name, group in ec_df.groupby("name"):
     plt.errorbar(
       group[x_col],
       group[y_col],
       yerr=[group[low_err_col].to_numpy(), group[up_err_col].to_numpy()],
       fmt='o',
       color=ax.get_legend().legend_handles[
-        df["name"]
+        ec_df["name"]
         .unique()
         .tolist()
         .index(name)
@@ -66,11 +74,11 @@ def plot_confidence_intervals(df: pd.DataFrame, x_axis: AxType, y_axis: AxType) 
     )
 
 
-def plot_avx_avx2_xor(df: pd.DataFrame, x_axis: AxType, y_axis: AxType, cpu_info: CPUInfo) -> None:
+def plot_theoretical_bounds(ec_df: pd.DataFrame, perf_dfs: Dict[int, pd.DataFrame], x_axis: AxType, y_axis: AxType, cpu_info: CPUInfo) -> None:
   x_col = get_col_name(x_axis)
   func = get_theoretical_bound_func(y_axis)
 
-  params_df = df[[
+  params_df = ec_df[[
     "tot_data_size_KiB",
     "block_size_B",
     "num_data_blocks",
@@ -78,44 +86,35 @@ def plot_avx_avx2_xor(df: pd.DataFrame, x_axis: AxType, y_axis: AxType, cpu_info
     "num_lost_blocks"
   ]].drop_duplicates().sort_values(by=x_col, ascending=True)
 
+  available_version = [XorecVersion(x) for x in perf_dfs.keys()]
+
   x_values = params_df[x_col].unique()
 
-  y_values_AVX = params_df.apply(
-    lambda row: func(
-      AVX_XOR_LATENCY,
-      AVX_XOR_CPI,
-      AVX_BITS,
-      cpu_info.clock_rate_GHz,
-      row["block_size_B"],
-      row["num_data_blocks"],
-      row["num_parity_blocks"],
-      row["num_lost_blocks"]
-    ),
-    axis=1
-  ).tolist()
+  for version in available_version:
+    perf_df = perf_dfs[version.value]
+    label = perf_dfs.at[0, "name"]
+    color = THEORETICAL_BOUND_COLORS[version]
+    y_values = params_df.apply(
+      lambda row: func(
+        perf_df=perf_df,
+        clk_rate_GHz=cpu_info.clock_rate_GHz,
+        blk_size_B=row["block_size_B"],
+        num_data_blks=row["num_data_blocks"],
+        num_parity_blks=row["num_parity_blocks"],
+        num_lost_data_blks=row["num_lost_blocks"]
+      ),
+      axis=1
+    ).tolist()
 
-  y_values_AVX2 = params_df.apply(
-    lambda row: func(
-      AVX2_XOR_LATENCY,
-      AVX2_XOR_CPI,
-      AVX2_BITS,
-      cpu_info.clock_rate_GHz,
-      row["block_size_B"],
-      row["num_data_blocks"],
-      row["num_parity_blocks"],
-      row["num_lost_blocks"]
-    ),
-    axis=1
-  ).tolist()
-
-  assert(len(x_values) == len(y_values_AVX) == len(y_values_AVX2))
-  plt.plot(x_values, y_values_AVX, label="AVX XOR", color=AVX_COLOR, linestyle="--")
-  plt.plot(x_values, y_values_AVX2, label="AVX2 XOR", color=AVX2_COLOR, linestyle="--")
+    # Sanity check
+    assert(len(x_values) == len(y_values))
+    plt.plot(x_values, y_values, label=label, color=color, linestyle="--")
 
 
 
 def write_plot(
-  df: pd.DataFrame,
+  ec_df: pd.DataFrame,
+  perf_dfs: Dict[int, pd.DataFrame],
   x_axis: AxType,
   y_axis: AxType,
   y_scale: str,
@@ -123,7 +122,6 @@ def write_plot(
   cache_sizes: bool=True,
   theoretical_bounds: bool=True
 ) -> None:
-  plot_id = get_plot_id(x_axis)
   output_file = get_output_path(x_axis, y_axis, y_scale)
   cpu_info = get_cpu_info()
   x_label = get_ax_label(x_axis)
@@ -133,7 +131,7 @@ def write_plot(
 
   sns.set_theme(style="whitegrid")
   plt.figure(figsize=(10, 6))
-  sns.scatterplot(data=df, x=x_col, y=y_col, hue="name", palette="tab10")
+  sns.scatterplot(data=ec_df, x=x_col, y=y_col, hue="name", palette="tab10")
 
   plt.xlabel(x_label, fontsize=12)
   plt.ylabel(y_label, fontsize=12)
@@ -142,17 +140,17 @@ def write_plot(
   plt.yscale(y_scale)
 
   if cache_sizes and x_axis == AxType.BUF_SIZE: plot_cache_sizes(cpu_info)
-  if theoretical_bounds: plot_avx_avx2_xor(df, x_axis, y_axis, cpu_info)
-  if confidence_intervals: plot_confidence_intervals(df, x_axis, y_axis)
+  if theoretical_bounds: plot_theoretical_bounds(ec_df, perf_dfs, x_axis, y_axis, cpu_info)
+  if confidence_intervals: plot_confidence_intervals(ec_df, x_axis, y_axis)
 
   plt.legend(
     title="Libraries",
     bbox_to_anchor=(1.05, 1),
     loc="upper left"
   )
-  plt.title(get_plot_title(df, cpu_info), fontsize=12)
+  plt.title(get_plot_title(ec_df, cpu_info), fontsize=12)
 
-  plot_xticks(df, x_axis)
+  plot_xticks(ec_df, x_axis)
   if y_scale == "log": plot_yticks()
 
   plt.tight_layout()

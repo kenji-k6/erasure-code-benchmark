@@ -1,10 +1,9 @@
 import os
 import pandas as pd
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import List
 
 import utils.config as cfg
-from utils.config import RAW_DIR, OUTPUT_DIR
 from utils.hardware_info import CPUInfo
 
 class AxType(Enum):
@@ -16,6 +15,11 @@ class AxType(Enum):
   PARITY_BLKS = 5
   LOST_BLKS = 6
 
+class XorecVersion(IntEnum):
+  Scalar = 0
+  AVX = 1
+  AVX2 = 2
+  AVX512 = 3
 
 FILE_NAME_MAP = {
   AxType.ENCODE_T: "encodetime",
@@ -72,12 +76,16 @@ AX_ARG_MAP = {
 }
 
 
-def ensure_paths() -> None:
+
+
+def ensure_paths(check_perf_file: bool) -> None:
   """Ensure that the input/output directories exist."""
   for dir in [cfg.RAW_DIR, cfg.OUTPUT_DIR]:
     os.makedirs(dir, exist_ok=True)
   
-  os.path.isfile(cfg.INPUT_FILE)
+  os.path.isfile(cfg.EC_INPUT_FILE)
+  if check_perf_file:
+    os.path.isfile(cfg.PERF_INPUT_FILE)
   return
 
 
