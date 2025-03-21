@@ -90,8 +90,7 @@ const std::vector<LineTuple> lines = {
   { "", "", "",   "",                 "",                 "", "1 or 2 comma separated args (default: false)"                    },
   { "", "", "",   "--prefetch",       "true,false",       "whether data blocks from unified memory, are prefetched or", ""      },
   { "", "", "",   "",                 "",                 "fetched on-demand,", "1 or 2 comma separated args (default: false)"  },
-  { "", "", "",   "--perf-xorec",     "scalar,avx,avx2,avx512", "", ""                                                          },
-  { "", "", "",   "",                 "",                 "", "0 or more comma seperated args (default: none)"                  }
+  { "", "", "",   "--perf-xorec",     "scalar,avx,avx2,avx512", "", "0 or more comma seperated args (default: all)"             }
 };
 
 

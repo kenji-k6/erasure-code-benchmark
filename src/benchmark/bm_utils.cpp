@@ -9,6 +9,7 @@
 #include "utils.hpp"
 #include <filesystem>
 #include <getopt.h>
+#include <ranges>
 
 #include "bm_cli.hpp" //temp
 
@@ -42,24 +43,14 @@ bool INIT_XOREC_GPU_PTR_CONFIGS = false;
 
 std::chrono::system_clock::time_point START_TIME;
 
+bool RUN_XOREC_NO_PREFETCH = false;
+bool RUN_XOREC_PREFETCH = false;
 
-
-enum class TouchUnifiedMemory {
-  TOUCH_UNIFIED_MEM_TRUE = 0,
-  TOUCH_UNIFIED_MEM_FALSE = 1,
-  TOUCH_UNIFIED_MEM_ALL = 2
-};
-
-enum class XorecPrefetch {
-  XOREC_PREFETCH = 0,
-  XOREC_NO_PREFETCH = 1,
-  XOREC_ALL_PREFETCH = 2
-};
+bool RUN_XOREC_TOUCH_UNIFIED = false;
+bool RUN_XOREC_NO_TOUCH_UNIFIED = false;
 
 using BenchmarkTuple = std::tuple<std::string, BenchmarkFunction, BenchmarkConfig>;
 
-TouchUnifiedMemory TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_FALSE;
-XorecPrefetch PREFETCH = XorecPrefetch::XOREC_NO_PREFETCH;
 
 
 std::unordered_set<std::string> selected_base_ec_benchmarks;
@@ -73,7 +64,7 @@ const std::unordered_map<std::string, BenchmarkFunction> available_base_ec_bench
 };
 
 const std::unordered_map<std::string, BenchmarkFunction> available_xorec_ec_benchmarks = {
-  { "xorec",                  BM_XOREC              },
+  { "xorec-cpu",              BM_XOREC              },
   { "xorec-unified-ptr",      BM_XOREC_UNIFIED_PTR  },
   { "xorec-gpu-ptr",          BM_XOREC_GPU_PTR      },
   { "xorec-gpu-cmp",          BM_XOREC_GPU_CMP      }
@@ -84,7 +75,7 @@ const std::unordered_map<std::string, std::string> ec_benchmark_names = {
   { "isal",                 "ISA-L"                 },
   { "leopard",              "Leopard"               },
   { "wirehair",             "Wirehair"              },
-  { "xorec",                "XOR-EC"                },
+  { "xorec-cpu",            "XOR-EC (CPU)"          },
   { "xorec-unified-ptr",    "XOR-EC (Unified Ptr)"  },
   { "xorec-gpu-ptr",        "XOR-EC (GPU Ptr)"      },
   { "xorec-gpu-cmp",        "XOR-EC (GPU Cmp)"      }
@@ -116,57 +107,7 @@ const std::unordered_map<std::string, XorecVersion> perf_benchmark_version = {
 static void usage() {
   print_usage();
   print_options();
-  // std::cerr << "Usage: ec-benchmark [options]\n\n"
-
-  //           << " Help Option:\n"
-  //           << "  -h, --help                              show this help message\n\n"
-            
-  //           << " Benchmark Options:\n"
-  //           << "  -r, --result-dir=<dir_name>             specify output result subdirectory (inside /results/raw/),\n"
-  //           << "                                          will be created if it doesn't exist\n"
-  //           << "  -a, --append                            append results to the output file (default: overwrite)\n"
-  //           << "  -b, --benchmark=<ec|perf|all>           specify the type of benchmark to run (default: all)\n\n"
-
-  //           << " Erase Code Benchmarking Option\n"
-  //           << "  -i, --iterations=<num>                  number of benchmark iterations (default 10)\n\n"
-  //           << " Base Algorithm Selection:\n"
-  //           << "      --cm256                             run the CM256 benchmark\n"
-  //           << "      --isal                              run the ISA-L benchmark\n"
-  //           << "      --leopard                           run the Leopard benchmark\n"
-  //           << "      --wirehair                          run the Wirehair benchmark\n\n"
-
-  //           << " XOR-EC Algorithm Selection:\n"
-  //           << "      --xorec                             run the XOR-EC implementation (data buffer, parity buffer\n"
-  //           << "                                          & computation on CPU)\n"
-  //           << "      --xorec-unified-ptr                 run the XOR-EC implementation (data buffer in unified memory,\n"
-  //           << "                                          parity buffer & computation on CPU)\n"
-  //           << "      --xorec-gpu-ptr                     run the XOR-EC implementation (data buffer in GPU memory,\n"
-  //           << "                                          parity buffer & computation on CPU)\n"
-  //           << "      --xorec-gpu-cmp                     run the XOR-EC implementation (data buffer, parity buffer\n"
-  //           << "                                          & computation in GPU memory, bitmap in CPU memory)\n\n"
-
-  //           << " *If no algorithm is specified, all algorithms will be run.*\n\n"
-
-  //           << " XOR-EC Version Options: (relevant if --xorec or --xorec-gpu-ptr specified)\n"
-  //           << "      --scalar                            run the scalar XOR-EC implementation\n"
-  //           << "      --avx                               run the AVX XOR-EC implementation\n"
-  //           << "      --avx2                              run the AVX2 XOR-EC implementation\n"
-  //           << "      --avx512                            run the AVX512 XOR-EC implementation\n\n"
-  //           << " *If no versions are specified all 4 will be run.*\n\n"
-
-  //           << " XOR-EC GPU Options: (relevant if --xorec-gpu-ptr or --xorec-gpu-cmp specified)\n"
-  //           << "      --touch-unified-memory <true|false|all> whether to touch unified memory on the GPU before encoding/decoding\n"
-  //           << "                                          (default: false)\n"
-  //           << "      --prefetch <true|false|all>         whether to prefetch data blocks from unified memory to CPU memory, or fetch them on-demand,\n"
-  //           << "                                          only relevant if --xorec-unified-ptr is specified (default: false)\n"
-
-  //           << " Performance Benchmark Selection (if none are selected, none are run):\n"
-  //           << "      --perf-xorec-scalar                 run the theoretical XOR-EC (SCALAR) performance benchmark\n"
-  //           << "      --perf-xorec-avx                    run the theoretical XOR-EC (AVX) performance benchmark\n"
-  //           << "      --perf-xorec-avx2                   run the theoretical XOR-EC (AVX2) performance benchmark\n"
-  //           << "      --perf-xorec-avx512                 run the theoretical XOR-EC (AVX512) performance benchmark\n\n"
-  //           << " *If no versions are specified all 4 will be run.*\n\n";
-  // exit(0);
+  exit(0);
 }
 
 static void inline add_benchmark(std::string name) {
@@ -174,50 +115,46 @@ static void inline add_benchmark(std::string name) {
     selected_base_ec_benchmarks.insert(name);
   } else if (available_xorec_ec_benchmarks.find(name) != available_xorec_ec_benchmarks.end()) {
     selected_xorec_ec_benchmarks.insert(name);
-  } else {
+  } else if (available_perf_benchmarks.find(name) != available_perf_benchmarks.end()) {
     selected_perf_benchmarks.insert(name);
+  } else {
+    throw_error("Invalid benchmark: "+name);
   }
+}
+
+std::vector<std::string> get_arg_vector(std::string input) {
+  std::vector<std::string> result;
+  size_t start = 0;
+  size_t end;
+  while ((end = input.find(",", start)) != std::string::npos) {
+    result.push_back(to_lower(input.substr(start, end-start)));
+    start = end + 1;
+  }
+  result.push_back(to_lower(input.substr(start)));
+  return result;
 }
 
 void parse_args(int argc, char** argv) {
   struct option long_options[] = {
-    { "help",                 no_argument,        nullptr, 'h'  },
-    { "result-dir",           required_argument,  nullptr, 'r'  },
-    { "append",               no_argument,        nullptr, 'a'  },
-    { "benchmark",            required_argument,  nullptr, 'b'  },
-
-    { "cm256",                no_argument,        nullptr,  0   },
-    { "isal",                 no_argument,        nullptr,  0   },
-    { "leopard",              no_argument,        nullptr,  0   },
-    { "wirehair",             no_argument,        nullptr,  0   },
-    
-    { "iterations",           required_argument,  nullptr, 'i'  },
-
-    { "xorec",                no_argument,        nullptr,  0   },
-    { "xorec-unified-ptr",    no_argument,        nullptr,  0   },
-    { "xorec-gpu-ptr",        no_argument,        nullptr,  0   },
-    { "xorec-gpu-cmp",        no_argument,        nullptr,  0   },
-
-    { "scalar",               no_argument,        nullptr,  0   },
-    { "avx",                  no_argument,        nullptr,  0   },
-    { "avx2",                 no_argument,        nullptr,  0   },
-    { "avx512",               no_argument,        nullptr,  0   },
-
-    { "touch-unified-memory",     required_argument,  nullptr,  0   },
-    { "prefetch",             required_argument,  nullptr,  0   },
-
-    { "perf-xorec-scalar",    no_argument,        nullptr,  0   },
-    { "perf-xorec-avx",       no_argument,        nullptr,  0   },
-    { "perf-xorec-avx2",      no_argument,        nullptr,  0   },
-    { "perf-xorec-avx512",    no_argument,        nullptr,  0   },
-    { nullptr,                0,                  nullptr,  0   }
+    { "help",           no_argument,        nullptr, 'h'  },
+    { "result-dir",     required_argument,  nullptr, 'r'  },
+    { "append",         no_argument,        nullptr, 'a'  },
+    { "benchmark",      required_argument,  nullptr, 'b'  },
+    { "iterations",     required_argument,  nullptr, 'i'  },
+    { "base",           required_argument,  nullptr,  0   },
+    { "xorec",          required_argument,  nullptr,  0   },
+    { "simd",           required_argument,  nullptr,  0   },
+    { "touch-unified",  required_argument,  nullptr,  0   },
+    { "prefetch",       required_argument,  nullptr,  0   },
+    { "perf-xorec",     required_argument,  nullptr,  0   },
+    { nullptr,          0,                  nullptr,  0   }
   };
 
 
   int c;
   int option_index = 0;
   std::string flag;
-  std::string arg;
+  std::vector<std::string> args;
 
   while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, &option_index)) != -1) {
     switch (c) {
@@ -234,58 +171,74 @@ void parse_args(int argc, char** argv) {
         OVERWRITE_FILE = false;
         break;
       case 'b':
-        arg = to_lower(std::string(optarg));
-        if (arg == "ec") {
-          RUN_EC_BM = true;
-          RUN_PERF_BM = false;
-        } else if (arg == "perf") {
-          RUN_EC_BM = false;
-          RUN_PERF_BM = true;
-        } else if (arg == "all") {
-          RUN_PERF_BM = true;
-          RUN_EC_BM = true;
-        } else {
-          std::cerr << "Error: --benchmark option must be either 'ec', 'perf', or 'all'.\n";
-          exit(0);
+        args = get_arg_vector(std::string(optarg));
+        for (auto arg : args) {
+          if (arg == "ec") {
+            RUN_EC_BM = true;
+          } else if (arg == "perf") {
+            RUN_PERF_BM = true;
+          } else {
+            std::cerr << "Error: --benchmark option must be either 'ec', 'perf', or 'all'.\n";
+            exit(0);
+          }
         }
         break;
       case 0:
         flag = std::string(long_options[option_index].name);
+        args = get_arg_vector(std::string(optarg));
         
-        if (flag == "scalar") {
-          RUN_XOREC_SCALAR = true;
-        } else if (flag == "avx") {
-          RUN_XOREC_AVX = true;
-        } else if (flag == "avx2") {
-          RUN_XOREC_AVX2 = true;
-        } else if (flag == "avx512") {
-          RUN_XOREC_AVX512 = true;
-        } else if (flag == "touch-unified-memory") {
-          arg = to_lower(std::string(optarg));
-          if (arg == "true" || arg == "1") {
-            TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_TRUE;
-          } else if (arg == "false" || arg == "0") {
-            TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_FALSE;
-          } else if (arg == "all") {
-            TOUCH_UNIFIED_MEM = TouchUnifiedMemory::TOUCH_UNIFIED_MEM_ALL;
-          } else {
-            std::cerr << "Error: --touch-gpu-memory option must be either 'true', 'false', or 'all'.\n";
-            exit(0);
+        if (flag == "base") {
+          for (auto arg : args) {
+            add_benchmark(arg);
           }
-        }  else if (flag == "prefetch"){
-          arg = to_lower(std::string(optarg));
-          if (arg == "true" || arg == "1") {
-            PREFETCH = XorecPrefetch::XOREC_PREFETCH;
-          } else if (arg == "false" || arg == "0") {
-            PREFETCH = XorecPrefetch::XOREC_NO_PREFETCH;
-          } else if (arg == "all") {
-            PREFETCH = XorecPrefetch::XOREC_ALL_PREFETCH;
-          } else {
-            std::cerr << "Error: --prefetch option must be either 'true', 'false', or 'all'.\n";
-            exit(0);
+        } else if (flag == "xorec") {
+          for (auto arg : args) {
+            add_benchmark("xorec-"+arg);
+          }
+        } else if (flag == "simd") {
+          for (auto arg : args) {
+            if (arg == "scalar") {
+             RUN_XOREC_SCALAR = true;
+            } else if (arg == "avx") {
+              RUN_XOREC_AVX = true;
+            } else if (arg == "avx2") {
+              RUN_XOREC_AVX2 = true;
+            } else if (arg == "avx512") {
+              RUN_XOREC_AVX512 = true;
+            } else {
+              std::cerr << "Error: --simd option must be either 'scalar', 'avx', 'avx2', or 'avx512'.\n";
+              exit(0);
+            }
+          }
+        } else if (flag == "touch-unified") {
+          for (auto arg : args) {
+            if (arg == "true" || arg == "1") {
+              RUN_XOREC_TOUCH_UNIFIED = true;
+            } else if (arg == "false" || arg == "0") {
+              RUN_XOREC_NO_TOUCH_UNIFIED = true;
+            } else {
+              std::cerr << "Error: --touch-unified option must be either 'true' or 'false'.\n";
+              exit(0);
+            }
+          }
+        } else if (flag == "prefetch") {
+          for (auto arg : args) {
+            if (arg == "true" || arg == "1") {
+              RUN_XOREC_PREFETCH = true;
+            } else if (arg == "false" || arg == "0") {
+              RUN_XOREC_NO_PREFETCH = true;
+            } else {
+              std::cerr << "Error: --prefetch option must be either 'true' or 'false'.\n";
+              exit(0);
+            }
+          }
+        } else if (flag == "perf-xorec") {
+          for (auto arg : args) {
+            add_benchmark("perf-xorec-"+arg);
           }
         } else {
-          add_benchmark(flag);
+          std::cerr << "Error: Invalid option: " << flag << '\n';
+          exit(0);
         }
         break;
       default:
@@ -294,18 +247,12 @@ void parse_args(int argc, char** argv) {
     }
   }
 
-  if (!RUN_XOREC_SCALAR && !RUN_XOREC_AVX && !RUN_XOREC_AVX2 && !RUN_XOREC_AVX512) {
-    RUN_XOREC_SCALAR = true;
-    RUN_XOREC_AVX = true;
-    RUN_XOREC_AVX2 = true;
-    RUN_XOREC_AVX512 = true;
-  }
-
+  
   if (selected_base_ec_benchmarks.empty() && selected_xorec_ec_benchmarks.empty()) {
     for (const auto& [name, _] : available_base_ec_benchmarks) {
       add_benchmark(name);
     }
-
+    
     for (const auto& [name, _] : available_xorec_ec_benchmarks) {
       add_benchmark(name);
     }
@@ -315,6 +262,26 @@ void parse_args(int argc, char** argv) {
     for (const auto& [name, _] : available_perf_benchmarks) {
       add_benchmark(name);
     }
+  }
+  
+  if (!RUN_XOREC_SCALAR && !RUN_XOREC_AVX && !RUN_XOREC_AVX2 && !RUN_XOREC_AVX512) {
+    RUN_XOREC_SCALAR = true;
+    RUN_XOREC_AVX = true;
+    RUN_XOREC_AVX2 = true;
+    RUN_XOREC_AVX512 = true;
+  }
+
+  if (!RUN_XOREC_TOUCH_UNIFIED && !RUN_XOREC_NO_TOUCH_UNIFIED) {
+    RUN_XOREC_NO_TOUCH_UNIFIED = true;
+  }
+
+  if (!RUN_XOREC_PREFETCH && !RUN_XOREC_NO_PREFETCH) {
+    RUN_XOREC_NO_PREFETCH = true;
+  }
+
+  if (!RUN_EC_BM && !RUN_PERF_BM) {
+    RUN_EC_BM = true;
+    RUN_PERF_BM = true;
   }
 }
 
@@ -389,25 +356,25 @@ static void get_xorec_unified_ptr_configs(std::vector<BenchmarkConfig>& configs)
     BenchmarkConfig config = configs[i];
     config.xorec_params.unified_mem = true;
 
-    if (PREFETCH == XorecPrefetch::XOREC_PREFETCH  || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
+    if (RUN_XOREC_PREFETCH) {
       config.xorec_params.prefetch = true;
       prefetch_configs.push_back(config);
     }
 
-    if (PREFETCH == XorecPrefetch::XOREC_NO_PREFETCH || PREFETCH == XorecPrefetch::XOREC_ALL_PREFETCH) {
+    if (RUN_XOREC_NO_PREFETCH) {
       config.xorec_params.prefetch = false;
       prefetch_configs.push_back(config);
     }
   }
 
   for (BenchmarkConfig config : prefetch_configs) {
-    if (TOUCH_UNIFIED_MEM == TouchUnifiedMemory::TOUCH_UNIFIED_MEM_TRUE || TOUCH_UNIFIED_MEM == TouchUnifiedMemory::TOUCH_UNIFIED_MEM_ALL) {
+    if (RUN_XOREC_TOUCH_UNIFIED) {
       config.xorec_params.touch_unified_mem = true;
       configs.push_back(config);
       ++NUM_XOREC_UNIFIED_PTR_CONFIGS;
     }
 
-    if (TOUCH_UNIFIED_MEM == TouchUnifiedMemory::TOUCH_UNIFIED_MEM_FALSE || TOUCH_UNIFIED_MEM == TouchUnifiedMemory::TOUCH_UNIFIED_MEM_ALL) {
+    if (RUN_XOREC_NO_TOUCH_UNIFIED) {
       config.xorec_params.touch_unified_mem = false;
       configs.push_back(config);
       ++NUM_XOREC_UNIFIED_PTR_CONFIGS;
@@ -602,9 +569,9 @@ static std::vector<BenchmarkTuple> get_ec_benchmarks(std::vector<BenchmarkConfig
 
   // XOR-EC CPU benchmarks
   for (; it != configs.begin()+NUM_BASE_CONFIGS+NUM_XOREC_CPU_CONFIGS; ++it) {
-    if (selected_xorec_ec_benchmarks.find("xorec") != selected_xorec_ec_benchmarks.end()) {
-      auto bm_name = get_ec_benchmark_name("xorec", *it);
-      auto bm_func = get_ec_benchmark_func("xorec");
+    if (selected_xorec_ec_benchmarks.find("xorec-cpu") != selected_xorec_ec_benchmarks.end()) {
+      auto bm_name = get_ec_benchmark_name("xorec-cpu", *it);
+      auto bm_func = get_ec_benchmark_func("xorec-cpu");
       benchmarks.push_back({ bm_name, bm_func, *it });
     }
   }
