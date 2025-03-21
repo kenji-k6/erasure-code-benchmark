@@ -65,6 +65,3 @@ dist/
 
 # Ignore environment variable files (e.g., .env for sensitive data)
 .env
-
-bm_cli.cpp
-bm_cli.hpp
