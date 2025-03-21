@@ -41,6 +41,7 @@ set (SOURCES
   src/benchmark/bm_utils.cpp
 
   src/utils/utils.cpp
+  src/utils/bm_cli.cpp
 
   src/xorec/xorec_gpu_cmp.cu
   src/xorec/xorec_utils.cpp

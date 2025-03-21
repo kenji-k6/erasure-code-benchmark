@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <getopt.h>
 
+#include "bm_cli.hpp" //temp
+
 // Global variable definitions
 constexpr const char* RAW_DIR = "../results/raw/";
 std::string RESULT_DIR = "";
@@ -112,57 +114,59 @@ const std::unordered_map<std::string, XorecVersion> perf_benchmark_version = {
 };
 
 static void usage() {
-  std::cerr << "Usage: ec-benchmark [options]\n\n"
+  print_usage();
+  print_options();
+  // std::cerr << "Usage: ec-benchmark [options]\n\n"
 
-            << " Help Option:\n"
-            << "  -h, --help                              show this help message\n\n"
+  //           << " Help Option:\n"
+  //           << "  -h, --help                              show this help message\n\n"
             
-            << " Benchmark Options:\n"
-            << "  -r, --result-dir=<dir_name>             specify output result subdirectory (inside /results/raw/),\n"
-            << "                                          will be created if it doesn't exist\n"
-            << "  -a, --append                            append results to the output file (default: overwrite)\n"
-            << "  -b, --benchmark=<ec|perf|all>           specify the type of benchmark to run (default: all)\n\n"
+  //           << " Benchmark Options:\n"
+  //           << "  -r, --result-dir=<dir_name>             specify output result subdirectory (inside /results/raw/),\n"
+  //           << "                                          will be created if it doesn't exist\n"
+  //           << "  -a, --append                            append results to the output file (default: overwrite)\n"
+  //           << "  -b, --benchmark=<ec|perf|all>           specify the type of benchmark to run (default: all)\n\n"
 
-            << " Erase Code Benchmarking Option\n"
-            << "  -i, --iterations=<num>                  number of benchmark iterations (default 10)\n\n"
-            << " Base Algorithm Selection:\n"
-            << "      --cm256                             run the CM256 benchmark\n"
-            << "      --isal                              run the ISA-L benchmark\n"
-            << "      --leopard                           run the Leopard benchmark\n"
-            << "      --wirehair                          run the Wirehair benchmark\n\n"
+  //           << " Erase Code Benchmarking Option\n"
+  //           << "  -i, --iterations=<num>                  number of benchmark iterations (default 10)\n\n"
+  //           << " Base Algorithm Selection:\n"
+  //           << "      --cm256                             run the CM256 benchmark\n"
+  //           << "      --isal                              run the ISA-L benchmark\n"
+  //           << "      --leopard                           run the Leopard benchmark\n"
+  //           << "      --wirehair                          run the Wirehair benchmark\n\n"
 
-            << " XOR-EC Algorithm Selection:\n"
-            << "      --xorec                             run the XOR-EC implementation (data buffer, parity buffer\n"
-            << "                                          & computation on CPU)\n"
-            << "      --xorec-unified-ptr                 run the XOR-EC implementation (data buffer in unified memory,\n"
-            << "                                          parity buffer & computation on CPU)\n"
-            << "      --xorec-gpu-ptr                     run the XOR-EC implementation (data buffer in GPU memory,\n"
-            << "                                          parity buffer & computation on CPU)\n"
-            << "      --xorec-gpu-cmp                     run the XOR-EC implementation (data buffer, parity buffer\n"
-            << "                                          & computation in GPU memory, bitmap in CPU memory)\n\n"
+  //           << " XOR-EC Algorithm Selection:\n"
+  //           << "      --xorec                             run the XOR-EC implementation (data buffer, parity buffer\n"
+  //           << "                                          & computation on CPU)\n"
+  //           << "      --xorec-unified-ptr                 run the XOR-EC implementation (data buffer in unified memory,\n"
+  //           << "                                          parity buffer & computation on CPU)\n"
+  //           << "      --xorec-gpu-ptr                     run the XOR-EC implementation (data buffer in GPU memory,\n"
+  //           << "                                          parity buffer & computation on CPU)\n"
+  //           << "      --xorec-gpu-cmp                     run the XOR-EC implementation (data buffer, parity buffer\n"
+  //           << "                                          & computation in GPU memory, bitmap in CPU memory)\n\n"
 
-            << " *If no algorithm is specified, all algorithms will be run.*\n\n"
+  //           << " *If no algorithm is specified, all algorithms will be run.*\n\n"
 
-            << " XOR-EC Version Options: (relevant if --xorec or --xorec-gpu-ptr specified)\n"
-            << "      --scalar                            run the scalar XOR-EC implementation\n"
-            << "      --avx                               run the AVX XOR-EC implementation\n"
-            << "      --avx2                              run the AVX2 XOR-EC implementation\n"
-            << "      --avx512                            run the AVX512 XOR-EC implementation\n\n"
-            << " *If no versions are specified all 4 will be run.*\n\n"
+  //           << " XOR-EC Version Options: (relevant if --xorec or --xorec-gpu-ptr specified)\n"
+  //           << "      --scalar                            run the scalar XOR-EC implementation\n"
+  //           << "      --avx                               run the AVX XOR-EC implementation\n"
+  //           << "      --avx2                              run the AVX2 XOR-EC implementation\n"
+  //           << "      --avx512                            run the AVX512 XOR-EC implementation\n\n"
+  //           << " *If no versions are specified all 4 will be run.*\n\n"
 
-            << " XOR-EC GPU Options: (relevant if --xorec-gpu-ptr or --xorec-gpu-cmp specified)\n"
-            << "      --touch-unified-memory <true|false|all> whether to touch unified memory on the GPU before encoding/decoding\n"
-            << "                                          (default: false)\n"
-            << "      --prefetch <true|false|all>         whether to prefetch data blocks from unified memory to CPU memory, or fetch them on-demand,\n"
-            << "                                          only relevant if --xorec-unified-ptr is specified (default: false)\n"
+  //           << " XOR-EC GPU Options: (relevant if --xorec-gpu-ptr or --xorec-gpu-cmp specified)\n"
+  //           << "      --touch-unified-memory <true|false|all> whether to touch unified memory on the GPU before encoding/decoding\n"
+  //           << "                                          (default: false)\n"
+  //           << "      --prefetch <true|false|all>         whether to prefetch data blocks from unified memory to CPU memory, or fetch them on-demand,\n"
+  //           << "                                          only relevant if --xorec-unified-ptr is specified (default: false)\n"
 
-            << " Performance Benchmark Selection (if none are selected, none are run):\n"
-            << "      --perf-xorec-scalar                 run the theoretical XOR-EC (SCALAR) performance benchmark\n"
-            << "      --perf-xorec-avx                    run the theoretical XOR-EC (AVX) performance benchmark\n"
-            << "      --perf-xorec-avx2                   run the theoretical XOR-EC (AVX2) performance benchmark\n"
-            << "      --perf-xorec-avx512                 run the theoretical XOR-EC (AVX512) performance benchmark\n\n"
-            << " *If no versions are specified all 4 will be run.*\n\n";
-  exit(0);
+  //           << " Performance Benchmark Selection (if none are selected, none are run):\n"
+  //           << "      --perf-xorec-scalar                 run the theoretical XOR-EC (SCALAR) performance benchmark\n"
+  //           << "      --perf-xorec-avx                    run the theoretical XOR-EC (AVX) performance benchmark\n"
+  //           << "      --perf-xorec-avx2                   run the theoretical XOR-EC (AVX2) performance benchmark\n"
+  //           << "      --perf-xorec-avx512                 run the theoretical XOR-EC (AVX512) performance benchmark\n\n"
+  //           << " *If no versions are specified all 4 will be run.*\n\n";
+  // exit(0);
 }
 
 static void inline add_benchmark(std::string name) {
