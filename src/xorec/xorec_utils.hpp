@@ -12,8 +12,8 @@
 #define XOREC_RESTRICT __restrict
 
 /// @brief Constants for the XOR-EC algorithm(s)
-constexpr size_t XOREC_BLOCK_SIZE_MULTIPLE = 64;
-constexpr size_t XOREC_MIN_BLOCK_SIZE = 64;
+constexpr size_t XOREC_BLOCK_SIZE_MULTIPLE = 256;
+constexpr size_t XOREC_MIN_BLOCK_SIZE = 256;
 constexpr size_t XOREC_MIN_DATA_BLOCKS = 1;
 constexpr size_t XOREC_MAX_DATA_BLOCKS = 128;
 constexpr size_t XOREC_MIN_PARITY_BLOCKS = 1;

@@ -186,21 +186,6 @@ static void inline xorec_xor_blocks_avx512(void * XOREC_RESTRICT dest, const voi
       _mm512_store_si512(dest512 + 2, x2);
       _mm512_store_si512(dest512 + 3, x3);
     }
-
-    if (bytes > 64) {
-      XOREC_AVX512 x0 = _mm512_xor_si512(_mm512_load_si512(dest512), _mm512_load_si512(src512));
-      XOREC_AVX512 x1 = _mm512_xor_si512(_mm512_load_si512(dest512 + 1), _mm512_load_si512(src512 + 1));
-      _mm512_store_si512(dest512, x0);
-      _mm512_store_si512(dest512 + 1, x1);
-      dest512 += 2;
-      src512 += 2;
-    }
-
-    if (bytes > 0) {
-      XOREC_AVX512 x0 = _mm512_xor_si512(_mm512_load_si512(dest512), _mm512_load_si512(src512));
-      _mm512_store_si512(dest512, x0);
-    }
-    
   #else
     throw_error("AVX512 not supported");
   #endif
@@ -228,13 +213,6 @@ static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void 
       _mm256_store_si256(dest256 + 1, x1);
       _mm256_store_si256(dest256 + 2, x2);
       _mm256_store_si256(dest256 + 3, x3);
-    }
-
-    if (bytes > 0) {
-      XOREC_AVX2 x0 = _mm256_xor_si256(_mm256_load_si256(dest256), _mm256_load_si256(src256));
-      XOREC_AVX2 x1 = _mm256_xor_si256(_mm256_load_si256(dest256 + 1), _mm256_load_si256(src256 + 1));
-      _mm256_store_si256(dest256, x0);
-      _mm256_store_si256(dest256 + 1, x1);
     }
   #else
     throw_error("AVX2 not supported");
