@@ -9,8 +9,11 @@ XorecBenchmarkUnifiedPtr::XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config
   cudaError_t err = cudaMallocManaged(reinterpret_cast<void**>(&m_data_buffer), m_block_size * m_num_original_blocks, cudaMemAttachHost); 
   if (err != cudaSuccess) throw_error("Xorec: Failed to allocate data buffer.");
 
-  m_parity_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_recovery_blocks);
-  if (!m_parity_buffer) throw_error("Xorec: Failed to allocate parity buffer.");
+  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
+    m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_block_size * m_num_recovery_blocks, 64));
+  #else
+    m_parity_buffer = reinterpret_cast<uint8_t*>(malloc(m_block_size * m_num_recovery_blocks));
+  #endif
 
   m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
   m_version = config.xorec_params.version;
@@ -25,23 +28,28 @@ XorecBenchmarkUnifiedPtr::XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config
 
 XorecBenchmarkUnifiedPtr::~XorecBenchmarkUnifiedPtr() noexcept {
   if (m_data_buffer) cudaFree(m_data_buffer);
+  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
+    if (m_parity_buffer) _mm_free(m_parity_buffer);
+  #else
+    if (m_parity_buffer) free(m_parity_buffer);
+  #endif
   cudaDeviceSynchronize();
 }
 
 int XorecBenchmarkUnifiedPtr::encode() noexcept {
   if (m_prefetch) {
-    xorec_unified_prefetch_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
+    xorec_unified_prefetch_encode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
   } else {
-    xorec_encode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
+    xorec_encode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
   }
   return 0;
 }
 
 int XorecBenchmarkUnifiedPtr::decode() noexcept {
   if (m_prefetch) {
-    xorec_unified_prefetch_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
+    xorec_unified_prefetch_decode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
   } else {
-    xorec_decode(m_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
+    xorec_decode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
   }
   return 0;
 }

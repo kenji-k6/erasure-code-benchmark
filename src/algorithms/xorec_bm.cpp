@@ -14,11 +14,17 @@
 XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
   xorec_init();
   m_num_total_blocks = m_num_original_blocks + m_num_recovery_blocks;
-  m_data_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_original_blocks);
-  m_parity_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_recovery_blocks);
-  m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
   m_version = config.xorec_params.version;
 
+  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
+    m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_block_size * m_num_original_blocks, 64));
+    m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_block_size * m_num_recovery_blocks, 64));
+  #else
+    m_data_buffer = reinterpret_cast<uint8_t*>(malloc(m_block_size * m_num_original_blocks));
+    m_parity_buffer = reinterpret_cast<uint8_t*>(malloc(m_block_size * m_num_recovery_blocks));
+  #endif
+
+  m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
 
   if (!m_data_buffer || !m_parity_buffer) throw_error("Xorec: Failed to allocate buffer(s).");
 
@@ -29,13 +35,23 @@ XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBench
   }
 }
 
+XorecBenchmark::~XorecBenchmark() noexcept {
+  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
+    if (m_data_buffer) _mm_free(m_data_buffer);
+    if (m_parity_buffer) _mm_free(m_parity_buffer);
+  #else
+    if (m_data_buffer) free(m_data_buffer);
+    if (m_parity_buffer) free(m_parity_buffer);
+  #endif
+}
+
 int XorecBenchmark::encode() noexcept {
-  xorec_encode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
+  xorec_encode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
   return 0;
 }
 
 int XorecBenchmark::decode() noexcept {
-  xorec_decode(m_data_buffer.get(), m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
+  xorec_decode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
   return 0;
 }
 

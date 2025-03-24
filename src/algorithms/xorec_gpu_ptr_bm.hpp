@@ -22,7 +22,7 @@
     // Data Buffers
     uint8_t *m_gpu_data_buffer;          ///< Buffer for the original data we want to transmit
     uint8_t *m_cpu_data_buffer;
-    std::unique_ptr<uint8_t[]> m_parity_buffer;        ///< Buffer for the decoded data
+    uint8_t *m_parity_buffer;        ///< Buffer for the decoded data
     std::unique_ptr<uint8_t[]> m_block_bitmap; ///< Bitmap to check if all data arrived
   
     XorecVersion m_version;

@@ -15,7 +15,7 @@
 class XorecBenchmark : public ECBenchmark {
 public:
 explicit XorecBenchmark(const BenchmarkConfig& config) noexcept;
-  ~XorecBenchmark() noexcept override = default;
+  ~XorecBenchmark() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
@@ -25,8 +25,8 @@ protected:
   size_t m_num_total_blocks;
 
   // Data Buffers
-  std::unique_ptr<uint8_t[]> m_data_buffer;  ///< Buffer for the original data we want to transmit
-  std::unique_ptr<uint8_t[]> m_parity_buffer;///< Buffer for the decoded data
+  uint8_t *m_data_buffer;   ///< Buffer for the original data we want to transmit
+  uint8_t *m_parity_buffer; ///< Buffer for the decoded data
   std::unique_ptr<uint8_t[]> m_block_bitmap; ///< Bitmap to check if all data arrived
   XorecVersion m_version;
 };

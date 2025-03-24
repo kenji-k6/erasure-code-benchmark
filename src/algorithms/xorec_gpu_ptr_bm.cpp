@@ -13,8 +13,11 @@ XorecBenchmarkGpuPtr::XorecBenchmarkGpuPtr(const BenchmarkConfig& config) noexce
   err = cudaMallocHost(reinterpret_cast<void**>(&m_cpu_data_buffer), m_block_size * m_num_original_blocks);
   if (err != cudaSuccess) throw_error("Xorec: Failed to allocate CPU data buffer.");
 
-  m_parity_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_recovery_blocks);
-  if (!m_parity_buffer) throw_error("Xorec: Failed to allocate parity buffer.");
+  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
+    m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_block_size * m_num_recovery_blocks, 64));
+  #else
+    m_parity_buffer = reinterpret_cast<uint8_t*>(malloc(m_block_size * m_num_recovery_blocks));
+  #endif
 
   m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
   m_version = config.xorec_params.version;
@@ -34,16 +37,23 @@ XorecBenchmarkGpuPtr::XorecBenchmarkGpuPtr(const BenchmarkConfig& config) noexce
 XorecBenchmarkGpuPtr::~XorecBenchmarkGpuPtr() noexcept {
   if (m_gpu_data_buffer) cudaFree(m_gpu_data_buffer);
   if (m_cpu_data_buffer) cudaFreeHost(m_cpu_data_buffer);
+
+  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
+    if (m_parity_buffer) _mm_free(m_parity_buffer);
+  #else
+    if (m_parity_buffer) free(m_parity_buffer);
+  #endif
+
   cudaDeviceSynchronize();
 }
 
 int XorecBenchmarkGpuPtr::encode() noexcept {
-  xorec_gpu_prefetch_encode(m_gpu_data_buffer, m_cpu_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, 0, m_version);
+  xorec_gpu_prefetch_encode(m_gpu_data_buffer, m_cpu_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, 0, m_version);
   return 0;
 }
 
 int XorecBenchmarkGpuPtr::decode() noexcept {
-  xorec_gpu_prefetch_decode(m_gpu_data_buffer, m_cpu_data_buffer, m_parity_buffer.get(), m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), 0, m_version);
+  xorec_gpu_prefetch_decode(m_gpu_data_buffer, m_cpu_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), 0, m_version);
   cudaDeviceSynchronize();
   return 0;
 }
