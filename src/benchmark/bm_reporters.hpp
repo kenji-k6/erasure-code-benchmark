@@ -82,7 +82,14 @@ protected:
   void write_header() override;
 };
 
-
+/**
+ * @class PerfBenchmarkProgressReporter
+ * 
+ * @brief Custom benchmark reporter that outputs progress information for performance benchmarks.
+ * Unlike the `BenchmarkProgressReporter`, this class does not output individual iteration results,
+ * but only those of completed runs.
+ * 
+ */
 class PerfBenchmarkProgressReporter : public BenchmarkProgressReporter {
 public:
   explicit PerfBenchmarkProgressReporter(int num_runs, std::chrono::system_clock::time_point start_time) : BenchmarkProgressReporter(num_runs, start_time) { };
