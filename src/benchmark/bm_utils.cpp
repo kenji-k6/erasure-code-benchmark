@@ -3,6 +3,8 @@
  * @brief Implementations of utility functions for parsing and validating command-line arguments
  */
 
+
+#include "bm_cli.hpp"
 #include "bm_utils.hpp"
 #include "benchmark/benchmark.h"
 #include "bm_functions.hpp"
@@ -10,8 +12,9 @@
 #include <filesystem>
 #include <getopt.h>
 #include <ranges>
+#include <unordered_map>
+#include <unordered_set>
 
-#include "bm_cli.hpp" //temp
 
 // Global variable definitions
 constexpr const char* RAW_DIR = "../results/raw/";
@@ -22,39 +25,37 @@ std::string PERF_OUTPUT_FILE_NAME = "perf_results.csv";
 bool OVERWRITE_FILE = true;
 int NUM_ITERATIONS = 10;
 
-int NUM_BASE_CONFIGS = 0;
-int NUM_XOREC_CPU_CONFIGS = 0;
+int NUM_BASE_CONFIGS              = 0;
+int NUM_XOREC_CPU_CONFIGS         = 0;
 int NUM_XOREC_UNIFIED_PTR_CONFIGS = 0;
-int NUM_XOREC_GPU_PTR_CONFIGS = 0;
-int NUM_XOREC_GPU_CMP_CONFIGS = 0;
+int NUM_XOREC_GPU_PTR_CONFIGS     = 0;
+int NUM_XOREC_GPU_CMP_CONFIGS     = 0;
 
 bool RUN_XOREC_SCALAR = false;
-bool RUN_XOREC_AVX = false;
-bool RUN_XOREC_AVX2 = false;
+bool RUN_XOREC_AVX    = false;
+bool RUN_XOREC_AVX2   = false;
 bool RUN_XOREC_AVX512 = false;
 
-bool RUN_PERF_BM = false;
-bool RUN_EC_BM = false;
+bool RUN_PERF_BM  = false;
+bool RUN_EC_BM    = false;
 
-bool INIT_BASE_CONFIGS = false;
-bool INIT_XOREC_CPU_CONFIGS = false;
+bool INIT_BASE_CONFIGS              = false;
+bool INIT_XOREC_CPU_CONFIGS         = false;
 bool INIT_XOREC_UNIFIED_PTR_CONFIGS = false;
-bool INIT_XOREC_GPU_PTR_CONFIGS = false;
+bool INIT_XOREC_GPU_PTR_CONFIGS     = false;
 
-std::chrono::system_clock::time_point START_TIME;
+bool RUN_XOREC_NO_PREFETCH  = false;
+bool RUN_XOREC_PREFETCH     = false;
 
-bool RUN_XOREC_NO_PREFETCH = false;
-bool RUN_XOREC_PREFETCH = false;
-
-bool RUN_XOREC_TOUCH_UNIFIED = false;
+bool RUN_XOREC_TOUCH_UNIFIED    = false;
 bool RUN_XOREC_NO_TOUCH_UNIFIED = false;
 
+std::chrono::system_clock::time_point START_TIME;
 using BenchmarkTuple = std::tuple<std::string, BenchmarkFunction, BenchmarkConfig>;
-
-
 
 std::unordered_set<std::string> selected_base_ec_benchmarks;
 std::unordered_set<std::string> selected_xorec_ec_benchmarks;
+std::unordered_set<std::string> selected_perf_benchmarks;
 
 const std::unordered_map<std::string, BenchmarkFunction> available_base_ec_benchmarks = {
   { "cm256",                  BM_CM256                },
@@ -70,6 +71,13 @@ const std::unordered_map<std::string, BenchmarkFunction> available_xorec_ec_benc
   { "xorec-gpu-cmp",          BM_XOREC_GPU_CMP      }
 };
 
+const std::unordered_map<std::string, BenchmarkFunction> available_perf_benchmarks = {
+  { "perf-xorec-scalar", BM_XOR_BLOCKS_SCALAR },
+  { "perf-xorec-avx",    BM_XOR_BLOCKS_AVX    },
+  { "perf-xorec-avx2",   BM_XOR_BLOCKS_AVX2   },
+  { "perf-xorec-avx512", BM_XOR_BLOCKS_AVX512 }
+};
+
 const std::unordered_map<std::string, std::string> ec_benchmark_names = {
   { "cm256",                "CM256"                 },
   { "isal",                 "ISA-L"                 },
@@ -79,15 +87,6 @@ const std::unordered_map<std::string, std::string> ec_benchmark_names = {
   { "xorec-unified-ptr",    "XOR-EC (Unified Ptr)"  },
   { "xorec-gpu-ptr",        "XOR-EC (GPU Ptr)"      },
   { "xorec-gpu-cmp",        "XOR-EC (GPU Cmp)"      }
-};
-
-std::unordered_set<std::string> selected_perf_benchmarks;
-
-const std::unordered_map<std::string, BenchmarkFunction> available_perf_benchmarks = {
-  { "perf-xorec-scalar", BM_XOR_BLOCKS_SCALAR },
-  { "perf-xorec-avx",    BM_XOR_BLOCKS_AVX    },
-  { "perf-xorec-avx2",   BM_XOR_BLOCKS_AVX2   },
-  { "perf-xorec-avx512", BM_XOR_BLOCKS_AVX512 }
 };
 
 const std::unordered_map<std::string, std::string> perf_benchmark_names = {
@@ -104,12 +103,20 @@ const std::unordered_map<std::string, XorecVersion> perf_benchmark_version = {
   { "perf-xorec-avx512", XorecVersion::AVX512 }
 };
 
+/**
+ * @brief Prints usage information and exits the program
+ */
 static void usage() {
   print_usage();
   print_options();
   exit(0);
 }
 
+/**
+ * @brief Adds a benchmark to the corresponding `selected_*_benchmarks` set based on its input name.
+ * 
+ * @param name The name of the benchmark to add
+ */
 static void inline add_benchmark(std::string name) {
   if (available_base_ec_benchmarks.find(name) != available_base_ec_benchmarks.end()) {
     selected_base_ec_benchmarks.insert(name);
@@ -122,6 +129,13 @@ static void inline add_benchmark(std::string name) {
   }
 }
 
+
+/**
+ * @brief Splits a comma-seperated argument string into a vector of strings
+ * 
+ * @param input The input string to split
+ * @return A vector of strings
+ */
 std::vector<std::string> get_arg_vector(std::string input) {
   std::vector<std::string> result;
   size_t start = 0;
@@ -134,6 +148,13 @@ std::vector<std::string> get_arg_vector(std::string input) {
   return result;
 }
 
+
+/**
+ * @brief Parses command-line arguments and sets the global configuration variables accordingly.
+ * 
+ * @param argc 
+ * @param argv 
+ */
 void parse_args(int argc, char** argv) {
   struct option long_options[] = {
     { "help",           no_argument,        nullptr, 'h'  },
@@ -149,7 +170,6 @@ void parse_args(int argc, char** argv) {
     { "perf-xorec",     required_argument,  nullptr,  0   },
     { nullptr,          0,                  nullptr,  0   }
   };
-
 
   int c;
   int option_index = 0;
@@ -285,6 +305,11 @@ void parse_args(int argc, char** argv) {
   }
 }
 
+/**
+ * @brief Initliazes the lost block indices used for benchmarking
+ * 
+ * @param lost_block_idxs A vector of vectors to store the lost block indices (should be empty)
+ */
 static void init_lost_block_idxs(std::vector<std::vector<uint32_t>>& lost_block_idxs) {
   for ([[maybe_unused]] auto _ : VAR_BUFFER_SIZE) {
     std::vector<uint32_t> vec;
@@ -320,6 +345,14 @@ static void init_lost_block_idxs(std::vector<std::vector<uint32_t>>& lost_block_
   }
 }
 
+/**
+ * @brief Get the XOR-EC GPU computation configs based on already initialized configs
+ * 
+ * @attention This function assumes that the XOR-EC GPU Pointer configurations have already been initialized
+ * and are stored in the configs vector already
+ * 
+ * @param configs 
+ */
 static void get_xorec_gpu_cmp_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_GPU_PTR_CONFIGS) throw_error("XOR-EC GPU Pointer configurations must be initialized before XOR-EC GPU Computation configurations.");
   
@@ -334,6 +367,14 @@ static void get_xorec_gpu_cmp_configs(std::vector<BenchmarkConfig>& configs) {
   }
 }
 
+/**
+ * @brief Get the XOR-EC GPU Pointer configs based on already initialized configs
+ * 
+ * @attention This function assumes that the XOR-EC Unified Pointer configurations have already been initialized
+ * and are stored in the configs vector already
+ * 
+ * @param configs 
+ */
 static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_UNIFIED_PTR_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
 
@@ -347,6 +388,14 @@ static void get_xorec_gpu_ptr_configs(std::vector<BenchmarkConfig>& configs) {
   INIT_XOREC_GPU_PTR_CONFIGS = true;
 }
 
+/**
+ * @brief Get the XOR-EC Unified Pointer configs based on already initialized configs
+ * 
+ * @attention This function assumes that the XOR-EC CPU configurations have already been initialized
+ * and are stored in the configs vector already
+ * 
+ * @param configs 
+ */
 static void get_xorec_unified_ptr_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_XOREC_CPU_CONFIGS) throw_error("XOR-EC CPU configurations must be initialized before XOR-EC GPU Pointer configurations.");
 
@@ -384,6 +433,14 @@ static void get_xorec_unified_ptr_configs(std::vector<BenchmarkConfig>& configs)
   INIT_XOREC_UNIFIED_PTR_CONFIGS = true;
 }
 
+/**
+ * @brief Get the XOR-EC CPU configs based on already initialized configs
+ * 
+ * @attention This function assumes that the base configurations have already been initialized
+ * and are stored in the configs vector already
+ * 
+ * @param configs 
+ */
 static void get_xorec_cpu_configs(std::vector<BenchmarkConfig>& configs) {
   if (!INIT_BASE_CONFIGS) throw_error("Base configurations must be initialized before XOR-EC CPU configurations.");
 
@@ -415,8 +472,12 @@ static void get_xorec_cpu_configs(std::vector<BenchmarkConfig>& configs) {
   INIT_XOREC_CPU_CONFIGS = true;
 }
 
+/**
+ * @brief Get the base EC configs based on already initialized configs
+ * 
+ * @param configs (should be empty)
+ */
 static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
-
   auto it = lost_block_idxs.begin();
   for (auto buf_size : VAR_BUFFER_SIZE) {
     BenchmarkConfig config {
@@ -478,6 +539,12 @@ static void get_base_configs(std::vector<BenchmarkConfig>& configs, std::vector<
   INIT_BASE_CONFIGS = true;
 }
 
+/**
+ * @brief Populate the EC benchmark configurations based on the user-passed arguments
+ * 
+ * @param configs Should be empty
+ * @param lost_block_idxs Should be empty
+ */
 static void get_ec_configs(std::vector<BenchmarkConfig>& configs, std::vector<std::vector<uint32_t>>& lost_block_idxs) {
   init_lost_block_idxs(lost_block_idxs);
 
@@ -491,6 +558,11 @@ static void get_ec_configs(std::vector<BenchmarkConfig>& configs, std::vector<st
   }
 }
 
+/**
+ * @brief Gets the configs for the performance benchmarks
+ * 
+ * @param configs Should be empty
+ */
 static void get_perf_configs(std::vector<BenchmarkConfig>& configs) {
   for (auto data_size : VAR_BUFFER_SIZE) {
     size_t block_size = data_size / FIXED_NUM_ORIGINAL_BLOCKS;
@@ -512,6 +584,13 @@ static void get_perf_configs(std::vector<BenchmarkConfig>& configs) {
   }
 }
 
+/**
+ * @brief Get the benchmark name based on the algorithm and config parameters
+ * 
+ * @param inp_name 
+ * @param config 
+ * @return std::string 
+ */
 static std::string get_ec_benchmark_name(const std::string inp_name, BenchmarkConfig config) {
   std::string name = ec_benchmark_names.at(inp_name);
   if (config.is_xorec_config && !config.xorec_params.gpu_cmp) {
@@ -536,6 +615,12 @@ static std::string get_ec_benchmark_name(const std::string inp_name, BenchmarkCo
   return name;
 }
 
+/**
+ * @brief Get the benchmarking function based on the algorithm name
+ * 
+ * @param name 
+ * @return BenchmarkFunction 
+ */
 static BenchmarkFunction get_ec_benchmark_func(const std::string& name) {
   if (available_base_ec_benchmarks.find(name) != available_base_ec_benchmarks.end()) {
     return available_base_ec_benchmarks.at(name);
@@ -544,16 +629,32 @@ static BenchmarkFunction get_ec_benchmark_func(const std::string& name) {
   }
 }
 
-
+/**
+ * @brief Get the performance benchmark name based on the input name
+ * 
+ * @param inp_name 
+ * @return std::string 
+ */
 static std::string get_perf_benchmark_name(const std::string inp_name) {
   return perf_benchmark_names.at(inp_name);
 }
 
+/**
+ * @brief Get the performance benchmark function based on the input name
+ * 
+ * @param name 
+ * @return BenchmarkFunction 
+ */
 static BenchmarkFunction get_perf_benchmark_func(const std::string& name) {
   return available_perf_benchmarks.at(name);
 }
 
-
+/**
+ * @brief "Zips" the EC benchmark names, functions, and configurations into a vector of tuples
+ * 
+ * @param configs 
+ * @return std::vector<BenchmarkTuple> 
+ */
 static std::vector<BenchmarkTuple> get_ec_benchmarks(std::vector<BenchmarkConfig>& configs) {
   std::vector<BenchmarkTuple> benchmarks;
 
@@ -604,6 +705,12 @@ static std::vector<BenchmarkTuple> get_ec_benchmarks(std::vector<BenchmarkConfig
   return benchmarks;
 }
 
+/**
+ * @brief "Zips" the performance benchmark names, functions, and configurations into a vector of tuples
+ * 
+ * @param configs 
+ * @return std::vector<BenchmarkTuple> 
+ */
 static std::vector<BenchmarkTuple> get_perf_benchmarks(std::vector<BenchmarkConfig>& configs) {
   std::vector<BenchmarkTuple> benchmarks;
   for (auto config : configs) {
@@ -617,7 +724,11 @@ static std::vector<BenchmarkTuple> get_perf_benchmarks(std::vector<BenchmarkConf
   return benchmarks;
 }
 
-
+/**
+ * @brief Initializes reporters and runs the EC benchmarks
+ * 
+ * @param configs 
+ */
 static void run_ec_benchmarks(std::vector<BenchmarkConfig>& configs) {
   if (configs.empty()) throw_error("No EC benchmark configurations found.");
 
@@ -644,7 +755,11 @@ static void run_ec_benchmarks(std::vector<BenchmarkConfig>& configs) {
   benchmark::Shutdown();
 }
 
-
+/**
+ * @brief Initializes reporters and runs the performance benchmarks
+ * 
+ * @param configs 
+ */
 static void run_perf_benchmarks(std::vector<BenchmarkConfig>& configs) {
   if (configs.empty()) return;
 
@@ -668,6 +783,9 @@ static void run_perf_benchmarks(std::vector<BenchmarkConfig>& configs) {
   benchmark::Shutdown();
 }
 
+/**
+ * @brief Ensures that the result directory exists, creating it if it does not
+ */
 static void ensure_result_dir() {
   namespace fs = std::filesystem;
   std::string dir = RAW_DIR + RESULT_DIR;
@@ -677,13 +795,24 @@ static void ensure_result_dir() {
   }
 }
 
-
-
+/**
+ * @brief Populates the lost block indices, EC and performance configurations vectors
+ * 
+ * @param ec_configs 
+ * @param lost_block_idxs 
+ * @param perf_configs 
+ */
 void get_configs(std::vector<BenchmarkConfig>& ec_configs, std::vector<std::vector<uint32_t>>& lost_block_idxs, std::vector<BenchmarkConfig>& perf_configs) {
   if (RUN_EC_BM) get_ec_configs(ec_configs, lost_block_idxs);
   if (RUN_PERF_BM) get_perf_configs(perf_configs);
 }
 
+/**
+ * @brief Runs all benchmarks based on the user-passed arguments
+ * 
+ * @param ec_configs 
+ * @param perf_configs 
+ */
 void run_benchmarks(std::vector<BenchmarkConfig>& ec_configs, std::vector<BenchmarkConfig>& perf_configs) {
   START_TIME = std::chrono::system_clock::now();
   ensure_result_dir();
