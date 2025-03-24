@@ -198,7 +198,7 @@ void parse_args(int argc, char** argv) {
           } else if (arg == "perf") {
             RUN_PERF_BM = true;
           } else {
-            std::cerr << "Error: --benchmark option must be either 'ec', 'perf', or 'all'.\n";
+            std::cerr << "Error: --benchmark option must be either 'ec' or 'perf";
             exit(0);
           }
         }
