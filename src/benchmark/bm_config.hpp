@@ -3,60 +3,29 @@
  * @brief Defines the BenchmarkConfig struct and related constants.
  */
 
-#ifndef BM_CONFIG_HPP
-#define BM_CONFIG_HPP
+ #ifndef BM_CONFIG_HPP
+ #define BM_CONFIG_HPP
+ 
+ #include "bm_reporters.hpp"
+ #include "xorec_utils.hpp"
+ #include <cstdint>
+ #include <vector>
 
-#include "bm_reporters.hpp"
-#include "xorec_utils.hpp"
-#include <cstdint>
-#include <vector>
+ 
 
-/**
- * @struct BenchmarkConfig
- * 
- * @brief Struct to hold the configuration for a single benchmark run
- */
+using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
+using FECTuple = std::tuple<size_t, size_t>;
+
 struct BenchmarkConfig {
-  size_t data_size;                               ///< Total size of original data (in bytes)
-  size_t block_size;                              ///< Size of each block (in bytes)
-  size_t num_lost_blocks;                         ///< Number of total blocks lost (recovery + original)
-  double redundancy_ratio;                        ///< Recovery blocks / original blocks ratio
-  int num_iterations;                             ///< Number of iterations to run the benchmark
-  uint8_t plot_id;                                ///< Identifier for plotting
-  const std::vector<uint32_t>& lost_block_idxs;   ///< Indices of lost blocks
-
-  size_t num_original_blocks;                   ///< Number of original data blocks
-  size_t num_recovery_blocks;                   ///< Number of recovery blocks
-
-  bool is_xorec_config;                           ///< Flag to indicate whether this configuration is for XOR-EC algorithm(s)
-
-  struct {
-    XorecVersion version;                         ///< Version of the XOR-EC algorithm
-    bool gpu_cmp;                                 ///< Flag to indicate GPU computation
-
-    bool prefetch;                                ///< Flag to indicate prefetching
-
-    bool unified_mem;                             ///< Flag to indicate unified memory allocation
-    bool gpu_mem;                                 ///< Flag to indicate GPU memory a llocation
-    bool touch_unified_mem;                       ///< Flag to indicate GPU memory warmup
-  } xorec_params;
-
+  size_t message_size;                          ///< Size of the message to be encoded
+  size_t block_size;                            ///< Size of the block to be encoded
+  FECTuple fec_params;                          ///< Tuple to hold FEC parameters
+  
   BenchmarkProgressReporter *progress_reporter = nullptr;
 };
+ 
 
-
-/// @typedef BenchmarkFunction
-/// @brief Type definition for benchmark functions
-using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
-
-/// @brief Constants for fixed values
-constexpr size_t FIXED_NUM_ORIGINAL_BLOCKS = 128;
-constexpr size_t FIXED_NUM_RECOVERY_BLOCKS = 4;
-constexpr size_t FIXED_BUFFER_SIZE = 1048576; // 1 MiB
-constexpr double FIXED_PARITY_RATIO = 0.03125;
-constexpr size_t FIXED_NUM_LOST_BLOCKS = 1;
-const std::vector<size_t> VAR_BUFFER_SIZE = { 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144 };
-const std::vector<size_t> VAR_NUM_RECOVERY_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
-const std::vector<size_t> VAR_NUM_LOST_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
-
+constexpr size_t FIXED_MESSAGE_SIZE = 128 * 1024 * 1024; // 128 MiB
+const std::vector<size_t> VAR_BLOCK_SIZES = { 4096, 8192, 16384, 32768, 65536, 131072, 262144 };
+const std::vector<FECTuple> VAR_FEC_PARAMS = { {2,1}, {4,2}, {8,4}, {16,4}, {16,8}, {32, 8}, {32,4} };
 #endif // BM_CONFIG_HPP
