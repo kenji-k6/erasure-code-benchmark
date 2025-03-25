@@ -24,7 +24,7 @@ struct BenchmarkConfig {
   size_t num_lost_rmda_packets;
   const std::vector<uint32_t>& lost_rdma_packets;   ///< Indices of lost rdma packets
 
-  
+  int num_iterations;                           ///< Number of iterations to run the benchmark
   BenchmarkProgressReporter *progress_reporter = nullptr;
 };
  
@@ -33,4 +33,5 @@ constexpr size_t FIXED_MESSAGE_SIZE = 128 * 1024 * 1024; // 128 MiB
 constexpr size_t FIXED_NUM_LOST_BLOCKS = 1;
 const std::vector<size_t> VAR_BLOCK_SIZES = { 4096, 8192, 16384, 32768, 65536, 131072, 262144 };
 const std::vector<FECTuple> VAR_FEC_PARAMS = { {2,1}, {4,2}, {8,4}, {16,4}, {16,8}, {32, 8}, {32,4} };
+
 #endif // BM_CONFIG_HPP
