@@ -12,8 +12,8 @@
 #define XOREC_RESTRICT __restrict
 
 /// @brief Constants for the XOR-EC algorithm(s)
-constexpr size_t XOREC_BLOCK_SIZE_MULTIPLE = 256;
-constexpr size_t XOREC_MIN_BLOCK_SIZE = 256;
+constexpr size_t XOREC_BLOCK_SIZE_MULTIPLE = 128;
+constexpr size_t XOREC_MIN_BLOCK_SIZE = 128;
 constexpr size_t XOREC_MIN_DATA_BLOCKS = 1;
 constexpr size_t XOREC_MAX_DATA_BLOCKS = 128;
 constexpr size_t XOREC_MIN_PARITY_BLOCKS = 1;
@@ -32,25 +32,6 @@ enum class XorecResult {
   DecodeFailure = 4,
   KernelFailure = 5
 };
-
-/**
- * @enum XORVersion
- * @brief Allows to specify which version of the implementations to use
- */
-enum class XorecVersion {
-  Scalar = 0,
-  AVX = 1,
-  AVX2 = 2,
-  AVX512 = 3
-};
-
-/**
- * @brief Get the version name corresponding to the provided version
- * 
- * @param version 
- * @return std::string 
- */
-std::string get_version_name(XorecVersion version);
 
 
 /// @brief Auxiliary bitmap to check if all data blocks have been received
