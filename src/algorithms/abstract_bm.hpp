@@ -57,26 +57,26 @@ public:
    */
   virtual bool check_for_corruption() const noexcept = 0;
 
-  /**
-   * @brief Function to ensure the CPU memory is cold (only relevant for GPU memory benchmarks)
-   * 
-   * If not overwritten it doesn nothing.
-   */
-  virtual void touch_unified_memory() noexcept {};
-
 protected:
   explicit ECBenchmark(const BenchmarkConfig& config) noexcept
-    : m_block_size(config.block_size),
-      m_num_original_blocks(config.num_original_blocks),
-      m_num_recovery_blocks(config.num_recovery_blocks),
-      m_num_lost_blocks(config.num_lost_blocks),
-      m_lost_block_idxs(config.lost_block_idxs) {};
+    : m_size_msg(config.message_size),
+      m_size_blk(config.block_size),
+      m_fec_params(config.fec_params),
+      m_num_lst_rdma_pkts(config.num_lost_rmda_packets),
+      m_lst_rdma_pkts(config.lost_rdma_packets),
+      m_num_submsg(config.message_size/config.block_size),
+      m_size_submsg(get<0>(config.fec_params)*config.block_size) {}
 
-  size_t m_block_size;
-  size_t m_num_original_blocks;
-  size_t m_num_recovery_blocks;
-  size_t m_num_lost_blocks;
-  const std::vector<uint32_t>& m_lost_block_idxs;
+
+  size_t m_size_msg;
+  size_t m_size_blk;
+  FECTuple m_fec_params;
+
+  size_t m_num_lst_rdma_pkts;
+  const std::vector<uint32_t>& m_lst_rdma_pkts;
+
+  size_t m_num_submsg;
+  size_t m_size_submsg;
 };
 
 #endif // ABSTRACT_BM_HPP
