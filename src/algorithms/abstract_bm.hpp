@@ -63,9 +63,16 @@ protected:
       m_size_blk(config.block_size),
       m_fec_params(config.fec_params),
       m_num_lst_rdma_pkts(config.num_lost_rmda_packets),
-      m_lst_rdma_pkts(config.lost_rdma_packets),
-      m_num_submsg(config.message_size/config.block_size),
-      m_size_submsg(get<0>(config.fec_params)*config.block_size) {}
+      m_lst_rdma_pkts(config.lost_rdma_packets)
+  {
+    m_size_data_submsg = get<0>(config.fec_params)*config.block_size;
+    m_size_parity_submsg = get<1>(config.fec_params)*config.block_size;
+
+    m_num_chunks = config.message_size/m_size_data_submsg;
+    m_blks_per_chunk = get<0>(config.fec_params)+get<1>(config.fec_params);
+  }
+
+
 
 
   size_t m_size_msg;
@@ -75,8 +82,16 @@ protected:
   size_t m_num_lst_rdma_pkts;
   const std::vector<uint32_t>& m_lst_rdma_pkts;
 
-  size_t m_num_submsg;
-  size_t m_size_submsg;
+  
+  size_t m_size_data_submsg;
+  size_t m_size_parity_submsg;
+  
+  size_t m_blks_per_chunk;
+  size_t m_num_chunks;
+
+  uint8_t* m_data_buffer;
+  uint8_t* m_parity_buffer;
+  uint8_t* m_block_bitmap;
 };
 
 #endif // ABSTRACT_BM_HPP
