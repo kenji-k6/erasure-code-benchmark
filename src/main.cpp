@@ -8,4 +8,5 @@ int main (int argc, char** argv) {
   parse_args(argc, argv);
   get_configs(ec_configs, lost_block_idxs, perf_configs);
   run_benchmarks(ec_configs, perf_configs);
+  
 }
