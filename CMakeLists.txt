@@ -57,17 +57,10 @@ add_executable(ec-benchmark ${SOURCES})
 set_target_properties(ec-benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 
 
-# Add libpfm
-add_library(PFM STATIC IMPORTED)
-set_target_properties(PFM PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/lib/libpfm.a
-)
-
 # Google benchmarking library
 # Enable libpfm for benchmarking (needed for counting cycles, instructions, etc.)
 set(CMAKE_BUILD_TYPE Release)
 set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON CACHE BOOL "Enable downloading of dependencies" FORCE)
-set(BENCHMARK_ENABLE_LIBPFM ON CACHE BOOL "Enable libpfm support" FORCE)
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable testing in Google Benchmark" FORCE)
 add_subdirectory(libraries/google_benchmark)
 
@@ -102,7 +95,6 @@ target_include_directories(ec-benchmark PRIVATE
   ${CMAKE_SOURCE_DIR}/src/benchmark
   ${CMAKE_SOURCE_DIR}/libraries/leopard
   ${CMAKE_SOURCE_DIR}/libraries/isa-l/include
-  ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/include
 )
 
 
@@ -119,7 +111,6 @@ target_link_libraries(ec-benchmark PRIVATE
   cm256
   wirehair
   isal
-  PFM
   benchmark::benchmark
   OpenMP::OpenMP_CXX
   ${CUDA_LIBRARIES}
