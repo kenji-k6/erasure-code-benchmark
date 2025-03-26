@@ -48,7 +48,7 @@ public:
    * a lot based on the EC algorithm/library being tested.
    */
   virtual void simulate_data_loss() noexcept = 0;
-
+  
   /**
    * @brief Check if there is any corruption in the decoded data.
    * 

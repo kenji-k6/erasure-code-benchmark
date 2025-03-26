@@ -83,7 +83,6 @@ int ISALBenchmark::encode() noexcept {
 
 int ISALBenchmark::decode() noexcept {
   size_t num_data_blocks = get<0>(m_fec_params);
-  size_t num_parity_blocks = get<1>(m_fec_params);
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
     auto orig_ptrs = m_original_ptrs.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;

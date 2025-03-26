@@ -41,12 +41,11 @@ WirehairBenchmark::~WirehairBenchmark() noexcept {
 }
 
 int WirehairBenchmark::encode() noexcept {
-  size_t num_data_blocks = get<0>(m_fec_params);
   uint32_t write_len = 0;
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
     void* data_ptr = m_data_buffer + i*m_size_data_submsg;
-    void* encode_ptr = m_encode_buffer + i*(m_size_parity_submsg + m_size_data_submsg);
+    uint8_t* encode_ptr = m_encode_buffer + i*(m_size_parity_submsg + m_size_data_submsg);
 
     m_encoder = wirehair_encoder_create(m_encoder, data_ptr, m_size_data_submsg, m_size_blk);
     if (!m_encoder) return 1;

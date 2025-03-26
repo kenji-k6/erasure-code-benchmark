@@ -44,6 +44,13 @@ LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECB
   }
 }
 
+LeopardBenchmark::~LeopardBenchmark() noexcept {
+  _mm_free(m_data_buffer);
+  _mm_free(m_encode_buffer);
+  _mm_free(m_decode_buffer);
+  _mm_free(m_block_bitmap);
+}
+
 int LeopardBenchmark::encode() noexcept {
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
@@ -70,7 +77,7 @@ int LeopardBenchmark::decode() noexcept {
     if (leo_decode(m_size_blk, fec_0, fec_1, m_decode_work_count, data_ptrs, encode_work_ptrs, decode_work_ptrs)) return 1;
 
     for (unsigned j = 0; j < get<0>(m_fec_params); ++j) {
-      if (!data_ptrs[j]) memcpy(data_ptrs[j], decode_work_ptrs[j], m_size_blk);
+      if (!data_ptrs[j]) memcpy(data_ptrs + j, decode_work_ptrs + j, m_size_blk);
     }
   }
   return 0;
