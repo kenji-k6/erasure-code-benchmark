@@ -76,6 +76,8 @@ protected:
 
     m_num_chunks = config.message_size/m_size_data_submsg;
     m_blks_per_chunk = get<0>(config.fec_params)+get<1>(config.fec_params);
+    m_data_blks_per_chunk = get<0>(config.fec_params);
+    m_parity_blks_per_chunk = get<1>(config.fec_params);
   }
 
 
@@ -91,6 +93,8 @@ protected:
   size_t m_size_parity_submsg;
   
   size_t m_blks_per_chunk;
+  size_t m_data_blks_per_chunk;
+  size_t m_parity_blks_per_chunk;
   size_t m_num_chunks;
 
   uint8_t* m_data_buffer;
