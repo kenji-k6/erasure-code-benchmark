@@ -15,16 +15,16 @@
 ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
 
   // Allocate matrices etc.
-  size_t num_data_blocks = get<0>(m_fec_params);
-  size_t num_parity_blocks = get<1>(m_fec_params);
-  m_encode_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks, ALIGNMENT)); 
-  m_decode_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks, ALIGNMENT));
-  m_invert_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks, ALIGNMENT));
-  m_temp_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks, ALIGNMENT));
-  m_g_tbls = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks * 32, ALIGNMENT));
+  m_encode_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * m_data_blks_per_chunk, ALIGNMENT)); 
+  m_decode_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * m_data_blks_per_chunk, ALIGNMENT));
+  m_invert_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * m_data_blks_per_chunk, ALIGNMENT));
+  m_temp_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * m_data_blks_per_chunk, ALIGNMENT));
+  m_g_tbls = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * m_data_blks_per_chunk * 32, ALIGNMENT));
 
-  m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_blks_per_chunk * m_size_blk, ALIGNMENT));
-  m_recovery_outp_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * num_parity_blocks * m_size_blk, ALIGNMENT));
+  m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_data_submsg, ALIGNMENT));
+  m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_parity_submsg, ALIGNMENT));
+
+  m_recovery_outp_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_parity_blks_per_chunk * m_size_blk, ALIGNMENT));
   m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks*m_blks_per_chunk, ALIGNMENT));
 
   if (!m_encode_matrix || !m_decode_matrix || !m_invert_matrix || !m_temp_matrix || !m_g_tbls ||
@@ -33,28 +33,37 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchma
   }
 
   // Initialize Pointer vectors
-  m_original_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
+  m_frag_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
+
   m_parity_src_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
   m_recovery_outp_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
   m_decode_index.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
 
-  for (unsigned i = 0; i < m_num_chunks*m_blks_per_chunk; ++i) {
-    m_original_ptrs[i] = m_data_buffer + i * m_size_blk;
+  for (unsigned i = 0; i < m_num_chunks; ++i) {
+    unsigned idx;
+    for (idx = 0; idx < m_data_blks_per_chunk; ++idx) {
+      m_frag_ptrs[i*ECLimits::ISAL_MAX_TOT_BLOCKS + idx] = m_data_buffer + i * m_size_data_submsg + idx * m_size_blk;
+    }
+    for (idx = 0; idx < m_parity_blks_per_chunk; ++idx) {
+      m_frag_ptrs[i*ECLimits::ISAL_MAX_TOT_BLOCKS + m_data_blks_per_chunk + idx] = m_parity_buffer + i * m_size_parity_submsg + idx * m_size_blk;
+    }
   }
 
-  for (unsigned i = 0; i < num_data_blocks*m_num_chunks; ++i) {
-    m_recovery_outp_ptrs[i] = m_recovery_outp_buffer + i * m_size_blk;
+  for (unsigned i = 0; i < m_num_chunks; ++i) {
+    for (unsigned idx = 0; idx < m_parity_blks_per_chunk; ++idx) {
+      m_recovery_outp_ptrs[i*ECLimits::ISAL_MAX_TOT_BLOCKS + idx] = m_data_buffer + i * m_size_parity_submsg + idx * m_size_blk; 
+    }
   }
 
   // Generate encode matricx, can be precomputed as it is fixed for a given m_num_original_blocks
-  gf_gen_cauchy1_matrix(m_encode_matrix, m_blks_per_chunk, num_data_blocks);
+  gf_gen_cauchy1_matrix(m_encode_matrix, m_blks_per_chunk, m_data_blks_per_chunk);
 
   // Initialize generator tables for encoding, can be precomputed as it is fixed for a given m_num_original_blocks
-  ec_init_tables(num_data_blocks, num_parity_blocks, &m_encode_matrix[num_data_blocks * num_data_blocks], m_g_tbls);
+  ec_init_tables(m_data_blks_per_chunk, m_parity_blks_per_chunk, &m_encode_matrix[m_data_blks_per_chunk * m_data_blks_per_chunk], m_g_tbls);
 
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
-    if (write_validation_pattern(i, m_original_ptrs[i], m_size_blk)) throw_error("ISAL: Failed to write random checking packet.");
+    if (write_validation_pattern(i, m_data_buffer+i*m_size_blk, m_size_blk)) throw_error("ISAL: Failed to write validation pattern");
   }
 }
 
@@ -70,54 +79,56 @@ ISALBenchmark::~ISALBenchmark() noexcept {
 }
 
 int ISALBenchmark::encode() noexcept {
-  size_t num_data_blocks = get<0>(m_fec_params);
-  size_t num_parity_blocks = get<1>(m_fec_params);
+  uint8_t** frag_ptrs = reinterpret_cast<uint8_t**>(m_frag_ptrs.data());
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    auto orig_ptrs = m_original_ptrs.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
-    ec_encode_data(m_size_blk, num_data_blocks, num_parity_blocks, m_g_tbls, orig_ptrs, orig_ptrs + num_data_blocks);
+    ec_encode_data(m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk, m_g_tbls, frag_ptrs, frag_ptrs + m_data_blks_per_chunk);
+    frag_ptrs += ECLimits::ISAL_MAX_TOT_BLOCKS;
   }
   return 0;
 }
 
 
 int ISALBenchmark::decode() noexcept {
-  size_t num_data_blocks = get<0>(m_fec_params);
+  uint8_t** frag_ptrs = reinterpret_cast<uint8_t**>(m_frag_ptrs.data());
+  uint8_t** parity_src_ptrs = m_parity_src_ptrs.data();
+  uint8_t** recovery_outp_ptrs = m_recovery_outp_ptrs.data();
+  uint8_t* decode_index = m_decode_index.data();
+  uint8_t* bitmap_ptr = m_block_bitmap;
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    auto orig_ptrs = m_original_ptrs.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
-    auto parity_src_ptrs = m_parity_src_ptrs.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
-    auto recovery_outp_ptrs = m_recovery_outp_ptrs.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
-    auto decode_index = m_decode_index.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
-    uint8_t* bitmap_ptr = m_block_bitmap + i*m_blks_per_chunk;
 
     m_block_err_list.clear();
 
-    for (unsigned j = 0; j < m_blks_per_chunk; ++j) {
-      if (bitmap_ptr[j] == 0) {
-        m_block_err_list.push_back(static_cast<uint8_t>(j));
-      }
+    for (unsigned idx = 0; idx < m_blks_per_chunk; ++idx) {
+      if (bitmap_ptr[idx] == 0) m_block_err_list.push_back(static_cast<uint8_t>(idx));
     }
+
+    size_t num_lost_blocks = m_block_err_list.size();
 
     if (m_block_err_list.empty()) continue;
 
     if (gf_gen_decode_matrix_simple(m_encode_matrix, m_decode_matrix, m_invert_matrix,
-                                    m_temp_matrix, decode_index, m_block_err_list, m_block_err_list.size(),
-                                    num_data_blocks, m_blks_per_chunk)) {
+                                    m_temp_matrix, decode_index, m_block_err_list, num_lost_blocks,
+                                    m_data_blks_per_chunk, m_blks_per_chunk)) {
       return -1;
     }
 
-
-    for (unsigned i = 0; i < num_data_blocks; ++i) {
-      parity_src_ptrs[i] = orig_ptrs[decode_index[i]];
+    for (unsigned idx = 0; idx < m_data_blks_per_chunk; ++idx) {
+      parity_src_ptrs[idx] = frag_ptrs[decode_index[idx]];
     }
-
-    ec_init_tables(num_data_blocks, m_block_err_list.size(), m_decode_matrix, m_g_tbls);
-    ec_encode_data(m_size_blk, num_data_blocks, m_block_err_list.size(), m_g_tbls, parity_src_ptrs, recovery_outp_ptrs);
+    ec_init_tables(m_data_blks_per_chunk, num_lost_blocks, m_decode_matrix, m_g_tbls);
+    ec_encode_data(m_size_blk, m_data_blks_per_chunk, num_lost_blocks, m_g_tbls, parity_src_ptrs, recovery_outp_ptrs);
     
-    for (unsigned i = 0; i < m_block_err_list.size(); ++i) {
-      memcpy(orig_ptrs[m_block_err_list[i]], recovery_outp_ptrs[i], m_size_blk);
-    }
+    // for (unsigned i = 0; i < m_block_err_list.size(); ++i) {
+    //   memcpy(orig_ptrs[m_block_err_list[i]], recovery_outp_ptrs[i], m_size_blk);
+    // }
+    frag_ptrs += ECLimits::ISAL_MAX_TOT_BLOCKS;
+    parity_src_ptrs += ECLimits::ISAL_MAX_TOT_BLOCKS;
+    recovery_outp_ptrs += ECLimits::ISAL_MAX_TOT_BLOCKS;
+    decode_index += ECLimits::ISAL_MAX_TOT_BLOCKS;
+    bitmap_ptr += m_blks_per_chunk;
+
 
   }
   return 0;

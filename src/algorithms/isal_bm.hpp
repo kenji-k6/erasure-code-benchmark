@@ -23,10 +23,11 @@ public:
   
 private:
   // Data Buffers
+  uint8_t* m_parity_buffer;
   uint8_t* m_recovery_outp_buffer; ///< Buffer for recovery of corrupted data
 
   // Data Block Pointers
-  std::vector<uint8_t*> m_original_ptrs;
+  std::vector<uint8_t*> m_frag_ptrs;
   std::vector<uint8_t*> m_parity_src_ptrs;
   std::vector<uint8_t*> m_recovery_outp_ptrs;
   
