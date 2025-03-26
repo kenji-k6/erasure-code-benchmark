@@ -13,10 +13,10 @@ static bool XOREC_INIT_CALLED = false;
 
 
 
-void xorec_init() {
+void xorec_init(size_t num_data_blocks, size_t num_parity_blocks) {
   if (XOREC_INIT_CALLED) return;
   XOREC_INIT_CALLED = true;
-  std::fill_n(COMPLETE_DATA_BITMAP.begin(), XOREC_MAX_DATA_BLOCKS, 1);
+  std::fill_n(COMPLETE_DATA_BITMAP.begin(), num_data_blocks, 1);
 }
 
 XorecResult xorec_encode(

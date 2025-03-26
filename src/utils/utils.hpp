@@ -5,7 +5,7 @@
 #include "bm_reporters.hpp"
 
 /// @brief Constants for fixed values
-constexpr size_t ALIGNMENT_BYTES = 64;
+constexpr size_t ALIGNMENT = 64;
 constexpr size_t RANDOM_SEED = 1896;
 constexpr size_t MIN_DATA_BLOCK_SIZE = 2;
 
@@ -75,15 +75,6 @@ int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, size_t byte
 bool validate_block(const uint8_t* block_ptr, size_t bytes);
 
 
-/**
- * @brief Selects k unique indices from range [0, maxIndex) to determine lost blocks.
- * @attention To properly benchmark CM256 and XOR-EC, the lost blocks returned always make a recoverable set.
- * @param num_recovery_blocks Number of recovery blocks.
- * @param num_lost_blocks Number of blocks to select.
- * @param max_index Upper limit of the index range.
- * @param lost_block_idxs Pointer to the array to store the selected indices.
- */
-void select_lost_block_idxs(size_t num_recovery_blocks, size_t num_lost_blocks, uint32_t max_idx, std::vector<uint32_t>& lost_block_idxs);
 
 
 /**
@@ -101,14 +92,4 @@ void select_lost_block_idxs(size_t num_recovery_blocks, size_t num_lost_blocks, 
  * @return std::string 
  */
 std::string to_lower(std::string str);
-
-/**
- * @brief Function to touch GPU memory, used to simulate
- * a cold view of unified memory for the CPU computations
- * 
- * @param buffer Pointer to the memory to touch
- * @param bytes Size of the memory region to be touched in bytes
- */
-void touch_memory(uint8_t* buffer, size_t bytes);
-
 #endif // UTILS_HPP
