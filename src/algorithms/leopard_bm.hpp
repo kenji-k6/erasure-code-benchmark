@@ -15,7 +15,7 @@
 class LeopardBenchmark : public ECBenchmark {
 public:
   explicit LeopardBenchmark(const BenchmarkConfig& config) noexcept;
-  ~LeopardBenchmark() noexcept = default;
+  ~LeopardBenchmark() noexcept override;
 
   int encode() noexcept override;
   int decode() noexcept override;

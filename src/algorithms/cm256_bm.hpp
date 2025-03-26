@@ -15,7 +15,7 @@
 class CM256Benchmark : public ECBenchmark {
 public:
   explicit CM256Benchmark(const BenchmarkConfig& config) noexcept;
-  ~CM256Benchmark() noexcept = default;
+  ~CM256Benchmark() noexcept override;
   
   int encode() noexcept override;
   int decode() noexcept override;

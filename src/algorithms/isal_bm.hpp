@@ -15,7 +15,7 @@
 class ISALBenchmark : public ECBenchmark {
 public:
   explicit ISALBenchmark(const BenchmarkConfig& config) noexcept;
-  ~ISALBenchmark() noexcept = default;
+  ~ISALBenchmark() noexcept override;
 
   int encode() noexcept override;
   int decode() noexcept override;
