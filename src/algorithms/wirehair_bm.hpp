@@ -30,7 +30,7 @@ private:
   size_t m_num_total_blocks;
 
   uint8_t* m_encode_buffer;      ///< Buffer for the encoded data
-
+  
   WirehairCodec m_encoder;       ///< Wirehair encoder instance
   WirehairCodec m_decoder;       ///< Wirehair decoder instance
 };

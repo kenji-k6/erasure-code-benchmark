@@ -26,7 +26,7 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchma
 
   m_recovery_outp_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_parity_blks_per_chunk * m_size_blk, ALIGNMENT));
   m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks*m_blks_per_chunk, ALIGNMENT));
-
+  memset(m_block_bitmap, 1, m_num_chunks * m_blks_per_chunk);
   if (!m_encode_matrix || !m_decode_matrix || !m_invert_matrix || !m_temp_matrix || !m_g_tbls ||
       !m_data_buffer || !m_recovery_outp_buffer || !m_block_bitmap) {
     throw_error("ISAL: Failed to allocate memory.");
@@ -128,8 +128,6 @@ int ISALBenchmark::decode() noexcept {
     recovery_outp_ptrs += ECLimits::ISAL_MAX_TOT_BLOCKS;
     decode_index += ECLimits::ISAL_MAX_TOT_BLOCKS;
     bitmap_ptr += m_blks_per_chunk;
-
-
   }
   return 0;
 }

@@ -26,7 +26,8 @@ LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECB
   m_encode_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_blk * m_encode_work_count, ALIGNMENT));
   m_decode_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_blk * m_decode_work_count, ALIGNMENT));
   m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_blks_per_chunk, ALIGNMENT));
-
+  memset(m_block_bitmap, 1, m_num_chunks * m_blks_per_chunk);
+  
   if (!m_data_buffer || !m_encode_buffer || !m_decode_buffer || !m_block_bitmap) throw_error("Leopard: Failed to allocate memory.");
 
   // Populate vectors with pointers to the data blocks
