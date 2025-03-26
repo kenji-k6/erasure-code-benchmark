@@ -21,6 +21,8 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
     if (!bench.check_for_corruption()) {
       state.counters["data_corrupted"] = 1;
+    } else {
+      state.counters["data_corrupted"] = 0;
     }
     state.ResumeTiming();
   }

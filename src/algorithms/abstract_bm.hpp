@@ -59,8 +59,7 @@ public:
    */
   virtual bool check_for_corruption() const noexcept {
     for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
-      uint8_t* data_ptr = m_data_buffer + i*m_size_data_submsg;
-      if (!validate_block(data_ptr, m_size_blk)) return false;
+      if (!validate_block(m_data_buffer+i*m_size_blk, m_size_blk)) return false;
     }
     return true;
   }
