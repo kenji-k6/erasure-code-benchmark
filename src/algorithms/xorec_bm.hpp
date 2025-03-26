@@ -19,7 +19,8 @@ explicit XorecBenchmark(const BenchmarkConfig& config) noexcept;
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
-  bool check_for_corruption() const noexcept override;
+protected:
+  uint8_t* m_parity_buffer;
 };
 
 #endif // XOREC_BM_HPP

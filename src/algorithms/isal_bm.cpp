@@ -13,117 +13,130 @@
 
 
 ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
-  m_num_total_blocks = m_num_original_blocks + m_num_recovery_blocks;
-  // Allocate matrices etc.
-  m_encode_matrix = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks);
-  m_decode_matrix = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks);
-  m_invert_matrix = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks);
-  m_temp_matrix = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks);
-  m_g_tbls = std::make_unique<uint8_t[]>(m_num_total_blocks * m_num_original_blocks * 32);
 
-  m_original_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_total_blocks);
-  m_recovery_outp_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_recovery_blocks);
+  // Allocate matrices etc.
+  size_t num_data_blocks = get<0>(m_fec_params);
+  size_t num_parity_blocks = get<1>(m_fec_params);
+  m_encode_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks, ALIGNMENT)); 
+  m_decode_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks, ALIGNMENT));
+  m_invert_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks, ALIGNMENT));
+  m_temp_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks, ALIGNMENT));
+  m_g_tbls = reinterpret_cast<uint8_t*>(_mm_malloc(m_blks_per_chunk * num_data_blocks * 32, ALIGNMENT));
+
+  m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_blks_per_chunk * m_size_blk, ALIGNMENT));
+  m_recovery_outp_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * num_parity_blocks * m_size_blk, ALIGNMENT));
+  m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks*m_blks_per_chunk, ALIGNMENT));
 
   if (!m_encode_matrix || !m_decode_matrix || !m_invert_matrix || !m_temp_matrix || !m_g_tbls ||
-      !m_original_buffer || !m_recovery_outp_buffer) {
+      !m_data_buffer || !m_recovery_outp_buffer || !m_block_bitmap) {
     throw_error("ISAL: Failed to allocate memory.");
   }
 
   // Initialize Pointer vectors
-  m_original_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  m_recovery_src_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  m_recovery_outp_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  m_decode_index.resize(ECLimits::ISAL_MAX_TOT_BLOCKS);
+  m_original_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
+  m_parity_src_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
+  m_recovery_outp_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
+  m_decode_index.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
 
-  for (unsigned i = 0; i < m_num_total_blocks; ++i) {
-    m_original_ptrs[i] = &m_original_buffer[i * m_block_size];
+  for (unsigned i = 0; i < m_num_chunks*m_blks_per_chunk; ++i) {
+    m_original_ptrs[i] = m_data_buffer + i * m_size_blk;
   }
 
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
-    m_recovery_outp_ptrs[i] = &m_recovery_outp_buffer[i * m_block_size];
+  for (unsigned i = 0; i < num_data_blocks*m_num_chunks; ++i) {
+    m_recovery_outp_ptrs[i] = m_recovery_outp_buffer + i * m_size_blk;
   }
 
   // Generate encode matricx, can be precomputed as it is fixed for a given m_num_original_blocks
-  gf_gen_cauchy1_matrix(m_encode_matrix.get(), m_num_total_blocks, m_num_original_blocks);
+  gf_gen_cauchy1_matrix(m_encode_matrix, m_blks_per_chunk, num_data_blocks);
 
   // Initialize generator tables for encoding, can be precomputed as it is fixed for a given m_num_original_blocks
-  ec_init_tables(m_num_original_blocks, m_num_recovery_blocks, &m_encode_matrix[m_num_original_blocks * m_num_original_blocks], m_g_tbls.get());
+  ec_init_tables(num_data_blocks, num_parity_blocks, &m_encode_matrix[num_data_blocks * num_data_blocks], m_g_tbls);
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
-    int write_res = write_validation_pattern(i, m_original_ptrs[i], m_block_size);
-    if (write_res) throw_error("ISAL: Failed to write random checking packet.");
+  for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
+    if (write_validation_pattern(i, m_original_ptrs[i], m_size_blk)) throw_error("ISAL: Failed to write random checking packet.");
   }
 }
 
+ISALBenchmark::~ISALBenchmark() noexcept {
+  _mm_free(m_encode_matrix);
+  _mm_free(m_decode_matrix);
+  _mm_free(m_invert_matrix);
+  _mm_free(m_temp_matrix);
+  _mm_free(m_g_tbls);
+  _mm_free(m_data_buffer);
+  _mm_free(m_recovery_outp_buffer);
+  _mm_free(m_block_bitmap);
+}
+
 int ISALBenchmark::encode() noexcept {
-  ec_encode_data(m_block_size, m_num_original_blocks, m_num_recovery_blocks,
-                 m_g_tbls.get(), m_original_ptrs.data(), m_original_ptrs.data() + m_num_original_blocks);
+  size_t num_data_blocks = get<0>(m_fec_params);
+  size_t num_parity_blocks = get<1>(m_fec_params);
+
+  for (unsigned i = 0; i < m_num_chunks; ++i) {
+    auto orig_ptrs = m_original_ptrs.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
+    ec_encode_data(m_size_blk, num_data_blocks, num_parity_blocks, m_g_tbls, orig_ptrs, orig_ptrs + num_data_blocks);
+  }
   return 0;
 }
 
 
-
 int ISALBenchmark::decode() noexcept {
-  if (m_num_lost_blocks == 0) return 0;
+  size_t num_data_blocks = get<0>(m_fec_params);
+  size_t num_parity_blocks = get<1>(m_fec_params);
 
-  // Copy lost block indices (in reality this would be done by iterating and checking for lost blocks)
-  for (auto idx : m_lost_block_idxs) {
-    m_block_err_list.push_back(static_cast<uint8_t>(idx));
+  for (unsigned i = 0; i < m_num_chunks; ++i) {
+    auto orig_ptrs = m_original_ptrs.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
+    auto parity_src_ptrs = m_parity_src_ptrs.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
+    auto recovery_outp_ptrs = m_recovery_outp_ptrs.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
+    auto decode_index = m_decode_index.data() + i * ECLimits::ISAL_MAX_TOT_BLOCKS;
+    uint8_t* bitmap_ptr = m_block_bitmap + i*m_blks_per_chunk;
+
+    m_block_err_list.clear();
+
+    for (unsigned j = 0; j < m_blks_per_chunk; ++j) {
+      if (bitmap_ptr[j] == 0) {
+        m_block_err_list.push_back(static_cast<uint8_t>(j));
+      }
+    }
+
+    if (m_block_err_list.empty()) continue;
+
+    if (gf_gen_decode_matrix_simple(m_encode_matrix, m_decode_matrix, m_invert_matrix,
+                                    m_temp_matrix, decode_index, m_block_err_list, m_block_err_list.size(),
+                                    num_data_blocks, m_blks_per_chunk)) {
+      return -1;
+    }
+
+
+    for (unsigned i = 0; i < num_data_blocks; ++i) {
+      parity_src_ptrs[i] = orig_ptrs[decode_index[i]];
+    }
+
+    ec_init_tables(num_data_blocks, m_block_err_list.size(), m_decode_matrix, m_g_tbls);
+    ec_encode_data(m_size_blk, num_data_blocks, m_block_err_list.size(), m_g_tbls, parity_src_ptrs, recovery_outp_ptrs);
+    
+    for (unsigned i = 0; i < m_block_err_list.size(); ++i) {
+      memcpy(orig_ptrs[m_block_err_list[i]], recovery_outp_ptrs[i], m_size_blk);
+    }
+
   }
-  // Generate decoding matrix
-  if (gf_gen_decode_matrix_simple(m_encode_matrix, m_decode_matrix, m_invert_matrix,
-                                  m_temp_matrix, m_decode_index, m_block_err_list,
-                                  m_num_lost_blocks, m_num_original_blocks, m_num_total_blocks)) {
-    return -1;
-  }
-  // Set up recovery pointers
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
-    m_recovery_src_ptrs[i] = m_original_ptrs[m_decode_index[i]];
-  }
-  // Initialize tables and perform recovery
-  ec_init_tables(m_num_original_blocks, m_num_lost_blocks, m_decode_matrix.get(), m_g_tbls.get());
-  ec_encode_data(m_block_size, m_num_original_blocks, m_num_lost_blocks,
-                 m_g_tbls.get(), m_recovery_src_ptrs.data(), m_recovery_outp_ptrs.data());
-                 
   return 0;
 }
 
 
 void ISALBenchmark::simulate_data_loss() noexcept {
-  for (auto idx : m_lost_block_idxs) {
-    memset(m_original_ptrs[idx], 0, m_block_size);
-    m_original_ptrs[idx] = nullptr;
-    if (idx > m_num_original_blocks) {
-      memset(m_recovery_outp_ptrs[idx - m_num_original_blocks], 0, m_block_size);
-    }
-  }
-}
-
-
-bool ISALBenchmark::check_for_corruption() const noexcept {
-  unsigned loss_idx = 0;
-  for (unsigned i = 0; i < m_num_original_blocks; i++) {
-    bool res = false;
-    if (loss_idx < m_num_lost_blocks && i == m_lost_block_idxs[loss_idx]) {
-      res = validate_block(m_recovery_outp_ptrs[loss_idx], m_block_size);
-      loss_idx++;
-    } else {
-      res = validate_block(m_original_ptrs[i], m_block_size);
-    }
-
-    if (!res) return false;
-  }
-  return true;
+  // TODO
+  return;
 }
 
 
 int gf_gen_decode_matrix_simple(
-  const std::unique_ptr<uint8_t[]>& encode_matrix,
-  std::unique_ptr<uint8_t[]>& decode_matrix,
-  std::unique_ptr<uint8_t[]>& invert_matrix,
-  std::unique_ptr<uint8_t[]>& temp_matrix,
-  std::vector<uint8_t>& decode_index,
+  const uint8_t* encode_matrix,
+  uint8_t* decode_matrix,
+  uint8_t* invert_matrix,
+  uint8_t* temp_matrix,
+  uint8_t* decode_index,
   std::vector<uint8_t>& frag_err_list,
   const int nerrs, const int k, [[maybe_unused]] const int m
 ) {
@@ -153,7 +166,7 @@ int gf_gen_decode_matrix_simple(
     decode_index[i] = r;
   }
   // Invert matrix to get recovery matrix
-  if (gf_invert_matrix(temp_matrix.get(), invert_matrix.get(), k) < 0) {
+  if (gf_invert_matrix(temp_matrix, invert_matrix, k) < 0) {
     return -1;
   }
   // Get decode matrix with only wanted recovery rows

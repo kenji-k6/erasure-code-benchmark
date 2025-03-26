@@ -30,9 +30,7 @@ public:
 private:
   size_t m_num_total_blocks;
 
-  std::unique_ptr<uint8_t[]> m_original_buffer;    ///< Buffer for the original data we want to transmit
-  std::unique_ptr<uint8_t[]> m_encode_buffer;      ///< Buffer for the encoded data
-  std::unique_ptr<uint8_t[]> m_decode_buffer;      ///< Buffer for the decoded data
+  uint8_t* m_encode_buffer;      ///< Buffer for the encoded data
 
   WirehairCodec m_encoder;       ///< Wirehair encoder instance
   WirehairCodec m_decoder;       ///< Wirehair decoder instance

@@ -16,71 +16,67 @@ LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECB
   // Initialize Leopard
   if (leo_init()) throw_error("Leopard: Initialization failed.");
 
-  m_encode_work_count = leo_encode_work_count(m_num_original_blocks, m_num_recovery_blocks);
-  m_decode_work_count = leo_decode_work_count(m_num_original_blocks, m_num_recovery_blocks);
+  m_encode_work_count = leo_encode_work_count(get<0>(m_fec_params), get<1>(m_fec_params));
+  m_decode_work_count = leo_decode_work_count(get<0>(m_fec_params), get<1>(m_fec_params));
 
   if (m_encode_work_count == 0 || m_decode_work_count == 0) throw_error("Leopard: Invalid work count(s).");
 
-  // Allocate buffers
-  m_original_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_original_blocks);
-  m_encode_buffer = std::make_unique<uint8_t[]>(m_block_size * m_encode_work_count);
-  m_decode_buffer = std::make_unique<uint8_t[]>(m_block_size * m_decode_work_count);
+  // Allocate buffers;
+  m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_data_submsg, ALIGNMENT));
+  m_encode_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_blk * m_encode_work_count, ALIGNMENT));
+  m_encode_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_blk * m_decode_work_count, ALIGNMENT));
+  m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_blks_per_chunk, ALIGNMENT));
 
-  if (!m_original_buffer || !m_encode_buffer || !m_decode_buffer) throw_error("Leopard: Failed to allocate buffer(s).");
+  if (!m_data_buffer || !m_encode_buffer || !m_decode_buffer || !m_block_bitmap) throw_error("Leopard: Failed to allocate memory.");
 
   // Populate vectors with pointers to the data blocks
-  m_original_ptrs.resize(m_num_original_blocks);
-  m_encode_work_ptrs.resize(m_encode_work_count);
-  m_decode_work_ptrs.resize(m_decode_work_count);
+  m_original_ptrs.resize(m_num_chunks * get<0>(m_fec_params));
+  m_encode_work_ptrs.resize(m_num_chunks * m_encode_work_count);
+  m_decode_work_ptrs.resize(m_num_chunks * m_decode_work_count);
 
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) m_original_ptrs[i] = &m_original_buffer[i * m_block_size];
-  for (unsigned i = 0; i < m_encode_work_count; ++i) m_encode_work_ptrs[i] = &m_encode_buffer[i * m_block_size];
-  for (unsigned i = 0; i < m_decode_work_count; ++i) m_decode_work_ptrs[i] = &m_decode_buffer[i * m_block_size];
+  for (unsigned i = 0; i < m_num_chunks * get<0>(m_fec_params); ++i) m_original_ptrs[i] = m_data_buffer + i*m_size_blk;
+  for (unsigned i = 0; i < m_num_chunks * m_encode_work_count; ++i) m_encode_work_ptrs[i] = m_encode_buffer + i*m_size_blk;
+  for (unsigned i = 0; i < m_num_chunks * m_decode_work_count; ++i) m_decode_work_ptrs[i] = m_decode_buffer + i*m_size_blk;
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
-    int write_res = write_validation_pattern(i, m_original_ptrs[i], m_block_size);
-    if (write_res) throw_error("Leopard: Failed to write random checking packet.");
+  for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
+    if (write_validation_pattern(i, m_data_buffer, m_size_blk)) throw_error("Leopard: Failed to write validation pattern.");
   }
 }
 
 int LeopardBenchmark::encode() noexcept {
-  return leo_encode(m_block_size, m_num_original_blocks,
-                    m_num_recovery_blocks, m_encode_work_count,
-                    reinterpret_cast<void**>(m_original_ptrs.data()),
-                    reinterpret_cast<void**>(m_encode_work_ptrs.data()));
+
+  for (unsigned i = 0; i < m_num_chunks; ++i) {
+    void** data_ptrs = reinterpret_cast<void**>(m_original_ptrs.data() + i*get<0>(m_fec_params));
+    void** encode_work_ptrs = reinterpret_cast<void**>(m_encode_work_ptrs.data() + i*m_encode_work_count);
+    size_t fec_0 = get<0>(m_fec_params);
+    size_t fec_1 = get<1>(m_fec_params);
+
+    if (leo_encode(m_size_blk, fec_0, fec_1, m_encode_work_count, data_ptrs, encode_work_ptrs)) return 1;
+  }
+
+  return 0;
 }
 
 
 int LeopardBenchmark::decode() noexcept {
-  return leo_decode(m_block_size, m_num_original_blocks,
-                    m_num_recovery_blocks, m_decode_work_count,
-                    reinterpret_cast<void**>(m_original_ptrs.data()),
-                    reinterpret_cast<void**>(m_encode_work_ptrs.data()),
-                    reinterpret_cast<void**>(m_decode_work_ptrs.data()));
+  for (unsigned i = 0; i < m_num_chunks; ++i) {
+    void** data_ptrs = reinterpret_cast<void**>(m_original_ptrs.data() + i*get<0>(m_fec_params));
+    void** encode_work_ptrs = reinterpret_cast<void**>(m_encode_work_ptrs.data() + i*m_encode_work_count);
+    void** decode_work_ptrs = reinterpret_cast<void**>(m_decode_work_ptrs.data() + i*m_decode_work_count);
+    size_t fec_0 = get<0>(m_fec_params);
+    size_t fec_1 = get<1>(m_fec_params);
+
+    if (leo_decode(m_size_blk, fec_0, fec_1, m_decode_work_count, data_ptrs, encode_work_ptrs, decode_work_ptrs)) return 1;
+
+    for (unsigned j = 0; j < get<0>(m_fec_params); ++j) {
+      if (!data_ptrs[j]) memcpy(data_ptrs[j], decode_work_ptrs[j], m_size_blk);
+    }
+  }
+  return 0;
 }
 
 
 void LeopardBenchmark::simulate_data_loss() noexcept {
-  for (auto idx : m_lost_block_idxs) {
-    if (idx < m_num_original_blocks) {
-      memset(m_original_ptrs[idx], 0, m_block_size);
-      m_original_ptrs[idx] = nullptr;
-    } else {
-      memset(m_encode_work_ptrs[idx - m_num_original_blocks], 0, m_block_size);
-      m_encode_work_ptrs[idx- m_num_original_blocks] = nullptr;
-    }
-  }
-}
-
-
-bool LeopardBenchmark::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
-    if (!m_original_ptrs[i]) { // lost block
-      if (!validate_block(m_decode_work_ptrs[i], m_block_size)) return false;
-    } else { // block is intact
-      if (!validate_block(m_original_ptrs[i], m_block_size)) return false;
-    }
-  }
-  return true;
+  return; // TODO
 }

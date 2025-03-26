@@ -13,16 +13,14 @@
 
 XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
   xorec_init();
-  m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks*m_size_data_submsg, ALIGNMENT));
-  m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks*m_size_parity_submsg, ALIGNMENT));
-  m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks*m_blks_per_chunk, ALIGNMENT));
+  m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_data_submsg, ALIGNMENT));
+  m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_parity_submsg, ALIGNMENT));
+  m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_blks_per_chunk, ALIGNMENT));
 
-  if (m_data_buffer == nullptr || m_parity_buffer == nullptr || m_block_bitmap == nullptr) {
-    throw_error("XorecBenchmark: Failed to allocate memory");
-  }
+  if (!m_data_buffer || !m_parity_buffer || !m_block_bitmap) throw_error("XorecBenchmark: Failed to allocate memory.");
 
   for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
-    if(write_validation_pattern(i, m_data_buffer, m_size_blk)) throw_error("XorecBenchmark: Failed to write validation pattern");
+    if (write_validation_pattern(i, m_data_buffer, m_size_blk)) throw_error("XorecBenchmark: Failed to write validation pattern");
   }
 }
 
@@ -59,10 +57,3 @@ void XorecBenchmark::simulate_data_loss() noexcept {
   return; // TODO
 }
 
-bool XorecBenchmark::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < m_num_chunks; ++i) {
-    uint8_t* data_ptr = m_data_buffer + i*m_size_data_submsg;
-    if (!validate_block(data_ptr, m_size_blk)) return false;
-  }
-  return true;
-}

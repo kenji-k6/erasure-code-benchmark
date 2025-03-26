@@ -2,6 +2,7 @@
 #define ABSTRACT_BM_HPP
 
 #include "bm_config.hpp"
+#include <immintrin.h>
 #include <cstring>
 
 /**
@@ -55,7 +56,13 @@ public:
    * 
    * @return True if the data is not corrupted, false otherwise.
    */
-  virtual bool check_for_corruption() const noexcept = 0;
+  virtual bool check_for_corruption() const noexcept {
+    for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
+      uint8_t* data_ptr = m_data_buffer + i*m_size_data_submsg;
+      if (!validate_block(data_ptr, m_size_blk)) return false;
+    }
+    return true;
+  }
 
 protected:
   explicit ECBenchmark(const BenchmarkConfig& config) noexcept
@@ -90,7 +97,6 @@ protected:
   size_t m_num_chunks;
 
   uint8_t* m_data_buffer;
-  uint8_t* m_parity_buffer;
   uint8_t* m_block_bitmap;
 };
 
