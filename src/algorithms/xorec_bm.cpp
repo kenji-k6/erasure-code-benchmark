@@ -20,7 +20,7 @@ XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBench
   if (!m_data_buffer || !m_parity_buffer || !m_block_bitmap) throw_error("XorecBenchmark: Failed to allocate memory.");
 
   for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
-    if (write_validation_pattern(i, m_data_buffer, m_size_blk)) throw_error("XorecBenchmark: Failed to write validation pattern");
+    if (write_validation_pattern(i, m_data_buffer+i*m_size_blk, m_size_blk)) throw_error("XorecBenchmark: Failed to write validation pattern");
   }
 }
 

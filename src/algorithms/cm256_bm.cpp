@@ -28,7 +28,7 @@ CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : ECBench
 
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
-    if (write_validation_pattern(i, m_data_buffer, m_size_blk)) throw_error("CM256: Failed to write validation pattern");
+    if (write_validation_pattern(i, m_data_buffer+i*m_size_blk, m_size_blk)) throw_error("CM256: Failed to write validation pattern");
   }
 
   // Initialize indices
