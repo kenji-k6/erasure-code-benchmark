@@ -8,29 +8,6 @@
 #include <cmath>
 
 
-/**
- * @brief Runs a generic benchmark for a given EC Library Benchmark type
- * 
- * This function is templated to work with any class that implements
- * the `ECBenchmark` interface. It follows a standard benchmarking procedure:
- * 1. Pauses timing and sets up the benchmark environment
- * 2. Touches GPU memory if required
- * 3. Encodes data
- * 4. Simulates data loss (untimed)
- * 5. Touches GPU memory if required
- * 6. Decodes data
- * 7. Verifies the correctness of the decoded data (untimed)
- * 8. Cleans up the benchmark environment
- * 
- * If data corruption is detected after decoding, the benchmark run is skipped
- * with an error message
- * 
- * @attention Pausing and stopping in each iteration incurs some overhead, however it is rouglhy 200-300ns and therefore negligible
- * Manual Timing as specified in the Google Benchmark documentation does not change this, since then the timings lose accuracy
- * 
- * @tparam BenchmarkType A class implementing the `ECBenchmark` interface
- * @param state The Google Benchmark state object
- */
 template <typename BenchmarkType>
 static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   std::vector<int64_t> enc_times(config.num_iterations);
@@ -49,14 +26,12 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
   for (auto _ : state) {
     BenchmarkType bench(config);
-    if (config.is_xorec_config && config.xorec_params.unified_mem && config.xorec_params.touch_unified_mem) bench.touch_unified_memory();
 
     auto start_encode = std::chrono::steady_clock::now();
     bench.encode();
     auto end_encode = std::chrono::steady_clock::now();
 
     bench.simulate_data_loss();
-    if (config.is_xorec_config && config.xorec_params.unified_mem && config.xorec_params.touch_unified_mem) bench.touch_unified_memory();
     
     auto start_decode = std::chrono::steady_clock::now();
     bench.decode();
@@ -122,13 +97,11 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
 
   // Save results to counters
-  state.counters["plot_id"] = config.plot_id;
-  state.counters["tot_data_size_B"] = config.data_size;
+  state.counters["message_size_B"] = config.message_size;
   state.counters["block_size_B"] = config.block_size;
-  state.counters["num_lost_blocks"] = config.num_lost_blocks;
-  state.counters["redundancy_ratio"] = config.redundancy_ratio;
-  state.counters["num_data_blocks"] = config.num_original_blocks;
-  state.counters["num_parity_blocks"] = config.num_recovery_blocks;
+  state.counters["fec_params_0"] = get<0>(config.fec_params);
+  state.counters["fec_params_1"] = get<1>(config.fec_params);
+  state.counters["num_lost_rmda_packets"] = config.num_lost_rmda_packets;
 
   state.counters["encode_time_ns"] = enc_time_mean;
   state.counters["encode_time_ns_stddev"] = enc_time_stddev;
