@@ -13,9 +13,7 @@
 WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
   if (wirehair_init()) throw_error("Wirehair: Initialization failed.");
 
-  size_t num_data_blocks = get<0>(m_fec_params);
-  size_t num_parity_blocks = get<1>(m_fec_params);
-  m_num_total_blocks = num_data_blocks + num_parity_blocks;
+  m_num_total_blocks = m_data_blks_per_chunk + m_parity_blks_per_chunk;
 
   // Allocate buffers
   m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_data_submsg, ALIGNMENT));
@@ -42,30 +40,33 @@ WirehairBenchmark::~WirehairBenchmark() noexcept {
 
 int WirehairBenchmark::encode() noexcept {
   uint32_t write_len = 0;
+  uint8_t* data_ptr = m_data_buffer;
+  uint8_t* encode_ptr = m_encode_buffer;
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    void* data_ptr = m_data_buffer + i*m_size_data_submsg;
-    uint8_t* encode_ptr = m_encode_buffer + i*(m_size_parity_submsg + m_size_data_submsg);
-
     m_encoder = wirehair_encoder_create(m_encoder, data_ptr, m_size_data_submsg, m_size_blk);
+
     if (!m_encoder) return 1;
-    for (unsigned j = 0; j < m_num_total_blocks; ++i) {
-      if (wirehair_encode(m_encoder, j, encode_ptr + i * m_size_blk,
+
+    for (unsigned j = 0; j < m_num_total_blocks; ++j) {
+
+      if (wirehair_encode(m_encoder, j, encode_ptr + j * m_size_blk,
                           m_size_blk, &write_len) != Wirehair_Success) return 1;
     }
+    data_ptr += m_size_data_submsg;
+    encode_ptr += m_size_parity_submsg + m_size_data_submsg;
   }
   return 0;
 }
 
 int WirehairBenchmark::decode() noexcept {
-  size_t num_data_blocks = get<0>(m_fec_params);
+  uint8_t* data_ptr = m_data_buffer;
+  uint8_t* encode_ptr = m_encode_buffer;
+  uint8_t* bitmap_ptr = m_block_bitmap;
+
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    uint8_t* data_ptr = m_data_buffer + i * m_size_data_submsg;
-    uint8_t* encode_ptr = m_encode_buffer + i * (m_size_parity_submsg + m_size_data_submsg);
-    uint8_t* bitmap_ptr = m_block_bitmap + i * m_blks_per_chunk;
-    
     WirehairResult decode_result = Wirehair_NeedMore;
-    m_decoder = wirehair_decoder_create(m_decoder, m_size_blk * num_data_blocks, m_size_blk);
+    m_decoder = wirehair_decoder_create(m_decoder, m_size_blk * m_data_blks_per_chunk, m_size_blk);
     if (!m_decoder) return 1;
 
     for (unsigned j = 0; j < m_num_total_blocks; ++j) {
@@ -75,6 +76,10 @@ int WirehairBenchmark::decode() noexcept {
     }
     WirehairResult recover_result = wirehair_recover(m_decoder, data_ptr, m_size_data_submsg);
     if (recover_result != Wirehair_Success) return 1;
+    
+    data_ptr += m_size_data_submsg;
+    encode_ptr += m_size_parity_submsg + m_size_data_submsg;
+    bitmap_ptr += m_blks_per_chunk;
   }
   return 0;
 }
