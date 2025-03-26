@@ -79,6 +79,7 @@ void parse_args(int argc, char** argv) {
     switch (c) {
       case 'h':
         print_usage();
+        exit(0);
         break;
       case 'f':
         OUTPUT_FILE = std::string(optarg);
@@ -88,7 +89,7 @@ void parse_args(int argc, char** argv) {
         break;
       case 'i':
         NUM_ITERATIONS = std::stoi(optarg);
-        if (NUM_ITERATIONS <= 0) throw_error("Number of iterations must be greater than 0");
+        if (NUM_ITERATIONS < 3) throw_error("Number of iterations must be at least 3");
         break;
       case 'c':
         args = get_arg_vector(std::string(optarg));
@@ -117,12 +118,13 @@ void print_usage() {
             << "  -h, --help            show this help message"                                             << '\n'
             << "  -f, --file            specify the output CSV file (inside /results/raw/)"                 << '\n'
             << "  -a, --append          append results to the output file (default: overwrite)"             << '\n'
-            << "  -i, --iterations      number of benchmark iterations (default 1)"                         << '\n'
+            << "  -i, --iterations      number of benchmark iterations (atleast 3, default 3)"                         << '\n'
             << "  -c, --cpu-algorithm <cm256|isal|leopard|wirehair|xorec>"                                  << '\n'
             << "                        run the specified CPU algorithms, 0 or more comma separated args."  << '\n'
             << "  -g, --gpu-algorithm <xorec>"                                                              << '\n'
-            << "                        run the specified GPU algorithms, 0 or more comma separated args."  << '\n';
+            << "                        run the specified GPU algorithms, 0 or more comma separated args."  << '\n' << '\n';
 }
+
 
 
 void get_cpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
@@ -187,8 +189,14 @@ void run_benchmarks() {
   START_TIME = std::chrono::system_clock::now();
   ensure_result_dir();
 
-  int argc = 2;
-  char *argv[] = { (char*)"benchmark", (char*)"--benchmark_out=console" };
+  std::string repetitions = "--benchmark_repetitions=" + std::to_string(5);
+  char arg0[] = "benchmark";
+  char arg1[] = "--benchmark_out=console";
+  char arg2[50];
+  snprintf(arg2, sizeof(arg2), "--benchmark_repetitions=%d", NUM_ITERATIONS);
+
+  int argc = 3;
+  char *argv[] = { arg0, arg1, arg2 };
 
   std::vector<BenchmarkTuple> benchmarks;
 
@@ -200,15 +208,15 @@ void run_benchmarks() {
   }
 
   std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(benchmarks.size() * NUM_ITERATIONS, START_TIME);
-  std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(RAW_DIR + OUTPUT_FILE, OVERWRITE_FILE);
+  std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(RAW_DIR + OUTPUT_FILE, OVERWRITE_FILE, NUM_ITERATIONS);
 
   benchmark::ClearRegisteredBenchmarks();
   for (auto [name, func, cfg] : benchmarks) {
     cfg.progress_reporter = console_reporter.get();
 
     benchmark::RegisterBenchmark(name, func, cfg)
-      ->UseRealTime()
-      ->Iterations(NUM_ITERATIONS);
+      ->Iterations(1)
+      ->DisplayAggregatesOnly(true);
   }
 
   benchmark::Initialize(&argc, argv);
