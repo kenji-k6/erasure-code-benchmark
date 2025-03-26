@@ -32,8 +32,6 @@ set (SOURCES
   src/algorithms/leopard_bm.cpp
   src/algorithms/wirehair_bm.cpp
   src/algorithms/xorec_bm.cpp
-  src/algorithms/xorec_unified_ptr_bm.cpp
-  src/algorithms/xorec_gpu_ptr_bm.cpp
   src/algorithms/xorec_gpu_cmp_bm.cpp
 
   src/benchmark/bm_functions.cpp
@@ -41,7 +39,6 @@ set (SOURCES
   src/benchmark/bm_utils.cpp
 
   src/utils/utils.cpp
-  src/utils/bm_cli.cpp
 
   src/xorec/xorec_gpu_cmp.cu
   src/xorec/xorec_utils.cpp
