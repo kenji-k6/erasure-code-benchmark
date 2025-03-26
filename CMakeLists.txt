@@ -72,6 +72,8 @@ set(CMAKE_BUILD_TYPE Release)
 set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON CACHE BOOL "Enable downloading of dependencies" FORCE)
 set(BENCHMARK_ENABLE_LIBPFM ON CACHE BOOL "Enable libpfm support" FORCE)
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable testing in Google Benchmark" FORCE)
+set(PFM_LIBRARY ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/lib/libpfm.a CACHE FILEPATH "Path to libpfm.a" FORCE)
+set(PFM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/include CACHE PATH "Path to libpfm include directory" FORCE)
 add_subdirectory(libraries/google_benchmark)
 
 # leopard
