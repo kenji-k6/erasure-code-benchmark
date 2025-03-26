@@ -9,7 +9,7 @@ __device__ __constant__ int WARP_SIZE;
 
 static bool XOREC_GPU_INIT_CALLED = false;
 
-void xorec_gpu_init(int num_blocks, int threads_per_block, size_t num_data_blocks, [[maybe_unused]] size_t num_parity_blocks) {
+void xorec_gpu_init(int num_gpu_blocks, int threads_per_block, size_t num_data_blocks, [[maybe_unused]] size_t num_parity_blocks) {
   if (XOREC_GPU_INIT_CALLED) return;
   XOREC_GPU_INIT_CALLED = true;
 
@@ -32,10 +32,10 @@ void xorec_gpu_init(int num_blocks, int threads_per_block, size_t num_data_block
 
   std::fill_n(COMPLETE_DATA_BITMAP.begin(), num_data_blocks, 1);
 
-  NUM_BLOCKS = num_blocks;
+  NUM_BLOCKS = num_gpu_blocks;
   THREADS_PER_BLOCK = threads_per_block;
 
-  if (num_blocks <= 0 || threads_per_block <= 0) throw_error("Invalid block count or threads per block");
+  if (num_gpu_blocks <= 0 || threads_per_block <= 0) throw_error("Invalid block count or threads per block");
   if (threads_per_block > device_prop.maxThreadsPerBlock) throw_error("Threads per block exceeds device limit");
 }
 

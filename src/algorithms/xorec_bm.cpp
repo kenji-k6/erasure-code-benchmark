@@ -12,7 +12,7 @@
 
 
 XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
-  xorec_init(get<0>(m_fec_params), get<1>(m_fec_params));
+  xorec_init(m_data_blks_per_chunk, m_parity_blks_per_chunk);
   m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_data_submsg, ALIGNMENT));
   m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_parity_submsg, ALIGNMENT));
   m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_blks_per_chunk, ALIGNMENT));
@@ -31,25 +31,26 @@ XorecBenchmark::~XorecBenchmark() noexcept {
 }
 
 int XorecBenchmark::encode() noexcept {
+  uint8_t* data_ptr = m_data_buffer;
+  uint8_t* parity_ptr = m_parity_buffer;
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    uint8_t* data_ptr = m_data_buffer + i*m_size_data_submsg;
-    uint8_t* parity_ptr = m_parity_buffer + i*m_size_parity_submsg;
-    size_t fec_0 = get<0>(m_fec_params);
-    size_t fec_1 = get<1>(m_fec_params);
-    if (xorec_encode(data_ptr, parity_ptr, m_size_blk, fec_0, fec_1) != XorecResult::Success) return 1;
+    if (xorec_encode(data_ptr, parity_ptr, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk) != XorecResult::Success) return 1;
+    data_ptr += m_size_data_submsg;
+    parity_ptr += m_size_parity_submsg;
   }
   return 0;
 }
 
 int XorecBenchmark::decode() noexcept {
-  for (unsigned i = 0; i < m_num_chunks; ++i) {
-    uint8_t* data_ptr = m_data_buffer + i*m_size_data_submsg;
-    uint8_t* parity_ptr = m_parity_buffer + i*m_size_parity_submsg;
-    size_t fec_0 = get<0>(m_fec_params);
-    size_t fec_1 = get<1>(m_fec_params);
-    uint8_t* bitmap_ptr = m_block_bitmap + i*m_blks_per_chunk;
+  uint8_t* data_ptr = m_data_buffer;
+  uint8_t* parity_ptr = m_parity_buffer;
+  uint8_t* bitmap_ptr = m_block_bitmap;
 
-    if (xorec_decode(data_ptr, parity_ptr, m_size_blk, fec_0, fec_1, bitmap_ptr) != XorecResult::Success) return 1;
+  for (unsigned i = 0; i < m_num_chunks; ++i) {
+    if (xorec_decode(data_ptr, parity_ptr, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk, bitmap_ptr) != XorecResult::Success) return 1;
+    data_ptr += m_size_data_submsg;
+    parity_ptr += m_size_parity_submsg;
+    bitmap_ptr += m_blks_per_chunk;
   }
   return 0;
 }

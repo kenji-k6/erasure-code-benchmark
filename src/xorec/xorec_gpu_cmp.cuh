@@ -9,7 +9,7 @@
 /**
  * @brief Initialize the necessary global variables & GPU environment for XOR encoding and decoding on the GPU.
  */
-void xorec_gpu_init(int num_blocks, int threads_per_block, size_t num_data_blocks, [[maybe_unused]] size_t num_parity_blocks);
+void xorec_gpu_init(int num_gpu_blocks, int threads_per_block, size_t num_data_blocks, [[maybe_unused]] size_t num_parity_blocks);
 
 
 /**
