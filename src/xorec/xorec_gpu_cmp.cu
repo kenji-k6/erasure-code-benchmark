@@ -2,13 +2,14 @@
 #include "utils.hpp"
 
 int DEVICE_ID;
-int MAX_THREADS_PER_BLOCK; 
+int NUM_BLOCKS;
+int THREADS_PER_BLOCK;
 
 __device__ __constant__ int WARP_SIZE;
 
 static bool XOREC_GPU_INIT_CALLED = false;
 
-void xorec_gpu_init() {
+void xorec_gpu_init(int num_blocks, int threads_per_block, size_t num_data_blocks, [[maybe_unused]] size_t num_parity_blocks) {
   if (XOREC_GPU_INIT_CALLED) return;
   XOREC_GPU_INIT_CALLED = true;
 
@@ -24,13 +25,18 @@ void xorec_gpu_init() {
   
   cudaDeviceProp device_prop;
   cudaGetDeviceProperties(&device_prop, DEVICE_ID);
-  MAX_THREADS_PER_BLOCK = device_prop.maxThreadsPerBlock;
   int warp_size = device_prop.warpSize;
 
   err = cudaMemcpyToSymbol(WARP_SIZE, &warp_size, sizeof(int));
   if (err != cudaSuccess) throw_error("Failed to copy warp size to constant memory"); 
 
-  std::fill_n(COMPLETE_DATA_BITMAP.begin(), XOREC_MAX_DATA_BLOCKS, 1);
+  std::fill_n(COMPLETE_DATA_BITMAP.begin(), num_data_blocks, 1);
+
+  NUM_BLOCKS = num_blocks;
+  THREADS_PER_BLOCK = threads_per_block;
+
+  if (num_blocks <= 0 || threads_per_block <= 0) throw_error("Invalid block count or threads per block");
+  if (threads_per_block > device_prop.maxThreadsPerBlock) throw_error("Threads per block exceeds device limit");
 }
 
 XorecResult xorec_gpu_encode(
@@ -40,11 +46,12 @@ XorecResult xorec_gpu_encode(
   size_t num_data_blocks,
   size_t num_parity_blocks
 ) {
+  if (!XOREC_GPU_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_encode()");
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
   if (block_size % sizeof(CUDA_ATOMIC_XOR_T) != 0) return XorecResult::InvalidSize;
 
   cudaMemset(parity_buffer, 0, block_size * num_parity_blocks);
-  xorec_gpu_xor_parity_kernel<<<1024, MAX_THREADS_PER_BLOCK>>>(data_buffer, parity_buffer, block_size, num_data_blocks, num_parity_blocks);
+  xorec_gpu_xor_parity_kernel<<<NUM_BLOCKS, THREADS_PER_BLOCK>>>(data_buffer, parity_buffer, block_size, num_data_blocks, num_parity_blocks);
 
   return XorecResult::Success;
 }
@@ -58,6 +65,7 @@ XorecResult xorec_gpu_decode(
   size_t num_parity_blocks,
   const uint8_t *XOREC_RESTRICT block_bitmap   ///< Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
 ) {
+  if (!XOREC_GPU_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_decode()");
   if (!recovery_needed(block_bitmap)) return XorecResult::Success;
 
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
@@ -71,7 +79,7 @@ XorecResult xorec_gpu_decode(
     if (!block_bitmap[i]) cudaMemsetAsync(data_buffer + i * block_size, 0, block_size);
   }
 
-  xorec_gpu_xor_parity_kernel<<<1024, MAX_THREADS_PER_BLOCK>>>(data_buffer, parity_buffer, block_size, num_data_blocks, num_parity_blocks);
+  xorec_gpu_xor_parity_kernel<<<NUM_BLOCKS, THREADS_PER_BLOCK>>>(data_buffer, parity_buffer, block_size, num_data_blocks, num_parity_blocks);
 
   for (uint32_t i = 0; i < num_data_blocks; ++i) {
     if (!block_bitmap[i]) cudaMemcpyAsync(data_buffer + i * block_size, parity_buffer + (i % num_parity_blocks) * block_size, block_size, cudaMemcpyDeviceToDevice);
