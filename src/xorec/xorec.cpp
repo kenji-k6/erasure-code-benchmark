@@ -3,7 +3,6 @@
  * @brief Implements XOR-based erasure encoding and decoding functions.
  */
 
-
  #include "xorec.hpp"
  #include <cstring>
  #include "utils.hpp"
@@ -13,7 +12,7 @@ static bool XOREC_INIT_CALLED = false;
 
 
 
-void xorec_init(size_t num_data_blocks, size_t num_parity_blocks) {
+void xorec_init(size_t num_data_blocks, [[maybe_unused]] size_t num_parity_blocks) {
   if (XOREC_INIT_CALLED) return;
   XOREC_INIT_CALLED = true;
   std::fill_n(COMPLETE_DATA_BITMAP.begin(), num_data_blocks, 1);

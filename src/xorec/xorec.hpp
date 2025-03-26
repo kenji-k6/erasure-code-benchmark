@@ -8,7 +8,7 @@
 #define XOREC_AVX2 __m256i
 
 
-void xorec_init();
+void xorec_init(size_t num_data_blocks, size_t num_parity_blocks);
 
 /**
  * @brief Encodes data using XOR-based erasure coding.
