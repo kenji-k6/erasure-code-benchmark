@@ -10,7 +10,6 @@ public:
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
-  bool check_for_corruption() const noexcept override;
 
 protected:
   size_t m_num_total_blocks;
