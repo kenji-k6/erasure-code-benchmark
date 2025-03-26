@@ -103,6 +103,10 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   state.counters["fec_params_1"] = get<1>(config.fec_params);
   state.counters["num_lost_rmda_packets"] = config.num_lost_rmda_packets;
 
+  state.counters["is_gpu_bm"] = config.is_gpu_config ? 1 : 0;
+  state.counters["num_gpu_blocks"] = config.num_gpu_blocks;
+  state.counters["threads_per_gpu_block"] = config.threads_per_gpu_block;
+
   state.counters["encode_time_ns"] = enc_time_mean;
   state.counters["encode_time_ns_stddev"] = enc_time_stddev;
   state.counters["encode_throughput_Gbps"] = enc_throughput;

@@ -16,6 +16,6 @@ void BM_ISAL(benchmark::State& state, const BenchmarkConfig& config);
 void BM_Leopard(benchmark::State& state, const BenchmarkConfig& config);
 void BM_Wirehair(benchmark::State& state, const BenchmarkConfig& config);
 void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config);
-void BM_XOREC_GPU_CMP(benchmark::State& state, const BenchmarkConfig& config);
+void BM_XOREC_GPU(benchmark::State& state, const BenchmarkConfig& config);
 
 #endif // BM_FUNCTIONS_HPP
