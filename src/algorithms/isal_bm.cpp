@@ -74,6 +74,7 @@ ISALBenchmark::~ISALBenchmark() noexcept {
   _mm_free(m_temp_matrix);
   _mm_free(m_g_tbls);
   _mm_free(m_data_buffer);
+  _mm_free(m_parity_buffer);
   _mm_free(m_recovery_outp_buffer);
   _mm_free(m_block_bitmap);
 }
