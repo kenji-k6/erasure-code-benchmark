@@ -27,6 +27,7 @@ find_package(OpenMP REQUIRED) # needed for leopard
 
 # Add source files
 set (SOURCES
+  src/algorithms/abstract_bm.cpp
   src/algorithms/cm256_bm.cpp
   src/algorithms/isal_bm.cpp
   src/algorithms/leopard_bm.cpp
