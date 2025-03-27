@@ -31,9 +31,9 @@ LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECB
   if (!m_data_buffer || !m_encode_buffer || !m_decode_buffer || !m_block_bitmap) throw_error("Leopard: Failed to allocate memory.");
 
   // Populate vectors with pointers to the data blocks
-  m_original_ptrs.resize(m_num_chunks * m_data_blks_per_chunk);
-  m_encode_work_ptrs.resize(m_num_chunks * m_encode_work_count);
-  m_decode_work_ptrs.resize(m_num_chunks * m_decode_work_count);
+  m_original_ptrs.reserve(m_num_chunks * m_data_blks_per_chunk);
+  m_encode_work_ptrs.reserve(m_num_chunks * m_encode_work_count);
+  m_decode_work_ptrs.reserve(m_num_chunks * m_decode_work_count);
 
   for (unsigned i = 0; i < m_num_chunks * m_data_blks_per_chunk; ++i) m_original_ptrs[i] = m_data_buffer + i*m_size_blk;
   for (unsigned i = 0; i < m_num_chunks * m_encode_work_count; ++i) m_encode_work_ptrs[i] = m_encode_buffer + i*m_size_blk;
@@ -76,7 +76,7 @@ int LeopardBenchmark::decode() noexcept {
     if (leo_decode(m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk, m_decode_work_count, data_ptrs, encode_work_ptrs, decode_work_ptrs)) return 1;
 
     for (unsigned j = 0; j < m_data_blks_per_chunk; ++j) {
-      if (!data_ptrs[j]) memcpy(data_ptrs + j, decode_work_ptrs + j, m_size_blk);
+      if (!data_ptrs[j]) memcpy(data_ptrs[j], decode_work_ptrs[j], m_size_blk);
     }
 
     data_ptrs += m_data_blks_per_chunk;

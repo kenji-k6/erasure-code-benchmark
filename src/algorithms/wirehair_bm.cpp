@@ -36,8 +36,8 @@ WirehairBenchmark::~WirehairBenchmark() noexcept {
   _mm_free(m_data_buffer);
   _mm_free(m_encode_buffer);
   _mm_free(m_block_bitmap);
-  wirehair_free(m_encoder);
-  wirehair_free(m_decoder);
+  // wirehair_free(m_decoder);
+  // wirehair_free(m_encoder);
 }
 
 int WirehairBenchmark::encode() noexcept {
@@ -46,17 +46,21 @@ int WirehairBenchmark::encode() noexcept {
   uint8_t* encode_ptr = m_encode_buffer;
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    m_encoder = wirehair_encoder_create(m_encoder, data_ptr, m_size_data_submsg, m_size_blk);
+    m_encoder = wirehair_encoder_create(nullptr, data_ptr, m_size_data_submsg, m_size_blk);
 
     if (!m_encoder) return 1;
 
     for (unsigned j = 0; j < m_num_total_blocks; ++j) {
 
       if (wirehair_encode(m_encoder, j, encode_ptr + j * m_size_blk,
-                          m_size_blk, &write_len) != Wirehair_Success) return 1;
+                          m_size_blk, &write_len) != Wirehair_Success) {
+        wirehair_free(m_encoder);
+        return 1;
+      };
     }
     data_ptr += m_size_data_submsg;
     encode_ptr += m_size_parity_submsg + m_size_data_submsg;
+    wirehair_free(m_encoder);
   }
   return 0;
 }
@@ -68,7 +72,7 @@ int WirehairBenchmark::decode() noexcept {
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
     WirehairResult decode_result = Wirehair_NeedMore;
-    m_decoder = wirehair_decoder_create(m_decoder, m_size_blk * m_data_blks_per_chunk, m_size_blk);
+    m_decoder = wirehair_decoder_create(nullptr, m_size_blk * m_data_blks_per_chunk, m_size_blk);
     if (!m_decoder) return 1;
 
     for (unsigned j = 0; j < m_num_total_blocks; ++j) {
@@ -76,8 +80,13 @@ int WirehairBenchmark::decode() noexcept {
       decode_result = wirehair_decode(m_decoder, j, encode_ptr + j * m_size_blk, m_size_blk);
       if (decode_result == Wirehair_Success) break;
     }
+
     WirehairResult recover_result = wirehair_recover(m_decoder, data_ptr, m_size_data_submsg);
-    if (recover_result != Wirehair_Success) return 1;
+    if (recover_result != Wirehair_Success) {
+      wirehair_free(m_decoder);
+      return 1;
+    }
+    wirehair_free(m_decoder);
 
     data_ptr += m_size_data_submsg;
     encode_ptr += m_size_parity_submsg + m_size_data_submsg;

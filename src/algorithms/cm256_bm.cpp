@@ -21,8 +21,8 @@ CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : ECBench
   m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_data_submsg, ALIGNMENT));
   m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_size_parity_submsg, ALIGNMENT));
   m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_blks_per_chunk, ALIGNMENT));
-  memset(m_block_bitmap, 1, m_num_chunks * m_blks_per_chunk);
   if (!m_data_buffer || !m_parity_buffer || !m_block_bitmap) throw_error("CM256: Failed to allocate memory.");
+  memset(m_block_bitmap, 1, m_num_chunks * m_blks_per_chunk);
 
   // Initialize data buffer with CRC blocks
   for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {

@@ -26,18 +26,18 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchma
 
   m_recovery_outp_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks * m_parity_blks_per_chunk * m_size_blk, ALIGNMENT));
   m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_chunks*m_blks_per_chunk, ALIGNMENT));
-  memset(m_block_bitmap, 1, m_num_chunks * m_blks_per_chunk);
   if (!m_encode_matrix || !m_decode_matrix || !m_invert_matrix || !m_temp_matrix || !m_g_tbls ||
-      !m_data_buffer || !m_recovery_outp_buffer || !m_block_bitmap) {
-    throw_error("ISAL: Failed to allocate memory.");
-  }
+    !m_data_buffer || !m_recovery_outp_buffer || !m_block_bitmap || !m_parity_buffer) {
+      throw_error("ISAL: Failed to allocate memory.");
+    }
+  memset(m_block_bitmap, 1, m_num_chunks * m_blks_per_chunk);
 
   // Initialize Pointer vectors
-  m_frag_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
+  m_frag_ptrs.reserve(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
 
-  m_parity_src_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
-  m_recovery_outp_ptrs.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
-  m_decode_index.resize(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
+  m_parity_src_ptrs.reserve(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
+  m_recovery_outp_ptrs.reserve(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
+  m_decode_index.reserve(ECLimits::ISAL_MAX_TOT_BLOCKS*m_num_chunks);
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
     unsigned idx;
