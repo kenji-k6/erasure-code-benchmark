@@ -16,7 +16,7 @@ class AxType(Enum):
 FILE_NAME_MAP = {
   AxType.ENCODE_T: "encodetime",
   AxType.ENCODE_TP: "encodethroughput",
-  AxType.BLK_SIZE: "buffersize",
+  AxType.BLK_SIZE: "blocksize",
   AxType.FEC_RATIO: "fecratio",
   AxType.GPU_PARAMS: "gpuparams"
 }
