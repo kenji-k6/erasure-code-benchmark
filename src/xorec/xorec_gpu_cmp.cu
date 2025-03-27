@@ -95,16 +95,12 @@ __global__ void xorec_gpu_xor_parity_kernel(
   size_t num_parity_blocks
 ) {
 
-  // unsigned num_warps = (blockDim.x / WARP_SIZE)*gridDim.x;
-
-
   unsigned num_threads = blockDim.x * gridDim.x;
   unsigned glbl_thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
   unsigned block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T); // number of 64-bit elements in a block
   unsigned tot_elems = block_elems * num_data_blocks;
 
-  unsigned thread_elems = (tot_elems + num_threads - 1) / num_threads;
 
   for (unsigned i = glbl_thread_idx; i < tot_elems; i += num_threads) {
     unsigned block_idx = i / block_elems;
