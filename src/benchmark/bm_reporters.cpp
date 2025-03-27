@@ -40,7 +40,7 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
 
   std::string name = "\"" + mean_run.benchmark_name().substr(0, pos) + "\"";
   bool data_corrupted = static_cast<bool>(mean_run.counters.find("data_corrupted")->second.value);
-  std::string err_msg = data_corrupted ? "\"Corruption Detected!\"" : "\"\"";
+  std::string err_msg = data_corrupted ? "\"Corruption Detected!\"" : "";
   uint64_t num_iterations = mean_run.iterations;
   uint64_t message_size_B = static_cast<uint64_t>(mean_run.counters.find("message_size_B")->second.value);
   uint64_t block_size_B = static_cast<uint64_t>(mean_run.counters.find("block_size_B")->second.value);
