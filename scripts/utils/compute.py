@@ -1,41 +1,37 @@
 import pandas as pd
 import numpy as np
-from typing import Dict, List
+from utils.utils import AxType, get_fixed_param
+import utils.config as cfg
 
-from psutil.tests.test_posix import df
-from utils.config import Z_VALUE
+def get_df(file: str, x_axis: AxType) -> pd.DataFrame:
+  df = pd.read_csv(file)
 
-def get_ec_dfs(ec_file: str, selected_benchmarks: List[str]) -> Dict[int, pd.DataFrame]:
-  df = pd.read_csv(ec_file)
-
-
+  # Remove unnecessary text after the benchmark name
   df["name"] = df["name"].str.split("/", n=1).str[0]
+
+  # Remove rows where corruption occured
   df = df[df["err_msg"].isna()]
 
-  if selected_benchmarks:
-    pattern = '|'.join(selected_benchmarks)
-    df = df[df["name"].str.contains(pattern, na=False)]
 
-  df.sort_values(by="name", ascending=True, inplace=True)
+  # Sort by benchmark name and FEC parameters
+  df.sort_values(by=["name", "FEC"], ascending=[True, True], inplace=True)
 
-  df["encode_time_ms"] = df["encode_time_ns"] / 1e6
-  df["decode_time_ms"] = df["decode_time_ns"] / 1e6
-  df["tot_data_size_KiB"] = df["tot_data_size_B"] // 1024
+  # Compute the message size & block size in KiB
+  df["message_size_KiB"] = df["message_size_B"] // 1024
+  df["block_size_KiB"] = df["block_size_B"] // 1024
 
+  # Compute the encode times (and standard deviation) in ms
+  df["time_ms"] = df["time_ns"] / 1e6
+  df["time_ms_stddev"] = df["time_ns_stddev"] / 1e6
 
-  for col in ["encode_time_ns", "decode_time_ns", "encode_throughput_Gbps", "decode_throughput_Gbps"]:
-    df[f"{col}_lower"] = Z_VALUE * (df[f"{col}_stddev"] / np.sqrt(df["num_iterations"]))
-    df[f"{col}_upper"] = Z_VALUE * (df[f"{col}_stddev"] / np.sqrt(df["num_iterations"]))
+  # Compute the encode throughput (and standard deviation) in Gbps
+  df["throughput_Gbps"] = (df["message_size_B"] * 8) / df["time_ns"] # equal to (#bits / 10^9) / (t_ns / 10^9) = #Gbits / s
+  df["throughput_Gbps_stddev"] = df["throughput_Gbps"] * (df["time_ns_stddev"] / df["time_ns"]) # first order taylor expansion/error propagation
 
-  for col in ["encode_time", "decode_time"]:
-    df.rename(columns={f"{col}_ns_lower": f"{col}_ms_lower", f"{col}_ns_upper": f"{col}_ms_upper"}, inplace=True)
-    df[f"{col}_ms_lower"] = df[f"{col}_ms_lower"] / 1e6
-    df[f"{col}_ms_upper"] = df[f"{col}_ms_upper"] / 1e6
-  
-  dfs = {plot_id: group for plot_id, group in df.groupby("plot_id")}
-  return dfs
+  for col in ["time_ms", "throughput_Gbps"]:
+    df[f"{col}_err"] = cfg.Z_VALUE * (df[f"{col}_stddev"] / np.sqrt(df["num_iterations"]))
 
-def get_perf_dfs(perf_file: str) -> Dict[int, pd.DataFrame]:
-  df = pd.read_csv(perf_file)
-  dfs = {xorec_version: group for xorec_version, group in df.groupby("xorec_version")}
-  return dfs
+  # get only the rows with the fixed parameter:
+  fixed_col, fixed_val = get_fixed_param(x_axis)
+  df = df[df[fixed_col] == fixed_val]
+  return df
