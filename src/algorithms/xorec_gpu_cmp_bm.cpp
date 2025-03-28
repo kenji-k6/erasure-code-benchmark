@@ -34,14 +34,7 @@ XorecBenchmarkGpuCmp::~XorecBenchmarkGpuCmp() noexcept {
 }
 
 int XorecBenchmarkGpuCmp::encode() noexcept {
-  uint8_t* data_ptr = m_data_buffer;
-  uint8_t* parity_ptr = m_parity_buffer;
-
-  for (unsigned i = 0; i < m_num_chunks; ++i) {
-    xorec_gpu_encode(data_ptr, parity_ptr, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk);
-    data_ptr += m_size_data_submsg;
-    parity_ptr += m_size_parity_submsg;
-  }
+  xorec_gpu_encode_full_message(m_data_buffer, m_parity_buffer, m_num_chunks, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk);
   cudaDeviceSynchronize();
   return 0;
 }
