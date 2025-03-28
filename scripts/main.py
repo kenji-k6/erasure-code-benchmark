@@ -2,7 +2,7 @@ import argparse
 import os
 from utils.compute import get_df
 import utils.config as cfg
-from utils.plot import write_plot
+from utils.plot import write_cpu_plot, write_gpu_plot
 from utils.utils import get_axis, ensure_paths
 
 
@@ -53,6 +53,12 @@ def main() -> None:
     help="include cache sizes in the plots"
   )
 
+  parser.add_argument(
+    "--gpu",
+    action="store_true",
+    help="plot gpu results"
+  )
+
   args = parser.parse_args()
 
   if args.input:
@@ -67,11 +73,16 @@ def main() -> None:
   y_axis = get_axis(args.y_axis)
 
   cache_sizes = args.cache_sizes
+  plot_gpu = args.gpu
 
 
   ensure_paths()
-  df = get_df(cfg.INPUT_FILE, x_axis)
-  write_plot(df=df, x_axis=x_axis, y_axis=y_axis, cache_sizes=cache_sizes)
+  df = get_df(cfg.INPUT_FILE, plot_gpu)
+  if plot_gpu:
+    write_gpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, cache_sizes=cache_sizes)
+  else:
+    write_cpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, cache_sizes=cache_sizes)
+
   return
 
 if __name__ == "__main__":

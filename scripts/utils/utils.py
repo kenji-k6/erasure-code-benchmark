@@ -1,7 +1,6 @@
 import os
 import pandas as pd
-from enum import Enum, IntEnum
-from typing import Union, Tuple
+from enum import Enum
 
 import utils.config as cfg
 from utils.hardware_info import CPUInfo
@@ -57,10 +56,10 @@ def ensure_paths() -> None:
   return
 
 
-def get_output_path(x_axis: AxType, y_axis: AxType) -> str:
+def get_output_path(x_axis: AxType, y_axis: AxType, plot_gpu: bool) -> str:
   """Generate the file name & path for the plot image."""
 
-  file_name = f"{FILE_NAME_MAP[x_axis]}_vs_{FILE_NAME_MAP[y_axis]}.png"
+  file_name = f"{FILE_NAME_MAP[x_axis]}_vs_{FILE_NAME_MAP[y_axis]}" + ("_gpu" if plot_gpu else "") + ".png"
   return os.path.join(cfg.OUTPUT_DIR, file_name)
 
 
@@ -81,19 +80,10 @@ def get_axis(axis: str) -> AxType:
   return AX_ARG_MAP[axis]
 
 
-def get_fixed_param(x_axis: AxType) -> Tuple[str, Union[int, str]]:
-  """Returns the fixed parameter for the given AxType."""
-  if x_axis == AxType.BLK_SIZE:
-    return get_col_name(AxType.FEC_RATIO), cfg.FIXED_FEC_RATIO
-  elif x_axis == AxType.FEC_RATIO:
-    return get_col_name(AxType.BLK_SIZE), cfg.FIXED_BLOCK_SIZE
 
-
-def get_plot_title(df: pd.DataFrame, x_axis: AxType, cpu_info: CPUInfo) -> str:
+def get_plot_title(df: pd.DataFrame, x_axis: AxType, cpu_info: CPUInfo, gpu_plot: bool) -> str:
   """Generate a  plot title containing all the constant parameters."""
   # Sanity check
-  fixed_col, _ =  get_fixed_param(x_axis)
-  assert(len(df[fixed_col].unique()) == 1)
   cpu_title = f"CPU: {cpu_info.model_name}"
 
   first_row = df.iloc[0]
