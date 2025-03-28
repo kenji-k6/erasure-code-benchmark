@@ -152,10 +152,10 @@ void get_cpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
 }
 
 void get_gpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
-  for (auto num_gpu_blocks : VAR_NUM_GPU_BLOCKS) {
-    for (auto threads_per_gpu_block : VAR_THREADS_PER_GPU_BLOCK) {
-      for (auto block_size : VAR_BLOCK_SIZES) {
-        for (auto fec_params : VAR_FEC_PARAMS) {
+  for (auto block_size : VAR_BLOCK_SIZES) {
+    for (auto fec_params : VAR_FEC_PARAMS) {
+      for (auto num_gpu_blocks : VAR_NUM_GPU_BLOCKS) {
+        for (auto threads_per_gpu_block : VAR_THREADS_PER_GPU_BLOCK) {
           BenchmarkConfig config {
             FIXED_MESSAGE_SIZE,
             block_size,
