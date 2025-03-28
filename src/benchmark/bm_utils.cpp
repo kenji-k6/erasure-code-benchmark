@@ -153,7 +153,7 @@ void get_cpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
 
 void get_gpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
   for (auto num_gpu_blocks : VAR_NUM_GPU_BLOCKS) {
-    for (auto hreads_per_gpu_block : VAR_THREADS_PER_GPU_BLOCK) {
+    for (auto threads_per_gpu_block : VAR_THREADS_PER_GPU_BLOCK) {
       for (auto block_size : VAR_BLOCK_SIZES) {
         for (auto fec_params : VAR_FEC_PARAMS) {
           BenchmarkConfig config {
@@ -163,7 +163,7 @@ void get_gpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
             FIXED_NUM_LOST_RDMA_PKTS,
             true,
             num_gpu_blocks,
-            hreads_per_gpu_block,
+            threads_per_gpu_block,
             NUM_ITERATIONS,
             nullptr
           };

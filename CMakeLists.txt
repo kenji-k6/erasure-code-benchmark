@@ -38,6 +38,7 @@ set (SOURCES
   src/benchmark/bm_functions.cpp
   src/benchmark/bm_reporters.cpp
   src/benchmark/bm_utils.cpp
+  src/benchmark/bm_config.cpp
 
   src/utils/utils.cpp
 
