@@ -92,7 +92,7 @@ def write_gpu_plot(
                     ).set(title=get_plot_title(df, x_axis, cpu_info, True))
 
   
-  g.map_dataframe(sns.barplot, x=x_col, y=y_col, errorbar=None, hue=hue_col, palette=palette)
+  g.map_dataframe(sns.barplot, x=x_col, y=y_col, errorbar=None, hue=hue_col, palette=palette)#.set(yscale="log")
   g.set_axis_labels(x_label, y_label)
   g.set_titles(col_template="{col_name} GPU Blocks")
   g.add_legend(title="Threads per GPU Block")
