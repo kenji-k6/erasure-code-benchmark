@@ -58,4 +58,33 @@ __global__ void xorec_gpu_xor_parity_kernel(
   size_t num_parity_blocks
 );
 
+
+XorecResult xorec_gpu_encode_full_message(
+  const uint8_t *XOREC_RESTRICT data_buffer,
+  uint8_t *XOREC_RESTRICT parity_buffer,
+  size_t num_chunks,
+  size_t block_size,
+  size_t data_blks_per_chunk,
+  size_t parity_blks_per_chunk
+);
+
+XorecResult xorec_gpu_encode_full_message_cpu_parity(
+  const uint8_t *XOREC_RESTRICT data_buffer,
+  uint8_t *XOREC_RESTRICT parity_buffer,
+  uint8_t *XOREC_RESTRICT gpu_parity_buffer,
+  size_t num_chunks,
+  size_t block_size,
+  size_t data_blks_per_chunk,
+  size_t parity_blks_per_chunk
+);
+
+
+__global__ void xorec_encode_kernel_full_message(
+  const uint8_t * XOREC_RESTRICT data_buffer,
+  uint8_t * XOREC_RESTRICT parity_buffer,
+  size_t num_chunks,
+  size_t block_size,
+  size_t data_blks_per_chunk,
+  size_t parity_blks_per_chunk
+);
 #endif // XOREC_GPU_CMP_CUH

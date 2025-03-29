@@ -37,3 +37,7 @@ void BM_XOREC(benchmark::State& state, const BenchmarkConfig& config) {
 void BM_XOREC_GPU(benchmark::State& state, const BenchmarkConfig& config) {
   BM_generic<XorecBenchmarkGpuCmp>(state, config);
 }
+
+void BM_XOREC_GPU_PARITY_CPU(benchmark::State& state, const BenchmarkConfig& config) {
+  BM_generic<XorecBenchmarkGpuCmpCpuParity>(state, config);
+}

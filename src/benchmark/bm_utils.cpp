@@ -36,12 +36,14 @@ const std::unordered_map<std::string, std::string> CPU_BENCHMARK_NAMES = {
 };
 
 const std::unordered_map<std::string, std::string> GPU_BENCHMARK_NAMES = {
-  { "xorec", "Xorec GPU" }
+  { "xorec", "Xorec GPU"                         },
+  { "xorec-cpu-partiy", "Xorec GPU (CPU Parity)" }
 };
 
 
 const std::unordered_map<std::string, BenchmarkFunction> GPU_BENCHMARK_FUNCTIONS = {
-  { "xorec", BM_XOREC_GPU }
+  { "xorec", BM_XOREC_GPU }, 
+  { "xorec-cpu-parity", BM_XOREC_GPU_PARITY_CPU }
 };
 
 
@@ -121,7 +123,7 @@ void print_usage() {
             << "  -i, --iterations      number of benchmark iterations (atleast 3, default 3)"                         << '\n'
             << "  -c, --cpu-algorithm <cm256|isal|leopard|wirehair|xorec>"                                  << '\n'
             << "                        run the specified CPU algorithms, 0 or more comma separated args."  << '\n'
-            << "  -g, --gpu-algorithm <xorec>"                                                              << '\n'
+            << "  -g, --gpu-algorithm <xorec,xorec-cpu-parity>"                                                              << '\n'
             << "                        run the specified GPU algorithms, 0 or more comma separated args."  << '\n' << '\n';
 }
 

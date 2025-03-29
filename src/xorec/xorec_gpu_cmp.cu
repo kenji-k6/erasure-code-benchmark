@@ -50,7 +50,7 @@ XorecResult xorec_gpu_encode(
   if (xorec_check_args(block_size, num_data_blocks, num_parity_blocks) != XorecResult::Success) return XorecResult::InvalidCounts;
   if (block_size % sizeof(CUDA_ATOMIC_XOR_T) != 0) return XorecResult::InvalidSize;
 
-  cudaMemset(parity_buffer, 0, block_size * num_parity_blocks);
+  cudaMemsetAsync(parity_buffer, 0, block_size * num_parity_blocks);
   xorec_gpu_xor_parity_kernel<<<NUM_BLOCKS, THREADS_PER_BLOCK>>>(data_buffer, parity_buffer, block_size, num_data_blocks, num_parity_blocks);
 
   return XorecResult::Success;
@@ -111,4 +111,84 @@ __global__ void xorec_gpu_xor_parity_kernel(
 
     atomicXor(&parity_block_64[i % block_elems], data_block_64[i % block_elems]);
   }
+}
+
+
+/**
+  * @brief THE FUNCTIONS BELOW SHOULD ONLY BE USED FOR THE BENCHMARKS REQUIRED FOR THE PAPER
+  * 
+  * THEY ARE MEANT TO MEASURE THE THEORETICAL MAXIMUM THROUGHPUT FOR GPU OPTIMIZED XOR-EC VERSIONS
+  */
+ 
+  XorecResult xorec_gpu_encode_full_message(
+    const uint8_t *XOREC_RESTRICT data_buffer,
+    uint8_t *XOREC_RESTRICT parity_buffer,
+    size_t num_chunks,
+    size_t block_size,
+    size_t data_blks_per_chunk,
+    size_t parity_blks_per_chunk
+  ) {
+    if (!XOREC_GPU_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_encode()");
+    if (xorec_check_args(block_size, data_blks_per_chunk, parity_blks_per_chunk) != XorecResult::Success) return XorecResult::InvalidCounts;
+    if (block_size % sizeof(CUDA_ATOMIC_XOR_T) != 0) return XorecResult::InvalidSize;
+
+    cudaMemset(parity_buffer, 0, block_size * parity_blks_per_chunk * num_chunks);
+    xorec_encode_kernel_full_message<<<NUM_BLOCKS, THREADS_PER_BLOCK>>>(data_buffer, parity_buffer, num_chunks, block_size, data_blks_per_chunk, parity_blks_per_chunk);
+  
+    return XorecResult::Success;
+  }
+
+  XorecResult xorec_gpu_encode_full_message_cpu_parity(
+    const uint8_t *XOREC_RESTRICT data_buffer,
+    uint8_t *XOREC_RESTRICT parity_buffer,
+    uint8_t *XOREC_RESTRICT gpu_parity_buffer,
+    size_t num_chunks,
+    size_t block_size,
+    size_t data_blks_per_chunk,
+    size_t parity_blks_per_chunk
+  ) {
+    if (!XOREC_GPU_INIT_CALLED) throw_error("xorec_init() must be called before calling xorec_encode()");
+    if (xorec_check_args(block_size, data_blks_per_chunk, parity_blks_per_chunk) != XorecResult::Success) return XorecResult::InvalidCounts;
+    if (block_size % sizeof(CUDA_ATOMIC_XOR_T) != 0) return XorecResult::InvalidSize;
+
+    cudaMemset(gpu_parity_buffer, 0, block_size * parity_blks_per_chunk * num_chunks);
+    xorec_encode_kernel_full_message<<<NUM_BLOCKS, THREADS_PER_BLOCK>>>(data_buffer, gpu_parity_buffer, num_chunks, block_size, data_blks_per_chunk, parity_blks_per_chunk);
+    cudaMemcpyAsync(parity_buffer, gpu_parity_buffer, block_size * parity_blks_per_chunk * num_chunks, cudaMemcpyDeviceToHost);
+    return XorecResult::Success;
+  }
+  
+  __global__ void xorec_encode_kernel_full_message(
+    const uint8_t * XOREC_RESTRICT data_buffer,
+    uint8_t * XOREC_RESTRICT parity_buffer,
+    size_t num_chunks,
+    size_t block_size,
+    size_t data_blks_per_chunk,
+    size_t parity_blks_per_chunk
+  ) {
+    unsigned num_threads = blockDim.x * gridDim.x;
+    unsigned glbl_thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
+  
+    unsigned tot_elems = num_chunks * data_blks_per_chunk * block_size / sizeof(CUDA_ATOMIC_XOR_T);
+    unsigned chunk_elems = data_blks_per_chunk * block_size / sizeof(CUDA_ATOMIC_XOR_T);
+    unsigned block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T);
+
+  
+    for (unsigned i = glbl_thread_idx; i < tot_elems; i += num_threads) {
+      unsigned chunk_idx = i / chunk_elems;
+      unsigned block_idx = (i % chunk_elems) / block_elems;
+      unsigned parity_idx = block_idx % parity_blks_per_chunk;
+  
+      const CUDA_ATOMIC_XOR_T * XOREC_RESTRICT data_block_64 = reinterpret_cast<const CUDA_ATOMIC_XOR_T*>(
+        data_buffer
+        + chunk_idx * data_blks_per_chunk * block_size
+        + block_idx * block_size
+      );
+      CUDA_ATOMIC_XOR_T * XOREC_RESTRICT parity_block_64 = reinterpret_cast<CUDA_ATOMIC_XOR_T*>(
+        parity_buffer
+        + chunk_idx * parity_blks_per_chunk * block_size
+        + parity_idx * block_size
+      );
+  
+      atomicXor(&parity_block_64[(i % chunk_elems) % block_elems], data_block_64[(i % chunk_elems) % block_elems]);
+    } 
 }
