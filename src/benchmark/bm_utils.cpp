@@ -37,7 +37,7 @@ const std::unordered_map<std::string, std::string> CPU_BENCHMARK_NAMES = {
 
 const std::unordered_map<std::string, std::string> GPU_BENCHMARK_NAMES = {
   { "xorec", "Xorec GPU"                         },
-  { "xorec-cpu-partiy", "Xorec GPU (CPU Parity)" }
+  { "xorec-cpu-parity", "Xorec GPU (CPU Parity)" }
 };
 
 

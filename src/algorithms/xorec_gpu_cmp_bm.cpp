@@ -103,9 +103,48 @@ XorecBenchmarkGpuCmpCpuParity::XorecBenchmarkGpuCmpCpuParity(const BenchmarkConf
   cudaDeviceSynchronize();
 }
 
-XorecBenchmarkGpuCmp::~XorecBenchmarkGpuCmp() noexcept {
+XorecBenchmarkGpuCmpCpuParity::~XorecBenchmarkGpuCmpCpuParity() noexcept {
   cudaFree(m_data_buffer);
   cudaFree(m_parity_buffer);
   cudaFree(m_gpu_parity_buffer);
   _mm_free(m_block_bitmap);
+}
+
+int XorecBenchmarkGpuCmpCpuParity::encode() noexcept {
+  xorec_gpu_encode_full_message(m_data_buffer, m_parity_buffer, m_num_chunks, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk);
+  cudaDeviceSynchronize();
+  return 0;
+}
+
+
+int XorecBenchmarkGpuCmpCpuParity::decode() noexcept {
+  uint8_t* data_ptr = m_data_buffer;
+  uint8_t* parity_ptr = m_parity_buffer;
+  uint8_t* bitmap_ptr = m_block_bitmap;
+
+  cudaMemcpy(m_gpu_parity_buffer, m_parity_buffer, m_num_chunks * m_size_parity_submsg, cudaMemcpyHostToDevice);
+  for (unsigned i = 0; i < m_num_chunks; ++i) {
+    xorec_gpu_decode(data_ptr, parity_ptr, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk, bitmap_ptr);
+    data_ptr += m_size_data_submsg;
+    parity_ptr += m_size_parity_submsg;
+    bitmap_ptr += m_blks_per_chunk;
+  }
+  cudaDeviceSynchronize();
+  return 0;
+}
+
+void XorecBenchmarkGpuCmpCpuParity::simulate_data_loss() noexcept {
+  // TODO
+  return;
+}
+
+bool XorecBenchmarkGpuCmpCpuParity::check_for_corruption() const noexcept {
+  std::unique_ptr<uint8_t[]> temp_data_buffer = std::make_unique<uint8_t[]>(m_num_chunks * m_size_data_submsg);
+  cudaMemcpy(temp_data_buffer.get(), m_data_buffer, m_num_chunks*m_size_data_submsg, cudaMemcpyDeviceToHost);
+  cudaDeviceSynchronize();
+
+  for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
+    if (!validate_block(&temp_data_buffer[i * m_size_blk], m_size_blk)) return false;
+  }
+  return true;
 }
