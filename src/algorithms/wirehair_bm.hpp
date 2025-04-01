@@ -25,17 +25,11 @@ public:
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
-  bool check_for_corruption() const noexcept override;
 
 private:
-  size_t m_num_total_blocks;
-
-  std::unique_ptr<uint8_t[]> m_original_buffer;    ///< Buffer for the original data we want to transmit
-  std::unique_ptr<uint8_t[]> m_encode_buffer;      ///< Buffer for the encoded data
-  std::unique_ptr<uint8_t[]> m_decode_buffer;      ///< Buffer for the decoded data
-
-  WirehairCodec m_encoder;       ///< Wirehair encoder instance
-  WirehairCodec m_decoder;       ///< Wirehair decoder instance
+  uint8_t* m_encode_buf;
+  WirehairCodec m_encoder = nullptr;       ///< Wirehair encoder instance
+  WirehairCodec m_decoder = nullptr;       ///< Wirehair decoder instance
 };
 
 #endif // WIREHAIR_BM_HPP
