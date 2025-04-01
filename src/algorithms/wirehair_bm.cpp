@@ -67,7 +67,8 @@ int WirehairBenchmark::decode() noexcept {
 
 
 void WirehairBenchmark::simulate_data_loss() noexcept {
-  // for (auto idx : m_lost_block_idxs) {
-  //   memset(&m_encode_buffer[idx * m_block_size], 0, m_block_size);
-  // }
+  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap);
+  for (unsigned i = 0; i < m_num_tot_blocks; ++i) {
+    if (!m_block_bitmap[i]) memset(m_encode_buf + i * m_block_size, 0, m_block_size);
+  }
 }

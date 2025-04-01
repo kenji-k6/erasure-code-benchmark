@@ -51,23 +51,43 @@ int CM256Benchmark::encode() noexcept {
 
 
 int CM256Benchmark::decode() noexcept {
-  return cm256_decode(m_params, m_blocks.data());
+  // replace the lost blocks with corresponding recovery block
+  uint32_t recovery_idx = 0;
+
+  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
+    if (!m_block_bitmap[i]) {
+      // lost a data block
+      while (recovery_idx < m_num_parity_blocks && !m_block_bitmap[m_num_data_blocks + recovery_idx]) {
+        ++recovery_idx;
+      }
+      if (recovery_idx == m_num_parity_blocks) return -1;
+
+      m_blocks[i].Index = cm256_get_recovery_block_index(m_params, recovery_idx);
+      m_blocks[i].Block = m_parity_buf + recovery_idx * m_block_size;
+      ++recovery_idx;
+    }
+  }
+
+  cm256_decode(m_params, m_blocks.data());
+
+  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
+    if (!m_block_bitmap[i]) {
+      memcpy(m_data_buf + i * m_block_size, m_blocks[i].Block, m_block_size);
+    }
+  }
+  return 0;
 }
 
 
 void CM256Benchmark::simulate_data_loss() noexcept {
-  // for (unsigned i = 0; i < m_num_lost_blocks; ++i) {
-  //   uint32_t idx = m_lost_block_idxs[i];
+  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap);
+  unsigned i;
+  for (i = 0; i < m_num_data_blocks; ++i) {
+    if (!m_block_bitmap[i]) memset(m_data_buf + i * m_block_size, 0, m_block_size);   
+  }
 
-  //   if (idx < m_num_original_blocks) { // dropped block is original block
-  //     idx = cm256_get_original_block_index(m_params, idx);
-  //     memset(&m_original_buffer[idx * m_block_size], 0, m_block_size);
-  //     m_blocks[idx].Block = &m_decode_buffer[i * m_block_size];
-  //     m_blocks[idx].Index = cm256_get_recovery_block_index(m_params, i);
-
-  //   } else { // dropped block is recovery block
-  //     uint32_t orig_idx = idx - m_num_original_blocks;
-  //     memset(&m_decode_buffer[orig_idx * m_block_size], 0, m_block_size);
-  //   }
-  // }
+  for (; i < m_num_tot_blocks; ++i) {
+    auto idx = i - m_num_data_blocks;
+    if (!m_block_bitmap[i]) memset(m_parity_buf + idx * m_block_size, 0, m_block_size);
+  }
 }

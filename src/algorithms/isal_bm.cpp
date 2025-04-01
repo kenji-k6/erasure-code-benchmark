@@ -22,6 +22,7 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchma
   m_g_tbls = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks * m_num_data_blocks * 32, ALIGNMENT));
 
   m_data_buf = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_data_blocks * m_block_size, ALIGNMENT));
+  m_recover_outp_buf = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_data_blocks * m_block_size, ALIGNMENT));
   m_parity_buf = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_parity_blocks * m_block_size, ALIGNMENT));
   m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks, ALIGNMENT));
 
@@ -31,11 +32,6 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchma
   }
   memset(m_block_bitmap, 1, m_num_tot_blocks);
 
-  // Initialize Pointer vectors
-  m_frag_ptrs.reserve(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  m_parity_src_ptrs.reserve(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  m_recovery_outp_ptrs.reserve(ECLimits::ISAL_MAX_TOT_BLOCKS);
-  m_decode_index.reserve(ECLimits::ISAL_MAX_TOT_BLOCKS);
   
   for (unsigned i = 0; i < m_num_data_blocks; ++i) {
     m_frag_ptrs[i] = m_data_buf + i * m_block_size;
@@ -46,7 +42,7 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchma
   }
 
   for (unsigned i = 0; i < m_num_parity_blocks; ++i) {
-    m_recovery_outp_ptrs[i] = m_data_buf + i * m_block_size;
+    m_recovery_outp_ptrs[i] = m_recover_outp_buf + i * m_block_size;
   }
 
   // Generate encode matricx, can be precomputed as it is fixed for a given m_num_original_blocks
@@ -80,20 +76,16 @@ int ISALBenchmark::encode() noexcept {
 
 
 int ISALBenchmark::decode() noexcept {
-
-  m_block_err_list.clear();
-
+  size_t nerrs = 0;
   for (unsigned i = 0; i < m_num_tot_blocks; ++i) {
-    if (m_block_bitmap[i] == 0) m_block_err_list.push_back(static_cast<uint8_t>(i));
+    if (m_block_bitmap[i] == 0) m_block_err_list[nerrs++] = static_cast<uint8_t>(i);
   }
 
-  if (m_block_err_list.empty()) return 0;
-
-  size_t num_lost_blocks = m_block_err_list.size();
+  if (nerrs == 0) return 0;
 
   if (gf_gen_decode_matrix_simple(m_encode_matrix, m_decode_matrix, m_invert_matrix,
-                                  m_temp_matrix, m_decode_index.data(), m_block_err_list,
-                                  num_lost_blocks, m_num_data_blocks, m_num_tot_blocks)) {
+                                  m_temp_matrix, m_decode_index.data(), m_block_err_list.data(),
+                                  nerrs, m_num_data_blocks, m_num_tot_blocks)) {
     return -1;
   }
 
@@ -101,22 +93,28 @@ int ISALBenchmark::decode() noexcept {
     m_parity_src_ptrs[i] = m_frag_ptrs[m_decode_index[i]];
   }
 
-  ec_init_tables(m_num_data_blocks, num_lost_blocks, m_decode_matrix, m_g_tbls);
-  ec_encode_data(m_block_size, m_num_data_blocks, num_lost_blocks,
+  ec_init_tables(m_num_data_blocks, nerrs, m_decode_matrix, m_g_tbls);
+  ec_encode_data(m_block_size, m_num_data_blocks, nerrs,
                  m_g_tbls, m_parity_src_ptrs.data(), m_recovery_outp_ptrs.data());
-
+  
+  for (unsigned i = 0; i < nerrs; ++i) {
+    if (m_block_err_list[i] < m_num_data_blocks) {
+      memcpy(m_frag_ptrs[m_block_err_list[i]], m_recover_outp_buf + i * m_block_size, m_block_size);
+    }
+  }
   return 0;
 }
 
 
 void ISALBenchmark::simulate_data_loss() noexcept {
-  // for (auto idx : m_lost_block_idxs) {
-  //   memset(m_original_ptrs[idx], 0, m_block_size);
-  //   m_original_ptrs[idx] = nullptr;
-  //   if (idx > m_num_original_blocks) {
-  //     memset(m_recovery_outp_ptrs[idx - m_num_original_blocks], 0, m_block_size);
-  //   }
-  // }
+  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap);
+  unsigned i;
+
+  for (i = 0; i < m_num_data_blocks; ++i) {
+    if (!m_block_bitmap[i]) {
+      memset(m_frag_ptrs[i], 0, m_block_size);
+    }
+  }
 }
 
 int gf_gen_decode_matrix_simple(
@@ -125,7 +123,7 @@ int gf_gen_decode_matrix_simple(
   uint8_t* invert_matrix,
   uint8_t* temp_matrix,
   uint8_t* decode_index,
-  std::vector<uint8_t>& frag_err_list,
+  uint8_t* frag_err_list,
   const int nerrs, const int k, [[maybe_unused]] const int m
 ) {
   int i, j, p, r;

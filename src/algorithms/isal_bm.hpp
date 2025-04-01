@@ -23,11 +23,12 @@ public:
   
 private:
   uint8_t* m_parity_buf;
+  uint8_t* m_recover_outp_buf;
 
   // Data Block Pointers
-  std::vector<uint8_t*> m_frag_ptrs;
-  std::vector<uint8_t*> m_parity_src_ptrs;
-  std::vector<uint8_t*> m_recovery_outp_ptrs;
+  std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS> m_frag_ptrs;
+  std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS> m_parity_src_ptrs;
+  std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS> m_recovery_outp_ptrs;
   
 
   // Erasure and Coefficient Matrices
@@ -37,8 +38,8 @@ private:
   uint8_t* m_temp_matrix;
   uint8_t* m_g_tbls; ///< Generator tables for encoding
 
-  std::vector<uint8_t> m_block_err_list; ///< Array containing the indices of lost blocks
-  std::vector<uint8_t> m_decode_index;  ///< Array containing the indices of the blocks to decode
+  std::array<uint8_t, ECLimits::ISAL_MAX_TOT_BLOCKS> m_block_err_list;
+  std::array<uint8_t, ECLimits::ISAL_MAX_TOT_BLOCKS> m_decode_index;
 };
 
 // Helper function for generating the decode matrix (simple version, implementation from ISA-L Github repository)
@@ -48,7 +49,7 @@ int gf_gen_decode_matrix_simple(
   uint8_t* invert_matrix,
   uint8_t* temp_matrix,
   uint8_t* decode_index,
-  std::vector<uint8_t>& frag_err_list,
+  uint8_t* frag_err_list,
   const int nerrs, const int k, [[maybe_unused]] const int m
 );
 

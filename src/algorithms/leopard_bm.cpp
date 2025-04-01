@@ -63,6 +63,16 @@ int LeopardBenchmark::encode() noexcept {
 
 
 int LeopardBenchmark::decode() noexcept {
+  unsigned i;
+  for (i = 0; i < m_num_data_blocks; ++i) {
+    if (!m_block_bitmap[i]) m_original_ptrs[i] = nullptr;
+  }
+
+  for (; i < m_num_tot_blocks; ++i) {
+    auto idx = i - m_num_data_blocks;
+    if (!m_block_bitmap[i]) m_encode_work_ptrs[idx] = nullptr;
+  }
+
   if (leo_decode(m_block_size, m_num_data_blocks,
                     m_num_parity_blocks, m_decode_work_count,
                     reinterpret_cast<void**>(m_original_ptrs.data()),
@@ -73,7 +83,7 @@ int LeopardBenchmark::decode() noexcept {
   }
 
   for (unsigned i = 0; i < m_num_data_blocks; ++i) {
-    if (!m_original_ptrs[i]) memcpy(m_original_ptrs[i], m_decode_work_ptrs[i], m_block_size);
+    if (!m_original_ptrs[i]) memcpy(m_data_buf + i * m_block_size, m_decode_work_ptrs[i], m_block_size);
   }
 
   return 0;
@@ -81,13 +91,14 @@ int LeopardBenchmark::decode() noexcept {
 
 
 void LeopardBenchmark::simulate_data_loss() noexcept {
-  // for (auto idx : m_lost_block_idxs) {
-  //   if (idx < m_num_data_blocks) {
-  //     memset(m_original_ptrs[idx], 0, m_block_size);
-  //     m_original_ptrs[idx] = nullptr;
-  //   } else {
-  //     memset(m_encode_work_ptrs[idx - m_num_data_blocks], 0, m_block_size);
-  //     m_encode_work_ptrs[idx- m_num_data_blocks] = nullptr;
-  //   }
-  // }
+  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap);
+  unsigned i;
+  for (i = 0; i < m_num_data_blocks; ++i) {
+    if (!m_block_bitmap[i]) memset(m_data_buf + i * m_block_size, 0, m_block_size);
+  }
+
+  for (; i < m_num_tot_blocks; ++i) {
+    auto idx = i - m_num_data_blocks;
+    if (!m_block_bitmap[i]) memset(m_encode_buf + idx * m_block_size, 0, m_block_size);
+  }
 }

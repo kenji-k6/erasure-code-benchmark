@@ -47,24 +47,14 @@ int XorecBenchmark::decode() noexcept {
 
 
 void XorecBenchmark::simulate_data_loss() noexcept {
-  // unsigned loss_idx = 0;
-  // for (unsigned i = 0; i < m_num_total_blocks; ++i) {
-  //   if (loss_idx < m_num_lost_blocks && m_lost_block_idxs[loss_idx] == i) {
-  //     if (i < m_num_original_blocks) {
-  //       memset(&m_data_buffer[i * m_block_size], 0, m_block_size);
-  //       m_block_bitmap[i] = 0;
-  //     } else {
-  //       memset(&m_parity_buffer[(i-m_num_original_blocks) * m_block_size], 0, m_block_size);
-  //       m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 0;
-  //     }
+  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap);
+  unsigned i;
+  for (i = 0; i < m_num_data_blocks; ++i) {
+    if (!m_block_bitmap[i]) memset(m_data_buf + i * m_block_size, 0, m_block_size);
+  }
 
-  //     ++loss_idx;
-  //     continue;
-  //   }
-  //   if (i < m_num_original_blocks) {
-  //     m_block_bitmap[i] = 1;
-  //   } else {
-  //     m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 1;
-  //   }
-  // }
+  for (; i < m_num_tot_blocks; ++i) {
+    auto idx = i - m_num_data_blocks;
+    if (!m_block_bitmap[i]) memset(m_parity_buf + idx * m_block_size, 0, m_block_size);
+  }
 }

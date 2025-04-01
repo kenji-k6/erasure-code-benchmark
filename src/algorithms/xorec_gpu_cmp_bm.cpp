@@ -48,30 +48,23 @@ int XorecBenchmarkGpuCmp::decode() noexcept {
 }
 
 void XorecBenchmarkGpuCmp::simulate_data_loss() noexcept {
-  // unsigned loss_idx = 0;
-  // for (unsigned i = 0; i < m_num_tot_blocks; ++i) {
-  //   if (loss_idx < m_num_lost_blocks && m_lost_block_idxs[loss_idx] == i) {
+  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap);
+  unsigned i;
+  for (i = 0; i < m_num_data_blocks; ++i) {
+    if (!m_block_bitmap[i]) {
+      cudaError_t err = cudaMemsetAsync(m_data_buf + i * m_block_size, 0, m_block_size);
+      if (err != cudaSuccess) throw_error("Xorec (Gpu Computation): Failed to memset in simulate_data_loss.");
+    }
+  }
 
-  //     if (i < m_num_data_blocks) {
-  //       cudaError_t err = cudaMemset(&m_data_buffer[i * m_block_size], 0, m_block_size);
-  //       if (err != cudaSuccess) throw_error("Xorec (Gpu Computation): Failed to memset data buffer.");
-  //       m_block_bitmap[i] = 0;
-  //     } else {
-  //       cudaError_t err = cudaMemset(&m_parity_buffer[(i - m_num_data_blocks) * m_block_size], 0, m_block_size);
-  //       if (err != cudaSuccess) throw_error("Xorec (Gpu Computation): Failed to memset parity buffer.");
-  //       m_block_bitmap[i-m_num_data_blocks + XOREC_MAX_DATA_BLOCKS] = 0;
-  //     }
-
-  //     ++loss_idx;
-  //     continue;
-  //   }
-  //   if (i < m_num_data_blocks) {
-  //     m_block_bitmap[i] = 1;
-  //   } else {
-  //     m_block_bitmap[i-m_num_data_blocks + XOREC_MAX_DATA_BLOCKS] = 1;
-  //   }
-  // }
-  // cudaDeviceSynchronize();
+  for (; i < m_num_tot_blocks; ++i) {
+    auto idx = i - m_num_data_blocks;
+    if (!m_block_bitmap[i]) {
+      cudaError_t err = cudaMemsetAsync(m_parity_buf + idx * m_block_size, 0, m_block_size);
+      if (err != cudaSuccess) throw_error("Xorec (Gpu Computation): Failed to memset in simulate_data_loss.");
+    }
+  }
+  cudaDeviceSynchronize();
 }
 
 bool XorecBenchmarkGpuCmp::check_for_corruption() const noexcept {
