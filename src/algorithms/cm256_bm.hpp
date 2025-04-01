@@ -15,17 +15,15 @@
 class CM256Benchmark : public ECBenchmark {
 public:
   explicit CM256Benchmark(const BenchmarkConfig& config) noexcept;
-  ~CM256Benchmark() noexcept = default;
+  ~CM256Benchmark() noexcept override;
   
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
-  bool check_for_corruption() const noexcept override;
 
 private:
   // Data Buffers
-  std::unique_ptr<uint8_t[]> m_original_buffer;
-  std::unique_ptr<uint8_t[]> m_decode_buffer;
+  uint8_t* m_parity_buf;         ///< Buffer for parity data
 
   // CM256 Internals
   cm256_encoder_params m_params;       ///< cm256 internal parameters
