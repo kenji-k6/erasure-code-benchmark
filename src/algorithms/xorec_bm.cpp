@@ -36,15 +36,13 @@ XorecBenchmark::~XorecBenchmark() noexcept {
 }
 
 int XorecBenchmark::encode() noexcept {
-  if (xorec_encode(m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_version) != XorecResult::Success)
-    return -1;
-  return 0;
+  XorecResult res = xorec_encode(m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_version);
+  return (res == XorecResult::Success) ? 0 : -1;
 }
 
 int XorecBenchmark::decode() noexcept {
-  if (xorec_decode(m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_block_bitmap, m_version) != XorecResult::Success)
-    return -1;
-  return 0;
+  XorecResult res = xorec_decode(m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_block_bitmap, m_version);
+  return (res == XorecResult::Success) ? 0 : -1;
 }
 
 
