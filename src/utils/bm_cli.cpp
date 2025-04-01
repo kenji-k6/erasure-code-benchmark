@@ -67,11 +67,9 @@ inline const std::vector<OptionLine> option_lines = {
   { "Help:", "", "", "", "", "", ""                                                                                                           },
   { "", "", "-h", "--help",           "",                 "show this help message", ""                                                        },
   { "Benchmark options:", "", "", "", "", "", ""                                                                                              },
-  { "", "", "-r", "--result-dir",     "<dir_name>",       "specify output result subdirectory", "(inside /results/raw/)"                      },
+  { "", "", "-f", "--file",           "<dir_name>",       "specify output CSV file", "(inside /results/raw/)"                                 },
   { "", "", "",   "",                 "",                 "will be created if it doesn't exist", ""                                           },
   { "", "", "-a", "--append",         "",                 "append results to the output file", "(default: overwrite)"                         },
-  { "", "", "-b", "--benchmark",      "ec,perf",          "specify the type of benchmark to run,", "1 or 2 comma"                             },
-  { "", "", "",   "",                 "",                 "", "separated args (default: both)"                                                },
   { "", "", "-i", "--iterations",     "<num>",            "number of benchmark iterations", "(default 10)"                                    },
   { "Algorithm selection:", "", "", "", "", "", ""                                                                                            },
   { "", "If no algorithm is selected, all algorithms will be run", "", "", "", "", ""                                                         },
@@ -88,13 +86,7 @@ inline const std::vector<OptionLine> option_lines = {
   { "XOR-EC version selection:", "", "", "", "", "", ""                                                                                       },
   { "", "", "",   "--simd",           "scalar,avx,avx2,avx512", "which SIMD version to use for XOR-EC benchmarking", ""                       },
   { "", "", "",   "",                 "",                 format_requirement("--xorec", "scalar|unified-ptr|gpu-ptr"), ""                     },
-  { "", "", "",   "",                 "",                 "","0 or more comma separated args (default: all)"                                  },
-  {"XOR-EC GPU Options " + format_requirement("--xorec","unified-ptr"),  "", "", "", "", "", ""                                               },
-  { "", "", "",   "--touch-unified",  "true,false",       "whether to touch unified memory on the GPU before encoding,", ""                   },
-  { "", "", "",   "",                 "",                 "", "1 or 2 comma separated args (default: false)"                                  },
-  { "", "", "",   "--prefetch",       "true,false",       "whether data blocks from unified memory, are prefetched or", ""                    },
-  { "", "", "",   "",                 "",                 "fetched on-demand,", "1 or 2 comma separated args (default: false)"                },
-  { "", "", "",   "--perf-xorec",     "scalar,avx,avx2,avx512", "", "0 or more comma seperated args (default: all)"                           }
+  { "", "", "",   "",                 "",                 "","0 or more comma separated args (default: all)"                                  }
 };
 
 void print_usage() {

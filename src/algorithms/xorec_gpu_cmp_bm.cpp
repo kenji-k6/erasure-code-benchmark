@@ -6,7 +6,10 @@ XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexce
   xorec_gpu_init(FIXED_GPU_BLOCKS, FIXED_GPU_THREADS_PER_BLOCK, m_num_data_blocks);
 
   cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&m_data_buf), m_block_size * m_num_data_blocks);
-  if (err != cudaSuccess) throw_error("Xorec (Gpu Computation): Failed to allocate data buffer.");
+  if (err != cudaSuccess) {
+    std::cerr << cudaGetErrorString(err)<< '\n';
+    throw_error("Xorec (Gpu Computation): Failed to allocate data buffer.");
+  }
 
   err = cudaMalloc(reinterpret_cast<void**>(&m_parity_buf), m_block_size * m_num_parity_blocks);
   if (err != cudaSuccess) throw_error("Xorec (Gpu Computation): Failed to allocate parity buffer.");
@@ -41,6 +44,7 @@ int XorecBenchmarkGpuCmp::decode() noexcept {
   XorecResult res = xorec_gpu_decode(m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_block_bitmap);
   cudaDeviceSynchronize();
   return (res == XorecResult::Success) ? 0 : -1;
+  return 0;
 }
 
 void XorecBenchmarkGpuCmp::simulate_data_loss() noexcept {

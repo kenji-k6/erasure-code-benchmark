@@ -4,10 +4,10 @@
  */
 
 
- #include "xorec.hpp"
- #include <cstring>
- #include "utils.hpp"
- #include <cuda_runtime.h>
+#include "xorec.hpp"
+#include <cstring>
+#include "utils.hpp"
+#include <cuda_runtime.h>
  
 static bool XOREC_INIT_CALLED = false;
 std::vector<uint8_t> COMPLETE_DATA_BITMAP = {};
@@ -111,7 +111,7 @@ XorecResult xorec_decode(
 }
 
 
-XorecResult xorec_unified_prefetch_encode(
+XorecResult xorec_unified_encode(
   const uint8_t *XOREC_RESTRICT data_buf,  // unified memory
   uint8_t *XOREC_RESTRICT parity_buf,      // host memory
   size_t block_size,
@@ -153,7 +153,7 @@ XorecResult xorec_unified_prefetch_encode(
 
 
 
-XorecResult xorec_unified_prefetch_decode(
+XorecResult xorec_unified_decode(
   uint8_t *XOREC_RESTRICT data_buf,
   const uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
@@ -212,14 +212,13 @@ XorecResult xorec_unified_prefetch_decode(
 
 
 
-XorecResult xorec_gpu_prefetch_encode(
+XorecResult xorec_gpu_encode(
   const uint8_t *XOREC_RESTRICT gpu_data_buf,
   uint8_t *XOREC_RESTRICT cpu_data_buf,
   uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
-  size_t prefetch_bytes,
   XorecVersion version
 ) {
   cudaMemcpyAsync(cpu_data_buf, gpu_data_buf, num_data_blocks * block_size, cudaMemcpyDeviceToHost);
@@ -266,7 +265,7 @@ XorecResult xorec_gpu_prefetch_encode(
  * @param block_bitmap A bitmap indicating which blocks are present.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_gpu_prefetch_decode(
+XorecResult xorec_gpu_decode(
   uint8_t *XOREC_RESTRICT gpu_data_buf,
   uint8_t *XOREC_RESTRICT cpu_data_buf,
   const uint8_t *XOREC_RESTRICT parity_buf,
@@ -274,7 +273,6 @@ XorecResult xorec_gpu_prefetch_decode(
   size_t num_data_blocks,
   size_t num_parity_blocks,
   const uint8_t * XOREC_RESTRICT block_bitmap,
-  size_t prefetch_bytes,
   XorecVersion version
 ) {
   cudaMemcpyAsync(cpu_data_buf, gpu_data_buf, num_data_blocks * block_size, cudaMemcpyDeviceToHost);

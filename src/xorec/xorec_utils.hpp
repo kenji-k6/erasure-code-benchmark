@@ -5,12 +5,12 @@
  * @brief Provides utility constants for both the CPU and the GPU-based XOR-EC implementations.
  */
 
-#include "xorec.hpp"
 #include <string>
-#include <array>
+#include <vector>
 
 
 #define XOREC_RESTRICT __restrict
+extern std::vector<uint8_t> COMPLETE_DATA_BITMAP;
 
 /// @brief Constants for the XOR-EC algorithm(s)
 constexpr size_t XOREC_BLOCK_SIZE_MULTIPLE = 256;
@@ -117,7 +117,7 @@ static void inline and_bitmap(uint8_t* XOREC_RESTRICT dst, const uint8_t* XOREC_
  * @param bytes Number of bytes to process
  * @return int 
  */
-static int inline bit_count(const uint8_t* XOREC_RESTRICT bitmap, size_t bytes) {
+static size_t inline bit_count(const uint8_t* XOREC_RESTRICT bitmap, size_t bytes) {
   int count = 0;
   const uint32_t * bitmap_32 = reinterpret_cast<const uint32_t*>(bitmap);
 

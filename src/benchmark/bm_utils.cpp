@@ -127,7 +127,7 @@ void parse_args(int argc, char** argv) {
   std::string flag;
   std::vector<std::string> args;
 
-  while ((c = getopt_long(argc, argv, "hs:b:l:r:i:", long_options, &option_index)) != -1) {
+  while ((c = getopt_long(argc, argv, "hf:ai:", long_options, &option_index)) != -1) {
     switch (c) {
       case 'h':
         usage();

@@ -13,7 +13,7 @@
  * optimized with SIMD intrinsics when available. It supports AVX, AVX2 and AVX512
  */
 
-
+extern std::vector<uint8_t> COMPLETE_DATA_BITMAP;
 
 #if defined(__AVX__)
   #define TRY_XOREC_AVX
@@ -34,7 +34,6 @@
 #endif
 
 /// @brief Auxiliary bitmap to check if all data blocks have been received
-extern std::vector<uint8_t> COMPLETE_DATA_BITMAP;
 
 
 void xorec_init(size_t num_data_blocks);
@@ -90,7 +89,7 @@ XorecResult xorec_decode(
  * @param num_parity_blocks Number of parity blocks.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_unified_prefetch_encode(
+XorecResult xorec_unified_encode(
   const uint8_t *XOREC_RESTRICT data_buf,
   uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
@@ -110,7 +109,7 @@ XorecResult xorec_unified_prefetch_encode(
  * @param block_bitmap A bitmap indicating which blocks are present.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_unified_prefetch_decode(
+XorecResult xorec_unified_decode(
   uint8_t *XOREC_RESTRICT data_buf,
   const uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
@@ -132,14 +131,13 @@ XorecResult xorec_unified_prefetch_decode(
  * @param num_parity_blocks Number of parity blocks.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_gpu_prefetch_encode(
+XorecResult xorec_gpu_encode(
   const uint8_t *XOREC_RESTRICT gpu_data_buf,
   uint8_t *XOREC_RESTRICT cpu_data_buf,
   uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
-  size_t prefetch_bytes,
   XorecVersion version
 );
 
@@ -155,7 +153,7 @@ XorecResult xorec_gpu_prefetch_encode(
  * @param block_bitmap A bitmap indicating which blocks are present.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_gpu_prefetch_decode(
+XorecResult xorec_gpu_decode(
   uint8_t *XOREC_RESTRICT gpu_data_buf,
   uint8_t *XOREC_RESTRICT cpu_data_buf,
   const uint8_t *XOREC_RESTRICT parity_buf,
@@ -163,7 +161,6 @@ XorecResult xorec_gpu_prefetch_decode(
   size_t num_data_blocks,
   size_t num_parity_blocks,
   const uint8_t * XOREC_RESTRICT block_bitmap,
-  size_t prefetch_bytes,
   XorecVersion version
 );
 

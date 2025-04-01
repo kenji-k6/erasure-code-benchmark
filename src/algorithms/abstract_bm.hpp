@@ -57,7 +57,7 @@ public:
    * 
    * @return True if the data is not corrupted, false otherwise.
    */
-  virtual bool check_for_corruption() const noexcept = 0;
+  virtual bool check_for_corruption() const noexcept;
 
   /**
    * @brief Function to ensure the CPU memory is cold (only relevant for GPU memory benchmarks)
@@ -75,8 +75,8 @@ protected:
   size_t m_num_tot_blocks;
   size_t m_num_lost_blocks;
 
-  uint8_t* m_data_buf = nullptr;
-  uint8_t* m_block_bitmap = nullptr;
+  uint8_t* m_data_buf;
+  uint8_t* m_block_bitmap;
 };
 
 #endif // ABSTRACT_BM_HPP

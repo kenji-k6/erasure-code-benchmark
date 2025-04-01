@@ -5,7 +5,7 @@
 #include "bm_reporters.hpp"
 
 /// @brief Constants for fixed values
-constexpr size_t ALIGNMENT_BYTES = 64;
+constexpr size_t ALIGNMENT = 64;
 constexpr size_t RANDOM_SEED = 1896;
 constexpr size_t MIN_DATA_BLOCK_SIZE = 2;
 
@@ -78,12 +78,12 @@ bool validate_block(const uint8_t* block_ptr, size_t bytes);
 /**
  * @brief Selects k unique indices from range [0, maxIndex) to determine lost blocks.
  * @attention To properly benchmark CM256 and XOR-EC, the lost blocks returned always make a recoverable set.
- * @param num_recovery_blocks Number of recovery blocks.
+ * @param num_data_blocks Number of data blocks.
+ * @param num_parity_blocks Number of parity blocks.
  * @param num_lost_blocks Number of blocks to select.
- * @param max_index Upper limit of the index range.
- * @param lost_block_idxs Pointer to the array to store the selected indices.
+ * @param block_bitmap Pointer to the bitmap to store lost blocks
  */
-void select_lost_block_idxs(size_t num_recovery_blocks, size_t num_lost_blocks, uint32_t max_idx, std::vector<uint32_t>& lost_block_idxs);
+void select_lost_block_idxs(size_t num_data_blocks, size_t num_parity_blocks, size_t num_lost_blocks, uint8_t* block_bitmap);
 
 
 /**

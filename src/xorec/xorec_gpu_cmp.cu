@@ -5,8 +5,6 @@ int DEVICE_ID;
 int NUM_BLOCKS;
 int THREADS_PER_BLOCK;
 
-__device__ __constant__ int WARP_SIZE;
-
 static bool XOREC_GPU_INIT_CALLED = false;
 
 void xorec_gpu_init(int num_gpu_blocks, int threads_per_block, size_t num_data_blocks) {
@@ -23,12 +21,9 @@ void xorec_gpu_init(int num_gpu_blocks, int threads_per_block, size_t num_data_b
   cudaError_t err = cudaSetDevice(DEVICE_ID);
   if (err != cudaSuccess) throw_error("Failed to set device");
   
-  cudaDeviceProp device_prop;
-  cudaGetDeviceProperties(&device_prop, DEVICE_ID);
-  int warp_size = device_prop.warpSize;
-
-  err = cudaMemcpyToSymbol(WARP_SIZE, &warp_size, sizeof(int));
-  if (err != cudaSuccess) throw_error("Failed to copy warp size to constant memory");
+  // cudaDeviceProp device_prop;
+  // cudaGetDeviceProperties(&device_prop, DEVICE_ID);
+  // if (err != cudaSuccess) throw_error("Failed to copy warp size to constant memory");
 
   COMPLETE_DATA_BITMAP.resize(num_data_blocks);
   std::fill_n(COMPLETE_DATA_BITMAP.begin(), num_data_blocks, 1);
@@ -36,8 +31,8 @@ void xorec_gpu_init(int num_gpu_blocks, int threads_per_block, size_t num_data_b
   NUM_BLOCKS = num_gpu_blocks;
   THREADS_PER_BLOCK = threads_per_block;
 
-  if (num_gpu_blocks <= 0 || threads_per_block <= 0) throw_error("Invalid block count or threads per block");
-  if (threads_per_block > device_prop.maxThreadsPerBlock) throw_error("Threads per block exceeds device limit");
+  // if (num_gpu_blocks <= 0 || threads_per_block <= 0) throw_error("Invalid block count or threads per block");
+  // if (threads_per_block > device_prop.maxThreadsPerBlock) throw_error("Threads per block exceeds device limit");
 }
 
 XorecResult xorec_gpu_encode(
@@ -98,14 +93,10 @@ __global__ void xorec_gpu_xor_parity_kernel(
   size_t num_data_blocks,
   size_t num_parity_blocks
 ) {
-
-  // unsigned num_warps = (blockDim.x / WARP_SIZE)*gridDim.x;
-
-
   unsigned num_threads = blockDim.x * gridDim.x;
   unsigned glbl_thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned tot_elems = (num_data_blocks * block_size) / sizeof(CUDA_ATOMIC_XOR_T) * num_data_blocks;
   unsigned block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T);
+  unsigned tot_elems = num_data_blocks * block_elems;
 
   for (unsigned i = glbl_thread_idx; i < tot_elems; i += num_threads) {
     unsigned block_idx = i / block_elems;
