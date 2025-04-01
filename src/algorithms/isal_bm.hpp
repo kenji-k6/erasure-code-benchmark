@@ -15,32 +15,27 @@
 class ISALBenchmark : public ECBenchmark {
 public:
   explicit ISALBenchmark(const BenchmarkConfig& config) noexcept;
-  ~ISALBenchmark() noexcept = default;
+  ~ISALBenchmark() noexcept override;
 
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
-  bool check_for_corruption() const noexcept override;
   
 private:
-  size_t m_num_total_blocks;
-
-  // Data Buffers
-  std::unique_ptr<uint8_t[]> m_original_buffer; ///< Buffer for the original data we want to transmit
-  std::unique_ptr<uint8_t[]> m_recovery_outp_buffer; ///< Buffer for recovery of corrupted data
+  uint8_t* m_parity_buf;
 
   // Data Block Pointers
-  std::vector<uint8_t*> m_original_ptrs;
-  std::vector<uint8_t*> m_recovery_src_ptrs;
+  std::vector<uint8_t*> m_frag_ptrs;
+  std::vector<uint8_t*> m_parity_src_ptrs;
   std::vector<uint8_t*> m_recovery_outp_ptrs;
   
 
   // Erasure and Coefficient Matrices
-  std::unique_ptr<uint8_t[]> m_encode_matrix;
-  std::unique_ptr<uint8_t[]> m_decode_matrix;
-  std::unique_ptr<uint8_t[]> m_invert_matrix;
-  std::unique_ptr<uint8_t[]> m_temp_matrix;
-  std::unique_ptr<uint8_t[]> m_g_tbls; ///< Generator tables for encoding
+  uint8_t* m_encode_matrix;
+  uint8_t* m_decode_matrix;
+  uint8_t* m_invert_matrix;
+  uint8_t* m_temp_matrix;
+  uint8_t* m_g_tbls; ///< Generator tables for encoding
 
   std::vector<uint8_t> m_block_err_list; ///< Array containing the indices of lost blocks
   std::vector<uint8_t> m_decode_index;  ///< Array containing the indices of the blocks to decode
@@ -48,11 +43,11 @@ private:
 
 // Helper function for generating the decode matrix (simple version, implementation from ISA-L Github repository)
 int gf_gen_decode_matrix_simple(
-  const std::unique_ptr<uint8_t[]>& encode_matrix,
-  std::unique_ptr<uint8_t[]>& decode_matrix,
-  std::unique_ptr<uint8_t[]>& invert_matrix,
-  std::unique_ptr<uint8_t[]>& temp_matrix,
-  std::vector<uint8_t>& decode_index,
+  const uint8_t* encode_matrix,
+  uint8_t* decode_matrix,
+  uint8_t* invert_matrix,
+  uint8_t* temp_matrix,
+  uint8_t* decode_index,
   std::vector<uint8_t>& frag_err_list,
   const int nerrs, const int k, [[maybe_unused]] const int m
 );
