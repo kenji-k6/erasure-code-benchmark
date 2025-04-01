@@ -15,21 +15,18 @@
 class LeopardBenchmark : public ECBenchmark {
 public:
   explicit LeopardBenchmark(const BenchmarkConfig& config) noexcept;
-  ~LeopardBenchmark() noexcept = default;
+  ~LeopardBenchmark() noexcept override;
 
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;
-  bool check_for_corruption() const noexcept override;
 
 private:
   size_t m_encode_work_count = 0;
   size_t m_decode_work_count = 0;
 
-  // Data Buffers
-  std::unique_ptr<uint8_t[]> m_original_buffer;  ///< Buffer for the original data we want to transmit
-  std::unique_ptr<uint8_t[]> m_encode_buffer;    ///< Buffer for the encoded data
-  std::unique_ptr<uint8_t[]> m_decode_buffer;    ///< Buffer for the decoded data
+  uint8_t* m_encode_buf;
+  uint8_t* m_decode_buf;
 
   // Pointer vectors
   std::vector<uint8_t*> m_original_ptrs;       ///< Pointers to the original data blocks
