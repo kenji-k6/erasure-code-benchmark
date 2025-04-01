@@ -2,6 +2,8 @@
 #define ABSTRACT_BM_HPP
 
 #include "bm_config.hpp"
+#include "utils.hpp"
+#include <immintrin.h>
 #include <cstring>
 
 /**
@@ -65,18 +67,16 @@ public:
   virtual void touch_unified_memory() noexcept {};
 
 protected:
-  explicit ECBenchmark(const BenchmarkConfig& config) noexcept
-    : m_block_size(config.block_size),
-      m_num_original_blocks(config.num_original_blocks),
-      m_num_recovery_blocks(config.num_recovery_blocks),
-      m_num_lost_blocks(config.num_lost_blocks),
-      m_lost_block_idxs(config.lost_block_idxs) {};
+  explicit ECBenchmark(const BenchmarkConfig& config) noexcept;
 
   size_t m_block_size;
-  size_t m_num_original_blocks;
-  size_t m_num_recovery_blocks;
+  size_t m_num_data_blocks;
+  size_t m_num_parity_blocks;
+  size_t m_num_tot_blocks;
   size_t m_num_lost_blocks;
-  const std::vector<uint32_t>& m_lost_block_idxs;
+
+  uint8_t* m_data_buf = nullptr;
+  uint8_t* m_block_bitmap = nullptr;
 };
 
 #endif // ABSTRACT_BM_HPP

@@ -40,13 +40,13 @@ XorecBenchmarkGpuPtr::~XorecBenchmarkGpuPtr() noexcept {
 }
 
 int XorecBenchmarkGpuPtr::encode() noexcept {
-  XorecResult res = xorec_gpu_prefetch_encode(m_gpu_data_buf, m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, 0, m_version);
+  XorecResult res = xorec_gpu_encode(m_gpu_data_buf, m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_version);
   cudaDeviceSynchronize();
   return (res == XorecResult::Success) ? 0 : -1;
 }
 
 int XorecBenchmarkGpuPtr::decode() noexcept {
-  XorecResult res = xorec_gpu_prefetch_decode(m_gpu_data_buf, m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_block_bitmap, 0, m_version);
+  XorecResult res = xorec_gpu_decode(m_gpu_data_buf, m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_block_bitmap, m_version);
   cudaDeviceSynchronize();
   return (res == XorecResult::Success) ? 0 : -1;
 }

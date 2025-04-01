@@ -4,89 +4,68 @@
 #include <cuda_runtime.h>
 
 XorecBenchmarkUnifiedPtr::XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
-  xorec_init();
-  m_num_total_blocks = m_num_original_blocks + m_num_recovery_blocks;
-  cudaError_t err = cudaMallocManaged(reinterpret_cast<void**>(&m_data_buffer), m_block_size * m_num_original_blocks, cudaMemAttachHost); 
+  xorec_init(m_num_data_blocks);
+  m_version = config.xorec_params.version;
+
+  cudaError_t err = cudaMallocManaged(reinterpret_cast<void**>(&m_data_buf), m_block_size * m_num_data_blocks, cudaMemAttachHost); 
   if (err != cudaSuccess) throw_error("Xorec: Failed to allocate data buffer.");
 
-  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
-    m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_block_size * m_num_recovery_blocks, 64));
-  #else
-    m_parity_buffer = reinterpret_cast<uint8_t*>(malloc(m_block_size * m_num_recovery_blocks));
-  #endif
+  m_parity_buf = reinterpret_cast<uint8_t*>(_mm_malloc(m_block_size * m_num_parity_blocks, 64));
+  m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks, ALIGNMENT));
+  if (!m_block_bitmap || !m_block_bitmap) throw_error("XorecBenchmark: Failed to allocate memory.");
 
-  m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
-  m_version = config.xorec_params.version;
-  m_prefetch = config.xorec_params.prefetch;
+  memset(m_block_bitmap, 1, m_num_tot_blocks);
+
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
-    int write_res = write_validation_pattern(i, &m_data_buffer[i * m_block_size], m_block_size);
-    if (write_res) throw_error("Xorec: Failed to write random checking packet.");
+  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
+    if (write_validation_pattern(i, m_data_buf+i*m_block_size, m_block_size)) throw_error("XorecBenchmark: Failed to write validation pattern");
   }
   cudaDeviceSynchronize();
 }
 
 XorecBenchmarkUnifiedPtr::~XorecBenchmarkUnifiedPtr() noexcept {
-  if (m_data_buffer) cudaFree(m_data_buffer);
-  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
-    if (m_parity_buffer) _mm_free(m_parity_buffer);
-  #else
-    if (m_parity_buffer) free(m_parity_buffer);
-  #endif
+  cudaFree(m_data_buf);
+  _mm_free(m_parity_buf);
+  _mm_free(m_block_bitmap);
   cudaDeviceSynchronize();
 }
 
 int XorecBenchmarkUnifiedPtr::encode() noexcept {
-  if (m_prefetch) {
-    xorec_unified_prefetch_encode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
-  } else {
-    xorec_encode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
-  }
-  return 0;
+  XorecResult res = xorec_unified_encode(m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_version);
+  return (res == XorecResult::Success) ? 0 : -1;
 }
 
 int XorecBenchmarkUnifiedPtr::decode() noexcept {
-  if (m_prefetch) {
-    xorec_unified_prefetch_decode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
-  } else {
-    xorec_decode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
-  }
-  return 0;
+  XorecResult res = xorec_unified_decode(m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_block_bitmap, m_version);
+  return (res == XorecResult::Success) ? 0 : -1;
 }
 
 void XorecBenchmarkUnifiedPtr::simulate_data_loss() noexcept {
-  unsigned loss_idx = 0;
-  for (unsigned i = 0; i < m_num_total_blocks; ++i) {
-    if (loss_idx < m_num_lost_blocks && m_lost_block_idxs[loss_idx] == i) {
-      if (i < m_num_original_blocks) {
-        cudaError_t err = cudaMemset(&m_data_buffer[i * m_block_size], 0, m_block_size);
-        if (err != cudaSuccess) throw_error("Xorec: Failed to memset data buffer.");
-        m_block_bitmap[i] = 0;
-      } else {
-        memset(&m_parity_buffer[(i - m_num_original_blocks) * m_block_size], 0, m_block_size);
-        m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 0;
-      }
+  // unsigned loss_idx = 0;
+  // for (unsigned i = 0; i < m_num_tot_blocks; ++i) {
+  //   if (loss_idx < m_num_lost_blocks && m_lost_block_idxs[loss_idx] == i) {
+  //     if (i < m_num_data_blocks) {
+  //       cudaError_t err = cudaMemset(&m_data_buffer[i * m_block_size], 0, m_block_size);
+  //       if (err != cudaSuccess) throw_error("Xorec: Failed to memset data buffer.");
+  //       m_block_bitmap[i] = 0;
+  //     } else {
+  //       memset(&m_parity_buffer[(i - m_num_data_blocks) * m_block_size], 0, m_block_size);
+  //       m_block_bitmap[i-m_num_data_blocks + XOREC_MAX_DATA_BLOCKS] = 0;
+  //     }
 
-      ++loss_idx;
-      continue;
-    }
-    if (i < m_num_original_blocks) {
-      m_block_bitmap[i] = 1;
-    } else {
-      m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 1;
-    }
-  }
+  //     ++loss_idx;
+  //     continue;
+  //   }
+  //   if (i < m_num_data_blocks) {
+  //     m_block_bitmap[i] = 1;
+  //   } else {
+  //     m_block_bitmap[i-m_num_data_blocks + XOREC_MAX_DATA_BLOCKS] = 1;
+  //   }
+  // }
 
-  cudaDeviceSynchronize();
-}
-
-bool XorecBenchmarkUnifiedPtr::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
-    if (!validate_block(&m_data_buffer[i * m_block_size], m_block_size)) return false;
-  }
-  return true;
+  // cudaDeviceSynchronize();
 }
 
 void XorecBenchmarkUnifiedPtr::touch_unified_memory() noexcept {
-  touch_memory(m_data_buffer, m_block_size * m_num_original_blocks);
+  touch_memory(m_data_buf, m_block_size * m_num_data_blocks);
 }
