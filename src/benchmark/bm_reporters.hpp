@@ -65,37 +65,4 @@ protected:
   ProgressBar m_bar;
 };
 
-
-/**
- * @class PerfBenchmarkCSVReporter
- * @brief Custom benchmark reporter that outputs results in CSV format. (used for performance benchmarks)
- * 
- * This class extends `benchmark::BenchmarkReporter` to write benchmark results
- * to a CSV file. It supports appending to an existing file or overwriting it.
- */
-class PerfBenchmarkCSVReporter : public BenchmarkCSVReporter {
-public:
-  explicit PerfBenchmarkCSVReporter(const std::string& output_file, bool overwrite_file) : BenchmarkCSVReporter(output_file, overwrite_file) { };
-  void ReportRuns(const std::vector<Run>& runs) override;
-
-protected:
-  void write_header() override;
-};
-
-/**
- * @class PerfBenchmarkProgressReporter
- * 
- * @brief Custom benchmark reporter that outputs progress information for performance benchmarks.
- * Unlike the `BenchmarkProgressReporter`, this class does not output individual iteration results,
- * but only those of completed runs.
- * 
- */
-class PerfBenchmarkProgressReporter : public BenchmarkProgressReporter {
-public:
-  explicit PerfBenchmarkProgressReporter(int num_runs, std::chrono::system_clock::time_point start_time) : BenchmarkProgressReporter(num_runs, start_time) { };
-  void ReportRuns(const std::vector<Run>& runs) override;
-  bool ReportContext(const Context& context) override;
-};
-
-
 #endif // BM_REPORTERS_HPP

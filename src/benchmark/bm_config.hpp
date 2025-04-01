@@ -23,18 +23,14 @@ struct BenchmarkConfig {
   double redundancy_ratio;                        ///< Recovery blocks / original blocks ratio
   int num_iterations;                             ///< Number of iterations to run the benchmark
   uint8_t plot_id;                                ///< Identifier for plotting
-  const std::vector<uint32_t>& lost_block_idxs;   ///< Indices of lost blocks
 
   size_t num_data_blocks;                   ///< Number of original data blocks
   size_t num_parity_blocks;                   ///< Number of recovery blocks
 
   bool is_xorec_config;                           ///< Flag to indicate whether this configuration is for XOR-EC algorithm(s)
-
   struct {
-    XorecVersion version;                         ///< Version of the XOR-EC algorithm
-    bool gpu_cmp;                                 ///< Flag to indicate GPU computation
-    bool unified_mem;                             ///< Flag to indicate unified memory allocation
-    bool gpu_mem;                                 ///< Flag to indicate GPU memory a llocation
+    XorecVersion version;
+    bool unified_mem;
   } xorec_params;
 
   BenchmarkProgressReporter *progress_reporter = nullptr;

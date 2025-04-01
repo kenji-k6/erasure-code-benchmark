@@ -14,10 +14,10 @@
  * This function is templated to work with any class that implements
  * the `ECBenchmark` interface. It follows a standard benchmarking procedure:
  * 1. Pauses timing and sets up the benchmark environment
- * 2. Touches GPU memory if required
+ * 2. Touches unified memory if required
  * 3. Encodes data
  * 4. Simulates data loss (untimed)
- * 5. Touches GPU memory if required
+ * 5. Touches unified memory if required
  * 6. Decodes data
  * 7. Verifies the correctness of the decoded data (untimed)
  * 8. Cleans up the benchmark environment
@@ -49,14 +49,14 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
   for (auto _ : state) {
     BenchmarkType bench(config);
-    if (config.is_xorec_config && config.xorec_params.unified_mem && config.xorec_params.touch_unified_mem) bench.touch_unified_memory();
+    if (config.is_xorec_config && config.xorec_params.unified_mem) bench.touch_unified_memory();
 
     auto start_encode = std::chrono::steady_clock::now();
     bench.encode();
     auto end_encode = std::chrono::steady_clock::now();
 
     bench.simulate_data_loss();
-    if (config.is_xorec_config && config.xorec_params.unified_mem && config.xorec_params.touch_unified_mem) bench.touch_unified_memory();
+    if (config.is_xorec_config && config.xorec_params.unified_mem) bench.touch_unified_memory();
     
     auto start_decode = std::chrono::steady_clock::now();
     bench.decode();
