@@ -17,14 +17,9 @@
     bool check_for_corruption() const noexcept override;
   
   protected:
-    size_t m_num_total_blocks;
-
     // Data Buffers
-    uint8_t *m_gpu_data_buffer;          ///< Buffer for the original data we want to transmit
-    uint8_t *m_cpu_data_buffer;
-    uint8_t *m_parity_buffer;        ///< Buffer for the decoded data
-    std::unique_ptr<uint8_t[]> m_block_bitmap; ///< Bitmap to check if all data arrived
-  
+    uint8_t *m_gpu_data_buf;          ///< Buffer for the original data we want to transmit
+    uint8_t *m_parity_buf;        ///< Buffer for the decoded data
     XorecVersion m_version;
   };
 
