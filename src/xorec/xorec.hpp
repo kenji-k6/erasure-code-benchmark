@@ -33,22 +33,25 @@
   #define XOREC_AVX512 __m512i
 #endif
 
-void xorec_init();
+/// @brief Auxiliary bitmap to check if all data blocks have been received
+extern std::vector<uint8_t> COMPLETE_DATA_BITMAP;
 
+
+void xorec_init(size_t num_data_blocks);
 
 
 /**
  * @brief Encodes data using XOR-based erasure coding.
- * @param data_buffer Pointer to the data buffer.
- * @param parity_buffer Pointer to the parity buffer.
+ * @param data_buf Pointer to the data buffer.
+ * @param parity_buf Pointer to the parity buffer.
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
  * @return XorecResult XorecResult indicating success or failure.
  */
 XorecResult xorec_encode(
-  const uint8_t *XOREC_RESTRICT data_buffer,
-  uint8_t *XOREC_RESTRICT parity_buffer,
+  const uint8_t *XOREC_RESTRICT data_buf,
+  uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
@@ -58,8 +61,8 @@ XorecResult xorec_encode(
 
 /**
  * @brief Decodes data using XOR-based erasure coding.
- * @param data_buffer Pointer to the data buffer.
- * @param parity_buffer Pointer to the parity buffer.
+ * @param data_buf Pointer to the data buffer.
+ * @param parity_buf Pointer to the parity buffer.
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
@@ -67,8 +70,8 @@ XorecResult xorec_encode(
  * @return XorecResult XorecResult indicating success or failure.
  */
 XorecResult xorec_decode(
-  uint8_t *XOREC_RESTRICT data_buffer,
-  const uint8_t *XOREC_RESTRICT parity_buffer,
+  uint8_t *XOREC_RESTRICT data_buf,
+  const uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
@@ -80,16 +83,16 @@ XorecResult xorec_decode(
 
 /**
  * @brief Encodes data using XOR-based erasure coding.
- * @param data_buffer Pointer to the data buffer.
- * @param parity_buffer Pointer to the parity buffer.
+ * @param data_buf Pointer to the data buffer.
+ * @param parity_buf Pointer to the parity buffer.
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
  * @return XorecResult XorecResult indicating success or failure.
  */
 XorecResult xorec_unified_prefetch_encode(
-  const uint8_t *XOREC_RESTRICT data_buffer,
-  uint8_t *XOREC_RESTRICT parity_buffer,
+  const uint8_t *XOREC_RESTRICT data_buf,
+  uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
@@ -99,8 +102,8 @@ XorecResult xorec_unified_prefetch_encode(
 /**
  * @brief Decodes data using XOR-based erasure coding.
  * 
- * @param data_buffer Pointer to the data buffer.
- * @param parity_buffer Pointer to the parity buffer.
+ * @param data_buf Pointer to the data buffer.
+ * @param parity_buf Pointer to the parity buffer.
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
@@ -108,8 +111,8 @@ XorecResult xorec_unified_prefetch_encode(
  * @return XorecResult XorecResult indicating success or failure.
  */
 XorecResult xorec_unified_prefetch_decode(
-  uint8_t *XOREC_RESTRICT data_buffer,
-  const uint8_t *XOREC_RESTRICT parity_buffer,
+  uint8_t *XOREC_RESTRICT data_buf,
+  const uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
@@ -121,18 +124,18 @@ XorecResult xorec_unified_prefetch_decode(
 /**
  * @brief Encodes data using XOR-based erasure coding.
  * 
- * @param gpu_data_buffer Pointer to the data buffer in GPU memory.
- * @param cpu_data_buffer Pointer to the data buffer in CPU memory (used for computation)
- * @param parity_buffer Pointer to the parity buffer.
+ * @param gpu_data_buf Pointer to the data buffer in GPU memory.
+ * @param cpu_data_buf Pointer to the data buffer in CPU memory (used for computation)
+ * @param parity_buf Pointer to the parity buffer.
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
  * @return XorecResult XorecResult indicating success or failure.
  */
 XorecResult xorec_gpu_prefetch_encode(
-  const uint8_t *XOREC_RESTRICT gpu_data_buffer,
-  uint8_t *XOREC_RESTRICT cpu_data_buffer,
-  uint8_t *XOREC_RESTRICT parity_buffer,
+  const uint8_t *XOREC_RESTRICT gpu_data_buf,
+  uint8_t *XOREC_RESTRICT cpu_data_buf,
+  uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
@@ -143,9 +146,9 @@ XorecResult xorec_gpu_prefetch_encode(
 /**
  * @brief Decodes data using XOR-based erasure coding.
  * 
- * @param gpu_data_buffer Pointer to the data buffer in GPU memory.
- * @param cpu_data_buffer Pointer to the data buffer in CPU memory (used for computation)
- * @param parity_buffer Pointer to the parity buffer.
+ * @param gpu_data_buf Pointer to the data buffer in GPU memory.
+ * @param cpu_data_buf Pointer to the data buffer in CPU memory (used for computation)
+ * @param parity_buf Pointer to the parity buffer.
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
@@ -153,9 +156,9 @@ XorecResult xorec_gpu_prefetch_encode(
  * @return XorecResult XorecResult indicating success or failure.
  */
 XorecResult xorec_gpu_prefetch_decode(
-  uint8_t *XOREC_RESTRICT gpu_data_buffer,
-  uint8_t *XOREC_RESTRICT cpu_data_buffer,
-  const uint8_t *XOREC_RESTRICT parity_buffer,
+  uint8_t *XOREC_RESTRICT gpu_data_buf,
+  uint8_t *XOREC_RESTRICT cpu_data_buf,
+  const uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,

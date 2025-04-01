@@ -9,22 +9,22 @@
 /**
  * @brief Initialize the necessary global variables & GPU environment for XOR encoding and decoding on the GPU.
  */
-void xorec_gpu_init();
+void xorec_gpu_init(int num_gpu_blocks, int threads_per_block, size_t num_data_blocks);
 
 
 /**
  * @brief Runs the XOR encoding algorithm on the GPU.
  * 
- * @param data_buffer The data buffer to encode. Must be allocated in unified memory.
- * @param parity_buffer The parity buffer to write the encoded parity blocks to. Must be allocated in unified memory.
+ * @param data_buf The data buffer to encode. Must be allocated in unified memory.
+ * @param parity_buf The parity buffer to write the encoded parity blocks to. Must be allocated in unified memory.
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
  * @return XorecResult 
  */
 XorecResult xorec_gpu_encode(
-  const uint8_t *XOREC_RESTRICT data_buffer,
-  uint8_t *XOREC_RESTRICT parity_buffer,
+  const uint8_t *XOREC_RESTRICT data_buf,
+  uint8_t *XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks
@@ -33,8 +33,8 @@ XorecResult xorec_gpu_encode(
 /**
  * @brief Runs the XOR decoding algorithm on the GPU.
  * 
- * @param data_buffer The data buffer to encode. Must be allocated in unified memory.
- * @param parity_buffer The parity buffer to write the encoded parity blocks to. Must be allocated in unified memory.
+ * @param data_buf The data buffer to encode. Must be allocated in unified memory.
+ * @param parity_buf The parity buffer to write the encoded parity blocks to. Must be allocated in unified memory.
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
@@ -42,17 +42,17 @@ XorecResult xorec_gpu_encode(
  * @return XorecResult 
  */
 XorecResult xorec_gpu_decode(
-  uint8_t *XOREC_RESTRICT data_buffer,
-  uint8_t *XOREC_RESTRICT parity_buffer,
+  uint8_t* XOREC_RESTRICT data_buf,
+  uint8_t* XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks,
-  const uint8_t *block_bitmap
+  const uint8_t* XOREC_RESTRICT block_bitmap
 );
 
 __global__ void xorec_gpu_xor_parity_kernel(
-  const uint8_t * XOREC_RESTRICT data_buffer,
-  uint8_t * XOREC_RESTRICT parity_buffer,
+  const uint8_t* XOREC_RESTRICT data_buf,
+  uint8_t* XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
   size_t num_parity_blocks
