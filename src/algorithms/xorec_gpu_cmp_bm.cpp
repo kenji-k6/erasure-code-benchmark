@@ -105,7 +105,7 @@ XorecBenchmarkGpuCmpCpuParity::XorecBenchmarkGpuCmpCpuParity(const BenchmarkConf
 
 XorecBenchmarkGpuCmpCpuParity::~XorecBenchmarkGpuCmpCpuParity() noexcept {
   cudaFree(m_data_buffer);
-  cudaFree(m_parity_buffer);
+  cudaFreeHost(m_parity_buffer);
   cudaFree(m_gpu_parity_buffer);
   _mm_free(m_block_bitmap);
 }

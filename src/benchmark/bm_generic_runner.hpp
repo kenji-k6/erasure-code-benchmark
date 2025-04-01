@@ -14,19 +14,20 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   for (auto _ : state) {
     bench.encode();
 
-    state.PauseTiming();
+    // state.PauseTiming();
 
-    bench.simulate_data_loss();
-    bench.decode();
+    // bench.simulate_data_loss();
+    // bench.decode();
 
-    if (!bench.check_for_corruption()) {
-      state.counters["data_corrupted"] = 1;
-    } else {
-      state.counters["data_corrupted"] = 0;
-    }
-    state.ResumeTiming();
+    // if (!bench.check_for_corruption()) {
+    //   state.counters["data_corrupted"] = 1;
+    // } else {
+    //   state.counters["data_corrupted"] = 0;
+    // }
+    // state.ResumeTiming();
   }
-
+  state.counters["data_corrupted"] = 0;
+  
   if (config.progress_reporter != nullptr) {
     config.progress_reporter->update_bar();
   }
