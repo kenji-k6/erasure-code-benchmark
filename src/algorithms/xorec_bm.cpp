@@ -9,79 +9,64 @@
 #include "xorec_bm.hpp"
 #include "xorec.hpp"
 #include "utils.hpp"
-
-
+ 
+ 
 XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
-  xorec_init();
-  m_num_total_blocks = m_num_original_blocks + m_num_recovery_blocks;
+  xorec_init(m_num_data_blocks);
   m_version = config.xorec_params.version;
 
-  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
-    m_data_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_block_size * m_num_original_blocks, 64));
-    m_parity_buffer = reinterpret_cast<uint8_t*>(_mm_malloc(m_block_size * m_num_recovery_blocks, 64));
-  #else
-    m_data_buffer = reinterpret_cast<uint8_t*>(malloc(m_block_size * m_num_original_blocks));
-    m_parity_buffer = reinterpret_cast<uint8_t*>(malloc(m_block_size * m_num_recovery_blocks));
-  #endif
+  m_data_buf = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_data_blocks*m_block_size, ALIGNMENT));
+  m_parity_buf = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_parity_blocks*m_block_size, ALIGNMENT));
+  m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks, ALIGNMENT));
 
-  m_block_bitmap = std::make_unique<uint8_t[]>(XOREC_MAX_TOTAL_BLOCKS);
+  if (!m_data_buf || !m_parity_buf || !m_block_bitmap) throw_error("XorecBenchmark: Failed to allocate memory.");
 
-  if (!m_data_buffer || !m_parity_buffer) throw_error("Xorec: Failed to allocate buffer(s).");
+  memset(m_block_bitmap, 1, m_num_tot_blocks);
 
   // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
-    int write_res = write_validation_pattern(i, &m_data_buffer[i * m_block_size], m_block_size);
-    if (write_res) throw_error("Xorec: Failed to write random checking packet.");
+  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
+    if (write_validation_pattern(i, m_data_buf+i*m_block_size, m_block_size)) throw_error("XorecBenchmark: Failed to write validation pattern");
   }
 }
 
 XorecBenchmark::~XorecBenchmark() noexcept {
-  #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
-    if (m_data_buffer) _mm_free(m_data_buffer);
-    if (m_parity_buffer) _mm_free(m_parity_buffer);
-  #else
-    if (m_data_buffer) free(m_data_buffer);
-    if (m_parity_buffer) free(m_parity_buffer);
-  #endif
+  _mm_free(m_data_buf);
+  _mm_free(m_parity_buf);
+  _mm_free(m_block_bitmap);
 }
 
 int XorecBenchmark::encode() noexcept {
-  xorec_encode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_version);
+  if (xorec_encode(m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_version) != XorecResult::Success)
+    return -1;
   return 0;
 }
 
 int XorecBenchmark::decode() noexcept {
-  xorec_decode(m_data_buffer, m_parity_buffer, m_block_size, m_num_original_blocks, m_num_recovery_blocks, m_block_bitmap.get(), m_version);
+  if (xorec_decode(m_data_buf, m_parity_buf, m_block_size, m_num_data_blocks, m_num_parity_blocks, m_block_bitmap, m_version) != XorecResult::Success)
+    return -1;
   return 0;
 }
 
 
 void XorecBenchmark::simulate_data_loss() noexcept {
-  unsigned loss_idx = 0;
-  for (unsigned i = 0; i < m_num_total_blocks; ++i) {
-    if (loss_idx < m_num_lost_blocks && m_lost_block_idxs[loss_idx] == i) {
-      if (i < m_num_original_blocks) {
-        memset(&m_data_buffer[i * m_block_size], 0, m_block_size);
-        m_block_bitmap[i] = 0;
-      } else {
-        memset(&m_parity_buffer[(i-m_num_original_blocks) * m_block_size], 0, m_block_size);
-        m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 0;
-      }
+  // unsigned loss_idx = 0;
+  // for (unsigned i = 0; i < m_num_total_blocks; ++i) {
+  //   if (loss_idx < m_num_lost_blocks && m_lost_block_idxs[loss_idx] == i) {
+  //     if (i < m_num_original_blocks) {
+  //       memset(&m_data_buffer[i * m_block_size], 0, m_block_size);
+  //       m_block_bitmap[i] = 0;
+  //     } else {
+  //       memset(&m_parity_buffer[(i-m_num_original_blocks) * m_block_size], 0, m_block_size);
+  //       m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 0;
+  //     }
 
-      ++loss_idx;
-      continue;
-    }
-    if (i < m_num_original_blocks) {
-      m_block_bitmap[i] = 1;
-    } else {
-      m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 1;
-    }
-  }
-}
-
-bool XorecBenchmark::check_for_corruption() const noexcept {
-  for (unsigned i = 0; i < m_num_original_blocks; ++i) {
-    if (!validate_block(&m_data_buffer[i * m_block_size], m_block_size)) return false;
-  }
-  return true;
+  //     ++loss_idx;
+  //     continue;
+  //   }
+  //   if (i < m_num_original_blocks) {
+  //     m_block_bitmap[i] = 1;
+  //   } else {
+  //     m_block_bitmap[i-m_num_original_blocks + XOREC_MAX_DATA_BLOCKS] = 1;
+  //   }
+  // }
 }
