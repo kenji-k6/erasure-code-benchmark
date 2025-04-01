@@ -25,20 +25,16 @@ struct BenchmarkConfig {
   uint8_t plot_id;                                ///< Identifier for plotting
   const std::vector<uint32_t>& lost_block_idxs;   ///< Indices of lost blocks
 
-  size_t num_original_blocks;                   ///< Number of original data blocks
-  size_t num_recovery_blocks;                   ///< Number of recovery blocks
+  size_t num_data_blocks;                   ///< Number of original data blocks
+  size_t num_parity_blocks;                   ///< Number of recovery blocks
 
   bool is_xorec_config;                           ///< Flag to indicate whether this configuration is for XOR-EC algorithm(s)
 
   struct {
     XorecVersion version;                         ///< Version of the XOR-EC algorithm
     bool gpu_cmp;                                 ///< Flag to indicate GPU computation
-
-    bool prefetch;                                ///< Flag to indicate prefetching
-
     bool unified_mem;                             ///< Flag to indicate unified memory allocation
     bool gpu_mem;                                 ///< Flag to indicate GPU memory a llocation
-    bool touch_unified_mem;                       ///< Flag to indicate GPU memory warmup
   } xorec_params;
 
   BenchmarkProgressReporter *progress_reporter = nullptr;
@@ -50,13 +46,15 @@ struct BenchmarkConfig {
 using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
 
 /// @brief Constants for fixed values
+constexpr int FIXED_GPU_BLOCKS = 8;
+constexpr int FIXED_GPU_THREADS_PER_BLOCK = 32;
 constexpr size_t FIXED_NUM_ORIGINAL_BLOCKS = 128;
 constexpr size_t FIXED_NUM_RECOVERY_BLOCKS = 4;
 constexpr size_t FIXED_BUFFER_SIZE = 1048576; // 1 MiB
 constexpr double FIXED_PARITY_RATIO = 0.03125;
 constexpr size_t FIXED_NUM_LOST_BLOCKS = 1;
-const std::vector<size_t> VAR_BUFFER_SIZE = { 134217728, 67108864, 33554432, 16777216, 8388608, 4194304, 2097152, 1048576, 524288, 262144 };
-const std::vector<size_t> VAR_NUM_RECOVERY_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
-const std::vector<size_t> VAR_NUM_LOST_BLOCKS = { 128, 64, 32, 16, 8, 4, 2, 1 };
+extern const std::vector<size_t> VAR_BUFFER_SIZE;
+extern const std::vector<size_t> VAR_NUM_RECOVERY_BLOCKS;
+extern const std::vector<size_t> VAR_NUM_LOST_BLOCKS;
 
 #endif // BM_CONFIG_HPP
