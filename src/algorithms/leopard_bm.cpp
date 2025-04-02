@@ -53,16 +53,20 @@ LeopardBenchmark::~LeopardBenchmark() noexcept {
 }
 
 int LeopardBenchmark::encode() noexcept {
-  void** data_ptrs = reinterpret_cast<void**>(m_original_ptrs.data());
-  void** encode_work_ptrs = reinterpret_cast<void**>(m_encode_work_ptrs.data());
+  int return_code = 0;
 
+  #pragma omp parallel for
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    if (leo_encode(m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk, m_encode_work_count, data_ptrs, encode_work_ptrs)) return 1;
-    data_ptrs += m_data_blks_per_chunk;
-    encode_work_ptrs += m_encode_work_count;
+    void** data_ptrs = reinterpret_cast<void**>(m_original_ptrs.data()) + i * m_data_blks_per_chunk;
+    void** encode_work_ptrs = reinterpret_cast<void**>(m_encode_work_ptrs.data()) + i * m_encode_work_count;
+
+    if (leo_encode(m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk, m_encode_work_count, data_ptrs, encode_work_ptrs)) {
+      #pragma omp atomic write
+      return_code = 1;
+    }
   }
 
-  return 0;
+  return return_code;
 }
 
 
