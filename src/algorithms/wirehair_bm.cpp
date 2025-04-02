@@ -24,9 +24,6 @@ WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : E
 
   if (!m_data_buffer || !m_encode_buffer || !m_block_bitmap) throw_error("Wirehair: Failed to allocate memory.");
 
-  m_encoder = nullptr;
-  m_decoder = nullptr;
-
   for (unsigned i = 0; i < m_size_msg/m_size_blk; ++i) {
     if (write_validation_pattern(i, m_data_buffer+i*m_size_blk, m_size_blk)) throw_error("Wirehair: Failed to write validation pattern.");
   }
@@ -36,33 +33,32 @@ WirehairBenchmark::~WirehairBenchmark() noexcept {
   _mm_free(m_data_buffer);
   _mm_free(m_encode_buffer);
   _mm_free(m_block_bitmap);
-  // wirehair_free(m_decoder);
-  // wirehair_free(m_encoder);
 }
 
 int WirehairBenchmark::encode() noexcept {
-  uint32_t write_len = 0;
-  uint8_t* data_ptr = m_data_buffer;
-  uint8_t* encode_ptr = m_encode_buffer;
-
+  int return_code = 0;
+  #pragma omp parallel for
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    m_encoder = wirehair_encoder_create(nullptr, data_ptr, m_size_data_submsg, m_size_blk);
-
-    if (!m_encoder) return 1;
+    uint32_t write_len = 0;
+    uint8_t* data_ptr = m_data_buffer + i * m_size_data_submsg;
+    uint8_t* encode_ptr = m_encode_buffer + i * (m_size_parity_submsg + m_size_data_submsg);
+    WirehairCodec encoder = wirehair_encoder_create(nullptr, data_ptr, m_size_data_submsg, m_size_blk);
+    if (!encoder) {
+      #pragma omp atomic write
+      return_code = 1;
+    }
 
     for (unsigned j = 0; j < m_num_total_blocks; ++j) {
-
-      if (wirehair_encode(m_encoder, j, encode_ptr + j * m_size_blk,
+      if (wirehair_encode(encoder, j, encode_ptr + j * m_size_blk,
                           m_size_blk, &write_len) != Wirehair_Success) {
-        wirehair_free(m_encoder);
-        return 1;
-      };
+        wirehair_free(encoder);
+        #pragma omp atomic write
+        return_code = 1;
+      }
     }
-    data_ptr += m_size_data_submsg;
-    encode_ptr += m_size_parity_submsg + m_size_data_submsg;
-    wirehair_free(m_encoder);
+    wirehair_free(encoder);
   }
-  return 0;
+  return return_code;
 }
 
 int WirehairBenchmark::decode() noexcept {
@@ -72,21 +68,21 @@ int WirehairBenchmark::decode() noexcept {
 
   for (unsigned i = 0; i < m_num_chunks; ++i) {
     WirehairResult decode_result = Wirehair_NeedMore;
-    m_decoder = wirehair_decoder_create(nullptr, m_size_blk * m_data_blks_per_chunk, m_size_blk);
-    if (!m_decoder) return 1;
+    WirehairCodec decoder = wirehair_decoder_create(nullptr, m_size_blk * m_data_blks_per_chunk, m_size_blk);
+    if (!decoder) return 1;
 
     for (unsigned j = 0; j < m_num_total_blocks; ++j) {
       if (!bitmap_ptr[j]) continue; // lost this block
-      decode_result = wirehair_decode(m_decoder, j, encode_ptr + j * m_size_blk, m_size_blk);
+      decode_result = wirehair_decode(decoder, j, encode_ptr + j * m_size_blk, m_size_blk);
       if (decode_result == Wirehair_Success) break;
     }
 
-    WirehairResult recover_result = wirehair_recover(m_decoder, data_ptr, m_size_data_submsg);
+    WirehairResult recover_result = wirehair_recover(decoder, data_ptr, m_size_data_submsg);
     if (recover_result != Wirehair_Success) {
-      wirehair_free(m_decoder);
+      wirehair_free(decoder);
       return 1;
     }
-    wirehair_free(m_decoder);
+    wirehair_free(decoder);
 
     data_ptr += m_size_data_submsg;
     encode_ptr += m_size_parity_submsg + m_size_data_submsg;
