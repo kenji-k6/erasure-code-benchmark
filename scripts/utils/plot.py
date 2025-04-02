@@ -27,6 +27,7 @@ def write_cpu_plot(
   df: pd.DataFrame,
   x_axis: AxType,
   y_axis: AxType,
+  yerr: str,
   cache_sizes: bool
 ) -> None:
   # get only the rows where the fixed parameter is set appropriately
@@ -42,7 +43,6 @@ def write_cpu_plot(
   y_label = get_ax_label(y_axis)
   x_col = get_col_name(x_axis)
   y_col = get_col_name(y_axis)
-  y_err_col = f"{y_col}_err"
   categories = df[x_col].unique()
 
   x_label_loc = np.arange(len(categories))
@@ -54,7 +54,14 @@ def write_cpu_plot(
   for alg in df["name"].unique():
     alg_df = df[df["name"] == alg]
     vals = alg_df[y_col].values
-    y_errs = alg_df[y_err_col].values
+    
+    if yerr == "ci":
+      y_errs = alg_df[f"{y_col}_ci"].values
+    elif yerr == "min-max":
+      y_errs = (alg_df[f"{y_col}_err_min"].values, alg_df[f"{y_col}_err_max"].values)
+    else:
+      ValueError(f"Invalid yerr value: {yerr}. Must be 'ci' or 'min-max'.")
+
     offset = width * multiplier
     ax.bar(x_label_loc + offset, vals, width, label=alg,
            yerr=y_errs, capsize=5)

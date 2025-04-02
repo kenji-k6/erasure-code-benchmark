@@ -31,11 +31,12 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
     write_header();
     m_header_written = true;
   }
-
-  if (runs.size() == m_num_repetitions) return; // skip if the runs aren't aggregates
+  if (runs[0].benchmark_name().find("_mean") == std::string::npos) return; // skip if the runs aren't aggregates
 
   auto mean_run = runs[0];
   auto stddev_run = runs[2];
+  auto min_run = runs[4];
+  auto max_run = runs[5];
   auto pos = mean_run.benchmark_name().find("_mean");
 
   std::string name = "\"" + mean_run.benchmark_name().substr(0, pos) + "\"";
@@ -54,7 +55,8 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
   uint32_t threads_per_gpu_block = static_cast<uint32_t>(mean_run.counters.find("threads_per_gpu_block")->second.value);
   double time_ns = mean_run.GetAdjustedCPUTime();
   double time_ns_stddev = stddev_run.GetAdjustedCPUTime();
-
+  double time_ns_min = min_run.GetAdjustedCPUTime();
+  double time_ns_max = max_run.GetAdjustedCPUTime();
   m_file << name                  << ","
          << err_msg               << ","
          << num_iterations        << ","
@@ -66,7 +68,9 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
          << num_gpu_blocks        << ","
          << threads_per_gpu_block << ","
          << time_ns               << ","
-         << time_ns_stddev        << std::endl;
+         << time_ns_stddev        << ","
+         << time_ns_min           << ","
+         << time_ns_max           << std::endl;
 }
 
 bool BenchmarkCSVReporter::ReportContext([[maybe_unused]]const Context& _) { return true; }
@@ -83,7 +87,9 @@ void BenchmarkCSVReporter::write_header() {
           << "num_gpu_blocks,"
           << "threads_per_gpu_block,"
           << "time_ns,"
-          << "time_ns_stddev"
+          << "time_ns_stddev,"
+          << "time_ns_min,"
+          << "time_ns_max"
           << std::endl;
 }
 

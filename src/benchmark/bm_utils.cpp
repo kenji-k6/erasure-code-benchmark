@@ -218,7 +218,13 @@ void run_benchmarks() {
 
     benchmark::RegisterBenchmark(name, func, cfg)
       ->Iterations(1)
-      ->DisplayAggregatesOnly(true);
+      ->DisplayAggregatesOnly(true)
+      ->ComputeStatistics("min", [](const std::vector<double>& v) -> double {
+        return *(std::min_element(v.begin(), v.end()));
+      })
+      ->ComputeStatistics("max", [](const std::vector<double>& v) -> double {
+        return *(std::max_element(v.begin(), v.end()));
+      });
   }
 
   benchmark::Initialize(&argc, argv);

@@ -80,6 +80,17 @@ def main() -> None:
   )
 
   parser.add_argument(
+    "--yerr",
+    type=str,
+    choices=[
+      "min-max",
+      "ci"
+    ],
+    default="min-max",
+    help="type of error bars to plot"
+  )
+
+  parser.add_argument(
     "--cache-sizes",
     action="store_true",
     help="include cache sizes in the plots"
@@ -107,6 +118,7 @@ def main() -> None:
 
   cfg.FIXED_FEC_RATIO = f"FEC({int(fec_x)},{int(fec_y)})"
 
+
   
   x_axis = get_axis(args.x_axis)
   y_axis = get_axis(args.y_axis)
@@ -120,7 +132,7 @@ def main() -> None:
   if plot_gpu:
     write_gpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, cache_sizes=cache_sizes)
   else:
-    write_cpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, cache_sizes=cache_sizes)
+    write_cpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, yerr=args.yerr, cache_sizes=cache_sizes)
 
   return
 

@@ -10,6 +10,7 @@ OUTPUT_DIR = None
 # Z value used for plotting the confidence intervals
 # 80% => 1.282, 85% => 1.440, 90% => 1.645, 95% => 1.960,
 # 99% => 2.576, 99.9% => 3.291
+
 Z_VALUE = 3.291
 
 FIXED_BLOCK_SIZE = None

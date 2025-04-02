@@ -24,13 +24,17 @@ def get_df(file: str, plot_gpu: bool) -> pd.DataFrame:
   # Compute the encode times (and standard deviation) in ms
   df["time_ms"] = df["time_ns"] / 1e6
   df["time_ms_stddev"] = df["time_ns_stddev"] / 1e6
+  df["time_ms_err_min"] = df["time_ms"] - (df["time_ns_min"] / 1e6)
+  df["time_ms_err_max"] = (df["time_ns_max"] / 1e6) - df["time_ms"]
 
   # Compute the encode throughput (and standard deviation) in Gbps
   df["throughput_Gbps"] = (df["message_size_B"] * 8) / df["time_ns"] # equal to (#bits / 10^9) / (t_ns / 10^9) = #Gbits / s
   df["throughput_Gbps_stddev"] = df["throughput_Gbps"] * (df["time_ns_stddev"] / df["time_ns"]) # first order taylor expansion/error propagation
+  df["throughput_Gbps_err_min"] = df["throughput_Gbps"]-((df["message_size_B"] * 8) / df["time_ns_max"])
+  df["throughput_Gbps_err_max"] = ((df["message_size_B"] * 8) / df["time_ns_min"])-df["throughput_Gbps"]
 
   for col in ["time_ms", "throughput_Gbps"]:
-    df[f"{col}_err"] = cfg.Z_VALUE * (df[f"{col}_stddev"] / np.sqrt(df["num_iterations"]))
+    df[f"{col}_ci"] = cfg.Z_VALUE * (df[f"{col}_stddev"] / np.sqrt(df["num_iterations"]))
 
   # If plotting for gpu result, make a nice string for the GPU parameters
   if plot_gpu:
