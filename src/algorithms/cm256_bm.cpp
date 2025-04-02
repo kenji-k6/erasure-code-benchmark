@@ -55,16 +55,19 @@ CM256Benchmark::~CM256Benchmark() noexcept {
 }
 
 int CM256Benchmark::encode() noexcept {
-  cm256_block* blocks = m_blocks.data();
-  uint8_t* parity_ptr = m_parity_buffer;
+  int return_code = 0;
 
+  #pragma omp parallel for
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    if (cm256_encode(m_params, blocks, parity_ptr)) return 1;
-    
-    blocks += ECLimits::CM256_MAX_TOT_BLOCKS;
-    parity_ptr += m_size_parity_submsg;
+    cm256_block* blocks = m_blocks.data() + i * ECLimits::CM256_MAX_TOT_BLOCKS;
+    uint8_t* parity_ptr = m_parity_buffer + i * m_size_parity_submsg;
+
+    if (cm256_encode(m_params, blocks, parity_ptr)) {
+      #pragma omp atomic write
+      return_code = 1;
+    }
   }
-  return 0;
+  return return_code;
 }
 
 int CM256Benchmark::decode() noexcept {
