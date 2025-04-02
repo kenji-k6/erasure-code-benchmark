@@ -48,6 +48,38 @@ def main() -> None:
   )
 
   parser.add_argument(
+    "--fixed-block-size",
+    type=int,
+    choices=[
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ],
+    default=4,
+    help="fixed block size in KiB"
+  )
+
+  parser.add_argument(
+    "--fixed-fec",
+    type=str,
+    choices=[
+      "2:1",
+      "4:2",
+      "8:4",
+      "16:4",
+      "16:8",
+      "32:4",
+      "32:8"
+    ],
+    default="32:8",
+    help="fixed fec ratio"
+  )
+
+  parser.add_argument(
     "--cache-sizes",
     action="store_true",
     help="include cache sizes in the plots"
@@ -68,6 +100,13 @@ def main() -> None:
     cfg.OUTPUT_DIR = os.path.join(cfg.PLOT_DIR, args.output_dir)
   else:
     cfg.OUTPUT_DIR = cfg.PLOT_DIR
+
+  cfg.FIXED_BLOCK_SIZE = args.fixed_block_size
+
+  fec_x, fec_y = args.fixed_fec.split(":")
+
+  cfg.FIXED_FEC_RATIO = f"FEC({int(fec_x)},{int(fec_y)})"
+
   
   x_axis = get_axis(args.x_axis)
   y_axis = get_axis(args.y_axis)

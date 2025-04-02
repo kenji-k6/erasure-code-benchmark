@@ -56,10 +56,10 @@ def ensure_paths() -> None:
   return
 
 
-def get_output_path(x_axis: AxType, y_axis: AxType, plot_gpu: bool) -> str:
+def get_output_path(x_axis: AxType, y_axis: AxType, fixed_param: str, plot_gpu: bool) -> str:
   """Generate the file name & path for the plot image."""
 
-  file_name = f"{FILE_NAME_MAP[x_axis]}_vs_{FILE_NAME_MAP[y_axis]}" + ("_gpu" if plot_gpu else "") + ".png"
+  file_name = f"{FILE_NAME_MAP[x_axis]}_vs_{FILE_NAME_MAP[y_axis]}" + "_" +fixed_param + ("_gpu" if plot_gpu else "") + ".png"
   return os.path.join(cfg.OUTPUT_DIR, file_name)
 
 

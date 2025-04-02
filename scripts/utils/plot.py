@@ -1,18 +1,21 @@
-from enum import unique
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
+from pandas.core.indexes import multi
 import seaborn as sns
 from utils.hardware_info import CPUInfo, get_cpu_info
 from utils.utils import AxType, get_output_path, get_col_name, get_ax_label, get_plot_title
 import utils.config as cfg
 from typing import Union, Tuple
 
-def get_fixed_param(x_axis: AxType) -> Tuple[str, Union[int, str]]:
+import os
+
+def get_fixed_param(x_axis: AxType) -> Tuple[str, Union[int, str], str]:
   """Returns the fixed parameter for the given AxType."""
   if x_axis == AxType.BLK_SIZE:
-    return get_col_name(AxType.FEC_RATIO), cfg.FIXED_FEC_RATIO
+    return get_col_name(AxType.FEC_RATIO), cfg.FIXED_FEC_RATIO, cfg.FIXED_FEC_RATIO
   elif x_axis == AxType.FEC_RATIO:
-    return get_col_name(AxType.BLK_SIZE), cfg.FIXED_BLOCK_SIZE
+    return get_col_name(AxType.BLK_SIZE), cfg.FIXED_BLOCK_SIZE, (str(cfg.FIXED_BLOCK_SIZE)+"KiB")
 
 def plot_cache_sizes(cpu_info: CPUInfo) -> None:
   pass
@@ -27,36 +30,53 @@ def write_cpu_plot(
   cache_sizes: bool
 ) -> None:
   # get only the rows where the fixed parameter is set appropriately
-  fixed_col, fixed_val = get_fixed_param(x_axis)
+  fixed_col, fixed_val, file_part = get_fixed_param(x_axis)
   df = df[df[fixed_col] == fixed_val]
+
   # sanity_check
   assert(len(df[fixed_col].unique()) == 1)
 
-  output_file = get_output_path(x_axis, y_axis, False)
+  output_file = os.path.join(cfg.OUTPUT_DIR, "test.png") #get_output_path(x_axis, y_axis, file_part, False)
   cpu_info = get_cpu_info()
   x_label = get_ax_label(x_axis)
   y_label = get_ax_label(y_axis)
   x_col = get_col_name(x_axis)
   y_col = get_col_name(y_axis)
 
-  sns.set_theme(style="whitegrid",)
-  g = sns.catplot(data=df, kind="bar",
-              x=x_col, y=y_col, hue="name",
-              errorbar=None, palette="tab10",
-              aspect=2, legend="full"
-  ).set(title=get_plot_title(df, x_axis, cpu_info, False))
+  categories = df[x_col].unique()
 
-  g.ax.set_ylim(0, max(df[y_col]) * 1.2)
-  g.set_axis_labels(x_label, y_label) 
-  g.despine(left=True)
-  g.legend.set_title("Libraries")
-  g.legend.set_frame_on(True)
-  sns.move_legend(g, "upper right")
+  x_label_loc = np.arange(len(categories))
+  width = 0.2
+  multiplier = 0
+
+  fig, ax = plt.subplots(figsize=(12, 6))
+
+  for alg in df["name"].unique():
+    vals = df[df["name"] == alg][y_col].values
+    offset = width * multiplier
+    ax.bar(x_label_loc + offset, vals, width, label=alg)
+    multiplier += 1
+
+  # Y-axis things
+  ax.set_ylabel(y_label)
+  ax.set_ylim(0, max(df[y_col]) * 1.2)
+  ax.grid(axis="y", linestyle="--", alpha=1.0)
+
+  # X-axis things
+  ax.set_xlabel(x_label)
+  ax.set_xticks(x_label_loc + width, labels=categories)
+
+  # General plot things
+  ax.set_title(get_plot_title(df, x_axis, cpu_info, False))
+  ax.legend(title="Libraries", loc="upper left", ncols=len(df["name"].unique()))
+
   plt.tight_layout()
-
   plt.savefig(output_file, dpi=300)
   plt.close()
   return
+  
+
+
 
 def write_gpu_plot(
   df: pd.DataFrame,
@@ -65,16 +85,12 @@ def write_gpu_plot(
   cache_sizes: bool
 ) -> None:
   # get only the rows where the fixed parameter is set appropriately
-  fixed_col, fixed_val = get_fixed_param(x_axis)
-  if (x_axis == AxType.FEC_RATIO):
-    fixed_col = "block_size_B"
-    fixed_val = 256*1024
+  fixed_col, fixed_val, file_part = get_fixed_param(x_axis)
   df = df[df[fixed_col] == fixed_val]
   # sanity_check
   assert(len(df[fixed_col].unique()) == 1)
 
-  print(len(df))
-  output_file = get_output_path(x_axis, y_axis, True)
+  output_file = get_output_path(x_axis, y_axis, file_part, False)
   cpu_info = get_cpu_info()
   x_label = get_ax_label(x_axis)
   y_label = get_ax_label(y_axis)
