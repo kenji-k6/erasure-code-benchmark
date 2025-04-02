@@ -9,6 +9,7 @@
 #include "xorec_bm.hpp"
 #include "xorec.hpp"
 #include "utils.hpp"
+#include <omp.h>
 
 
 XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
@@ -31,14 +32,19 @@ XorecBenchmark::~XorecBenchmark() noexcept {
 }
 
 int XorecBenchmark::encode() noexcept {
-  uint8_t* data_ptr = m_data_buffer;
-  uint8_t* parity_ptr = m_parity_buffer;
+  int return_code = 0;
+
+  #pragma omp parallel for
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    if (xorec_encode(data_ptr, parity_ptr, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk) != XorecResult::Success) return 1;
-    data_ptr += m_size_data_submsg;
-    parity_ptr += m_size_parity_submsg;
+    uint8_t* data_ptr = m_data_buffer + i * m_size_data_submsg;
+    uint8_t* parity_ptr = m_parity_buffer + i * m_size_parity_submsg;
+
+    if (xorec_encode(data_ptr, parity_ptr, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk) != XorecResult::Success) {
+      #pragma omp atomic write
+      return_code = 1;
+    };
   }
-  return 0;
+  return return_code;
 }
 
 int XorecBenchmark::decode() noexcept {

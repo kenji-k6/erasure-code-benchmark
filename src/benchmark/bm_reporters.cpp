@@ -50,6 +50,7 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
   uint32_t fec_1 = static_cast<uint32_t>(mean_run.counters.find("fec_params_1")->second.value);
   std::string fec = "\"FEC(" +std::to_string(fec_0) + "," + std::to_string(fec_1) + ")\"";
   uint32_t num_lost_rdma_packets = static_cast<uint32_t>(mean_run.counters.find("num_lost_rdma_packets")->second.value);
+  uint32_t num_cpu_threads = static_cast<uint32_t>(mean_run.counters.find("num_cpu_threads")->second.value);
   uint32_t is_gpu_bm = static_cast<uint32_t>(mean_run.counters.find("is_gpu_bm")->second.value);
   uint32_t num_gpu_blocks = static_cast<uint32_t>(mean_run.counters.find("num_gpu_blocks")->second.value);
   uint32_t threads_per_gpu_block = static_cast<uint32_t>(mean_run.counters.find("threads_per_gpu_block")->second.value);
@@ -64,6 +65,7 @@ void BenchmarkCSVReporter::ReportRuns(const std::vector<Run>& runs) {
          << block_size_B          << ","
          << fec                   << ","
          << num_lost_rdma_packets << ","
+         << num_cpu_threads       << ","
          << is_gpu_bm             << ","
          << num_gpu_blocks        << ","
          << threads_per_gpu_block << ","
@@ -83,6 +85,7 @@ void BenchmarkCSVReporter::write_header() {
           << "block_size_B,"
           << "FEC,"
           << "num_lost_rdma_packets,"
+          << "num_cpu_threads,"
           << "is_gpu_bm,"
           << "num_gpu_blocks,"
           << "threads_per_gpu_block,"

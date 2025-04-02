@@ -137,6 +137,7 @@ void get_cpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
         block_size,
         fec_params,
         FIXED_NUM_LOST_RDMA_PKTS,
+        1,
         false,
         0,
         0,
@@ -144,10 +145,21 @@ void get_cpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
         nullptr
       };
 
-      for (auto alg : cpu_selected_algorithms) {
-        auto name = CPU_BENCHMARK_NAMES.at(alg);
-        auto func = CPU_BENCHMARK_FUNCTIONS.at(alg);
-        benchmarks.push_back({ name, func, config });
+      if (fec_params == FECTuple(32,8)) {
+        for (auto num_cpu_threads : VAR_NUM_CPU_THREADS) {
+          config.num_cpu_threads = num_cpu_threads;
+          for (auto alg : cpu_selected_algorithms) {
+            auto name = CPU_BENCHMARK_NAMES.at(alg);
+            auto func = CPU_BENCHMARK_FUNCTIONS.at(alg);
+            benchmarks.push_back({ name, func, config });
+          }
+        }
+      } else {
+        for (auto alg : cpu_selected_algorithms) {
+          auto name = CPU_BENCHMARK_NAMES.at(alg);
+          auto func = CPU_BENCHMARK_FUNCTIONS.at(alg);
+          benchmarks.push_back({ name, func, config });
+        }
       }
     }
   }
@@ -163,6 +175,7 @@ void get_gpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
             block_size,
             fec_params,
             FIXED_NUM_LOST_RDMA_PKTS,
+            1,
             true,
             num_gpu_blocks,
             threads_per_gpu_block,

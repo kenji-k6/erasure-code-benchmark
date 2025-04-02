@@ -78,6 +78,8 @@ protected:
 
   uint8_t* m_data_buffer;
   uint8_t* m_block_bitmap;
+
+  uint32_t m_num_threads;
 };
 
 #endif // ABSTRACT_BM_HPP
