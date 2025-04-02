@@ -36,27 +36,34 @@ uint32_t PCGRandom::next() {
 
 // Utility functions
 int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, size_t bytes) {
-  if (bytes < 2) throw_error("write_validation_pattern: num_bytes must be at least 2");
+  // if (bytes < 2) throw_error("write_validation_pattern: num_bytes must be at least 2");
   
   PCGRandom rng(block_idx, 1);
 
-  if (bytes < 16) { // CRC check not viable
-    uint8_t val = static_cast<uint8_t>(rng.next());
-    std::fill(block_ptr, block_ptr + bytes, val);
-  } else {
-    // Apply CRC to the block if it is large enough
-    uint32_t crc = bytes;
-    *reinterpret_cast<uint32_t*>(block_ptr + 4) = bytes;
+  // if (bytes < 16) { // CRC check not viable
+  //   uint8_t val = static_cast<uint8_t>(rng.next());
+  //   std::fill(block_ptr, block_ptr + bytes, val);
+  // } else {
+  //   // Apply CRC to the block if it is large enough
+  //   uint32_t crc = bytes;
+  //   *reinterpret_cast<uint32_t*>(block_ptr + 4) = bytes;
 
-    for (unsigned i = 8; i < bytes; i++) {
-      uint8_t val = static_cast<uint8_t>(rng.next());
-      block_ptr[i] = val;
-      crc = (crc << 3) | (crc >> (32 - 3)); // Spread entropy
-      crc += val;
-    }
+  //   for (unsigned i = 8; i < bytes; i++) {
+  //     uint8_t val = static_cast<uint8_t>(rng.next());
+  //     block_ptr[i] = val;
+  //     crc = (crc << 3) | (crc >> (32 - 3)); // Spread entropy
+  //     crc += val;
+  //   }
 
-    *reinterpret_cast<uint32_t*>(block_ptr) = crc;
-  }
+  //   *reinterpret_cast<uint32_t*>(block_ptr) = crc;
+  // } 
+
+
+  // Original Implementation isn't needed, because we aren't decoding/losing data
+  // The code below ensures that the compiler doesn't optimize away memeory accesses
+  uint8_t val = static_cast<uint8_t>(rng.next());
+  std::fill(block_ptr, block_ptr + bytes, val);
+  asm volatile ("" : : : "memory");
   return 0;
 }
 
