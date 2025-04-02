@@ -36,13 +36,13 @@ def write_cpu_plot(
   # sanity_check
   assert(len(df[fixed_col].unique()) == 1)
 
-  output_file = os.path.join(cfg.OUTPUT_DIR, "test.png") #get_output_path(x_axis, y_axis, file_part, False)
+  output_file = get_output_path(x_axis, y_axis, file_part, False)
   cpu_info = get_cpu_info()
   x_label = get_ax_label(x_axis)
   y_label = get_ax_label(y_axis)
   x_col = get_col_name(x_axis)
   y_col = get_col_name(y_axis)
-
+  y_err_col = f"{y_col}_err"
   categories = df[x_col].unique()
 
   x_label_loc = np.arange(len(categories))
@@ -52,9 +52,12 @@ def write_cpu_plot(
   fig, ax = plt.subplots(figsize=(12, 6))
 
   for alg in df["name"].unique():
-    vals = df[df["name"] == alg][y_col].values
+    alg_df = df[df["name"] == alg]
+    vals = alg_df[y_col].values
+    y_errs = alg_df[y_err_col].values
     offset = width * multiplier
-    ax.bar(x_label_loc + offset, vals, width, label=alg)
+    ax.bar(x_label_loc + offset, vals, width, label=alg,
+           yerr=y_errs, capsize=5)
     multiplier += 1
 
   # Y-axis things
