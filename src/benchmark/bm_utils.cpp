@@ -132,18 +132,22 @@ void print_usage() {
 void get_cpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
   for (auto block_size : VAR_BLOCK_SIZES) {
     for (auto fec_params : VAR_FEC_PARAMS) {
-      BenchmarkConfig config {
-        FIXED_MESSAGE_SIZE,
-        block_size,
-        fec_params,
-        FIXED_NUM_LOST_RDMA_PKTS,
-        1,
-        false,
-        0,
-        0,
-        NUM_ITERATIONS,
-        nullptr
-      };
+      BenchmarkConfig config;
+      config.message_size = FIXED_MESSAGE_SIZE;
+      config.block_size = block_size;
+      config.fec_params = fec_params;
+      #ifdef VALIDATION
+      config.num_lost_rdma_packets = get<1>(fec_params);
+      #else
+      config.num_lost_rdma_packets = FIXED_NUM_LOST_RDMA_PKTS;
+      #endif
+      config.num_cpu_threads = 1;
+      config.is_gpu_config = false;
+      config.num_gpu_blocks = 0;
+      config.threads_per_gpu_block = 0;
+      config.num_iterations = NUM_ITERATIONS;
+      config.progress_reporter = nullptr;
+
 
       if (fec_params == FECTuple(32,8)) {
         for (auto num_cpu_threads : VAR_NUM_CPU_THREADS) {

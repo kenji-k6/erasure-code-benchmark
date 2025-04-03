@@ -5,7 +5,7 @@ ECBenchmark::ECBenchmark(const BenchmarkConfig& config) noexcept
     : m_size_msg(config.message_size),
       m_size_blk(config.block_size),
       m_fec_params(config.fec_params),
-      m_num_lst_rdma_pkts(config.num_lost_rmda_packets),
+      m_num_lst_rdma_pkts(config.num_lost_rdma_packets),
       m_num_threads(config.num_cpu_threads)
   {
     m_size_data_submsg = get<0>(config.fec_params)*config.block_size;

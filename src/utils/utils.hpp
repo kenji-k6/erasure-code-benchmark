@@ -4,6 +4,9 @@
 #include <vector>
 #include "bm_reporters.hpp"
 
+
+#define VALIDATION
+
 /// @brief Constants for fixed values
 constexpr size_t ALIGNMENT = 64;
 constexpr size_t RANDOM_SEED = 1896;
@@ -76,6 +79,7 @@ bool validate_block(const uint8_t* block_ptr, size_t bytes);
 
 
 
+void select_lost_block_idxs(size_t num_data_blocks, size_t num_parity_blocks, size_t num_lost_blocks, uint8_t* block_bitmap);
 
 /**
  * @brief Helper function to throw an error message.

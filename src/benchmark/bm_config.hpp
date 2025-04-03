@@ -19,7 +19,7 @@ struct BenchmarkConfig {
   size_t block_size;                            ///< Size of the block to be encoded
   FECTuple fec_params;                          ///< Tuple to hold FEC parameters
 
-  size_t num_lost_rmda_packets;
+  size_t num_lost_rdma_packets;
   size_t num_cpu_threads;                       ///< Number of CPU threads to use for the benchmark
   
   bool is_gpu_config;

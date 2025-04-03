@@ -71,19 +71,59 @@ int CM256Benchmark::encode() noexcept {
 }
 
 int CM256Benchmark::decode() noexcept {
-  cm256_block* blocks = m_blocks.data();
-  uint8_t* bitmap = m_block_bitmap;
+  int return_code = 0;
+  for (unsigned c = 0; c < m_num_chunks; ++c) {
+    uint8_t* data_buf = m_data_buffer + c * m_size_data_submsg;
+    uint8_t* parity_buf = m_parity_buffer + c * m_size_parity_submsg;
+    cm256_block* blocks = m_blocks.data() + c * ECLimits::CM256_MAX_TOT_BLOCKS;
+    uint8_t* bitmap = m_block_bitmap + c * m_blks_per_chunk;
+    uint32_t recovery_idx = 0;
 
-  for (unsigned i = 0; i < m_num_chunks; ++i) {
-    if (cm256_decode(m_params, blocks)) return 1;
-    blocks += ECLimits::CM256_MAX_TOT_BLOCKS;
-    bitmap += m_blks_per_chunk;
+    for (unsigned i = 0; i < m_data_blks_per_chunk; ++i) {
+      if (!bitmap[i]) {
+        while (recovery_idx < m_parity_blks_per_chunk && !bitmap[m_data_blks_per_chunk + recovery_idx]) {
+          ++recovery_idx;
+        }
+
+        if (recovery_idx == m_parity_blks_per_chunk) {
+          #pragma omp atomic write
+          return_code = 1;
+          break;
+        }
+
+        blocks[i].Index = cm256_get_recovery_block_index(m_params, recovery_idx);
+        blocks[i].Block = m_parity_buffer + c * m_size_parity_submsg + recovery_idx * m_size_blk;
+        ++recovery_idx;
+      }
+    }
+
+    cm256_decode(m_params, blocks);
+
+    for (unsigned i = 0; i < m_data_blks_per_chunk; ++i) {
+      if (!bitmap[i]) {
+        memcpy(data_buf + i * m_size_blk, blocks[i].Block, m_size_blk);
+      }
+    }
   }
-
-  return 0;
+  return return_code;
 }
 
 void CM256Benchmark::simulate_data_loss() noexcept {
-  // TODO
+  for (unsigned c = 0; c < m_num_chunks; ++c) {
+    uint8_t* bitmap = m_block_bitmap + c * m_blks_per_chunk;
+    uint8_t* data_buf = m_data_buffer + c * m_size_data_submsg;
+    uint8_t* parity_buf = m_parity_buffer + c * m_size_parity_submsg;
+
+    select_lost_block_idxs(m_data_blks_per_chunk, m_parity_blks_per_chunk, m_num_lst_rdma_pkts, bitmap);
+    unsigned i;
+
+    for (i = 0; i < m_data_blks_per_chunk; ++i) {
+      if (!bitmap[i]) memset(data_buf + i * m_size_blk, 0, m_size_blk);
+    }
+
+    for (; i < m_blks_per_chunk; ++i) {
+      if (!bitmap[i]) memset(parity_buf + (i - m_data_blks_per_chunk) * m_size_blk, 0, m_size_blk);
+    }
+  }
   return;
 }

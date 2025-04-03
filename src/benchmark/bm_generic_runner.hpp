@@ -14,19 +14,22 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   for (auto _ : state) {
     bench.encode();
 
-    // state.PauseTiming();
-
-    // bench.simulate_data_loss();
-    // bench.decode();
-
-    // if (!bench.check_for_corruption()) {
-    //   state.counters["data_corrupted"] = 1;
-    // } else {
-    //   state.counters["data_corrupted"] = 0;
-    // }
-    // state.ResumeTiming();
+    #ifdef VALIDATION
+    state.PauseTiming();
+    bench.simulate_data_loss();
+    bench.decode();
+    if (!bench.check_for_corruption()) {
+      state.counters["data_corrupted"] = 1;
+    } else {
+      state.counters["data_corrupted"] = 0;
+    }
+    state.ResumeTiming();
+    #endif
   }
+
+  #ifndef VALIDATION
   state.counters["data_corrupted"] = 0;
+  #endif
   
   if (config.progress_reporter != nullptr) {
     config.progress_reporter->update_bar();
@@ -36,7 +39,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   state.counters["block_size_B"] = config.block_size;
   state.counters["fec_params_0"] = get<0>(config.fec_params);
   state.counters["fec_params_1"] = get<1>(config.fec_params);
-  state.counters["num_lost_rmda_packets"] = config.num_lost_rmda_packets;
+  state.counters["num_lost_rdma_packets"] = config.num_lost_rdma_packets;
   state.counters["num_cpu_threads"] = config.num_cpu_threads;
   state.counters["is_gpu_bm"] = config.is_gpu_config ? 1 : 0;
   state.counters["num_gpu_blocks"] = config.num_gpu_blocks;
