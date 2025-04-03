@@ -4,8 +4,8 @@
 #include <vector>
 #include "bm_reporters.hpp"
 
-
-#define VALIDATION
+// Uncomment the line below to enable validation checks
+// #define VALIDATION
 
 /// @brief Constants for fixed values
 constexpr size_t ALIGNMENT = 64;
