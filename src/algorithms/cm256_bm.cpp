@@ -72,6 +72,8 @@ int CM256Benchmark::encode() noexcept {
 
 int CM256Benchmark::decode() noexcept {
   int return_code = 0;
+  
+  #pragma omp parallel for
   for (unsigned c = 0; c < m_num_chunks; ++c) {
     uint8_t* data_buf = m_data_buffer + c * m_size_data_submsg;
     uint8_t* parity_buf = m_parity_buffer + c * m_size_parity_submsg;
@@ -92,7 +94,7 @@ int CM256Benchmark::decode() noexcept {
         }
 
         blocks[i].Index = cm256_get_recovery_block_index(m_params, recovery_idx);
-        blocks[i].Block = m_parity_buffer + c * m_size_parity_submsg + recovery_idx * m_size_blk;
+        blocks[i].Block = parity_buf + recovery_idx * m_size_blk;
         ++recovery_idx;
       }
     }

@@ -23,7 +23,6 @@ const std::unordered_map<std::string, BenchmarkFunction> CPU_BENCHMARK_FUNCTIONS
   { "cm256", BM_CM256 },
   { "isal", BM_ISAL },
   { "leopard", BM_Leopard},
-  { "wirehair", BM_Wirehair },
   { "xorec", BM_XOREC }
 };
 
@@ -31,7 +30,6 @@ const std::unordered_map<std::string, std::string> CPU_BENCHMARK_NAMES = {
   { "cm256", "CM256 (MDS)" },
   { "isal", "ISA-L (MDS)" },
   { "leopard", "Leopard (MDS)"},
-  { "wirehair", "Wirehair (MDS)" },
   { "xorec", "Xorec" }
 };
 
@@ -120,10 +118,10 @@ void print_usage() {
             << "  -h, --help            show this help message"                                             << '\n'
             << "  -f, --file            specify the output CSV file (inside /results/raw/)"                 << '\n'
             << "  -a, --append          append results to the output file (default: overwrite)"             << '\n'
-            << "  -i, --iterations      number of benchmark iterations (atleast 3, default 3)"                         << '\n'
-            << "  -c, --cpu-algorithm <cm256|isal|leopard|wirehair|xorec>"                                  << '\n'
+            << "  -i, --iterations      number of benchmark iterations (atleast 3, default 3)"              << '\n'
+            << "  -c, --cpu-algorithm <cm256|isal|leopard|xorec>"                                           << '\n'
             << "                        run the specified CPU algorithms, 0 or more comma separated args."  << '\n'
-            << "  -g, --gpu-algorithm <xorec,xorec-cpu-parity>"                                                              << '\n'
+            << "  -g, --gpu-algorithm <xorec,xorec-cpu-parity>"                                             << '\n'
             << "                        run the specified GPU algorithms, 0 or more comma separated args."  << '\n' << '\n';
 }
 

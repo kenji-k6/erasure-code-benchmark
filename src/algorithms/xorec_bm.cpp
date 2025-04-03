@@ -36,10 +36,10 @@ int XorecBenchmark::encode() noexcept {
 
   #pragma omp parallel for
   for (unsigned i = 0; i < m_num_chunks; ++i) {
-    uint8_t* data_ptr = m_data_buffer + i * m_size_data_submsg;
-    uint8_t* parity_ptr = m_parity_buffer + i * m_size_parity_submsg;
+    uint8_t* data_buf = m_data_buffer + i * m_size_data_submsg;
+    uint8_t* parity_buf = m_parity_buffer + i * m_size_parity_submsg;
 
-    if (xorec_encode(data_ptr, parity_ptr, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk) != XorecResult::Success) {
+    if (xorec_encode(data_buf, parity_buf, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk) != XorecResult::Success) {
       #pragma omp atomic write
       return_code = 1;
     };
@@ -48,20 +48,39 @@ int XorecBenchmark::encode() noexcept {
 }
 
 int XorecBenchmark::decode() noexcept {
-  uint8_t* data_ptr = m_data_buffer;
-  uint8_t* parity_ptr = m_parity_buffer;
-  uint8_t* bitmap_ptr = m_block_bitmap;
+  int return_code = 0;
 
-  for (unsigned i = 0; i < m_num_chunks; ++i) {
-    if (xorec_decode(data_ptr, parity_ptr, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk, bitmap_ptr) != XorecResult::Success) return 1;
-    data_ptr += m_size_data_submsg;
-    parity_ptr += m_size_parity_submsg;
-    bitmap_ptr += m_blks_per_chunk;
+  #pragma omp parallel for
+  for (unsigned c = 0; c < m_num_chunks; ++c) {
+    uint8_t* data_buf = m_data_buffer + c * m_size_data_submsg;
+    uint8_t* parity_buf = m_parity_buffer + c * m_size_parity_submsg;
+    uint8_t* bitmap = m_block_bitmap + c * m_blks_per_chunk;
+
+    XorecResult res = xorec_decode(data_buf, parity_buf, m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk, bitmap);
+    if (res != XorecResult::Success) {
+      #pragma omp atomic write
+      return_code = 1;
+    }
   }
-  return 0;
+  return return_code;
 }
 
 void XorecBenchmark::simulate_data_loss() noexcept {
-  return; // TODO
+  for (unsigned c = 0; c < m_num_chunks; ++c) {
+    uint8_t* data_buf = m_data_buffer + c * m_size_data_submsg;
+    uint8_t* parity_buf = m_parity_buffer + c * m_size_parity_submsg;
+    uint8_t* bitmap = m_block_bitmap + c * m_blks_per_chunk;
+
+    select_lost_block_idxs(m_data_blks_per_chunk, m_parity_blks_per_chunk, m_num_lst_rdma_pkts, bitmap);
+    
+    unsigned i;
+    for (i = 0; i < m_data_blks_per_chunk; ++i) {
+      if (!bitmap[i]) memset(data_buf + i * m_size_blk, 0, m_size_blk);
+    }
+
+    for (; i < m_blks_per_chunk; ++i) {
+      if (!bitmap[i]) memset(parity_buf + (i - m_data_blks_per_chunk) * m_size_blk, 0, m_size_blk);
+    }
+  }
 }
 

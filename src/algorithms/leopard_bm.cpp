@@ -71,26 +71,56 @@ int LeopardBenchmark::encode() noexcept {
 
 
 int LeopardBenchmark::decode() noexcept {
-  void** data_ptrs = reinterpret_cast<void**>(m_original_ptrs.data());
-  void** encode_work_ptrs = reinterpret_cast<void**>(m_encode_work_ptrs.data());
-  void** decode_work_ptrs = reinterpret_cast<void**>(m_decode_work_ptrs.data());
+  int return_code = 0;
 
-  for (unsigned i = 0; i < m_num_chunks; ++i) {
+  #pragma omp parallel for
+  for (unsigned c = 0; c < m_num_chunks; ++c) {
+    uint8_t* data_buf = m_data_buffer + c * m_size_data_submsg;
+    uint8_t* bitmap = m_block_bitmap + c * m_blks_per_chunk;
+    void** orig_ptrs = reinterpret_cast<void**>(m_original_ptrs.data()) + c * m_data_blks_per_chunk;
+    void** encode_work_ptrs = reinterpret_cast<void**>(m_encode_work_ptrs.data()) + c * m_encode_work_count;
+    void** decode_work_ptrs = reinterpret_cast<void**>(m_decode_work_ptrs.data()) + c * m_decode_work_count;
 
-    if (leo_decode(m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk, m_decode_work_count, data_ptrs, encode_work_ptrs, decode_work_ptrs)) return 1;
-
-    for (unsigned j = 0; j < m_data_blks_per_chunk; ++j) {
-      if (!data_ptrs[j]) memcpy(data_ptrs[j], decode_work_ptrs[j], m_size_blk);
+    unsigned i;
+    for (i = 0; i < m_data_blks_per_chunk; ++i) {
+      if (!bitmap[i]) orig_ptrs[i] = nullptr;
     }
 
-    data_ptrs += m_data_blks_per_chunk;
-    encode_work_ptrs += m_encode_work_count;
-    decode_work_ptrs += m_decode_work_count;
+    for (; i < m_blks_per_chunk; ++i) {
+      auto idx = i - m_data_blks_per_chunk;
+      if (!bitmap[i]) encode_work_ptrs[idx] = nullptr;
+    }
+
+    if (leo_decode(m_size_blk, m_data_blks_per_chunk, m_parity_blks_per_chunk,
+                    m_decode_work_count, orig_ptrs, encode_work_ptrs, decode_work_ptrs)) {
+        #pragma omp atomic write
+        return_code = 1;
+    }
+
+    for (i = 0; i < m_data_blks_per_chunk; ++i) {
+      if (!bitmap[i]) memcpy(data_buf + i * m_size_blk, decode_work_ptrs[i], m_size_blk);
+    }
   }
-  return 0;
+  return return_code;
 }
 
 
 void LeopardBenchmark::simulate_data_loss() noexcept {
-  return; // TODO
+  for (unsigned c = 0; c < m_num_chunks; ++c) {
+    uint8_t* bitmap = m_block_bitmap + c * m_blks_per_chunk;
+    uint8_t* data_buf = m_data_buffer + c * m_size_data_submsg;
+    uint8_t* encode_buf = m_encode_buffer + c * m_size_blk * m_encode_work_count;
+
+    select_lost_block_idxs(m_data_blks_per_chunk, m_parity_blks_per_chunk, m_num_lst_rdma_pkts, bitmap);
+    unsigned i;
+
+    for (i = 0; i < m_data_blks_per_chunk; ++i) {
+      if (!bitmap[i]) memset(data_buf + i * m_size_blk, 0, m_size_blk);
+    }
+  
+    for (; i < m_blks_per_chunk; ++i) {
+      auto idx = i - m_data_blks_per_chunk;
+      if (!bitmap[i]) memset(encode_buf + idx * m_size_blk, 0, m_size_blk);
+    }
+  }
 }

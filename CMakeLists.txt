@@ -31,7 +31,6 @@ set (SOURCES
   src/algorithms/cm256_bm.cpp
   src/algorithms/isal_bm.cpp
   src/algorithms/leopard_bm.cpp
-  src/algorithms/wirehair_bm.cpp
   src/algorithms/xorec_bm.cpp
   src/algorithms/xorec_gpu_cmp_bm.cpp
 
@@ -72,10 +71,6 @@ add_subdirectory(libraries/leopard)
 # cm256
 add_subdirectory(libraries/cm256)
 
-# wirehair (have to set BUILD_TESTS to OFF)
-set(BUILD_TESTS OFF CACHE BOOL "Disable tests in Wirehair" FORCE)
-message(STATUS "BUILD_TESTS in wirehair: ${BUILD_TESTS}")
-add_subdirectory(libraries/wirehair)
 
 
 add_library(isal STATIC IMPORTED)
@@ -111,7 +106,6 @@ link_directories(${CUDA_LIBRARY_DIRS})
 target_link_libraries(ec-benchmark PRIVATE
   libleopard
   cm256
-  wirehair
   isal
   benchmark::benchmark
   OpenMP::OpenMP_CXX
