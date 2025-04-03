@@ -2,7 +2,7 @@ import argparse
 import os
 from utils.compute import get_df
 import utils.config as cfg
-from utils.plot import write_cpu_plot, write_gpu_plot
+from utils.plot import write_cpu_plot#, write_gpu_plot
 from utils.utils import get_axis, ensure_paths
 
 
@@ -28,9 +28,10 @@ def main() -> None:
     "--x-axis",
     type=str,
     choices=[
+      # "gpu-params",
       "block-size",
       "fec",
-      "gpu-params"
+      "cpu-threads"
     ],
     default="fec",
     help="x-axis parameter"
@@ -80,6 +81,21 @@ def main() -> None:
   )
 
   parser.add_argument(
+    "--fixed-threads",
+    type=int,
+    choices=[
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    default=1,
+    help="fixed number of CPU threads"
+  )
+
+  parser.add_argument(
     "--yerr",
     type=str,
     choices=[
@@ -91,16 +107,16 @@ def main() -> None:
   )
 
   parser.add_argument(
-    "--cache-sizes",
+    "--overwrite",
     action="store_true",
-    help="include cache sizes in the plots"
+    help="overwrite existing plots (default false)"
   )
 
-  parser.add_argument(
-    "--gpu",
-    action="store_true",
-    help="plot gpu results"
-  )
+  # parser.add_argument(
+  #   "--gpu",
+  #   action="store_true",
+  #   help="plot gpu results"
+  # )
 
   args = parser.parse_args()
 
@@ -118,21 +134,25 @@ def main() -> None:
 
   cfg.FIXED_FEC_RATIO = f"FEC({int(fec_x)},{int(fec_y)})"
 
+  cfg.FIXED_CPU_THREADS = args.fixed_threads
 
   
   x_axis = get_axis(args.x_axis)
   y_axis = get_axis(args.y_axis)
 
-  cache_sizes = args.cache_sizes
-  plot_gpu = args.gpu
-
 
   ensure_paths()
-  df = get_df(cfg.INPUT_FILE, plot_gpu)
-  if plot_gpu:
-    write_gpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, cache_sizes=cache_sizes)
-  else:
-    write_cpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, yerr=args.yerr, cache_sizes=cache_sizes)
+
+  # df = get_df(cfg.INPUT_FILE, plot_gpu)
+  df = get_df(cfg.INPUT_FILE, False)
+
+  # if args.gpu:
+  #   write_gpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, overwrite=args.overwrite)
+  # else:
+  #   write_cpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, yerr=args.yerr, overwrite=args.overwrite)
+
+  write_cpu_plot(df=df, x_axis=x_axis, y_axis=y_axis, yerr=args.yerr, overwrite=args.overwrite)
+  
 
   return
 
