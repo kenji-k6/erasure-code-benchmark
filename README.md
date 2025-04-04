@@ -61,12 +61,6 @@ cd libraries/isa-l
 make
 cd ..
 ```
-4. **Build libpfm4 (has to be built manually)**
-```bash
-cd perfmon2-libpfm4
-make
-cd ../..
-```
 
 4. **Create build folder & compile benchmark program**
 ```bash

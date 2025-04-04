@@ -78,7 +78,7 @@ int ISALBenchmark::encode() noexcept {
 int ISALBenchmark::decode() noexcept {
   size_t nerrs = 0;
   for (unsigned i = 0; i < m_num_tot_blocks; ++i) {
-    if (m_block_bitmap[i] == 0) m_block_err_list[nerrs++] = static_cast<uint8_t>(i);
+    if (!m_block_bitmap[i]) m_block_err_list[nerrs++] = static_cast<uint8_t>(i);
   }
 
   if (nerrs == 0) return 0;

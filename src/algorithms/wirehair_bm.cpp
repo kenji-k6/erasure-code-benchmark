@@ -41,7 +41,10 @@ int WirehairBenchmark::encode() noexcept {
   if (!m_encoder) return 1;
   for (size_t i = 0; i < m_num_tot_blocks; ++i) {
     if (wirehair_encode(m_encoder, i, m_encode_buf+i*m_block_size,
-                        m_block_size, &write_len) != Wirehair_Success) return -1;
+                        m_block_size, &write_len) != Wirehair_Success) {
+                          wirehair_free(m_encoder);
+                          return 1;
+                        }
   }
   wirehair_free(m_encoder);
   m_encoder = nullptr;

@@ -82,7 +82,7 @@ int LeopardBenchmark::decode() noexcept {
     return -1;
   }
 
-  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
+  for (i = 0; i < m_num_data_blocks; ++i) {
     if (!m_original_ptrs[i]) memcpy(m_data_buf + i * m_block_size, m_decode_work_ptrs[i], m_block_size);
   }
 
