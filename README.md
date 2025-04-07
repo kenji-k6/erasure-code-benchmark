@@ -50,7 +50,7 @@ git submodule update --init --recursive
 ```bash
 sudo apt update && sudo apt install -y \
   build-essential libbenchmark-dev automake \
-  autoconf libtool
+  autoconf libtool libomp-dev
 ```
 
 3. **Build ISA-L (has to be built manually)**
