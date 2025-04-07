@@ -7,7 +7,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed. Please run cmake from a 'build' directory.")
 endif()
 
-project(ec-benchmark LANGUAGES CXX CUDA)
+project(ec-benchmark LANGUAGES CXX)
 
 # Set C++ standard to 20
 set(CMAKE_CXX_STANDARD 20)
@@ -109,6 +109,5 @@ target_link_libraries(ec-benchmark PRIVATE
   isal
   benchmark::benchmark
   OpenMP::OpenMP_CXX
-  ${CUDA_LIBRARIES}
 )
 
