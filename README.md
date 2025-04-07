@@ -56,9 +56,7 @@ sudo apt update && sudo apt install -y \
 3. **Build ISA-L (has to be built manually)**
 ```bash
 cd libraries/isa-l
-./autogen.sh
-./configure
-make
+make -f Makefile.unx
 cd ..
 ```
 4. **Build libpfm4 (has to be built manually)**
