@@ -57,14 +57,9 @@ sudo apt update && sudo apt install -y \
 ```bash
 cd libraries/isa-l
 make -f Makefile.unx
-cd ..
-```
-4. **Build libpfm4 (has to be built manually)**
-```bash
-cd perfmon2-libpfm4
-make
 cd ../..
 ```
+
 
 4. **Create build folder & compile benchmark program**
 ```bash
