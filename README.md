@@ -30,7 +30,7 @@ ran on [Swis National Supercomputing Centre's](https://www.cscs.ch/) nodes.
 
 * **Make**: GNU 'make'
 
-* **C++ Compiler**: GCC 10+ (Recommended) / Clang 12+ (must support C++20)
+* **C++ Compiler**: GCC 10+ (Recommended)
 
 * **Python**: 3.8+ (for result analysis and visualization)
 
@@ -49,17 +49,16 @@ git submodule update --init --recursive
 2. **Install required packages**
 ```bash
 sudo apt update && sudo apt install -y \
-  build-essential libbenchmark-dev automake \
-  autoconf libtool
+  build-essential libbenchmark-dev \
+  libtool libomp-dev
 ```
 
 3. **Build ISA-L (has to be built manually)**
 ```bash
 cd libraries/isa-l
-./autogen.sh
-./configure
+make -f Makefile.unx
 make
-cd ..
+cd ../..
 ```
 
 4. **Create build folder & compile benchmark program**
