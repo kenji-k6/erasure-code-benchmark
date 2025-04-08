@@ -141,7 +141,7 @@ make > /dev/null || { err_cleanup "Benchmark build failed"; }
 report_progress "Built benchmark"
 
 report_progress "Starting benchmark execution"
-./ec-benchmark --iterations "$ITERATIONS" -c "cm256,isal,leopard$BM_SIMD_FLAGS" || { err_cleanup "Benchmark execution failed"; }
+./ec-benchmark --iterations "$ITERATIONS" -c "isal$BM_SIMD_FLAGS" || { err_cleanup "Benchmark execution failed"; }
 
 report_progress "Copying results to $OUTPUT_FILE"
 cd "$SCRIPT_DIR"
