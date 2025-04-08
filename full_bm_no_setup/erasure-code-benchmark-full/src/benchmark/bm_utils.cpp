@@ -1,0 +1,196 @@
+#include "bm_utils.hpp"
+#include "utils.hpp"
+#include "bm_functions.hpp"
+#include "benchmark/benchmark.h"
+#include <getopt.h>
+#include <vector>
+#include <unordered_set>
+#include <unordered_map>
+#include <filesystem>
+
+bool OVERWRITE_FILE = true;
+constexpr const char* RAW_DIR = "../results/raw/";
+std::string OUTPUT_FILE = "results.csv";
+int NUM_ITERATIONS = 1;
+
+std::chrono::system_clock::time_point START_TIME;
+using BenchmarkTuple = std::tuple<std::string, BenchmarkFunction, BenchmarkConfig>;
+
+std::unordered_set<std::string> cpu_selected_algorithms;
+
+const std::unordered_map<std::string, BenchmarkFunction> CPU_BENCHMARK_FUNCTIONS = {
+  { "cm256", BM_CM256 },
+  { "isal", BM_ISAL },
+  { "leopard", BM_Leopard},
+  { "xorec", BM_XOREC }
+};
+
+const std::unordered_map<std::string, std::string> CPU_BENCHMARK_NAMES = {
+  { "cm256", "CM256 (MDS)" },
+  { "isal", "ISA-L (MDS)" },
+  { "leopard", "Leopard (MDS)"},
+  { "xorec", "Xorec" }
+};
+
+
+std::vector<std::string> get_arg_vector(std::string input) {
+  std::vector<std::string> result;
+  size_t start = 0;
+  size_t end;
+  while ((end = input.find(",", start)) != std::string::npos) {
+    result.push_back(to_lower(input.substr(start, end-start)));
+    start = end + 1;
+  }
+  result.push_back(to_lower(input.substr(start)));
+  return result;
+}
+
+
+void parse_args(int argc, char** argv) {
+  struct option long_options[] = {
+    { "help",           no_argument,        nullptr, 'h' },
+    { "file",           required_argument,  nullptr, 'f' },
+    { "append",         no_argument,        nullptr, 'a' },
+    { "iterations",     required_argument,  nullptr, 'i' },
+    { "cpu-algorithm",  required_argument,  nullptr, 'c' },
+    { nullptr,          0,                  nullptr,  0  }
+  };
+
+  int c;
+  int option_index = 0;
+  std::string flag;
+  std::vector<std::string> args;
+
+  while ((c = getopt_long(argc, argv, "hf:ai:c:", long_options, &option_index)) != -1) {
+    switch (c) {
+      case 'h':
+        print_usage();
+        exit(0);
+        break;
+      case 'f':
+        OUTPUT_FILE = std::string(optarg);
+        break;
+      case 'a':
+        OVERWRITE_FILE = false;
+        break;
+      case 'i':
+        NUM_ITERATIONS = std::stoi(optarg);
+        if (NUM_ITERATIONS < 3) throw_error("Number of iterations must be at least 3");
+        break;
+      case 'c':
+        args = get_arg_vector(std::string(optarg));
+        for (const auto& arg : args) {
+          if (CPU_BENCHMARK_FUNCTIONS.find(arg) == CPU_BENCHMARK_FUNCTIONS.end()) throw_error("Invalid CPU algorithm: " + arg);
+          cpu_selected_algorithms.insert(arg);
+        }
+        break;
+      default:
+        print_usage();
+        exit(0);
+    }
+  }
+}
+
+void print_usage() {
+  std::cout << '\n' << "Usage: " << "ec-benchmark [OPTIONS(0)...] [ : [OPTIONS(N)...]]" << '\n' << '\n'
+            << "Options:" << '\n'
+            << "  -h, --help            show this help message"                                             << '\n'
+            << "  -f, --file            specify the output CSV file (inside /results/raw/)"                 << '\n'
+            << "  -a, --append          append results to the output file (default: overwrite)"             << '\n'
+            << "  -i, --iterations      number of benchmark iterations (atleast 3, default 3)"              << '\n'
+            << "  -c, --cpu-algorithm <cm256|isal|leopard|xorec>"                                           << '\n'
+            << "                        run the specified CPU algorithms, 0 or more comma separated args."  << "\n\n";
+}
+
+
+
+void get_cpu_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
+  for (auto block_size : VAR_BLOCK_SIZES) {
+    for (auto fec_params : VAR_FEC_PARAMS) {
+      BenchmarkConfig config;
+      config.message_size = FIXED_MESSAGE_SIZE;
+      config.block_size = block_size;
+      config.fec_params = fec_params;
+      #ifdef VALIDATION
+      config.num_lost_rdma_packets = get<1>(fec_params);
+      #else
+      config.num_lost_rdma_packets = FIXED_NUM_LOST_RDMA_PKTS;
+      #endif
+      config.num_cpu_threads = 1;
+      config.is_gpu_config = false;
+      config.num_gpu_blocks = 0;
+      config.threads_per_gpu_block = 0;
+      config.num_iterations = NUM_ITERATIONS;
+      config.progress_reporter = nullptr;
+
+
+      if (fec_params == FECTuple(32,8)) {
+        for (auto num_cpu_threads : VAR_NUM_CPU_THREADS) {
+          config.num_cpu_threads = num_cpu_threads;
+          for (auto alg : cpu_selected_algorithms) {
+            auto name = CPU_BENCHMARK_NAMES.at(alg);
+            auto func = CPU_BENCHMARK_FUNCTIONS.at(alg);
+            benchmarks.push_back({ name, func, config });
+          }
+        }
+      } else {
+        for (auto alg : cpu_selected_algorithms) {
+          auto name = CPU_BENCHMARK_NAMES.at(alg);
+          auto func = CPU_BENCHMARK_FUNCTIONS.at(alg);
+          benchmarks.push_back({ name, func, config });
+        }
+      }
+    }
+  }
+}
+
+static void ensure_result_dir() {
+  if (!std::filesystem::exists(RAW_DIR)) {
+    std::filesystem::create_directory(RAW_DIR);
+  }
+}
+
+void run_benchmarks() {
+  START_TIME = std::chrono::system_clock::now();
+  ensure_result_dir();
+
+  std::string repetitions = "--benchmark_repetitions=" + std::to_string(5);
+  char arg0[] = "benchmark";
+  char arg1[] = "--benchmark_out=console";
+  char arg2[50];
+  snprintf(arg2, sizeof(arg2), "--benchmark_repetitions=%d", NUM_ITERATIONS);
+
+  int argc = 3;
+  char *argv[] = { arg0, arg1, arg2 };
+
+  std::vector<BenchmarkTuple> benchmarks;
+
+  get_cpu_benchmarks(benchmarks);
+
+  if (benchmarks.empty()) {
+    throw_error("No benchmarks selected. Use -c to select benchmarks.");
+  }
+
+  std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(benchmarks.size() * NUM_ITERATIONS, START_TIME);
+  std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(RAW_DIR + OUTPUT_FILE, OVERWRITE_FILE, NUM_ITERATIONS);
+
+  benchmark::ClearRegisteredBenchmarks();
+  for (auto [name, func, cfg] : benchmarks) {
+    cfg.progress_reporter = console_reporter.get();
+
+    benchmark::RegisterBenchmark(name, func, cfg)
+      ->Iterations(1)
+      ->DisplayAggregatesOnly(true)
+      ->ComputeStatistics("min", [](const std::vector<double>& v) -> double {
+        return *(std::min_element(v.begin(), v.end()));
+      })
+      ->ComputeStatistics("max", [](const std::vector<double>& v) -> double {
+        return *(std::max_element(v.begin(), v.end()));
+      });
+  }
+
+  benchmark::Initialize(&argc, argv);
+  if (benchmark::ReportUnrecognizedArguments(argc, argv)) return;
+  benchmark::RunSpecifiedBenchmarks(console_reporter.get(), csv_reporter.get());
+  benchmark::Shutdown();
+}
