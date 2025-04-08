@@ -48,7 +48,7 @@ def write_cpu_plot(
   categories = plot_df[x_col].unique()
 
   x_label_loc = np.arange(len(categories))
-  width = 0.2
+  width = 0.15
   multiplier = 0
 
   fig, ax = plt.subplots(figsize=(12, 6))
