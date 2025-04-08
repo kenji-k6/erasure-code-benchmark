@@ -7,6 +7,7 @@
 
 #include <string>
 #include <array>
+#include <cstdint>
 
 
 #define XOREC_RESTRICT __restrict

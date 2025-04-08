@@ -3,10 +3,14 @@
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 OUTPUT_FILE=""
 ITERATIONS=""
+SIMD_SELECTIONS=()
+CMAKE_SIMD_FLAGS=""
+BM_SIMD_FLAGS=""
+
 
 # Function to print usage
 usage() {
-  echo "Usage: $0 -o|--output <output_file> -i|--iterations <num_iterations>"
+  echo "Usage: $0 -o|--output <output_file> -i|--iterations <num_iterations> --simd [avx|avx2|avx512]"
   exit 1
 }
 
@@ -19,6 +23,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -i|--iterations)
       ITERATIONS="$2"
+      shift 2
+      ;;
+    --simd)
+      IFS=',' read -ra SIMD_SELECTIONS <<< "$2"
       shift 2
       ;;
     -h|--help)
@@ -36,6 +44,11 @@ if [ -z "$OUTPUT_FILE" ] || [ -z "$ITERATIONS" ]; then
   usage
 fi
 
+if [ ${#SIMD_SELECTIONS[@]} -eq 0 ]; then
+  echo "Error: No SIMD selections provided."
+  usage 1
+fi
+
 
 # Validate iterations is a number and >= 3
 if ! [[ "$ITERATIONS" =~ ^[0-9]+$ ]]; then
@@ -51,6 +64,27 @@ if [[ "$OUTPUT_FILE" != *.csv ]]; then
   echo "Error: --output must be a CSV file (ending with .csv)."
   usage 1
 fi
+
+for simd in "${SIMD_SELECTIONS[@]}"; do
+  case "$simd" in
+    avx)
+      CMAKE_SIMD_FLAGS+=" -mavx"
+      BM_SIMD_FLAGS+=",xorec-avx"
+      ;;
+    avx2)
+      CMAKE_SIMD_FLAGS+=" -mavx2"
+      BM_SIMD_FLAGS+=",xorec-avx2"
+      ;;
+    avx512)
+      CMAKE_SIMD_FLAGS+=" -mavx512f"
+      BM_SIMD_FLAGS+=",xorec-avx512"
+      ;;
+    *)
+      echo "Error: Invalid SIMD selection '$simd'. Valid options are: avx, avx2, avx512."
+      usage 1
+      ;;
+  esac
+done
 
 # Function to print progress
 report_progress() {
@@ -79,9 +113,7 @@ err_cleanup() {
   local red="\033[1;31m"
   local reset="\033[0m"
 
-  printf "${red}%s\n%s${reset}\n" "$input" "Cleaning up temporary files..."
-  cd "$SCRIPT_DIR"
-  rm -rf "$WORK_DIR"
+  printf "${red}%s${reset}\n" "$input"
   exit 1
 }
 
@@ -101,7 +133,7 @@ report_progress "Built ISA-L"
 
 cd "$BUILD_DIR"
 report_progress "Running CMake configuration"
-cmake -DCMAKE_BUILD_TYPE=Release .. || { err_cleanup "CMake configuration failed"; }
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="$CMAKE_SIMD_FLAGS $CMAKE_CXX_FLAGS" .. || { err_cleanup "CMake configuration failed"; }
 report_progress "CMake configuration completed"
 
 report_progress "Building benchmark"
@@ -109,7 +141,7 @@ make > /dev/null || { err_cleanup "Benchmark build failed"; }
 report_progress "Built benchmark"
 
 report_progress "Starting benchmark execution"
-./ec-benchmark --iterations "$ITERATIONS" -c cm256,isal,leopard,xorec || { err_cleanup "Benchmark execution failed"; }
+./ec-benchmark --iterations "$ITERATIONS" -c "cm256,isal,leopard$BM_SIMD_FLAGS" || { err_cleanup "Benchmark execution failed"; }
 
 report_progress "Copying results to $OUTPUT_FILE"
 cd "$SCRIPT_DIR"
