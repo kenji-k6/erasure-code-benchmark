@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-INPUT_FILE = "results_erasure.csv"
+INPUT_FILE = "results_erasure-500.csv"
 OUTPUT_FILE = "results_erasure.pdf"
 
 def parse_csv() -> pd.DataFrame:
