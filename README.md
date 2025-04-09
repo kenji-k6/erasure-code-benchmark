@@ -57,7 +57,6 @@ sudo apt update && sudo apt install -y \
 ```bash
 cd libraries/isa-l
 make -f Makefile.unx
-make
 cd ../..
 ```
 

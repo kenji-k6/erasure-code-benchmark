@@ -83,7 +83,7 @@ add_subdirectory(libraries/wirehair)
 
 add_library(isal STATIC IMPORTED)
 set_target_properties(isal PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/isa-l/.libs/libisal.a
+  IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libraries/isa-l/bin/isa-l.a
 )
 
 
