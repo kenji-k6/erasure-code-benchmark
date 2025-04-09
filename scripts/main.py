@@ -11,10 +11,10 @@ from utils.utils import get_benchmark_names, get_axes, ensure_paths, get_plot_id
 def main() -> None:
   parser = argparse.ArgumentParser(description="Plot benchmark results")
   parser.add_argument(
-    "--input-dir",
+    "--input",
     type=str,
-    help="input directory name (in /results/raw/)",
-    required=False
+    help="input file (in /results/raw/)",
+    required=True
   )
 
   parser.add_argument(
@@ -93,11 +93,8 @@ def main() -> None:
 
   args = parser.parse_args()
 
-  if args.input_dir:
-    cfg.INPUT_DIR = args.input_dir
 
-  cfg.EC_INPUT_FILE = os.path.join(cfg.RAW_DIR, cfg.INPUT_DIR, cfg.EC_FILE_NAME)
-  cfg.PERF_INPUT_FILE = os.path.join(cfg.RAW_DIR, cfg.INPUT_DIR, cfg.PERF_FILE_NAME)
+  cfg.EC_INPUT_FILE = os.path.join(cfg.RAW_DIR, args.input)
 
   if args.output_dir:
     cfg.OUTPUT_DIR = os.path.join(cfg.PLOT_DIR, args.output_dir)
