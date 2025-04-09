@@ -60,6 +60,18 @@ def main() -> None:
   # Create the figure and axis
   fig, ax = plt.subplots(figsize=(7,5))
 
+  # Set the X-axis labels & ticks
+  ax.set_xlabel(x_label)
+  ax.set_xticks(x_label_loc + width, labels=fec_values)
+
+  # Set the Y-axis label scale and grid
+  ax.set_yscale("log")
+  ax.set_ylim(1, 1.2*max(df[y_col]))
+  ax.set_ylabel(y_label)
+  ax.grid(axis="y", linestyle="--", alpha=1.0, which="both")
+
+
+
   # Plot each algorithm individually
   for alg in df["name"].unique():
     alg_df = df[df["name"] == alg]
@@ -76,15 +88,6 @@ def main() -> None:
            label=alg
            )
     multiplier += 1
-
-  # Set the X-axis labels & ticks
-  ax.set_xlabel(x_label)
-  ax.set_xticks(x_label_loc + width, labels=fec_values)
-
-  # Set the Y-axis label, limtis and grid
-  ax.set_ylabel(y_label)
-  ax.set_ylim(0, max(df[y_col]) * 1.2)
-  ax.grid(axis="y", linestyle="--", alpha=1.0)
 
   # Set the title & legend
   ax.set_title(title)
