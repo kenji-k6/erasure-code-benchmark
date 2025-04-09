@@ -12,6 +12,9 @@ def parse_csv() -> pd.DataFrame:
   # Remove iteration information after the benchmark name
   df["name"] = df["name"].str.split("/", n=1).str[0]
 
+  # Remove runs where more than 32 threads were used
+  df = df[df["num_cpu_threads"] <= 32]
+
   # Ensure no row has an error message
   assert df["err_msg"].isna().all(), "Some rows have an error message"
 
