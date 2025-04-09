@@ -2,8 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-INPUT_FILE = "results_erasure-500.csv"
-OUTPUT_FILE = "results_erasure.pdf"
+INPUT_FILE = "results_erasures-500-take-2.csv"
+OUTPUT_FILE = "results_erasures-500-take-2.pdf"
+Z = 3.291 # 99.9% Confidence interval value
 
 def parse_csv() -> pd.DataFrame:
   df = pd.read_csv(INPUT_FILE)
@@ -22,8 +23,12 @@ def parse_csv() -> pd.DataFrame:
 
   # Compute the encode throughput (mean, min, max) in Gbps
   df["throughput_Gbps"] = (df["message_size_B"] * 8) / df["time_ns"] # equal to (#bits / 10^9) / (t_ns / 10^9) = #Gbits / s
+  df["throughput_Gbps_stddev"] = df["throughput_Gbps"] * (df["time_ns_stddev"] / df["time_ns"]) # first order taylor expansion/error propagation
   df["throughput_Gbps_err_min"] = df["throughput_Gbps"]-((df["message_size_B"] * 8) / df["time_ns_max"])
   df["throughput_Gbps_err_max"] = ((df["message_size_B"] * 8) / df["time_ns_min"])-df["throughput_Gbps"]
+
+  df["throughput_Gbps_ci"] = Z * (df["throughput_Gbps_stddev"] / np.sqrt(df["num_iterations"]))
+
 
   # Assert that the block size and FEC params are the same for each row
   assert df["block_size_KiB"].nunique() == 1, "Block size is not the same for all rows"
@@ -45,7 +50,10 @@ def main() -> None:
   # Do not change
   x_col = "num_cpu_threads"
   y_col = "throughput_Gbps"
-  y_min_col, y_max_col = f"{y_col}_err_min", f"{y_col}_err_max"
+
+  # Line below can either be confidence interval or min-max
+  # y_err_low_col, y_err_up_col = f"{y_col}_err_min", f"{y_col}_err_max" 
+  y_err_low_col, y_err_up_col = f"{y_col}_ci", f"{y_col}_ci"
   algorithms = df["name"].unique()
 
   fec_values = df[x_col].unique()
@@ -76,7 +84,7 @@ def main() -> None:
   for alg in algorithms:
     alg_df = df[df["name"] == alg]
     vals = alg_df[y_col].values
-    y_errs = (alg_df[y_min_col].values, alg_df[y_max_col].values)
+    y_errs = (alg_df[y_err_low_col].values, alg_df[y_err_up_col].values)
 
     # Compute the offset for the current algorithm
     offset = width * multiplier
