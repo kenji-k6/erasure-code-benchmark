@@ -15,7 +15,7 @@ def parse_csv() -> pd.DataFrame:
   assert df["err_msg"].isna().all(), "Some rows have an error message"
 
   # Sort dataframe by benchmark name
-  df.sort_values(by=["name"], ascending=[True], inplace=True)
+  df.sort_values(by=["name", "num_cpu_threads"], ascending=[False, True], inplace=True)
 
   # Compute the block size in KiB
   df["block_size_KiB"] = df["block_size_B"] // 1024
@@ -46,13 +46,14 @@ def main() -> None:
   x_col = "num_cpu_threads"
   y_col = "throughput_Gbps"
   y_min_col, y_max_col = f"{y_col}_err_min", f"{y_col}_err_max"
-
+  algorithms = df["name"].unique()
 
   fec_values = df[x_col].unique()
   x_label_loc = np.arange(len(fec_values)) # locations of the x-axis labels
 
-  width = 0.15 # width of the bars
+  width = 0.2 # width of the bars
   multiplier = 0 # multiplier for the x-axis locations
+  total_width = width * len(algorithms) # total width of the bars per CPU thread group
 
   # Set font size to 15
   plt.rcParams.update({'font.size': 15})
@@ -62,18 +63,17 @@ def main() -> None:
 
   # Set the X-axis labels & ticks
   ax.set_xlabel(x_label)
-  ax.set_xticks(x_label_loc + width, labels=fec_values)
+  ax.set_xticks((x_label_loc-width/2)+total_width/2, labels=fec_values)
 
   # Set the Y-axis label scale and grid
-  ax.set_yscale("log")
-  ax.set_ylim(1, 1.2*max(df[y_col]))
+  # ax.set_yscale("log")
   ax.set_ylabel(y_label)
   ax.grid(axis="y", linestyle="--", alpha=1.0, which="both")
 
 
 
   # Plot each algorithm individually
-  for alg in df["name"].unique():
+  for alg in algorithms:
     alg_df = df[df["name"] == alg]
     vals = alg_df[y_col].values
     y_errs = (alg_df[y_min_col].values, alg_df[y_max_col].values)
@@ -83,10 +83,20 @@ def main() -> None:
 
     # Plot the bars
     ax.bar(x_label_loc+offset,
-           height=vals, width=width,
-           yerr=y_errs, capsize=5,
-           label=alg
+           height=vals, width=width, label=alg
            )
+    # Plot the error bars (min/max)
+    ax.errorbar(
+        x_label_loc+offset,
+        y=vals,
+        yerr=y_errs,
+        fmt="none",
+        ecolor="black",
+        capsize=5,
+        capthick=1,
+        alpha=0.5
+    )
+    
     multiplier += 1
 
   # Set the title & legend
