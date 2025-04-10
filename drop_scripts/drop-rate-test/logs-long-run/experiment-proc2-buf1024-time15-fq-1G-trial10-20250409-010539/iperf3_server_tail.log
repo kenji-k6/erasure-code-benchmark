@@ -1,0 +1,79 @@
+-----------------------------------------------------------
+Server listening on 5201 (test #1)
+-----------------------------------------------------------
+Accepted connection from 148.187.70.141, port 41906
+[  5] local 148.187.129.250 port 5201 connected to 148.187.70.141 port 42925
+[  6] local 148.187.129.250 port 5201 connected to 148.187.70.141 port 50704
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-1.00   sec   111 MBytes   931 Mbits/sec  0.017 ms  3173/116872 (2.7%)  
+[  6]   0.00-1.00   sec   110 MBytes   923 Mbits/sec  0.007 ms  4163/116871 (3.6%)  
+[SUM]   0.00-1.00   sec   221 MBytes  1.85 Gbits/sec  0.012 ms  7336/233743 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   1.00-2.00   sec   111 MBytes   935 Mbits/sec  0.011 ms  3104/117271 (2.6%)  
+[  6]   1.00-2.00   sec   110 MBytes   926 Mbits/sec  0.016 ms  4275/117265 (3.6%)  
+[SUM]   1.00-2.00   sec   222 MBytes  1.86 Gbits/sec  0.014 ms  7379/234536 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   2.00-3.00   sec   111 MBytes   935 Mbits/sec  0.017 ms  3087/117256 (2.6%)  
+[  6]   2.00-3.00   sec   110 MBytes   925 Mbits/sec  0.007 ms  4285/117262 (3.7%)  
+[SUM]   2.00-3.00   sec   222 MBytes  1.86 Gbits/sec  0.012 ms  7372/234518 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   3.00-4.00   sec   111 MBytes   935 Mbits/sec  0.011 ms  3134/117261 (2.7%)  
+[  6]   3.00-4.00   sec   110 MBytes   925 Mbits/sec  0.012 ms  4379/117255 (3.7%)  
+[SUM]   3.00-4.00   sec   222 MBytes  1.86 Gbits/sec  0.011 ms  7513/234516 (3.2%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   4.00-5.00   sec   112 MBytes   936 Mbits/sec  0.008 ms  3021/117266 (2.6%)  
+[  6]   4.00-5.00   sec   110 MBytes   925 Mbits/sec  0.011 ms  4317/117265 (3.7%)  
+[SUM]   4.00-5.00   sec   222 MBytes  1.86 Gbits/sec  0.009 ms  7338/234531 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   5.00-6.00   sec   111 MBytes   935 Mbits/sec  0.011 ms  3133/117256 (2.7%)  
+[  6]   5.00-6.00   sec   110 MBytes   927 Mbits/sec  0.007 ms  4136/117264 (3.5%)  
+[SUM]   5.00-6.00   sec   222 MBytes  1.86 Gbits/sec  0.009 ms  7269/234520 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   6.00-7.00   sec   111 MBytes   935 Mbits/sec  0.012 ms  3126/117259 (2.7%)  
+[  6]   6.00-7.00   sec   110 MBytes   926 Mbits/sec  0.007 ms  4210/117254 (3.6%)  
+[SUM]   6.00-7.00   sec   222 MBytes  1.86 Gbits/sec  0.010 ms  7336/234513 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   7.00-8.00   sec   111 MBytes   935 Mbits/sec  0.012 ms  3140/117269 (2.7%)  
+[  6]   7.00-8.00   sec   110 MBytes   926 Mbits/sec  0.010 ms  4187/117268 (3.6%)  
+[SUM]   7.00-8.00   sec   222 MBytes  1.86 Gbits/sec  0.011 ms  7327/234537 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   8.00-9.00   sec   111 MBytes   935 Mbits/sec  0.011 ms  3121/117254 (2.7%)  
+[  6]   8.00-9.00   sec   110 MBytes   926 Mbits/sec  0.012 ms  4247/117260 (3.6%)  
+[SUM]   8.00-9.00   sec   222 MBytes  1.86 Gbits/sec  0.011 ms  7368/234514 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   9.00-10.00  sec   111 MBytes   935 Mbits/sec  0.008 ms  3167/117269 (2.7%)  
+[  6]   9.00-10.00  sec   110 MBytes   925 Mbits/sec  0.007 ms  4355/117256 (3.7%)  
+[SUM]   9.00-10.00  sec   222 MBytes  1.86 Gbits/sec  0.008 ms  7522/234525 (3.2%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  10.00-11.00  sec   111 MBytes   935 Mbits/sec  0.019 ms  3108/117260 (2.7%)  
+[  6]  10.00-11.00  sec   110 MBytes   926 Mbits/sec  0.020 ms  4233/117273 (3.6%)  
+[SUM]  10.00-11.00  sec   222 MBytes  1.86 Gbits/sec  0.020 ms  7341/234533 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  11.00-12.00  sec   111 MBytes   935 Mbits/sec  0.011 ms  3174/117256 (2.7%)  
+[  6]  11.00-12.00  sec   110 MBytes   926 Mbits/sec  0.007 ms  4271/117256 (3.6%)  
+[SUM]  11.00-12.00  sec   222 MBytes  1.86 Gbits/sec  0.009 ms  7445/234512 (3.2%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  12.00-13.00  sec   111 MBytes   935 Mbits/sec  0.009 ms  3103/117267 (2.6%)  
+[  6]  12.00-13.00  sec   110 MBytes   927 Mbits/sec  0.011 ms  4139/117255 (3.5%)  
+[SUM]  12.00-13.00  sec   222 MBytes  1.86 Gbits/sec  0.010 ms  7242/234522 (3.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  13.00-14.00  sec   111 MBytes   934 Mbits/sec  0.011 ms  3218/117260 (2.7%)  
+[  6]  13.00-14.00  sec   110 MBytes   926 Mbits/sec  0.011 ms  4235/117272 (3.6%)  
+[SUM]  13.00-14.00  sec   222 MBytes  1.86 Gbits/sec  0.011 ms  7453/234532 (3.2%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  14.00-15.00  sec   111 MBytes   933 Mbits/sec  0.007 ms  3382/117256 (2.9%)  
+[  6]  14.00-15.00  sec   111 MBytes   928 Mbits/sec  0.007 ms  4035/117256 (3.4%)  
+[SUM]  14.00-15.00  sec   222 MBytes  1.86 Gbits/sec  0.007 ms  7417/234512 (3.2%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  15.00-15.00  sec   425 KBytes   940 Mbits/sec  0.019 ms  10/436 (2.3%)  
+[  6]  15.00-15.00  sec   420 KBytes   929 Mbits/sec  0.021 ms  16/436 (3.7%)  
+[SUM]  15.00-15.00  sec   845 KBytes  1.87 Gbits/sec  0.020 ms  26/872 (3%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-15.00  sec  1.63 GBytes   935 Mbits/sec  0.019 ms  47201/1758968 (2.7%)  receiver
+[  6]   0.00-15.00  sec  1.62 GBytes   926 Mbits/sec  0.021 ms  63483/1758968 (3.6%)  receiver
+[SUM]   0.00-15.00  sec  3.25 GBytes  1.86 Gbits/sec  0.020 ms  110684/3517936 (3.1%)  receiver
+iperf3: interrupt - the server has terminated
+-----------------------------------------------------------
+Server listening on 5201 (test #2)
+-----------------------------------------------------------

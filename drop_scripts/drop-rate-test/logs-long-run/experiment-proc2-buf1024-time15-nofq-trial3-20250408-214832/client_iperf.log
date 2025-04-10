@@ -1,0 +1,73 @@
+Connecting to host 148.187.129.250, port 5201
+[  5] local 148.187.70.141 port 50055 connected to 148.187.129.250 port 5201
+[  7] local 148.187.70.141 port 60652 connected to 148.187.129.250 port 5201
+[ ID] Interval           Transfer     Bitrate         Total Datagrams
+[  5]   0.00-1.00   sec   486 MBytes  4.08 Gbits/sec  497480  
+[  7]   0.00-1.00   sec   502 MBytes  4.21 Gbits/sec  514514  
+[SUM]   0.00-1.00   sec   988 MBytes  8.29 Gbits/sec  1011994  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   1.00-2.00   sec   482 MBytes  4.04 Gbits/sec  493624  
+[  7]   1.00-2.00   sec   506 MBytes  4.25 Gbits/sec  518505  
+[SUM]   1.00-2.00   sec   988 MBytes  8.29 Gbits/sec  1012129  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   2.00-3.00   sec   500 MBytes  4.19 Gbits/sec  511568  
+[  7]   2.00-3.00   sec   487 MBytes  4.08 Gbits/sec  498418  
+[SUM]   2.00-3.00   sec   986 MBytes  8.27 Gbits/sec  1009986  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   3.00-4.00   sec   492 MBytes  4.13 Gbits/sec  503867  
+[  7]   3.00-4.00   sec   495 MBytes  4.15 Gbits/sec  507078  
+[SUM]   3.00-4.00   sec   987 MBytes  8.28 Gbits/sec  1010945  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   4.00-5.00   sec   479 MBytes  4.02 Gbits/sec  490393  
+[  7]   4.00-5.00   sec   507 MBytes  4.26 Gbits/sec  519479  
+[SUM]   4.00-5.00   sec   986 MBytes  8.27 Gbits/sec  1009872  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   5.00-6.00   sec   480 MBytes  4.02 Gbits/sec  491319  
+[  7]   5.00-6.00   sec   506 MBytes  4.25 Gbits/sec  518250  
+[SUM]   5.00-6.00   sec   986 MBytes  8.27 Gbits/sec  1009569  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   6.00-7.00   sec   498 MBytes  4.18 Gbits/sec  510072  
+[  7]   6.00-7.00   sec   496 MBytes  4.16 Gbits/sec  507730  
+[SUM]   6.00-7.00   sec   994 MBytes  8.34 Gbits/sec  1017802  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   7.00-8.00   sec   504 MBytes  4.23 Gbits/sec  516174  
+[  7]   7.00-8.00   sec   485 MBytes  4.07 Gbits/sec  496984  
+[SUM]   7.00-8.00   sec   989 MBytes  8.30 Gbits/sec  1013158  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   8.00-9.00   sec   505 MBytes  4.23 Gbits/sec  516841  
+[  7]   8.00-9.00   sec   483 MBytes  4.05 Gbits/sec  494677  
+[SUM]   8.00-9.00   sec   988 MBytes  8.29 Gbits/sec  1011518  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   9.00-10.00  sec   501 MBytes  4.20 Gbits/sec  512843  
+[  7]   9.00-10.00  sec   489 MBytes  4.10 Gbits/sec  500269  
+[SUM]   9.00-10.00  sec   989 MBytes  8.30 Gbits/sec  1013112  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  10.00-11.00  sec   483 MBytes  4.05 Gbits/sec  494785  
+[  7]  10.00-11.00  sec   505 MBytes  4.24 Gbits/sec  517317  
+[SUM]  10.00-11.00  sec   988 MBytes  8.29 Gbits/sec  1012102  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  11.00-12.00  sec   479 MBytes  4.02 Gbits/sec  490809  
+[  7]  11.00-12.00  sec   509 MBytes  4.27 Gbits/sec  520961  
+[SUM]  11.00-12.00  sec   988 MBytes  8.29 Gbits/sec  1011770  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  12.00-13.00  sec   489 MBytes  4.10 Gbits/sec  500728  
+[  7]  12.00-13.00  sec   502 MBytes  4.21 Gbits/sec  513600  
+[SUM]  12.00-13.00  sec   991 MBytes  8.31 Gbits/sec  1014328  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  13.00-14.00  sec   483 MBytes  4.05 Gbits/sec  494605  
+[  7]  13.00-14.00  sec   506 MBytes  4.24 Gbits/sec  517759  
+[SUM]  13.00-14.00  sec   989 MBytes  8.29 Gbits/sec  1012364  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  14.00-15.00  sec   478 MBytes  4.01 Gbits/sec  489723  
+[  7]  14.00-15.00  sec   509 MBytes  4.27 Gbits/sec  520888  
+[SUM]  14.00-15.00  sec   987 MBytes  8.28 Gbits/sec  1010611  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-15.00  sec  7.17 GBytes  4.10 Gbits/sec  0.000 ms  0/7514831 (0%)  sender
+[  5]   0.00-15.00  sec  6.53 GBytes  3.74 Gbits/sec  0.000 ms  570577/7419979 (7.7%)  receiver
+[  7]   0.00-15.00  sec  7.31 GBytes  4.19 Gbits/sec  0.000 ms  0/7666429 (0%)  sender
+[  7]   0.00-15.00  sec  7.30 GBytes  4.18 Gbits/sec  0.001 ms  12520/7666429 (0.16%)  receiver
+[SUM]   0.00-15.00  sec  14.5 GBytes  8.29 Gbits/sec  0.000 ms  0/15181260 (0%)  sender
+[SUM]   0.00-15.00  sec  13.8 GBytes  7.92 Gbits/sec  0.000 ms  583097/15086408 (3.8%)  receiver
+
+iperf Done.

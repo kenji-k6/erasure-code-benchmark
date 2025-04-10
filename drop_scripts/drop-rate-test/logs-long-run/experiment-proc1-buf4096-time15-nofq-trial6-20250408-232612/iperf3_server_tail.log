@@ -1,0 +1,29 @@
+-----------------------------------------------------------
+Server listening on 5201 (test #1)
+-----------------------------------------------------------
+Accepted connection from 148.187.70.141, port 55876
+[  5] local 148.187.129.250 port 5201 connected to 148.187.70.141 port 42077
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-1.00   sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  111151/498055 (22%)  
+[  5]   1.00-2.00   sec  1.47 GBytes  12.7 Gbits/sec  0.001 ms  171528/557995 (31%)  
+[  5]   2.00-3.00   sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  169731/557353 (30%)  
+[  5]   3.00-4.00   sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  171194/557893 (31%)  
+[  5]   4.00-5.00   sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  167668/555314 (30%)  
+[  5]   5.00-6.00   sec  1.47 GBytes  12.7 Gbits/sec  0.001 ms  169276/555932 (30%)  
+[  5]   6.00-7.00   sec  1.47 GBytes  12.7 Gbits/sec  0.001 ms  171625/557879 (31%)  
+[  5]   7.00-8.00   sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  171474/558146 (31%)  
+[  5]   8.00-9.00   sec  1.47 GBytes  12.7 Gbits/sec  0.001 ms  170491/557070 (31%)  
+[  5]   9.00-10.00  sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  170441/557352 (31%)  
+[  5]  10.00-11.00  sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  172430/559555 (31%)  
+[  5]  11.00-12.00  sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  173053/560027 (31%)  
+[  5]  12.00-13.00  sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  170256/557922 (31%)  
+[  5]  13.00-14.00  sec  1.47 GBytes  12.7 Gbits/sec  0.001 ms  172742/558802 (31%)  
+[  5]  14.00-15.00  sec  1.48 GBytes  12.7 Gbits/sec  0.001 ms  173267/559996 (31%)  
+[  5]  15.00-15.00  sec  5.59 MBytes  12.6 Gbits/sec  0.001 ms  1/1431 (0.07%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-15.00  sec  22.1 GBytes  12.7 Gbits/sec  0.001 ms  2506328/8310724 (30%)  receiver
+iperf3: interrupt - the server has terminated
+-----------------------------------------------------------
+Server listening on 5201 (test #2)
+-----------------------------------------------------------

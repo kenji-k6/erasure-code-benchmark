@@ -1,0 +1,181 @@
+Connecting to host 148.187.129.250, port 5201
+[  5] local 148.187.70.141 port 48904 connected to 148.187.129.250 port 5201
+[  7] local 148.187.70.141 port 46239 connected to 148.187.129.250 port 5201
+[  9] local 148.187.70.141 port 40346 connected to 148.187.129.250 port 5201
+[ 11] local 148.187.70.141 port 60846 connected to 148.187.129.250 port 5201
+[ 13] local 148.187.70.141 port 53864 connected to 148.187.129.250 port 5201
+[ 15] local 148.187.70.141 port 40153 connected to 148.187.129.250 port 5201
+[ 17] local 148.187.70.141 port 48809 connected to 148.187.129.250 port 5201
+[ 19] local 148.187.70.141 port 53396 connected to 148.187.129.250 port 5201
+[ ID] Interval           Transfer     Bitrate         Total Datagrams
+[  5]   0.00-1.00   sec   117 MBytes   981 Mbits/sec  59882  
+[  7]   0.00-1.00   sec   117 MBytes   981 Mbits/sec  59882  
+[  9]   0.00-1.00   sec   117 MBytes   980 Mbits/sec  59848  
+[ 11]   0.00-1.00   sec   117 MBytes   981 Mbits/sec  59856  
+[ 13]   0.00-1.00   sec   117 MBytes   981 Mbits/sec  59850  
+[ 15]   0.00-1.00   sec   117 MBytes   980 Mbits/sec  59848  
+[ 17]   0.00-1.00   sec   117 MBytes   980 Mbits/sec  59848  
+[ 19]   0.00-1.00   sec   117 MBytes   980 Mbits/sec  59840  
+[SUM]   0.00-1.00   sec   935 MBytes  7.84 Gbits/sec  478854  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   1.00-2.00   sec   117 MBytes   980 Mbits/sec  59797  
+[  7]   1.00-2.00   sec   117 MBytes   980 Mbits/sec  59806  
+[  9]   1.00-2.00   sec   117 MBytes   980 Mbits/sec  59823  
+[ 11]   1.00-2.00   sec   117 MBytes   980 Mbits/sec  59824  
+[ 13]   1.00-2.00   sec   117 MBytes   980 Mbits/sec  59821  
+[ 15]   1.00-2.00   sec   117 MBytes   980 Mbits/sec  59823  
+[ 17]   1.00-2.00   sec   117 MBytes   980 Mbits/sec  59823  
+[ 19]   1.00-2.00   sec   117 MBytes   980 Mbits/sec  59822  
+[SUM]   1.00-2.00   sec   935 MBytes  7.84 Gbits/sec  478539  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   2.00-3.00   sec   117 MBytes   980 Mbits/sec  59813  
+[  7]   2.00-3.00   sec   117 MBytes   980 Mbits/sec  59797  
+[  9]   2.00-3.00   sec   117 MBytes   980 Mbits/sec  59797  
+[ 11]   2.00-3.00   sec   117 MBytes   980 Mbits/sec  59805  
+[ 13]   2.00-3.00   sec   117 MBytes   980 Mbits/sec  59806  
+[ 15]   2.00-3.00   sec   117 MBytes   980 Mbits/sec  59797  
+[ 17]   2.00-3.00   sec   117 MBytes   980 Mbits/sec  59797  
+[ 19]   2.00-3.00   sec   117 MBytes   980 Mbits/sec  59798  
+[SUM]   2.00-3.00   sec   934 MBytes  7.84 Gbits/sec  478410  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   3.00-4.00   sec   117 MBytes   980 Mbits/sec  59808  
+[  7]   3.00-4.00   sec   117 MBytes   980 Mbits/sec  59823  
+[  9]   3.00-4.00   sec   117 MBytes   980 Mbits/sec  59823  
+[ 11]   3.00-4.00   sec   117 MBytes   980 Mbits/sec  59798  
+[ 13]   3.00-4.00   sec   117 MBytes   980 Mbits/sec  59797  
+[ 15]   3.00-4.00   sec   117 MBytes   980 Mbits/sec  59823  
+[ 17]   3.00-4.00   sec   117 MBytes   980 Mbits/sec  59823  
+[ 19]   3.00-4.00   sec   117 MBytes   980 Mbits/sec  59823  
+[SUM]   3.00-4.00   sec   935 MBytes  7.84 Gbits/sec  478518  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   4.00-5.00   sec   117 MBytes   980 Mbits/sec  59797  
+[  7]   4.00-5.00   sec   117 MBytes   980 Mbits/sec  59798  
+[  9]   4.00-5.00   sec   117 MBytes   980 Mbits/sec  59798  
+[ 11]   4.00-5.00   sec   117 MBytes   980 Mbits/sec  59823  
+[ 13]   4.00-5.00   sec   117 MBytes   980 Mbits/sec  59823  
+[ 15]   4.00-5.00   sec   117 MBytes   980 Mbits/sec  59798  
+[ 17]   4.00-5.00   sec   117 MBytes   980 Mbits/sec  59798  
+[ 19]   4.00-5.00   sec   117 MBytes   980 Mbits/sec  59797  
+[SUM]   4.00-5.00   sec   934 MBytes  7.84 Gbits/sec  478432  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   5.00-6.00   sec   117 MBytes   980 Mbits/sec  59815  
+[  7]   5.00-6.00   sec   117 MBytes   980 Mbits/sec  59802  
+[  9]   5.00-6.00   sec   117 MBytes   980 Mbits/sec  59814  
+[ 11]   5.00-6.00   sec   117 MBytes   980 Mbits/sec  59814  
+[ 13]   5.00-6.00   sec   117 MBytes   980 Mbits/sec  59815  
+[ 15]   5.00-6.00   sec   117 MBytes   980 Mbits/sec  59814  
+[ 17]   5.00-6.00   sec   117 MBytes   980 Mbits/sec  59814  
+[ 19]   5.00-6.00   sec   117 MBytes   980 Mbits/sec  59815  
+[SUM]   5.00-6.00   sec   935 MBytes  7.84 Gbits/sec  478503  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   6.00-7.00   sec   117 MBytes   980 Mbits/sec  59814  
+[  7]   6.00-7.00   sec   117 MBytes   980 Mbits/sec  59810  
+[  9]   6.00-7.00   sec   117 MBytes   980 Mbits/sec  59806  
+[ 11]   6.00-7.00   sec   117 MBytes   980 Mbits/sec  59806  
+[ 13]   6.00-7.00   sec   117 MBytes   980 Mbits/sec  59806  
+[ 15]   6.00-7.00   sec   117 MBytes   980 Mbits/sec  59815  
+[ 17]   6.00-7.00   sec   117 MBytes   980 Mbits/sec  59815  
+[ 19]   6.00-7.00   sec   117 MBytes   980 Mbits/sec  59806  
+[SUM]   6.00-7.00   sec   935 MBytes  7.84 Gbits/sec  478478  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   7.00-8.00   sec   117 MBytes   980 Mbits/sec  59798  
+[  7]   7.00-8.00   sec   117 MBytes   980 Mbits/sec  59806  
+[  9]   7.00-8.00   sec   117 MBytes   980 Mbits/sec  59798  
+[ 11]   7.00-8.00   sec   117 MBytes   980 Mbits/sec  59798  
+[ 13]   7.00-8.00   sec   117 MBytes   980 Mbits/sec  59802  
+[ 15]   7.00-8.00   sec   117 MBytes   980 Mbits/sec  59789  
+[ 17]   7.00-8.00   sec   117 MBytes   980 Mbits/sec  59789  
+[ 19]   7.00-8.00   sec   117 MBytes   980 Mbits/sec  59799  
+[SUM]   7.00-8.00   sec   934 MBytes  7.84 Gbits/sec  478379  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   8.00-9.00   sec   117 MBytes   980 Mbits/sec  59807  
+[  7]   8.00-9.00   sec   117 MBytes   980 Mbits/sec  59806  
+[  9]   8.00-9.00   sec   117 MBytes   980 Mbits/sec  59818  
+[ 11]   8.00-9.00   sec   117 MBytes   980 Mbits/sec  59806  
+[ 13]   8.00-9.00   sec   117 MBytes   980 Mbits/sec  59818  
+[ 15]   8.00-9.00   sec   117 MBytes   980 Mbits/sec  59828  
+[ 17]   8.00-9.00   sec   117 MBytes   980 Mbits/sec  59814  
+[ 19]   8.00-9.00   sec   117 MBytes   980 Mbits/sec  59828  
+[SUM]   8.00-9.00   sec   935 MBytes  7.84 Gbits/sec  478525  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   9.00-10.00  sec   117 MBytes   980 Mbits/sec  59813  
+[  7]   9.00-10.00  sec   117 MBytes   980 Mbits/sec  59814  
+[  9]   9.00-10.00  sec   117 MBytes   980 Mbits/sec  59802  
+[ 11]   9.00-10.00  sec   117 MBytes   980 Mbits/sec  59814  
+[ 13]   9.00-10.00  sec   117 MBytes   980 Mbits/sec  59797  
+[ 15]   9.00-10.00  sec   117 MBytes   980 Mbits/sec  59800  
+[ 17]   9.00-10.00  sec   117 MBytes   980 Mbits/sec  59806  
+[ 19]   9.00-10.00  sec   117 MBytes   980 Mbits/sec  59790  
+[SUM]   9.00-10.00  sec   934 MBytes  7.84 Gbits/sec  478436  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  10.00-11.00  sec   117 MBytes   980 Mbits/sec  59815  
+[  7]  10.00-11.00  sec   117 MBytes   980 Mbits/sec  59806  
+[  9]  10.00-11.00  sec   117 MBytes   980 Mbits/sec  59814  
+[ 11]  10.00-11.00  sec   117 MBytes   980 Mbits/sec  59815  
+[ 13]  10.00-11.00  sec   117 MBytes   980 Mbits/sec  59815  
+[ 15]  10.00-11.00  sec   117 MBytes   980 Mbits/sec  59806  
+[ 17]  10.00-11.00  sec   117 MBytes   980 Mbits/sec  59814  
+[ 19]  10.00-11.00  sec   117 MBytes   980 Mbits/sec  59823  
+[SUM]  10.00-11.00  sec   935 MBytes  7.84 Gbits/sec  478508  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  11.00-12.00  sec   117 MBytes   980 Mbits/sec  59797  
+[  7]  11.00-12.00  sec   117 MBytes   980 Mbits/sec  59806  
+[  9]  11.00-12.00  sec   117 MBytes   980 Mbits/sec  59806  
+[ 11]  11.00-12.00  sec   117 MBytes   980 Mbits/sec  59797  
+[ 13]  11.00-12.00  sec   117 MBytes   980 Mbits/sec  59797  
+[ 15]  11.00-12.00  sec   117 MBytes   980 Mbits/sec  59815  
+[ 17]  11.00-12.00  sec   117 MBytes   980 Mbits/sec  59815  
+[ 19]  11.00-12.00  sec   117 MBytes   980 Mbits/sec  59811  
+[SUM]  11.00-12.00  sec   934 MBytes  7.84 Gbits/sec  478444  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  12.00-13.00  sec   117 MBytes   980 Mbits/sec  59814  
+[  7]  12.00-13.00  sec   117 MBytes   980 Mbits/sec  59829  
+[  9]  12.00-13.00  sec   117 MBytes   980 Mbits/sec  59823  
+[ 11]  12.00-13.00  sec   117 MBytes   980 Mbits/sec  59806  
+[ 13]  12.00-13.00  sec   117 MBytes   980 Mbits/sec  59815  
+[ 15]  12.00-13.00  sec   117 MBytes   980 Mbits/sec  59797  
+[ 17]  12.00-13.00  sec   117 MBytes   980 Mbits/sec  59797  
+[ 19]  12.00-13.00  sec   117 MBytes   980 Mbits/sec  59801  
+[SUM]  12.00-13.00  sec   935 MBytes  7.84 Gbits/sec  478482  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  13.00-14.00  sec   117 MBytes   980 Mbits/sec  59815  
+[  7]  13.00-14.00  sec   117 MBytes   980 Mbits/sec  59791  
+[  9]  13.00-14.00  sec   117 MBytes   980 Mbits/sec  59806  
+[ 11]  13.00-14.00  sec   117 MBytes   980 Mbits/sec  59823  
+[ 13]  13.00-14.00  sec   117 MBytes   980 Mbits/sec  59814  
+[ 15]  13.00-14.00  sec   117 MBytes   980 Mbits/sec  59815  
+[ 17]  13.00-14.00  sec   117 MBytes   980 Mbits/sec  59815  
+[ 19]  13.00-14.00  sec   117 MBytes   980 Mbits/sec  59806  
+[SUM]  13.00-14.00  sec   935 MBytes  7.84 Gbits/sec  478485  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  14.00-15.00  sec   117 MBytes   980 Mbits/sec  59797  
+[  7]  14.00-15.00  sec   117 MBytes   980 Mbits/sec  59823  
+[  9]  14.00-15.00  sec   117 MBytes   980 Mbits/sec  59798  
+[ 11]  14.00-15.00  sec   117 MBytes   980 Mbits/sec  59797  
+[ 13]  14.00-15.00  sec   117 MBytes   980 Mbits/sec  59798  
+[ 15]  14.00-15.00  sec   117 MBytes   980 Mbits/sec  59808  
+[ 17]  14.00-15.00  sec   117 MBytes   980 Mbits/sec  59807  
+[ 19]  14.00-15.00  sec   117 MBytes   980 Mbits/sec  59821  
+[SUM]  14.00-15.00  sec   934 MBytes  7.84 Gbits/sec  478449  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-15.00  sec  1.71 GBytes   980 Mbits/sec  0.000 ms  0/897182 (0%)  sender
+[  5]   0.00-15.00  sec  1.71 GBytes   977 Mbits/sec  0.030 ms  2227/897166 (0.25%)  receiver
+[  7]   0.00-15.00  sec  1.71 GBytes   980 Mbits/sec  0.000 ms  0/897199 (0%)  sender
+[  7]   0.00-15.00  sec  1.63 GBytes   932 Mbits/sec  0.030 ms  43787/897168 (4.9%)  receiver
+[  9]   0.00-15.00  sec  1.71 GBytes   980 Mbits/sec  0.000 ms  0/897174 (0%)  sender
+[  9]   0.00-15.00  sec  1.71 GBytes   977 Mbits/sec  0.027 ms  2460/897158 (0.27%)  receiver
+[ 11]   0.00-15.00  sec  1.71 GBytes   980 Mbits/sec  0.000 ms  0/897182 (0%)  sender
+[ 11]   0.00-15.00  sec  1.71 GBytes   977 Mbits/sec  0.029 ms  2341/897166 (0.26%)  receiver
+[ 13]   0.00-15.00  sec  1.71 GBytes   980 Mbits/sec  0.000 ms  0/897174 (0%)  sender
+[ 13]   0.00-15.00  sec  1.61 GBytes   923 Mbits/sec  0.031 ms  52190/897158 (5.8%)  receiver
+[ 15]   0.00-15.00  sec  1.71 GBytes   980 Mbits/sec  0.000 ms  0/897176 (0%)  sender
+[ 15]   0.00-15.00  sec  1.70 GBytes   971 Mbits/sec  0.023 ms  7956/897158 (0.89%)  receiver
+[ 17]   0.00-15.00  sec  1.71 GBytes   980 Mbits/sec  0.000 ms  0/897175 (0%)  sender
+[ 17]   0.00-15.00  sec  1.63 GBytes   933 Mbits/sec  0.024 ms  42705/897158 (4.8%)  receiver
+[ 19]   0.00-15.00  sec  1.71 GBytes   980 Mbits/sec  0.000 ms  0/897180 (0%)  sender
+[ 19]   0.00-15.00  sec  1.69 GBytes   968 Mbits/sec  0.022 ms  11128/897149 (1.2%)  receiver
+[SUM]   0.00-15.00  sec  13.7 GBytes  7.84 Gbits/sec  0.000 ms  0/7177442 (0%)  sender
+[SUM]   0.00-15.00  sec  13.4 GBytes  7.66 Gbits/sec  0.027 ms  164794/7177281 (2.3%)  receiver
+
+iperf Done.

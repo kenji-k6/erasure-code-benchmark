@@ -1,0 +1,29 @@
+-----------------------------------------------------------
+Server listening on 5201 (test #1)
+-----------------------------------------------------------
+Accepted connection from 148.187.70.141, port 53028
+[  5] local 148.187.129.250 port 5201 connected to 148.187.70.141 port 58798
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-1.00   sec  2.49 GBytes  21.3 Gbits/sec  0.001 ms  76312/402037 (19%)  
+[  5]   1.00-2.00   sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  104890/430482 (24%)  
+[  5]   2.00-3.00   sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  108162/432727 (25%)  
+[  5]   3.00-4.00   sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  107694/432284 (25%)  
+[  5]   4.00-5.00   sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  110829/435850 (25%)  
+[  5]   5.00-6.00   sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  112255/436681 (26%)  
+[  5]   6.00-7.00   sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  112681/437481 (26%)  
+[  5]   7.00-8.00   sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  114183/438944 (26%)  
+[  5]   8.00-9.00   sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  114268/439126 (26%)  
+[  5]   9.00-10.00  sec  2.47 GBytes  21.3 Gbits/sec  0.001 ms  112850/437165 (26%)  
+[  5]  10.00-11.00  sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  113463/438463 (26%)  
+[  5]  11.00-12.00  sec  2.48 GBytes  21.3 Gbits/sec  0.001 ms  114143/438747 (26%)  
+[  5]  12.00-13.00  sec  2.47 GBytes  21.3 Gbits/sec  0.001 ms  116079/440362 (26%)  
+[  5]  13.00-14.00  sec  2.47 GBytes  21.2 Gbits/sec  0.001 ms  116712/440950 (26%)  
+[  5]  14.00-15.00  sec  2.47 GBytes  21.2 Gbits/sec  0.001 ms  114072/438312 (26%)  
+[  5]  15.00-15.00  sec  9.55 MBytes  21.1 Gbits/sec  0.001 ms  0/1223 (0%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-15.00  sec  37.2 GBytes  21.3 Gbits/sec  0.001 ms  1648593/6520834 (25%)  receiver
+iperf3: interrupt - the server has terminated
+-----------------------------------------------------------
+Server listening on 5201 (test #2)
+-----------------------------------------------------------
