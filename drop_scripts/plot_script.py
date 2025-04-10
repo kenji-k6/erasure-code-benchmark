@@ -2,10 +2,18 @@ import os
 import re
 import matplotlib.pyplot as plt
 import numpy as np
+from typing import TypedDict, Tuple
 BASE_DIR = "drop-rate-test/logs-long-run"
 
+class ExperimentConfig(TypedDict):
+  proc: int
+  buf: int
+  fq: bool
+  fq_num: int
+  trial: int
 
-def parse_experiment_dir_name(dirname) -> dict[str, int | bool]:
+
+def parse_experiment_dir_name(dirname) -> ExperimentConfig:
   """
   Parses the directory name to extract configuration parameters.
   """
@@ -31,9 +39,40 @@ def get_dir_name(proc: int, buf: int, fq: bool, fq_num: int, trial: int) -> str:
 
   dirs = os.listdir(BASE_DIR)
   temp_dir_name = f"experiment-{proc_str}-{buf_str}-time15-{fq_str}-{trial_str}-"
+  res = []
   for dir in dirs:
     if dir.startswith(temp_dir_name):
-      return dir
+      res.append(dir)
+  
+  assert len(res) == 1, f"Expected one directory, found {len(res)} for {temp_dir_name}"
+  return res[0]
+
+
+
+
+def parse_client_iperf_log(dirname: str) -> Tuple[int, int]:
+  """
+  Parses the client_iperf.log file to extract dropped and total packets from the receiver line.
+  """
+  filepath = os.path.join(BASE_DIR, dirname, "client_iperf.log")
+  with open(filepath, "r") as f:
+    lines = f.readlines()
+
+  pattern = r"(\d+)/(\d+)\s+\(\d+(\.\d+)?%\)"
+  for line in reversed(lines): #reverse for faster parsing
+    if "receiver" in line:
+      match = re.search(pattern, line)
+
+      if match:
+        dropped = int(match.group(1))
+        total = int(match.group(2))
+        return dropped, total
+      
+      raise ValueError(f"Invalid line format in client_iperf.log: {line}")
+  raise ValueError("No receiver line found in client_iperf.log")
+      
+  
+
 
 
 
@@ -42,8 +81,11 @@ def main():
   for dirname in os.listdir(BASE_DIR):
     dirpath = os.path.join(BASE_DIR, dirname)
     if os.path.isdir(dirpath):
-      temp = parse_experiment_dir_name(dirname)
-      get_dir_name(temp["proc"], temp["buf"], temp["fq"], temp["fq_num"], temp["trial"])
+      experiment_config = parse_experiment_dir_name(dirname)
+      dropped, total = parse_client_iperf_log(dirname)
+      
+
+
       
 
 if __name__ == "__main__":
