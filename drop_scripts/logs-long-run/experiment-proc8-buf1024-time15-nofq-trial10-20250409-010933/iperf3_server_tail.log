@@ -1,0 +1,100 @@
+[ 13]   7.00-8.00   sec   178 MBytes  1.49 Gbits/sec  0.004 ms  883/183106 (0.48%)  
+[ 15]   7.00-8.00   sec   176 MBytes  1.48 Gbits/sec  0.004 ms  854/181135 (0.47%)  
+[ 17]   7.00-8.00   sec   178 MBytes  1.49 Gbits/sec  0.003 ms  850/182797 (0.46%)  
+[ 19]   7.00-8.00   sec   175 MBytes  1.47 Gbits/sec  0.004 ms  825/179880 (0.46%)  
+[SUM]   7.00-8.00   sec  1.29 GBytes  11.1 Gbits/sec  0.004 ms  92278/1443710 (6.4%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   8.00-9.00   sec   139 MBytes  1.17 Gbits/sec  0.005 ms  36988/179448 (21%)  
+[  6]   8.00-9.00   sec   139 MBytes  1.16 Gbits/sec  0.006 ms  37596/179739 (21%)  
+[  9]   8.00-9.00   sec   140 MBytes  1.18 Gbits/sec  0.005 ms  37892/181715 (21%)  
+[ 11]   8.00-9.00   sec   173 MBytes  1.45 Gbits/sec  0.003 ms  833/178358 (0.47%)  
+[ 13]   8.00-9.00   sec   179 MBytes  1.50 Gbits/sec  0.004 ms  855/184231 (0.46%)  
+[ 15]   8.00-9.00   sec   176 MBytes  1.47 Gbits/sec  0.004 ms  905/180909 (0.5%)  
+[ 17]   8.00-9.00   sec   178 MBytes  1.49 Gbits/sec  0.004 ms  822/182742 (0.45%)  
+[ 19]   8.00-9.00   sec   175 MBytes  1.47 Gbits/sec  0.004 ms  828/180027 (0.46%)  
+[SUM]   8.00-9.00   sec  1.27 GBytes  10.9 Gbits/sec  0.004 ms  116719/1447169 (8.1%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]   9.00-10.00  sec   141 MBytes  1.18 Gbits/sec  0.011 ms  34709/178792 (19%)  
+[  6]   9.00-10.00  sec   141 MBytes  1.18 Gbits/sec  0.011 ms  34737/179226 (19%)  
+[  9]   9.00-10.00  sec   143 MBytes  1.20 Gbits/sec  0.012 ms  35664/181765 (20%)  
+[ 11]   9.00-10.00  sec   174 MBytes  1.46 Gbits/sec  0.005 ms  838/179389 (0.47%)  
+[ 13]   9.00-10.00  sec   178 MBytes  1.49 Gbits/sec  0.004 ms  800/182602 (0.44%)  
+[ 15]   9.00-10.00  sec   176 MBytes  1.48 Gbits/sec  0.004 ms  810/181377 (0.45%)  
+[ 17]   9.00-10.00  sec   177 MBytes  1.48 Gbits/sec  0.004 ms  816/181895 (0.45%)  
+[ 19]   9.00-10.00  sec   174 MBytes  1.46 Gbits/sec  0.004 ms  800/179266 (0.45%)  
+[SUM]   9.00-10.00  sec  1.27 GBytes  10.9 Gbits/sec  0.007 ms  109174/1444312 (7.6%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  10.00-11.00  sec   145 MBytes  1.22 Gbits/sec  0.008 ms  31995/180814 (18%)  
+[  6]  10.00-11.00  sec   143 MBytes  1.20 Gbits/sec  0.008 ms  31004/177590 (17%)  
+[  9]  10.00-11.00  sec   146 MBytes  1.22 Gbits/sec  0.008 ms  31764/181129 (18%)  
+[ 11]  10.00-11.00  sec   174 MBytes  1.46 Gbits/sec  0.004 ms  842/179341 (0.47%)  
+[ 13]  10.00-11.00  sec   178 MBytes  1.50 Gbits/sec  0.008 ms  805/183374 (0.44%)  
+[ 15]  10.00-11.00  sec   176 MBytes  1.47 Gbits/sec  0.005 ms  806/180713 (0.45%)  
+[ 17]  10.00-11.00  sec   178 MBytes  1.50 Gbits/sec  0.004 ms  787/183557 (0.43%)  
+[ 19]  10.00-11.00  sec   174 MBytes  1.46 Gbits/sec  0.005 ms  787/179078 (0.44%)  
+[SUM]  10.00-11.00  sec  1.28 GBytes  11.0 Gbits/sec  0.006 ms  98790/1445596 (6.8%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  11.00-12.00  sec   152 MBytes  1.27 Gbits/sec  0.004 ms  25313/180831 (14%)  
+[  6]  11.00-12.00  sec   151 MBytes  1.26 Gbits/sec  0.003 ms  25025/179407 (14%)  
+[  9]  11.00-12.00  sec   154 MBytes  1.29 Gbits/sec  0.004 ms  25412/182907 (14%)  
+[ 11]  11.00-12.00  sec   175 MBytes  1.46 Gbits/sec  0.004 ms  720/179532 (0.4%)  
+[ 13]  11.00-12.00  sec   179 MBytes  1.50 Gbits/sec  0.004 ms  719/183521 (0.39%)  
+[ 15]  11.00-12.00  sec   176 MBytes  1.47 Gbits/sec  0.003 ms  719/180536 (0.4%)  
+[ 17]  11.00-12.00  sec   177 MBytes  1.49 Gbits/sec  0.004 ms  726/182465 (0.4%)  
+[ 19]  11.00-12.00  sec   175 MBytes  1.47 Gbits/sec  0.004 ms  694/180299 (0.38%)  
+[SUM]  11.00-12.00  sec  1.31 GBytes  11.2 Gbits/sec  0.004 ms  79328/1449498 (5.5%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  12.00-13.00  sec   148 MBytes  1.24 Gbits/sec  0.006 ms  26785/178496 (15%)  
+[  6]  12.00-13.00  sec   148 MBytes  1.24 Gbits/sec  0.005 ms  26679/178509 (15%)  
+[  9]  12.00-13.00  sec   150 MBytes  1.26 Gbits/sec  0.006 ms  26985/180257 (15%)  
+[ 11]  12.00-13.00  sec   175 MBytes  1.46 Gbits/sec  0.004 ms  787/179531 (0.44%)  
+[ 13]  12.00-13.00  sec   179 MBytes  1.50 Gbits/sec  0.004 ms  766/184332 (0.42%)  
+[ 15]  12.00-13.00  sec   176 MBytes  1.48 Gbits/sec  0.003 ms  721/181435 (0.4%)  
+[ 17]  12.00-13.00  sec   178 MBytes  1.49 Gbits/sec  0.004 ms  692/182582 (0.38%)  
+[ 19]  12.00-13.00  sec   173 MBytes  1.45 Gbits/sec  0.004 ms  696/178270 (0.39%)  
+[SUM]  12.00-13.00  sec  1.30 GBytes  11.1 Gbits/sec  0.004 ms  84111/1443412 (5.8%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  13.00-14.00  sec   143 MBytes  1.20 Gbits/sec  0.006 ms  31112/177714 (18%)  
+[  6]  13.00-14.00  sec   143 MBytes  1.20 Gbits/sec  0.005 ms  31827/178240 (18%)  
+[  9]  13.00-14.00  sec   146 MBytes  1.23 Gbits/sec  0.005 ms  32523/182434 (18%)  
+[ 11]  13.00-14.00  sec   175 MBytes  1.47 Gbits/sec  0.004 ms  705/179965 (0.39%)  
+[ 13]  13.00-14.00  sec   178 MBytes  1.50 Gbits/sec  0.004 ms  754/183522 (0.41%)  
+[ 15]  13.00-14.00  sec   175 MBytes  1.47 Gbits/sec  0.004 ms  705/179589 (0.39%)  
+[ 17]  13.00-14.00  sec   178 MBytes  1.49 Gbits/sec  0.004 ms  689/183064 (0.38%)  
+[ 19]  13.00-14.00  sec   174 MBytes  1.46 Gbits/sec  0.004 ms  696/179071 (0.39%)  
+[SUM]  13.00-14.00  sec  1.28 GBytes  11.0 Gbits/sec  0.004 ms  99011/1443599 (6.9%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  14.00-15.00  sec   144 MBytes  1.20 Gbits/sec  0.004 ms  32448/179496 (18%)  
+[  6]  14.00-15.00  sec   144 MBytes  1.20 Gbits/sec  0.005 ms  32175/179274 (18%)  
+[  9]  14.00-15.00  sec   145 MBytes  1.22 Gbits/sec  0.003 ms  32092/180489 (18%)  
+[ 11]  14.00-15.00  sec   174 MBytes  1.46 Gbits/sec  0.004 ms  746/179222 (0.42%)  
+[ 13]  14.00-15.00  sec   178 MBytes  1.49 Gbits/sec  0.003 ms  819/182786 (0.45%)  
+[ 15]  14.00-15.00  sec   175 MBytes  1.47 Gbits/sec  0.004 ms  829/179887 (0.46%)  
+[ 17]  14.00-15.00  sec   178 MBytes  1.49 Gbits/sec  0.004 ms  801/183089 (0.44%)  
+[ 19]  14.00-15.00  sec   173 MBytes  1.45 Gbits/sec  0.004 ms  789/177804 (0.44%)  
+[SUM]  14.00-15.00  sec  1.28 GBytes  11.0 Gbits/sec  0.004 ms  100699/1442047 (7%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[  5]  15.00-15.00  sec   564 KBytes  1.26 Gbits/sec  0.005 ms  89/654 (14%)  
+[  6]  15.00-15.00  sec   637 KBytes  1.43 Gbits/sec  0.005 ms  90/727 (12%)  
+[  9]  15.00-15.00  sec   542 KBytes  1.22 Gbits/sec  0.005 ms  102/644 (16%)  
+[ 11]  15.00-15.00  sec   581 KBytes  1.31 Gbits/sec  0.004 ms  6/588 (1%)  
+[ 13]  15.00-15.00  sec   676 KBytes  1.52 Gbits/sec  0.004 ms  3/679 (0.44%)  
+[ 15]  15.00-15.00  sec   656 KBytes  1.48 Gbits/sec  0.004 ms  4/660 (0.61%)  
+[ 17]  15.00-15.00  sec   591 KBytes  1.33 Gbits/sec  0.004 ms  6/597 (1%)  
+[ 19]  15.00-15.00  sec   641 KBytes  1.44 Gbits/sec  0.005 ms  1/642 (0.16%)  
+[SUM]  15.00-15.00  sec  4.77 MBytes  11.0 Gbits/sec  0.004 ms  301/5191 (5.8%)  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-15.00  sec  2.09 GBytes  1.19 Gbits/sec  0.005 ms  489306/2677365 (18%)  receiver
+[  6]   0.00-15.00  sec  2.08 GBytes  1.19 Gbits/sec  0.005 ms  487709/2668826 (18%)  receiver
+[  9]   0.00-15.00  sec  2.11 GBytes  1.21 Gbits/sec  0.005 ms  494320/2708836 (18%)  receiver
+[ 11]   0.00-15.00  sec  2.56 GBytes  1.47 Gbits/sec  0.004 ms  12274/2698286 (0.45%)  receiver
+[ 13]   0.00-15.00  sec  2.62 GBytes  1.50 Gbits/sec  0.004 ms  12539/2755715 (0.46%)  receiver
+[ 15]   0.00-15.00  sec  2.58 GBytes  1.48 Gbits/sec  0.004 ms  12519/2720991 (0.46%)  receiver
+[ 17]   0.00-15.00  sec  2.60 GBytes  1.49 Gbits/sec  0.004 ms  12357/2740749 (0.45%)  receiver
+[ 19]   0.00-15.00  sec  2.56 GBytes  1.47 Gbits/sec  0.005 ms  12101/2696534 (0.45%)  receiver
+[SUM]   0.00-15.00  sec  19.2 GBytes  11.0 Gbits/sec  0.004 ms  1533125/21667302 (7.1%)  receiver
+iperf3: interrupt - the server has terminated
+-----------------------------------------------------------
+Server listening on 5201 (test #2)
+-----------------------------------------------------------

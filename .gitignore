@@ -66,4 +66,4 @@ dist/
 # Ignore environment variable files (e.g., .env for sensitive data)
 .env
 
-*.log
+*.DS_Store

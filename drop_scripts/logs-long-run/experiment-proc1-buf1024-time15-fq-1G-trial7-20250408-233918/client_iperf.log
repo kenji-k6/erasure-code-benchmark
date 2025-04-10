@@ -1,0 +1,24 @@
+Connecting to host 148.187.129.250, port 5201
+[  5] local 148.187.70.141 port 45287 connected to 148.187.129.250 port 5201
+[ ID] Interval           Transfer     Bitrate         Total Datagrams
+[  5]   0.00-1.00   sec   115 MBytes   962 Mbits/sec  117398  
+[  5]   1.00-2.00   sec   114 MBytes   960 Mbits/sec  117241  
+[  5]   2.00-3.00   sec   115 MBytes   961 Mbits/sec  117255  
+[  5]   3.00-4.00   sec   115 MBytes   961 Mbits/sec  117268  
+[  5]   4.00-5.00   sec   115 MBytes   961 Mbits/sec  117274  
+[  5]   5.00-6.00   sec   114 MBytes   960 Mbits/sec  117242  
+[  5]   6.00-7.00   sec   114 MBytes   960 Mbits/sec  117239  
+[  5]   7.00-8.00   sec   115 MBytes   961 Mbits/sec  117289  
+[  5]   8.00-9.00   sec   115 MBytes   961 Mbits/sec  117255  
+[  5]   9.00-10.00  sec   115 MBytes   961 Mbits/sec  117251  
+[  5]  10.00-11.00  sec   115 MBytes   961 Mbits/sec  117291  
+[  5]  11.00-12.00  sec   114 MBytes   960 Mbits/sec  117231  
+[  5]  12.00-13.00  sec   115 MBytes   960 Mbits/sec  117250  
+[  5]  13.00-14.00  sec   115 MBytes   961 Mbits/sec  117289  
+[  5]  14.00-15.00  sec   114 MBytes   960 Mbits/sec  117238  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+[  5]   0.00-15.00  sec  1.68 GBytes   961 Mbits/sec  0.000 ms  0/1759011 (0%)  sender
+[  5]   0.00-15.00  sec  1.61 GBytes   923 Mbits/sec  0.007 ms  68095/1759001 (3.9%)  receiver
+
+iperf Done.
