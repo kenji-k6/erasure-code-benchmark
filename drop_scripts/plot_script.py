@@ -1,6 +1,7 @@
 import os
 import re
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 import pandas as pd
 from typing import Tuple
 from collections import namedtuple
@@ -157,9 +158,12 @@ def write_plot(df: pd.DataFrame) -> None:
     
 
   plt.xlabel(x_label)
+  plt.xscale("log", base=2)
+  plt.gca().get_xaxis().set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x)}"))
+
   plt.ylabel(y_label)
-  plt.title(f"{proc_title} - {fq_title}")
-  plt.legend(loc="upper right", ncols=3)
+  # plt.title(f"{proc_title} - {fq_title}")
+  plt.legend(loc="upper right", ncols=3, fontsize=8)
   plt.grid(axis="y", linestyle="--", alpha=1.0, which="both")
   plt.tight_layout()
   plt.savefig(
