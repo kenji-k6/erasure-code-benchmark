@@ -1,7 +1,7 @@
 import os
 import re
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
+import matplotlib.ticker as ticker
 import pandas as pd
 from typing import Tuple
 from collections import namedtuple
@@ -76,7 +76,7 @@ def parse_client_iperf_log(dirname: str) -> ClientLogData:
       if match:
         dropped = int(match.group(1))
         total = int(match.group(2))
-        drop_rate = (dropped / total) * 100
+        drop_rate = (dropped / total)
         return ClientLogData(
           dropped=dropped,
           total=total,
@@ -120,7 +120,7 @@ def write_plot(df: pd.DataFrame) -> None:
   assert len(df["fq_num"].unique()) == 1, "More than one fq_num in the dataframe"
   # Get title fragments
   proc_title = f"{df.iloc[0]['proc']} Process(es)"
-  fq_title = f"Fair queuing w/ {df.iloc[0]['fq_num']}Gbps per flow injection BW limit" if df.iloc[0]['fq'] else "No fair queuing"
+  fq_title = f"FQ, {df.iloc[0]['fq_num']}Gbps injection BW limit" if df.iloc[0]['fq'] else "No FQ"
 
   # Get filename fragments
   proc_filename = f"proc{df.iloc[0]['proc']}"
@@ -128,7 +128,7 @@ def write_plot(df: pd.DataFrame) -> None:
 
   # Get x and y axis labels
   x_label = "Packet size (KiB)"
-  y_label = "Drop rate (%)"
+  y_label = "Drop rate"
 
   # Get x and y axis columns
   x_col = "packet_size_KiB"
@@ -156,13 +156,19 @@ def write_plot(df: pd.DataFrame) -> None:
       alpha=0.7,
     )
     
-
+  ax = plt.gca()
   plt.xlabel(x_label)
   plt.xscale("log", base=2)
-  plt.gca().get_xaxis().set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x)}"))
+  plt.yscale("log", base=10)
+  ax.get_xaxis().set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x)}"))
 
   plt.ylabel(y_label)
-  # plt.title(f"{proc_title} - {fq_title}")
+
+   # Add minor ticks to the y-axis
+  ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(4))  # Adjust the number of minor ticks as needed
+  plt.minorticks_on()  # Enable minor ticks
+
+  plt.title(f"{proc_title} - {fq_title}")
   plt.legend(loc="upper right", ncols=3, fontsize=8)
   plt.grid(axis="y", linestyle="--", alpha=1.0, which="both")
   plt.tight_layout()
