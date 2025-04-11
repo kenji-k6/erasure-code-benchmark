@@ -167,7 +167,6 @@ def write_plot(df: pd.DataFrame) -> None:
   plt.xscale("log", base=10)
   plt.xlabel(x_label)
 
-  print(df[y_col].unique())
   plt.yscale("log", base=2)
   plt.yticks(
     ticks = df[y_col].unique()
@@ -182,6 +181,7 @@ def write_plot(df: pd.DataFrame) -> None:
 
   plt.grid(axis="x", linestyle="--", alpha=1.0, which="both")
   plt.grid(axis="y", linestyle="--", alpha=1.0, which="both")
+  ax.set_axisbelow(True)
   plt.tight_layout()
   plt.savefig(
     os.path.join(PLOT_DIR, f"drop_rates_cscs.pdf"),
