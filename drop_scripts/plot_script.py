@@ -9,7 +9,7 @@ import matplotlib.colors as mcolors
 import pandas as pd
 from typing import Tuple
 from collections import namedtuple
-BASE_DIR = "logs-long-run"
+BASE_DIR = "logs-many-trials"
 PLOT_DIR = "plots"
 
 DirnameConfig = namedtuple("DirnameConfig", ["proc", "packet_size", "fq", "fq_num", "trial"])
@@ -139,7 +139,7 @@ def write_plot(df: pd.DataFrame) -> None:
     inplace=False)
   
   # Set the font size to 15
-  plt.rcParams.update({"font.size": 15})
+  plt.rcParams.update({"font.size": 17})
 
   # Create the plot
   plt.figure(figsize=(10, 2.5))
