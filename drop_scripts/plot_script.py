@@ -9,7 +9,7 @@ import matplotlib.colors as mcolors
 import pandas as pd
 from typing import Tuple
 from collections import namedtuple
-BASE_DIR = "logs-many-trials"
+BASE_DIR = "logs-long-run"
 PLOT_DIR = "plots"
 
 DirnameConfig = namedtuple("DirnameConfig", ["proc", "packet_size", "fq", "fq_num", "trial"])
