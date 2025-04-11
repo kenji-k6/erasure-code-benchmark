@@ -150,7 +150,7 @@ def write_plot(df: pd.DataFrame) -> None:
   cmap = mcolors.LinearSegmentedColormap.from_list(
     "green_red", ["lawngreen","limegreen", "darkorange", "red", "darkred"]
   )
-
+  # cmap = cm.get_cmap("RdYlGn_r")
   colors = cmap(norm(x_log))
 
   # Plot the data points
@@ -160,7 +160,7 @@ def write_plot(df: pd.DataFrame) -> None:
     c=colors,
     s=50,
     alpha=1.0,
-    edgecolors="black"
+    edgecolors="none"
   )
     
   ax = plt.gca()
