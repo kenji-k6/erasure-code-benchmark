@@ -127,16 +127,16 @@ def write_plot(df: pd.DataFrame) -> None:
   fq_filename = f"fq{df.iloc[0]['fq_num']}" if df.iloc[0]['fq'] else "nofq"
 
   # Get x and y axis labels
-  x_label = "Packet size (KiB)"
-  y_label = "Drop rate"
+  x_label = "Drop rate"
+  y_label = "UDP payload size\n[KiB]"
 
   # Get x and y axis columns
-  x_col = "packet_size_KiB"
-  y_col = "drop_rate"
+  x_col = "drop_rate"
+  y_col = "packet_size_KiB"
 
   # Sort the dataframe by trial and packet size
   df = df.sort_values(
-    by=["trial", x_col],
+    by=["trial", y_col],
     ascending=[True, True],
     inplace=False)
 
@@ -144,7 +144,7 @@ def write_plot(df: pd.DataFrame) -> None:
   plt.rcParams.update({'font.size': 15})
 
   # Create the plot
-  plt.figure(figsize=(7, 5))
+  plt.figure(figsize=(10, 2.5))
 
   for trial in df["trial"].unique():
     trial_df = df[df["trial"] == trial]
@@ -157,20 +157,23 @@ def write_plot(df: pd.DataFrame) -> None:
     )
     
   ax = plt.gca()
+  plt.xscale("log", base=10)
   plt.xlabel(x_label)
-  plt.xscale("log", base=2)
-  plt.yscale("log", base=10)
-  ax.get_xaxis().set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x)}"))
 
+  print(df[y_col].unique())
+  plt.yscale("log", base=2)
+  plt.yticks(
+    ticks = df[y_col].unique()
+  )
+  ax.get_yaxis().set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x)}"))
   plt.ylabel(y_label)
 
-   # Add minor ticks to the y-axis
-  ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(4))  # Adjust the number of minor ticks as needed
+   # Add minor ticks to the x-axis
+  ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(4))  # Adjust the number of minor ticks as needed
   plt.minorticks_on()  # Enable minor ticks
 
-  plt.title(f"{proc_title} - {fq_title}")
-  plt.legend(loc="upper right", ncols=3, fontsize=8)
-  plt.grid(axis="y", linestyle="--", alpha=1.0, which="both")
+
+  plt.grid(axis="x", linestyle="--", alpha=1.0, which="both")
   plt.tight_layout()
   plt.savefig(
     os.path.join(PLOT_DIR, f"{proc_filename}-{fq_filename}.pdf"),
@@ -186,20 +189,20 @@ def main() -> None:
   df = df[df["valid"]]
   unique_combs = df[["proc", "fq", "fq_num"]].drop_duplicates()
 
-  for _, row in unique_combs.iterrows():
-    proc = row["proc"]
-    fq = row["fq"]
-    fq_num = row["fq_num"]
+  final_params = {
+    "proc": 16,
+    "fq": True,
+    "fq_num": 10
+  }
 
-    # Filter the dataframe for the current combination
-    filtered_df = df[
-      (df["proc"] == proc) &
-      (df["fq"] == fq) &
-      (df["fq_num"] == fq_num)
-    ]
+  filtered_df = df[
+    (df["proc"] == final_params["proc"]) &
+    (df["fq"] == final_params["fq"]) &
+    (df["fq_num"] == final_params["fq_num"])
+  ]
 
-    # Create the plot
-    write_plot(filtered_df)
+  # Create the plot
+  write_plot(filtered_df)
   
 
   
