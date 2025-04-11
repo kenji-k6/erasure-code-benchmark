@@ -126,7 +126,7 @@ def write_plot(df: pd.DataFrame) -> None:
 
   # Get x and y axis labels
   x_label = r"$P_{drop}$"
-  y_label = "UDP payload size\n[KiB]"
+  y_label = "UDP payload\nsize [KiB]"
 
   # Get x and y axis columns
   x_col = "drop_rate"
