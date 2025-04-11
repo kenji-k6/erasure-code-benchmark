@@ -1,7 +1,11 @@
 import os
 import re
+
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 import pandas as pd
 from typing import Tuple
 from collections import namedtuple
@@ -118,16 +122,10 @@ def write_plot(df: pd.DataFrame) -> None:
   assert len(df["proc"].unique()) == 1, "More than one proc type in the dataframe"
   assert len(df["fq"].unique()) == 1, "More than one fq type in the dataframe"
   assert len(df["fq_num"].unique()) == 1, "More than one fq_num in the dataframe"
-  # Get title fragments
-  proc_title = f"{df.iloc[0]['proc']} Process(es)"
-  fq_title = f"FQ, {df.iloc[0]['fq_num']}Gbps injection BW limit" if df.iloc[0]['fq'] else "No FQ"
 
-  # Get filename fragments
-  proc_filename = f"proc{df.iloc[0]['proc']}"
-  fq_filename = f"fq{df.iloc[0]['fq_num']}" if df.iloc[0]['fq'] else "nofq"
 
   # Get x and y axis labels
-  x_label = "Drop rate"
+  x_label = r"$P_{drop}$"
   y_label = "UDP payload size\n[KiB]"
 
   # Get x and y axis columns
@@ -139,22 +137,31 @@ def write_plot(df: pd.DataFrame) -> None:
     by=["trial", y_col],
     ascending=[True, True],
     inplace=False)
-
+  
   # Set the font size to 15
-  plt.rcParams.update({'font.size': 15})
+  plt.rcParams.update({"font.size": 15})
 
   # Create the plot
   plt.figure(figsize=(10, 2.5))
 
-  for trial in df["trial"].unique():
-    trial_df = df[df["trial"] == trial]
-    plt.scatter(
-      x=trial_df[x_col],
-      y=trial_df[y_col],
-      label=f"Trial {trial}",
-      s=50,
-      alpha=0.7,
-    )
+  # Colors for the measurements
+  x_log = np.log10(df[x_col])
+  norm = mcolors.Normalize(vmin=x_log.min(), vmax=x_log.max())
+  cmap = mcolors.LinearSegmentedColormap.from_list(
+    "green_red", ["lawngreen","limegreen", "darkorange", "red", "darkred"]
+  )
+
+  colors = cmap(norm(x_log))
+
+  # Plot the data points
+  plt.scatter(
+    x=df[x_col],
+    y=df[y_col],
+    c=colors,
+    s=50,
+    alpha=1.0,
+    edgecolors="black"
+  )
     
   ax = plt.gca()
   plt.xscale("log", base=10)
@@ -174,9 +181,10 @@ def write_plot(df: pd.DataFrame) -> None:
 
 
   plt.grid(axis="x", linestyle="--", alpha=1.0, which="both")
+  plt.grid(axis="y", linestyle="--", alpha=1.0, which="both")
   plt.tight_layout()
   plt.savefig(
-    os.path.join(PLOT_DIR, f"{proc_filename}-{fq_filename}.pdf"),
+    os.path.join(PLOT_DIR, f"drop_rates_cscs.pdf"),
     format="pdf",
     dpi=300
   )
