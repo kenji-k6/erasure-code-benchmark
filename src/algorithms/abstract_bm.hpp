@@ -7,16 +7,16 @@
 #include <cstring>
 
 /**
- * @class ECBenchmark
+ * @class AbstractBenchmark
  * @brief Abstract base class for Erasure Code (EC) benchmarking
  * 
  * This class defines the interface that all EC libraries should implement for benchmarking
  * their encoding, decoding and error-checking capabilities.
  * The class provides a clean and standardized way to set up, run and clean up EC benchmark tests.
  */
-class ECBenchmark {
+class AbstractBenchmark {
 public:
-  virtual ~ECBenchmark() noexcept = default; ///< Default virtual destructor
+  virtual ~AbstractBenchmark() noexcept = default; ///< Default virtual destructor
   /**
    * @brief Run the encoding process.
    * 
@@ -67,7 +67,7 @@ public:
   virtual void touch_unified_memory() noexcept {};
 
 protected:
-  explicit ECBenchmark(const BenchmarkConfig& config) noexcept;
+  explicit AbstractBenchmark(const BenchmarkConfig& config) noexcept;
 
   size_t m_block_size;
   size_t m_num_data_blocks;

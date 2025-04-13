@@ -12,7 +12,7 @@
  * @brief Runs a generic benchmark for a given EC Library Benchmark type
  * 
  * This function is templated to work with any class that implements
- * the `ECBenchmark` interface. It follows a standard benchmarking procedure:
+ * the `AbstractBenchmark` interface. It follows a standard benchmarking procedure:
  * 1. Pauses timing and sets up the benchmark environment
  * 2. Touches unified memory if required
  * 3. Encodes data
@@ -28,7 +28,7 @@
  * @attention Pausing and stopping in each iteration incurs some overhead, however it is rouglhy 200-300ns and therefore negligible
  * Manual Timing as specified in the Google Benchmark documentation does not change this, since then the timings lose accuracy
  * 
- * @tparam BenchmarkType A class implementing the `ECBenchmark` interface
+ * @tparam BenchmarkType A class implementing the `AbstractBenchmark` interface
  * @param state The Google Benchmark state object
  */
 template <typename BenchmarkType>

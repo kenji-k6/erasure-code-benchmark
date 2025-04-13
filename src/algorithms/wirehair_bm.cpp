@@ -10,7 +10,7 @@
 #include "utils.hpp"
 
 
-WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
+WirehairBenchmark::WirehairBenchmark(const BenchmarkConfig& config) noexcept : AbstractBenchmark(config) {
   if (wirehair_init()) throw_error("Wirehair: Initialization failed.");
 
   // Allocate buffers

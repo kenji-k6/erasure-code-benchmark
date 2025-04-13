@@ -8,11 +8,11 @@
  * @class XorecBenchmark
  * @brief Benchmark implementation for the baseline XOR-EC implementation.
  * 
- * This class implements the ECBenchmark interface, providing specific functionality
+ * This class implements the AbstractBenchmark interface, providing specific functionality
  * for benchmarking the XOR-EC implementation. It supports setup, teardown, encoding, decoding,
  * data loss simulation and corruption checking..
  */
-class XorecBenchmark : public ECBenchmark {
+class XorecBenchmark : public AbstractBenchmark {
 public:
 explicit XorecBenchmark(const BenchmarkConfig& config) noexcept;
   ~XorecBenchmark() noexcept override;

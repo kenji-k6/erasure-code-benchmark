@@ -2,7 +2,7 @@
 #include "xorec_gpu_cmp.cuh"
 #include "utils.hpp"
 
-XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
+XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexcept : AbstractBenchmark(config) {
   xorec_gpu_init(FIXED_GPU_BLOCKS, FIXED_GPU_THREADS_PER_BLOCK, m_num_data_blocks);
 
   cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&m_data_buf), m_block_size * m_num_data_blocks);

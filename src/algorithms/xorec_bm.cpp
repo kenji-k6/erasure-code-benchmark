@@ -11,7 +11,7 @@
 #include "utils.hpp"
  
  
-XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
+XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept : AbstractBenchmark(config) {
   xorec_init(m_num_data_blocks);
   m_version = config.xorec_params.version;
 

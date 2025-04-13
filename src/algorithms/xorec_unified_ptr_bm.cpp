@@ -3,7 +3,7 @@
 #include "utils.hpp"
 #include <cuda_runtime.h>
 
-XorecBenchmarkUnifiedPtr::XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
+XorecBenchmarkUnifiedPtr::XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config) noexcept : AbstractBenchmark(config) {
   xorec_init(m_num_data_blocks);
   m_version = config.xorec_params.version;
 

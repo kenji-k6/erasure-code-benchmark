@@ -3,7 +3,7 @@
 
 #include "abstract_bm.hpp"
 
-class XorecBenchmarkGpuCmp : public ECBenchmark {
+class XorecBenchmarkGpuCmp : public AbstractBenchmark {
 public:
   explicit XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexcept;
   ~XorecBenchmarkGpuCmp() noexcept override;

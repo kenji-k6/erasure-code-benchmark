@@ -9,7 +9,7 @@
 #include "cm256_bm.hpp"
 #include "utils.hpp"
 
-CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
+CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept : AbstractBenchmark(config) {
   if (cm256_init()) throw_error("CM256: Initialization failed.");
 
   // Initialize CM256 parameters

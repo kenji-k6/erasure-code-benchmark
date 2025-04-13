@@ -8,11 +8,11 @@
  * @class ISALBenchmark
  * @brief Benchmark implementation for the Intel ISA-L library's EC implementation https://github.com/intel/isa-l
  * 
- * This class implements the ECBenchmark interface, providing specific functionality
+ * This class implements the AbstractBenchmark interface, providing specific functionality
  * for benchmarking the ISA-L library. It supports setup, teardown, encoding, decoding,
  * data loss simulation and corruption checking..
  */
-class ISALBenchmark : public ECBenchmark {
+class ISALBenchmark : public AbstractBenchmark {
 public:
   explicit ISALBenchmark(const BenchmarkConfig& config) noexcept;
   ~ISALBenchmark() noexcept override;

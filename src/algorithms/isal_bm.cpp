@@ -12,7 +12,7 @@
 #include "utils.hpp"
 
 
-ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
+ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : AbstractBenchmark(config) {
 
   // Allocate matrices etc.
   m_encode_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks * m_num_data_blocks, ALIGNMENT)); 

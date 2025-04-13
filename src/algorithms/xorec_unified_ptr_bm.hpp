@@ -8,7 +8,7 @@
  * @class XorecBenchmarkUnifiedPtr
  * @brief Xorec Benchmark implementation using unified memory, computation still happens on the CPU
  */
-class XorecBenchmarkUnifiedPtr : public ECBenchmark {
+class XorecBenchmarkUnifiedPtr : public AbstractBenchmark {
 public:
   explicit XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config) noexcept;
   ~XorecBenchmarkUnifiedPtr() noexcept override;

@@ -7,7 +7,7 @@
  * @brief Xorec Benchmark implementation using GPU memory, computation still happens on the CPU
  */
 
- class XorecBenchmarkGpuPtr : public ECBenchmark {
+ class XorecBenchmarkGpuPtr : public AbstractBenchmark {
   public:
     explicit XorecBenchmarkGpuPtr(const BenchmarkConfig& config) noexcept;
     ~XorecBenchmarkGpuPtr() noexcept override;

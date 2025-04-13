@@ -12,7 +12,7 @@
 #include "utils.hpp"
 
 
-LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : ECBenchmark(config) {
+LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept : AbstractBenchmark(config) {
   // Initialize Leopard
   if (leo_init()) throw_error("Leopard: Initialization failed.");
 

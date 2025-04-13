@@ -8,11 +8,11 @@
  * @class CM256Benchmark
  * @brief Benchmark implementation for the CM256 EC library https://github.com/catid/cm256
  * 
- * This class implements the ECBenchmark interface, providing specific functionality
+ * This class implements the AbstractBenchmark interface, providing specific functionality
  * for benchmarking the CM256 library. It supports setup, teardown, encoding, decoding,
  * data loss simulation and corruption checking.
  */
-class CM256Benchmark : public ECBenchmark {
+class CM256Benchmark : public AbstractBenchmark {
 public:
   explicit CM256Benchmark(const BenchmarkConfig& config) noexcept;
   ~CM256Benchmark() noexcept override;
