@@ -85,7 +85,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
     dec_throughputs[it] = dec_throughput;
 
     ++it;
-    if (config.progress_reporter != nullptr) config.progress_reporter->update_bar();
+    if (config.reporter != nullptr) config.reporter->update_bar();
     state.SetIterationTime(static_cast<double>(time_encode+time_decode)/1e9);
   }
 

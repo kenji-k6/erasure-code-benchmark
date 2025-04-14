@@ -4,8 +4,8 @@
 #include <vector>
 #include <immintrin.h>
 #include <cuda_runtime.h>
-#include "bm_reporters.hpp"
-
+#include <stdexcept>
+#include <memory>
 
 /// @brief Constants for fixed values
 constexpr size_t ALIGNMENT = 64;

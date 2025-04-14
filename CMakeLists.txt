@@ -37,9 +37,11 @@ set (SOURCES
   src/algorithms/xorec_gpu_cmp_bm.cpp
 
   src/benchmark/bm_config.cpp
-  src/benchmark/bm_functions.cpp
-  src/benchmark/bm_reporters.cpp
+  src/benchmark/runners.cpp
   src/benchmark/bm_utils.cpp
+
+  src/reporters/console_reporter.cpp
+  src/reporters/csv_reporter.cpp
 
   src/utils/utils.cpp
   src/utils/bm_cli.cpp
@@ -87,6 +89,7 @@ target_include_directories(ec-benchmark PRIVATE
   ${CMAKE_SOURCE_DIR}/src/xorec
   ${CMAKE_SOURCE_DIR}/src/utils
   ${CMAKE_SOURCE_DIR}/src/benchmark
+  ${CMAKE_SOURCE_DIR}/src/reporters
   ${CMAKE_SOURCE_DIR}/libraries/leopard
   ${CMAKE_SOURCE_DIR}/libraries/isa-l/include
   ${CMAKE_SOURCE_DIR}/libraries/perfmon2-libpfm4/include

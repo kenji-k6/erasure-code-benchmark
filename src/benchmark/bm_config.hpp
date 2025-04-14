@@ -6,7 +6,7 @@
 #ifndef BM_CONFIG_HPP
 #define BM_CONFIG_HPP
 
-#include "bm_reporters.hpp"
+#include "console_reporter.hpp"
 #include "xorec_utils.hpp"
 #include <cstdint>
 #include <vector>
@@ -33,7 +33,7 @@ struct BenchmarkConfig {
     bool unified_mem;
   } xorec_params;
 
-  BenchmarkProgressReporter *progress_reporter = nullptr;
+  ConsoleReporter* reporter = nullptr;
 };
 
 

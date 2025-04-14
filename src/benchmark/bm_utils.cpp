@@ -6,7 +6,10 @@
 #include "bm_cli.hpp"
 #include "bm_utils.hpp"
 #include "benchmark/benchmark.h"
-#include "bm_functions.hpp"
+#include "bm_config.hpp"
+#include "console_reporter.hpp"
+#include "csv_reporter.hpp"
+#include "runners.hpp"
 #include "utils.hpp"
 #include "xorec_utils.hpp"
 #include <filesystem>
@@ -14,6 +17,7 @@
 #include <ranges>
 #include <unordered_map>
 #include <unordered_set>
+
 
 
 constexpr const char* RAW_DIR = "../results/raw/";
@@ -239,7 +243,7 @@ static void get_configs(std::vector<BenchmarkConfig>& configs) {
     config.num_data_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
     config.num_parity_blocks = FIXED_NUM_RECOVERY_BLOCKS;
     config.is_xorec_config = false;
-    config.progress_reporter = nullptr;
+    config.reporter = nullptr;
     configs.push_back(config);
   }
 
@@ -254,7 +258,7 @@ static void get_configs(std::vector<BenchmarkConfig>& configs) {
     config.num_data_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
     config.num_parity_blocks = num_rec_blocks;
     config.is_xorec_config = false;
-    config.progress_reporter = nullptr;
+    config.reporter = nullptr;
     configs.push_back(config);
   }
 
@@ -269,7 +273,7 @@ static void get_configs(std::vector<BenchmarkConfig>& configs) {
     config.num_data_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
     config.num_parity_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
     config.is_xorec_config = false;
-    config.progress_reporter = nullptr;
+    config.reporter = nullptr;
     configs.push_back(config);
   }
 }
@@ -311,12 +315,12 @@ void run_benchmarks(int argc, char** argv) {
   std::vector<BenchmarkTuple> benchmarks;
   get_benchmarks(benchmarks);
 
-  std::unique_ptr<BenchmarkProgressReporter> console_reporter = std::make_unique<BenchmarkProgressReporter>(NUM_ITERATIONS * benchmarks.size(), start_time);
-  std::unique_ptr<BenchmarkCSVReporter> csv_reporter = std::make_unique<BenchmarkCSVReporter>(RAW_DIR + OUTPUT_FILE_NAME, OVERWRITE_FILE);
+  std::unique_ptr<ConsoleReporter> console_reporter = std::make_unique<ConsoleReporter>(NUM_ITERATIONS * benchmarks.size(), start_time);
+  std::unique_ptr<CSVReporter> csv_reporter = std::make_unique<CSVReporter>(RAW_DIR + OUTPUT_FILE_NAME, OVERWRITE_FILE);
 
   benchmark::ClearRegisteredBenchmarks();
   for (auto [name, func, cfg] : benchmarks) {
-    cfg.progress_reporter = console_reporter.get();
+    cfg.reporter = console_reporter.get();
 
     benchmark::RegisterBenchmark(name, func, cfg)
       ->UseRealTime()
