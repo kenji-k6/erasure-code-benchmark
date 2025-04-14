@@ -27,7 +27,7 @@ struct BenchmarkConfig {
   size_t num_data_blocks;                   ///< Number of original data blocks
   size_t num_parity_blocks;                   ///< Number of recovery blocks
 
-  XorecVersion version;
+  XorecVersion xorec_version;
   ConsoleReporter* reporter = nullptr;
 };
 
