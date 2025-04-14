@@ -80,7 +80,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
   std::for_each(enc_times.begin(), enc_times.end(), [&](const double t) {
     enc_accum += std::pow(t - enc_t_ns, 2);
-  })
+  });
 
   std::for_each(dec_times.begin(), dec_times.end(), [&](const double t) {
     dec_accum += std::pow(t - dec_t_ns, 2);

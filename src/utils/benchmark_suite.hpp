@@ -6,6 +6,7 @@
 #ifndef BM_SUITE_HPP
 #define BM_SUITE_HPP
 #include "bm_config.hpp"
+#include "runners.hpp"
 #include <unordered_map>
 
 using BenchmarkTuple = std::tuple<std::string, BenchmarkFunction, BenchmarkConfig>;

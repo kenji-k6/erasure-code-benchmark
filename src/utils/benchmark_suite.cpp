@@ -8,7 +8,6 @@
 #include "benchmark/benchmark.h"
 #include "console_reporter.hpp"
 #include "csv_reporter.hpp"
-#include "runners.hpp"
 #include "utils.hpp"
 #include <filesystem>
 #include <getopt.h>
@@ -20,6 +19,7 @@ constexpr const char* RAW_DIR = "../results/raw/";
 std::string OUTPUT_FILE = "results.csv";
 bool OVERWRITE_FILE = true;
 int NUM_ITERATIONS = 10;
+int NUM_WARMUP_ITERATIONS = 0;
 
 std::unordered_set<std::string> selected_cpu_benchmarks;
 std::unordered_set<std::string> selected_gpu_benchmarks;
@@ -152,6 +152,7 @@ static void get_cpu_configs(std::vector<BenchmarkConfig>& configs) {
           .ec_params = ec_params,
           .num_lost_blocks = lost_blocks,
           .num_iterations = NUM_ITERATIONS,
+          .num_warmup_iterations = NUM_WARMUP_ITERATIONS,
           .gpu_computation = false,
         });
       }
@@ -173,6 +174,7 @@ static void get_gpu_configs(std::vector<BenchmarkConfig>& configs) {
               .ec_params = ec_params,
               .num_lost_blocks = lost_blocks,
               .num_iterations = NUM_ITERATIONS,
+              .num_warmup_iterations = NUM_WARMUP_ITERATIONS,
               .gpu_computation = true,
               .num_gpu_blocks = num_gpu_blocks,
               .threads_per_gpu_block = threads_per_block,

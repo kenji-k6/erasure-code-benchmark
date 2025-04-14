@@ -28,11 +28,11 @@ struct BenchmarkConfig {
   int num_iterations;                             ///< Number of iterations to run the benchmark
   int num_warmup_iterations;                     ///< Number of warm-up iterations
 
-  XorecVersion xorec_version;
+  XorecVersion xorec_version = XorecVersion::Scalar; ///< Version of XOR-EC to use (default: Scalar)
 
   bool gpu_computation;                   ///< Flag for GPU computation
-  size_t num_gpu_blocks;
-  size_t threads_per_gpu_block;
+  size_t num_gpu_blocks = 0;
+  size_t threads_per_gpu_block = 0;
 
   ConsoleReporter* reporter = nullptr;
 };
