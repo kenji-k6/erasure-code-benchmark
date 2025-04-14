@@ -47,16 +47,15 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
   unsigned it = 0;
 
+  BenchmarkType bench(config);
   for (auto _ : state) {
-    BenchmarkType bench(config);
-    if (config.is_xorec_config && config.xorec_params.unified_mem) bench.touch_unified_memory();
-
+    bench.setup();
+    
     auto start_encode = std::chrono::steady_clock::now();
     bench.encode();
     auto end_encode = std::chrono::steady_clock::now();
 
     bench.simulate_data_loss();
-    if (config.is_xorec_config && config.xorec_params.unified_mem) bench.touch_unified_memory();
     
     auto start_decode = std::chrono::steady_clock::now();
     bench.decode();

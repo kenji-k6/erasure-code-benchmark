@@ -11,6 +11,9 @@
 #include <cstdint>
 #include <vector>
 
+
+using ECTuple = std::tuple<size_t, size_t>;
+
 /**
  * @struct BenchmarkConfig
  * 
@@ -19,15 +22,16 @@
 struct BenchmarkConfig {
   size_t data_size;                               ///< Total size of original data (in bytes)
   size_t block_size;                              ///< Size of each block (in bytes)
+  ECTuple ec_params;                            
   size_t num_lost_blocks;                         ///< Number of total blocks lost (recovery + original)
-  double redundancy_ratio;                        ///< Recovery blocks / original blocks ratio
   int num_iterations;                             ///< Number of iterations to run the benchmark
-  uint8_t plot_id;                                ///< Identifier for plotting
-
-  size_t num_data_blocks;                   ///< Number of original data blocks
-  size_t num_parity_blocks;                   ///< Number of recovery blocks
 
   XorecVersion xorec_version;
+
+  bool gpu_computation;                   ///< Flag for GPU computation
+  size_t num_gpu_blocks;
+  size_t threads_per_gpu_block;
+
   ConsoleReporter* reporter = nullptr;
 };
 
@@ -37,15 +41,10 @@ struct BenchmarkConfig {
 using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
 
 /// @brief Constants for fixed values
-constexpr int FIXED_GPU_BLOCKS = 8;
-constexpr int FIXED_GPU_THREADS_PER_BLOCK = 32;
-constexpr size_t FIXED_NUM_ORIGINAL_BLOCKS = 128;
-constexpr size_t FIXED_NUM_RECOVERY_BLOCKS = 4;
-constexpr size_t FIXED_BUFFER_SIZE = 1048576; // 1 MiB
-constexpr double FIXED_PARITY_RATIO = 0.03125;
-constexpr size_t FIXED_NUM_LOST_BLOCKS = 1;
-extern const std::vector<size_t> VAR_BUFFER_SIZE;
-extern const std::vector<size_t> VAR_NUM_RECOVERY_BLOCKS;
+extern const std::vector<size_t> VAR_BLOCK_SIZES;
+extern const std::vector<ECTuple> VAR_EC_PARAMS;
 extern const std::vector<size_t> VAR_NUM_LOST_BLOCKS;
+extern const std::vector<size_t> VAR_NUM_GPU_BLOCKS;
+extern const std::vector<size_t> VAR_NUM_THREADS_PER_BLOCK;
 
 #endif // BM_CONFIG_HPP
