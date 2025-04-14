@@ -40,6 +40,13 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   unsigned it = 0;
 
   BenchmarkType bench(config);
+
+  for (int i = 0; i < config.num_warmup_iterations; ++i) {
+    bench.setup();
+    bench.encode();
+    bench.simulate_data_loss();
+    bench.decode();
+  }
   for (auto _ : state) {
     bench.setup();
     
@@ -99,7 +106,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
 
 
   // Save results to counters
-  state.counters["num_warmup_iterations"] = 0;
+  state.counters["num_warmup_iterations"] = config.num_warmup_iterations;
 
   state.counters["data_size_B"] = config.data_size;
   state.counters["block_size_B"] = config.block_size;

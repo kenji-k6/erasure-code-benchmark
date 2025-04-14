@@ -64,8 +64,9 @@ void parse_args(int argc, char** argv) {
     { "file",           required_argument,  nullptr, 'f'  },
     { "append",         no_argument,        nullptr, 'a'  },
     { "iterations",     required_argument,  nullptr, 'i'  },
-    { "cpu-alg",        required_argument,  nullptr, 'c'  },
-    { "gpu-ag",         required_argument,  nullptr, 'g'  },
+    { "warmup",         required_argument,  nullptr, 'w'  },
+    { "cpu",            required_argument,  nullptr, 'c'  },
+    { "gpu",            required_argument,  nullptr, 'g'  },
     { "simd",           required_argument,  nullptr, 's'  },
     { nullptr,          0,                  nullptr,  0   }
   };
@@ -75,14 +76,12 @@ void parse_args(int argc, char** argv) {
   std::string flag;
   std::vector<std::string> args;
 
-  while ((c = getopt_long(argc, argv, "hf:ai:", long_options, &option_index)) != -1) {
+  while ((c = getopt_long(argc, argv, "hf:ai:w:c:g:s:", long_options, &option_index)) != -1) {
     switch (c) {
       case 'h':
         usage();
         break;
-      case 'i':
-        NUM_ITERATIONS = std::stoi(optarg);
-        break;
+
       case 'f':
         OUTPUT_FILE = std::string(optarg);
         if (OUTPUT_FILE.find(".csv") == std::string::npos) {
@@ -90,9 +89,27 @@ void parse_args(int argc, char** argv) {
           exit(0);
         }
         break;
+
       case 'a':
         OVERWRITE_FILE = false;
         break;
+
+      case 'i':
+        NUM_ITERATIONS = std::stoi(optarg);
+        if (NUM_ITERATIONS <= 0) {
+          std::cerr << "Error: Number of iterations must be positive.\n";
+          usage();
+        }
+        break;
+      
+      case 'w':
+        NUM_WARMUP_ITERATIONS = std::stoi(optarg);
+        if (NUM_WARMUP_ITERATIONS < 0) {
+          std::cerr << "Error: Number of warmup iterations must be non-negative.\n";
+          usage();
+        }
+        break;
+        
       case 'c':
         args = get_arg_vector(std::string(optarg));
         for (const auto& arg: args) {
@@ -103,6 +120,7 @@ void parse_args(int argc, char** argv) {
           selected_cpu_benchmarks.insert(arg);
         }
         break;
+
       case 'g':
         args = get_arg_vector(std::string(optarg));
         for (const auto& arg: args) {
@@ -113,6 +131,7 @@ void parse_args(int argc, char** argv) {
           selected_gpu_benchmarks.insert(arg);
         }
         break;
+
       case 's':
         args = get_arg_vector(std::string(optarg));
         for (const auto& arg: args) {
@@ -123,6 +142,7 @@ void parse_args(int argc, char** argv) {
           selected_xorec_versions.insert(XOREC_VERSIONS.at(arg));
         }
         break;
+
       default:
         usage();
         break;
@@ -185,7 +205,6 @@ static void get_gpu_configs(std::vector<BenchmarkConfig>& configs) {
     }
   }
 }
-
 
 std::string get_benchmark_name(const std::string& inp_name) {
   if (GPU_BM_NAMES.find(inp_name) != GPU_BM_NAMES.end()) return GPU_BM_NAMES.at(inp_name);

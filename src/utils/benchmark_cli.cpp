@@ -64,29 +64,28 @@ static std::string format_requirement(
 }
 
 inline const std::vector<OptionLine> option_lines = {
-  { "Help:", "", "", "", "", "", ""                                                                                                           },
-  { "", "", "-h", "--help",           "",                 "show this help message", ""                                                        },
-  { "Benchmark options:", "", "", "", "", "", ""                                                                                              },
-  { "", "", "-f", "--file",           "<dir_name>",       "specify output CSV file", "(inside /results/raw/)"                                 },
-  { "", "", "",   "",                 "",                 "will be created if it doesn't exist", ""                                           },
-  { "", "", "-a", "--append",         "",                 "append results to the output file", "(default: overwrite)"                         },
-  { "", "", "-i", "--iterations",     "<num>",            "number of benchmark iterations", "(default 10)"                                    },
-  { "Algorithm selection:", "", "", "", "", "", ""                                                                                            },
-  { "", "If no algorithm is selected, all algorithms will be run", "", "", "", "", ""                                                         },
-  { "", "", "",   "--base",           "cm256,isal,leopard",     "run the specified algorithms,", "0 or more comma seperated args"             },
-  { "", "", "",   "--xorec",          "cpu,unified-ptr,gpu-ptr,gpu-cmp", "run the selected XOR-EC variants", "0 or more comma seperated args" },
-  { "", "", "",   "",                 "",                 "","cpu:          data buffer, parity buffer and"                                   },
-  { "", "", "",   "",                 "",                 "","              computation on CPU"                                               },
-  { "", "", "",   "",                 "",                 "","unified-ptr:  data buffer in unified memory, parity"                            },
-  { "", "", "",   "",                 "",                 "","              buffer and computation on CPU"                                    },
-  { "", "", "",   "",                 "",                 "","gpu-ptr:      data buffer on GPU, parity buffer and"                            },
-  { "", "", "",   "",                 "",                 "","              computation on CPU"                                               },
-  { "", "", "",   "",                 "",                 "","gpu-cmp:      data buffer, parity buffer and"                                   },
-  { "", "", "",   "",                 "",                 "","              computation on GPU"                                               },
-  { "XOR-EC version selection:", "", "", "", "", "", ""                                                                                       },
-  { "", "", "",   "--simd",           "scalar,avx,avx2,avx512", "which SIMD version to use for XOR-EC benchmarking", ""                       },
-  { "", "", "",   "",                 "",                 format_requirement("--xorec", "scalar|unified-ptr|gpu-ptr"), ""                     },
-  { "", "", "",   "",                 "",                 "","0 or more comma separated args (default: all)"                                  }
+  { "Help:", "", "", "", "", "", ""                                                                                             },
+  { "", "", "-h", "--help",           "",                 "show this help message", ""                                          },
+  { "Benchmarking options:", "", "", "", "", "", ""                                                                             },
+  { "", "", "-f", "--file",           "<dir_name>",       "specify output CSV file", "(inside /results/raw/)"                   },
+  { "", "", "",   "",                 "",                 "will be created if it doesn't exist", ""                             },
+  { "", "", "-a", "--append",         "",                 "append results to the output file", ""                               },
+  { "", "", "", "",         "",                           "", "(default: overwrite)"                                            },
+  { "", "", "-i", "--iterations",     "<num>",            "number of benchmark iterations", "(default: 10)"                     },
+  { "", "", "-w", "--warmup",         "<num>",            "number of warm-up iterations", "(default: 0)"                        },
+  { "Algorithm selection:", "", "", "", "", "", ""                                                                              },
+  { "", "", "-c", "--cpu",            "cm256,isal,leopard,xorec,","run the specified algorithms (CPU computation)","0 or more"  },
+  { "", "", "",   "",                 "xorec-unified-ptr,xorec-gpu-ptr", "", "comma seperated args"                             },
+  { "", "", "",   "",                 "",                 "","unified-ptr:  data buffer in unified memory,"                     },
+  { "", "", "",   "",                 "",                 "","              parity buffer in CPU memory"                        },
+  { "", "", "",   "",                 "",                 "","gpu-ptr:      data buffer in GPU memory,"                         },
+  { "", "", "",   "",                 "",                 "","              parity buffer in CPU memory"                        },
+  { "", "", "-g", "--gpu",            "xorec,",           "run the specified algorithms (GPU computation)",""                   },
+  { "", "", "",   "",                 "",                 "", "0 or more comma seperated args"                                  },
+  { "XOR-EC version selection:", "", "", "", "", "", ""                                                                         },
+  { "", "", "",   "--simd",           "scalar,avx,avx2,avx512", "Xorec SIMD version selection", ""                              },
+  { "", "", "",   "",                 "",                 format_requirement("--xorec", "scalar|unified-ptr|gpu-ptr"), ""       },
+  { "", "", "",   "",                 "",                 "","0 or more comma separated args (default: all)"                    }
 };
 
 void print_usage() {
@@ -113,6 +112,8 @@ void print_options() {
     max_width = std::max(max_width, total_width);
   }
 
+  max_width += 5; // add extra padding
+
 
   // Build top and bottom box borders.
   std::string box_top = std::string(BoxDraw::TopLeft)
@@ -132,6 +133,7 @@ void print_options() {
   // Print the top border
   std::cout << box_top << '\n';
 
+  int align_prev_long_opt = 0;
   for (const auto& [header, info, short_opt, long_opt, args, descript, comment] : option_lines) {
     int len_header    = get_visible_length(header);
     int len_info      = get_visible_length(info);
@@ -170,9 +172,17 @@ void print_options() {
       std::cout << std::setw(long_alignment-curr_len) << std::setfill(' ') << std::string(spacing, ' ');
       std::cout << Colors::LongOpt << long_opt << Colors::Reset;
       curr_len = long_alignment + len_long_opt;
+      align_prev_long_opt = curr_len;
     }
 
-    if (len_args > 0) {
+    if ((len_args > 0) && (len_short_opt == 0) && (len_long_opt == 0)) {
+      std::cout << std::setw(align_prev_long_opt-curr_len) << std::setfill(' ') << std::string(spacing, ' ');
+      std::cout << std::string(small_spacing, ' ');
+      curr_len = align_prev_long_opt;
+      curr_len += small_spacing;
+      std::cout << Colors::Args << args << Colors::Reset;
+      curr_len += len_args;
+    } else if (len_args > 0) {
       std::cout << std::string(small_spacing, ' ');
       curr_len += small_spacing;
       std::cout << Colors::Args << args << Colors::Reset;
