@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <immintrin.h>
+#include <cuda_runtime.h>
 #include "bm_reporters.hpp"
 
 
@@ -114,34 +115,69 @@ std::string to_lower(std::string str);
 void touch_memory(uint8_t* buffer, size_t bytes);
 
 
-/**
- * @brief Custom Deleter for std::unique_ptr in combination with
- * _mm_malloc/_mm_free
- * 
- */
-struct AlignedDeleter {
-  void operator()(void* ptr) const {
-    if (ptr) {
-      _mm_free(ptr);
-    }
-    std::cout << "Memory freed" << std::endl;
-  }
-};
 
-/**
- * @brief Helper function to create a 64 byte aligned unique_ptr
- * 
- */
+// **** Below are the utility functions for aligned memory allocation **** //
+
 template <typename T>
-std::unique_ptr<T[], AlignedDeleter> make_unique_aligned(size_t count = 1) {
-  static_assert(std::is_trivially_destructible_v<T>, "Type must be trivially destructible");
+using DeleterFunc = void(*)(T*);
 
-  void* mem = _mm_malloc(count * sizeof(T), ALIGNMENT);
-  if (!mem) {
-    throw std::bad_alloc();
-  }
-  return std::unique_ptr<T[], AlignedDeleter>(static_cast<T*>(mem));
+template <typename T>
+void mm_deleter(T* ptr) {
+  if (ptr) _mm_free(ptr);
+  std::cout << "Memory freed" << std::endl;
 }
+
+template <typename T>
+void cuda_deleter(T* ptr) {
+  if (ptr) {
+    cudaError_t err = cudaFree(ptr);
+    if (err != cudaSuccess) throw_error("Failed to free CUDA memory");
+    
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) throw_error("Failed to synchronize CUDA device");
+  }
+  std::cout << "Memory freed" << std::endl;
+}
+
+
+
+template <typename T>
+std::unique_ptr<T[], DeleterFunc<T>> make_unique_aligned(size_t count = 1) {
+  static_assert(std::is_trivially_destructible_v<T>, "Type must be trivially destructible");
+  void* mem = _mm_malloc(count * sizeof(T), ALIGNMENT);
+  if (!mem) throw std::bad_alloc();
+  return std::unique_ptr<T[], DeleterFunc<T>>(static_cast<T*>(mem), mm_deleter);
+}
+
+
+// /**
+//  * @brief Custom Deleter for std::unique_ptr in combination with
+//  * _mm_malloc/_mm_free
+//  * 
+//  */
+// struct AlignedDeleter {
+//   void operator()(void* ptr) const {
+//     if (ptr) {
+//       _mm_free(ptr);
+//     }
+//     std::cout << "Memory freed" << std::endl;
+//   }
+// };
+
+// /**
+//  * @brief Helper function to create a 64 byte aligned unique_ptr
+//  * 
+//  */
+// template <typename T>
+// std::unique_ptr<T[], AlignedDeleter> make_unique_aligned(size_t count = 1) {
+//   static_assert(std::is_trivially_destructible_v<T>, "Type must be trivially destructible");
+
+//   void* mem = _mm_malloc(count * sizeof(T), ALIGNMENT);
+//   if (!mem) {
+//     throw std::bad_alloc();
+//   }
+//   return std::unique_ptr<T[], AlignedDeleter>(static_cast<T*>(mem));
+// }
 
 
 #endif // UTILS_HPP

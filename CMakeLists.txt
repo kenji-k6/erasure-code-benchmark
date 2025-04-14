@@ -31,7 +31,7 @@ set (SOURCES
   src/algorithms/cm256_bm.cpp
   src/algorithms/isal_bm.cpp
   src/algorithms/leopard_bm.cpp
-  src/algorithms/wirehair_bm.cpp
+  # src/algorithms/wirehair_bm.cpp
   src/algorithms/xorec_bm.cpp
   src/algorithms/xorec_unified_ptr_bm.cpp
   src/algorithms/xorec_gpu_ptr_bm.cpp

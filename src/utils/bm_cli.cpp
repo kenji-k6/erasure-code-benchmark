@@ -73,7 +73,7 @@ inline const std::vector<OptionLine> option_lines = {
   { "", "", "-i", "--iterations",     "<num>",            "number of benchmark iterations", "(default 10)"                                    },
   { "Algorithm selection:", "", "", "", "", "", ""                                                                                            },
   { "", "If no algorithm is selected, all algorithms will be run", "", "", "", "", ""                                                         },
-  { "", "", "",   "--base",           "cm256,isal,leopard,wirehair",     "run the specified algorithms,", "0 or more comma seperated args"    },
+  { "", "", "",   "--base",           "cm256,isal,leopard",     "run the specified algorithms,", "0 or more comma seperated args"             },
   { "", "", "",   "--xorec",          "cpu,unified-ptr,gpu-ptr,gpu-cmp", "run the selected XOR-EC variants", "0 or more comma seperated args" },
   { "", "", "",   "",                 "",                 "","cpu:          data buffer, parity buffer and"                                   },
   { "", "", "",   "",                 "",                 "","              computation on CPU"                                               },
