@@ -40,7 +40,6 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   unsigned it = 0;
 
   BenchmarkType bench(config);
-
   for (int i = 0; i < config.num_warmup_iterations; ++i) {
     bench.setup();
     bench.encode();
