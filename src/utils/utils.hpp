@@ -105,16 +105,6 @@ void select_lost_block_idxs(size_t num_data_blocks, size_t num_parity_blocks, si
  */
 std::string to_lower(std::string str);
 
-/**
- * @brief Function to touch GPU memory, used to simulate
- * a cold view of unified memory for the CPU computations
- * 
- * @param buffer Pointer to the memory to touch
- * @param bytes Size of the memory region to be touched in bytes
- */
-void touch_memory(uint8_t* buffer, size_t bytes);
-
-
 
 // **** Below are the utility functions for aligned memory allocation **** //
 
