@@ -6,87 +6,24 @@
 #include "benchmark_cli.hpp"
 #include "benchmark_suite.hpp"
 #include "benchmark/benchmark.h"
-#include "bm_config.hpp"
 #include "console_reporter.hpp"
 #include "csv_reporter.hpp"
 #include "runners.hpp"
 #include "utils.hpp"
-#include "xorec_utils.hpp"
 #include <filesystem>
 #include <getopt.h>
 #include <ranges>
-#include <unordered_map>
 #include <unordered_set>
 
 
-
 constexpr const char* RAW_DIR = "../results/raw/";
-std::string OUTPUT_FILE_NAME = "results.csv";
-
+std::string OUTPUT_FILE = "results.csv";
 bool OVERWRITE_FILE = true;
 int NUM_ITERATIONS = 10;
 
-using BenchmarkTuple = std::tuple<std::string, BenchmarkFunction, BenchmarkConfig>;
-
-std::unordered_set<std::string> selected_benchmarks;
+std::unordered_set<std::string> selected_cpu_benchmarks;
+std::unordered_set<std::string> selected_gpu_benchmarks;
 std::unordered_set<XorecVersion> selected_xorec_versions;
-
-const std::unordered_map<std::string, BenchmarkFunction> available_benchmarks = {
-  { "cm256",              BM_CM256              },
-  { "isal",               BM_ISAL               },
-  { "leopard",            BM_Leopard            },
-  { "xorec-cpu",          BM_XOREC              },
-  { "xorec-unified-ptr",  BM_XOREC_UNIFIED_PTR  },
-  { "xorec-gpu-ptr",      BM_XOREC_GPU_PTR      },
-  { "xorec-gpu-cmp",      BM_XOREC_GPU_CMP      }
-};
-
-const std::unordered_map<std::string, std::string> benchmark_names = {
-  { "cm256",              "CM256"                 },
-  { "isal",               "ISA-L"                 },
-  { "leopard",            "Leopard"               },
-  { "xorec-cpu",          "XOR-EC (CPU)"          },
-  { "xorec-unified-ptr",  "XOR-EC (Unified Ptr)"  },
-  { "xorec-gpu-ptr",      "XOR-EC (GPU Ptr)"      },
-  { "xorec-gpu-cmp",      "XOR-EC (GPU Cmp)"      }
-};
-
-const std::unordered_map<std::string, XorecVersion> available_xorec_versions = {
-  { "scalar",   XorecVersion::Scalar   },
-  { "avx",      XorecVersion::AVX      },
-  { "avx2",     XorecVersion::AVX2     },
-  { "avx512",   XorecVersion::AVX512   }
-};
-
-/**
- * @brief Prints usage information and exits the program
- */
-static void usage() {
-  print_usage();
-  print_options();
-  exit(0);
-}
-
-/**
- * @brief Adds a benchmark to the corresponding `selected_*_benchmarks` set based on its input name.
- * 
- * @param name The name of the benchmark to add
- */
-static void inline add_benchmark(std::string name) {
-  if (available_benchmarks.find(name) != available_benchmarks.end()) {
-    selected_benchmarks.insert(name);
-  } else {
-    throw_error("Error: Invalid benchmark name: " + name);
-  }
-}
-
-static void inline add_xorec_version(std::string name) {
-  if (available_xorec_versions.find(name) != available_xorec_versions.end()) {
-    selected_xorec_versions.insert(available_xorec_versions.at(name));
-  } else {
-    throw_error("Error: Invalid xorec version name: " + name);
-  }
-}
 
 /**
  * @brief Splits a comma-seperated argument string into a vector of strings
@@ -107,6 +44,15 @@ std::vector<std::string> get_arg_vector(std::string input) {
 }
 
 /**
+ * @brief Prints usage information and exits the program
+ */
+static void usage() {
+  print_usage();
+  print_options();
+  exit(0);
+}
+
+/**
  * @brief Parses command-line arguments and sets the global configuration variables accordingly.
  * 
  * @param argc 
@@ -118,9 +64,9 @@ void parse_args(int argc, char** argv) {
     { "file",           required_argument,  nullptr, 'f'  },
     { "append",         no_argument,        nullptr, 'a'  },
     { "iterations",     required_argument,  nullptr, 'i'  },
-    { "base",           required_argument,  nullptr,  0   },
-    { "xorec",          required_argument,  nullptr,  0   },
-    { "simd",           required_argument,  nullptr,  0   },
+    { "cpu-alg",        required_argument,  nullptr, 'c'  },
+    { "gpu-ag",         required_argument,  nullptr, 'g'  },
+    { "simd",           required_argument,  nullptr, 's'  },
     { nullptr,          0,                  nullptr,  0   }
   };
 
@@ -138,8 +84,8 @@ void parse_args(int argc, char** argv) {
         NUM_ITERATIONS = std::stoi(optarg);
         break;
       case 'f':
-        OUTPUT_FILE_NAME = std::string(optarg);
-        if (OUTPUT_FILE_NAME.find(".csv") == std::string::npos) {
+        OUTPUT_FILE = std::string(optarg);
+        if (OUTPUT_FILE.find(".csv") == std::string::npos) {
           std::cerr << "Error: Output file must have .csv extension.\n";
           exit(0);
         }
@@ -147,160 +93,136 @@ void parse_args(int argc, char** argv) {
       case 'a':
         OVERWRITE_FILE = false;
         break;
-      case 0:
-        flag = std::string(long_options[option_index].name);
+      case 'c':
         args = get_arg_vector(std::string(optarg));
-        
-        if (flag == "base") {
-          for (auto arg : args) {
-            add_benchmark(arg);
+        for (const auto& arg: args) {
+          if (CPU_BM_FUNCTIONS.find(arg) == CPU_BM_FUNCTIONS.end()) {
+            std::cerr << "Error: Invalid CPU algorithm: " << arg << '\n';
+            usage();
           }
-        } else if (flag == "xorec") {
-          for (auto arg : args) {
-            add_benchmark("xorec-"+arg);
+          selected_cpu_benchmarks.insert(arg);
+        }
+        break;
+      case 'g':
+        args = get_arg_vector(std::string(optarg));
+        for (const auto& arg: args) {
+          if (GPU_BM_FUNCTIONS.find(arg) == GPU_BM_FUNCTIONS.end()) {
+            std::cerr << "Error: Invalid GPU algorithm: " << arg << '\n';
+            usage();
           }
-        } else if (flag == "simd") {
-          for (auto arg : args) {
-            add_xorec_version(arg);
+          selected_gpu_benchmarks.insert(arg);
+        }
+        break;
+      case 's':
+        args = get_arg_vector(std::string(optarg));
+        for (const auto& arg: args) {
+          if (XOREC_VERSIONS.find(arg) == XOREC_VERSIONS.end()) {
+            std::cerr << "Error: Invalid SIMD version: " << arg << '\n';
+            usage();
           }
-        } else {
-          std::cerr << "Error: Invalid option: " << flag << '\n';
-          exit(0);
+          selected_xorec_versions.insert(XOREC_VERSIONS.at(arg));
         }
         break;
       default:
         usage();
-        exit(0);
+        break;
     }
   }
-
-  
-  if (selected_benchmarks.empty()) {
-    for (const auto& [name, _] : available_benchmarks) {
-      add_benchmark(name);
-    }
+  if (selected_cpu_benchmarks.empty() && selected_gpu_benchmarks.empty()) {
+    std::cerr << "Error: No benchmarks selected. Use --cpu-alg or --gpu-alg to select benchmarks.\n";
+    usage();
   }
 
   if (selected_xorec_versions.empty()) {
-    for (const auto& [name, _] : available_xorec_versions) {
-      add_xorec_version(name);
+    for (auto& [_, version] : XOREC_VERSIONS) {
+      selected_xorec_versions.insert(version);
+    }
+  }
+}
+
+static void get_cpu_configs(std::vector<BenchmarkConfig>& configs) {
+  for (const auto& block_size : VAR_BLOCK_SIZES) {
+    for (const auto& ec_params : VAR_EC_PARAMS) {
+      const auto& [tot_blocks, data_blocks] = ec_params;
+      for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
+        if (lost_blocks > tot_blocks-data_blocks) continue;
+        configs.push_back({
+          .data_size = block_size * data_blocks,
+          .block_size = block_size,
+          .ec_params = ec_params,
+          .num_lost_blocks = lost_blocks,
+          .num_iterations = NUM_ITERATIONS,
+          .gpu_computation = false,
+        });
+      }
+    } 
+  }
+}
+
+static void get_gpu_configs(std::vector<BenchmarkConfig>& configs) {
+  for (const auto& block_size : VAR_BLOCK_SIZES) {
+    for (const auto& ec_params : VAR_EC_PARAMS) {
+      const auto& [tot_blocks, data_blocks] = ec_params;
+      for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
+        if (lost_blocks > tot_blocks-data_blocks) continue;
+        for (const auto& num_gpu_blocks : VAR_NUM_GPU_BLOCKS) {
+          for (const auto& threads_per_block : VAR_NUM_THREADS_PER_BLOCK) {
+            configs.push_back({
+              .data_size = block_size * data_blocks,
+              .block_size = block_size,
+              .ec_params = ec_params,
+              .num_lost_blocks = lost_blocks,
+              .num_iterations = NUM_ITERATIONS,
+              .gpu_computation = true,
+              .num_gpu_blocks = num_gpu_blocks,
+              .threads_per_gpu_block = threads_per_block,
+            });
+          }
+        }
+      }
     }
   }
 }
 
 
-/**
- * @brief Initliazes the lost block indices used for benchmarking
- * 
- * @param lost_block_idxs A vector of vectors to store the lost block indices (should be empty)
- */
-static void init_lost_block_idxs(std::vector<std::vector<uint32_t>>& lost_block_idxs) {
-  // for ([[maybe_unused]] auto _ : VAR_BUFFER_SIZE) {
-  //   std::vector<uint32_t> vec;
-  //   select_lost_block_idxs(
-  //     FIXED_NUM_RECOVERY_BLOCKS,
-  //     FIXED_NUM_LOST_BLOCKS,
-  //     FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_RECOVERY_BLOCKS,
-  //     vec
-  //   );
-  //   lost_block_idxs.push_back(vec);
-  // }
-
-  // for (auto num_rec_blocks : VAR_NUM_RECOVERY_BLOCKS) {
-  //   std::vector<uint32_t> vec;
-  //   select_lost_block_idxs(
-  //     num_rec_blocks,
-  //     FIXED_NUM_LOST_BLOCKS,
-  //     FIXED_NUM_ORIGINAL_BLOCKS + num_rec_blocks,
-  //     vec
-  //   );
-  //   lost_block_idxs.push_back(vec);
-  // }
-
-  // for (auto num_lost_blocks : VAR_NUM_LOST_BLOCKS) {
-  //   std::vector<uint32_t> vec;
-  //   select_lost_block_idxs(
-  //     FIXED_NUM_ORIGINAL_BLOCKS,
-  //     num_lost_blocks,
-  //     FIXED_NUM_ORIGINAL_BLOCKS + FIXED_NUM_ORIGINAL_BLOCKS,
-  //     vec
-  //   );
-  //   lost_block_idxs.push_back(vec);
-  // }
-}
-
-static void get_configs(std::vector<BenchmarkConfig>& configs) {
-  if (configs.size() > 0) throw_error("Error: Configs vector should be empty.");
-  
-  for (auto buf_size : VAR_BUFFER_SIZE) {
-    BenchmarkConfig config;
-    config.data_size = buf_size;
-    config.block_size = buf_size / FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
-    config.redundancy_ratio = FIXED_PARITY_RATIO;
-    config.num_iterations = NUM_ITERATIONS;
-    config.plot_id = 0;
-    config.num_data_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_parity_blocks = FIXED_NUM_RECOVERY_BLOCKS;
-    config.is_xorec_config = false;
-    config.reporter = nullptr;
-    configs.push_back(config);
-  }
-
-  for (auto num_rec_blocks : VAR_NUM_RECOVERY_BLOCKS) {
-    BenchmarkConfig config;
-    config.data_size = FIXED_BUFFER_SIZE;
-    config.block_size = FIXED_BUFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_lost_blocks = FIXED_NUM_LOST_BLOCKS;
-    config.redundancy_ratio = static_cast<double>(num_rec_blocks) / FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_iterations = NUM_ITERATIONS;
-    config.plot_id = 1;
-    config.num_data_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_parity_blocks = num_rec_blocks;
-    config.is_xorec_config = false;
-    config.reporter = nullptr;
-    configs.push_back(config);
-  }
-
-  for (auto num_lost_blocks : VAR_NUM_LOST_BLOCKS) {
-    BenchmarkConfig config;
-    config.data_size = FIXED_BUFFER_SIZE;
-    config.block_size = FIXED_BUFFER_SIZE / FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_lost_blocks = num_lost_blocks;
-    config.redundancy_ratio = 1.0;
-    config.num_iterations = NUM_ITERATIONS;
-    config.plot_id = 2;
-    config.num_data_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.num_parity_blocks = FIXED_NUM_ORIGINAL_BLOCKS;
-    config.is_xorec_config = false;
-    config.reporter = nullptr;
-    configs.push_back(config);
-  }
+std::string get_benchmark_name(const std::string& inp_name) {
+  if (GPU_BM_NAMES.find(inp_name) != GPU_BM_NAMES.end()) return GPU_BM_NAMES.at(inp_name);
+  return CPU_BM_NAMES.at(inp_name);
 }
 
 void get_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
-  std::vector<BenchmarkConfig> configs;
-  get_configs(configs);
+  if (benchmarks.size() > 0) throw_error("Error: Benchmarks vector should be empty.");
 
-  for (auto config : configs) {
-    for (auto& inp_name : selected_benchmarks) {
-      auto bm_name = benchmark_names.at(inp_name);
-      auto bm_func = available_benchmarks.at(inp_name);
-      if (inp_name == "xorec-cpu" || inp_name == "xorec-gpu-ptr" || inp_name == "xorec-unified-ptr") {
-        config.is_xorec_config = true;
-        if (inp_name == "xorec-unified-ptr") config.xorec_params.unified_mem = true;
+  std::vector<BenchmarkConfig> cpu_configs;
+  std::vector<BenchmarkConfig> gpu_configs;
+  get_cpu_configs(cpu_configs);
+  get_gpu_configs(gpu_configs);
 
-        for (auto version : selected_xorec_versions) {
-          config.xorec_params.version = version;
-          bm_name += ", " + get_version_name(version);
-          benchmarks.push_back({ bm_name, bm_func, config });
+
+  for (auto& inp_name : selected_cpu_benchmarks) {
+    auto bm_name = get_benchmark_name(inp_name);
+    auto bm_func = CPU_BM_FUNCTIONS.at(inp_name);
+
+    if (inp_name.find("xorec") != std::string::npos) {
+      for (const auto version : selected_xorec_versions) {
+        auto full_bm_name = bm_name + ", " + get_version_name(version);
+        for (auto config : cpu_configs) {
+          config.xorec_version = version;
+          benchmarks.push_back({ full_bm_name, bm_func, config });
         }
-      } else if (inp_name == "xorec-gpu-cmp") {
-        config.is_xorec_config = true;
-        benchmarks.push_back({ bm_name, bm_func, config });
-      } else {
+      }
+    } else {
+      for (auto config : cpu_configs) {
         benchmarks.push_back({ bm_name, bm_func, config });
       }
+    }
+  }
+
+  for (auto& inp_name : selected_gpu_benchmarks) {
+    auto bm_name = get_benchmark_name(inp_name);
+    auto bm_func = GPU_BM_FUNCTIONS.at(inp_name);
+    for (auto config : gpu_configs) {
+      benchmarks.push_back({ bm_name, bm_func, config });
     }
   }
 }
@@ -316,7 +238,7 @@ void run_benchmarks(int argc, char** argv) {
   get_benchmarks(benchmarks);
 
   std::unique_ptr<ConsoleReporter> console_reporter = std::make_unique<ConsoleReporter>(NUM_ITERATIONS * benchmarks.size(), start_time);
-  std::unique_ptr<CSVReporter> csv_reporter = std::make_unique<CSVReporter>(RAW_DIR + OUTPUT_FILE_NAME, OVERWRITE_FILE);
+  std::unique_ptr<CSVReporter> csv_reporter = std::make_unique<CSVReporter>(RAW_DIR + OUTPUT_FILE, OVERWRITE_FILE);
 
   benchmark::ClearRegisteredBenchmarks();
   for (auto [name, func, cfg] : benchmarks) {
