@@ -86,6 +86,7 @@ bool validate_block(const uint8_t* block_ptr, size_t bytes) {
 
 
 void select_lost_block_idxs(size_t num_data_blocks, size_t num_parity_blocks, size_t num_lost_blocks, uint8_t* block_bitmap) {
+  if (num_lost_blocks == 0) return;
   if (num_lost_blocks > num_parity_blocks) {
     std::cerr << "select_lost_block_idxs: Number of lost blocks must be less than or equal to the number of recovery blocks\n";
     exit(0);

@@ -11,15 +11,12 @@
 class XorecBenchmarkUnifiedPtr : public AbstractBenchmark {
 public:
   explicit XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config) noexcept;
-  ~XorecBenchmarkUnifiedPtr() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
-  void simulate_data_loss() noexcept override;
   void touch_unified_memory() noexcept override;
 
 protected:
   // Data Buffers
-  uint8_t *m_parity_buf;        ///< Buffer for the decoded data
   XorecVersion m_version;
 };
 

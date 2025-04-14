@@ -3,6 +3,7 @@
 
 #include "abstract_bm.hpp"
 #include "cm256.h"
+#include <array>
 
 /**
  * @class CM256Benchmark
@@ -15,19 +16,13 @@
 class CM256Benchmark : public AbstractBenchmark {
 public:
   explicit CM256Benchmark(const BenchmarkConfig& config) noexcept;
-  ~CM256Benchmark() noexcept override;
-  
   int encode() noexcept override;
   int decode() noexcept override;
-  void simulate_data_loss() noexcept override;
 
 private:
-  // Data Buffers
-  uint8_t* m_parity_buf;         ///< Buffer for parity data
-
   // CM256 Internals
   cm256_encoder_params m_params;       ///< cm256 internal parameters
-  std::vector<cm256_block> m_blocks;   ///< vector of cm256 blocks (keeps track of pointers and indices)
+  std::array<cm256_block, ECLimits::CM256_MAX_TOT_BLOCKS> m_blocks; ///< cm256 blocks
 };
 
 #endif // CM256_BM_HPP

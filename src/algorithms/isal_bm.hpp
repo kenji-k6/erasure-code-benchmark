@@ -15,29 +15,24 @@
 class ISALBenchmark : public AbstractBenchmark {
 public:
   explicit ISALBenchmark(const BenchmarkConfig& config) noexcept;
-  ~ISALBenchmark() noexcept override;
-
   int encode() noexcept override;
   int decode() noexcept override;
-  void simulate_data_loss() noexcept override;
   
 private:
-  uint8_t* m_parity_buf;
-  uint8_t* m_recover_outp_buf;
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_recovery_outp_buf;
+
+  // Erasure and Coefficient Matrices
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_encode_matrix;
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_decode_matrix;
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_invert_matrix;
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_temp_matrix;
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_g_tbls; ///< Generator tables for encoding
 
   // Data Block Pointers
   std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS> m_frag_ptrs;
   std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS> m_parity_src_ptrs;
   std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS> m_recovery_outp_ptrs;
   
-
-  // Erasure and Coefficient Matrices
-  uint8_t* m_encode_matrix;
-  uint8_t* m_decode_matrix;
-  uint8_t* m_invert_matrix;
-  uint8_t* m_temp_matrix;
-  uint8_t* m_g_tbls; ///< Generator tables for encoding
-
   std::array<uint8_t, ECLimits::ISAL_MAX_TOT_BLOCKS> m_block_err_list;
   std::array<uint8_t, ECLimits::ISAL_MAX_TOT_BLOCKS> m_decode_index;
 };

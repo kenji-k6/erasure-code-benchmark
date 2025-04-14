@@ -47,7 +47,7 @@ public:
    * data transmission. The actual implementation of this function will vary
    * a lot based on the EC algorithm/library being tested.
    */
-  virtual void simulate_data_loss() noexcept = 0;
+  virtual void simulate_data_loss() noexcept;
 
   /**
    * @brief Check if there is any corruption in the decoded data.
@@ -68,6 +68,7 @@ public:
 
 protected:
   explicit AbstractBenchmark(const BenchmarkConfig& config) noexcept;
+  virtual void m_write_data_buffer() noexcept; ///< writes validation pattern to data buffer
 
   size_t m_block_size;
   size_t m_num_data_blocks;
@@ -75,8 +76,9 @@ protected:
   size_t m_num_tot_blocks;
   size_t m_num_lost_blocks;
 
-  uint8_t* m_data_buf;
-  uint8_t* m_block_bitmap;
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_data_buf;
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_parity_buf;
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_block_bitmap;
 };
 
 #endif // ABSTRACT_BM_HPP

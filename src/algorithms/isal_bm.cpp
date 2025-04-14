@@ -12,64 +12,38 @@
 #include "utils.hpp"
 
 
-ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept : AbstractBenchmark(config) {
-
-  // Allocate matrices etc.
-  m_encode_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks * m_num_data_blocks, ALIGNMENT)); 
-  m_decode_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks * m_num_data_blocks, ALIGNMENT));
-  m_invert_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks * m_num_data_blocks, ALIGNMENT));
-  m_temp_matrix = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks * m_num_data_blocks, ALIGNMENT));
-  m_g_tbls = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks * m_num_data_blocks * 32, ALIGNMENT));
-
-  m_data_buf = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_data_blocks * m_block_size, ALIGNMENT));
-  m_recover_outp_buf = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_data_blocks * m_block_size, ALIGNMENT));
-  m_parity_buf = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_parity_blocks * m_block_size, ALIGNMENT));
-  m_block_bitmap = reinterpret_cast<uint8_t*>(_mm_malloc(m_num_tot_blocks, ALIGNMENT));
-
-  if (!m_encode_matrix || !m_decode_matrix || !m_invert_matrix || !m_temp_matrix || !m_g_tbls ||
-    !m_data_buf || !m_block_bitmap || !m_parity_buf) {
-      throw_error("ISAL: Failed to allocate memory.");
-  }
-  memset(m_block_bitmap, 1, m_num_tot_blocks);
-
-  
-  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
-    m_frag_ptrs[i] = m_data_buf + i * m_block_size;
-  }
-
+ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept
+  : AbstractBenchmark(config),
+    m_recovery_outp_buf(make_unique_aligned<uint8_t>(m_num_data_blocks * m_block_size)),
+    m_encode_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
+    m_decode_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
+    m_invert_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
+    m_temp_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
+    m_g_tbls(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks * 32))
+{
+  for (unsigned i = 0; i < m_num_data_blocks; ++i) m_frag_ptrs[i] = &m_data_buf[i*m_block_size];
   for (unsigned i = 0; i < m_num_parity_blocks; ++i) {
-    m_frag_ptrs[m_num_data_blocks + i] = m_parity_buf + i * m_block_size;
+    m_frag_ptrs[m_num_data_blocks + i] = &m_parity_buf[i*m_block_size];
+    m_recovery_outp_ptrs[i] = &m_recovery_outp_buf[i*m_block_size];
   }
-
-  for (unsigned i = 0; i < m_num_parity_blocks; ++i) {
-    m_recovery_outp_ptrs[i] = m_recover_outp_buf + i * m_block_size;
-  }
-
   // Generate encode matricx, can be precomputed as it is fixed for a given m_num_original_blocks
-  gf_gen_cauchy1_matrix(m_encode_matrix, m_num_tot_blocks, m_num_data_blocks);
-
+  gf_gen_cauchy1_matrix(m_encode_matrix.get(), m_num_tot_blocks, m_num_data_blocks);
+  
   // Initialize generator tables for encoding, can be precomputed as it is fixed for a given m_num_original_blocks
-  ec_init_tables(m_num_data_blocks, m_num_parity_blocks, &m_encode_matrix[m_num_data_blocks * m_num_data_blocks], m_g_tbls);
-
-  // Initialize data buffer with CRC blocks
-  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
-    if (write_validation_pattern(i, m_data_buf+i*m_block_size, m_block_size)) throw_error("ISAL: Failed to write random checking packet.");
-  }
+  ec_init_tables(m_num_data_blocks, m_num_parity_blocks, &m_encode_matrix[m_num_data_blocks*m_num_data_blocks], m_g_tbls.get());
+  m_write_data_buffer();
 }
 
-ISALBenchmark::~ISALBenchmark() noexcept {
-  _mm_free(m_encode_matrix);
-  _mm_free(m_decode_matrix);
-  _mm_free(m_invert_matrix);
-  _mm_free(m_temp_matrix);
-  _mm_free(m_g_tbls);
-  _mm_free(m_data_buf);
-  _mm_free(m_parity_buf);
-  _mm_free(m_block_bitmap);
-}
 
 int ISALBenchmark::encode() noexcept {
-  ec_encode_data(m_block_size, m_num_data_blocks, m_num_parity_blocks, m_g_tbls, m_frag_ptrs.data(), m_frag_ptrs.data() + m_num_data_blocks);
+  ec_encode_data(
+    m_block_size,
+    m_num_data_blocks,
+    m_num_parity_blocks,
+    m_g_tbls.get(),
+    m_frag_ptrs.data(),
+    &m_frag_ptrs[m_num_data_blocks]
+  );
   return 0;
 }
 
@@ -83,8 +57,8 @@ int ISALBenchmark::decode() noexcept {
 
   if (nerrs == 0) return 0;
 
-  if (gf_gen_decode_matrix_simple(m_encode_matrix, m_decode_matrix, m_invert_matrix,
-                                  m_temp_matrix, m_decode_index.data(), m_block_err_list.data(),
+  if (gf_gen_decode_matrix_simple(m_encode_matrix.get(), m_decode_matrix.get(), m_invert_matrix.get(),
+                                  m_temp_matrix.get(), m_decode_index.data(), m_block_err_list.data(),
                                   nerrs, m_num_data_blocks, m_num_tot_blocks)) {
     return -1;
   }
@@ -93,28 +67,16 @@ int ISALBenchmark::decode() noexcept {
     m_parity_src_ptrs[i] = m_frag_ptrs[m_decode_index[i]];
   }
 
-  ec_init_tables(m_num_data_blocks, nerrs, m_decode_matrix, m_g_tbls);
+  ec_init_tables(m_num_data_blocks, nerrs, m_decode_matrix.get(), m_g_tbls.get());
   ec_encode_data(m_block_size, m_num_data_blocks, nerrs,
-                 m_g_tbls, m_parity_src_ptrs.data(), m_recovery_outp_ptrs.data());
+                 m_g_tbls.get(), m_parity_src_ptrs.data(), m_recovery_outp_ptrs.data());
   
   for (unsigned i = 0; i < nerrs; ++i) {
     if (m_block_err_list[i] < m_num_data_blocks) {
-      memcpy(m_frag_ptrs[m_block_err_list[i]], m_recover_outp_buf + i * m_block_size, m_block_size);
+      memcpy(m_frag_ptrs[m_block_err_list[i]], &m_recovery_outp_buf[i*m_block_size], m_block_size);
     }
   }
   return 0;
-}
-
-
-void ISALBenchmark::simulate_data_loss() noexcept {
-  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap);
-  unsigned i;
-
-  for (i = 0; i < m_num_data_blocks; ++i) {
-    if (!m_block_bitmap[i]) {
-      memset(m_frag_ptrs[i], 0, m_block_size);
-    }
-  }
 }
 
 int gf_gen_decode_matrix_simple(

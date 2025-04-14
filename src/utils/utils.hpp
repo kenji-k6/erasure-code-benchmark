@@ -124,7 +124,6 @@ using DeleterFunc = void(*)(T*);
 template <typename T>
 void mm_deleter(T* ptr) {
   if (ptr) _mm_free(ptr);
-  std::cout << "Memory freed" << std::endl;
 }
 
 template <typename T>
@@ -136,7 +135,17 @@ void cuda_deleter(T* ptr) {
     err = cudaDeviceSynchronize();
     if (err != cudaSuccess) throw_error("Failed to synchronize CUDA device");
   }
-  std::cout << "Memory freed" << std::endl;
+}
+
+template <typename T>
+void cuda_host_deleter(T* ptr) {
+  if (ptr) {
+    cudaError_t err = cudaFreeHost(ptr);
+    if (err != cudaSuccess) throw_error("Failed to free CUDA memory");
+    
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) throw_error("Failed to synchronize CUDA device");
+  }
 }
 
 
@@ -158,6 +167,17 @@ std::unique_ptr<T[], DeleterFunc<T>> make_unique_cuda(size_t count = 1) {
   err = cudaDeviceSynchronize();
   if (err != cudaSuccess) throw_error("Failed to synchronize CUDA device");
   return std::unique_ptr<T[], DeleterFunc<T>>(static_cast<T*>(mem), cuda_deleter);
+}
+
+template <typename T>
+std::unique_ptr<T[], DeleterFunc<T>> make_unique_cuda_host(size_t count = 1) {
+  static_assert(std::is_trivially_destructible_v<T>, "Type must be trivially destructible");
+  void* mem = nullptr;
+  cudaError_t err = cudaMallocHost(&mem, count * sizeof(T));
+  if (err != cudaSuccess) throw_error("Failed to allocate CUDA memory");
+  err = cudaDeviceSynchronize();
+  if (err != cudaSuccess) throw_error("Failed to synchronize CUDA device");
+  return std::unique_ptr<T[], DeleterFunc<T>>(static_cast<T*>(mem), cuda_host_deleter);
 }
 
 template <typename T>
