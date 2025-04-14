@@ -11,7 +11,7 @@ extern std::vector<uint8_t> COMPLETE_DATA_BITMAP;
 /**
  * @brief Initialize the necessary global variables & GPU environment for XOR encoding and decoding on the GPU.
  */
-void xorec_gpu_init(int num_gpu_blocks, int threads_per_block, size_t num_data_blocks);
+void xorec_gpu_init(int num_gpu_blocks, int threads_per_block, size_t num_data_blocks, size_t block_size);
 
 /**
  * @brief Runs the XOR encoding algorithm on the GPU.
@@ -56,7 +56,10 @@ __global__ void xorec_gpu_xor_parity_kernel(
   uint8_t* XOREC_RESTRICT parity_buf,
   size_t block_size,
   size_t num_data_blocks,
-  size_t num_parity_blocks
+  size_t num_parity_blocks,
+  size_t tot_threads,
+  size_t atomic_xor_elems_block,
+  size_t atomic_xor_elems_tot
 );
 
 
