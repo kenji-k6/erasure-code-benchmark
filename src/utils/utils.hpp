@@ -149,35 +149,26 @@ std::unique_ptr<T[], DeleterFunc<T>> make_unique_aligned(size_t count = 1) {
   return std::unique_ptr<T[], DeleterFunc<T>>(static_cast<T*>(mem), mm_deleter);
 }
 
+template <typename T>
+std::unique_ptr<T[], DeleterFunc<T>> make_unique_cuda(size_t count = 1) {
+  static_assert(std::is_trivially_destructible_v<T>, "Type must be trivially destructible");
+  void* mem = nullptr;
+  cudaError_t err = cudaMalloc(&mem, count * sizeof(T));
+  if (err != cudaSuccess) throw_error("Failed to allocate CUDA memory");
+  err = cudaDeviceSynchronize();
+  if (err != cudaSuccess) throw_error("Failed to synchronize CUDA device");
+  return std::unique_ptr<T[], DeleterFunc<T>>(static_cast<T*>(mem), cuda_deleter);
+}
 
-// /**
-//  * @brief Custom Deleter for std::unique_ptr in combination with
-//  * _mm_malloc/_mm_free
-//  * 
-//  */
-// struct AlignedDeleter {
-//   void operator()(void* ptr) const {
-//     if (ptr) {
-//       _mm_free(ptr);
-//     }
-//     std::cout << "Memory freed" << std::endl;
-//   }
-// };
-
-// /**
-//  * @brief Helper function to create a 64 byte aligned unique_ptr
-//  * 
-//  */
-// template <typename T>
-// std::unique_ptr<T[], AlignedDeleter> make_unique_aligned(size_t count = 1) {
-//   static_assert(std::is_trivially_destructible_v<T>, "Type must be trivially destructible");
-
-//   void* mem = _mm_malloc(count * sizeof(T), ALIGNMENT);
-//   if (!mem) {
-//     throw std::bad_alloc();
-//   }
-//   return std::unique_ptr<T[], AlignedDeleter>(static_cast<T*>(mem));
-// }
-
+template <typename T>
+std::unique_ptr<T[], DeleterFunc<T>> make_unique_cuda_managed(size_t count = 1, unsigned int flags = 1U) {
+  static_assert(std::is_trivially_destructible_v<T>, "Type must be trivially destructible");
+  void* mem = nullptr;
+  cudaError_t err = cudaMallocManaged(&mem, count * sizeof(T), flags);
+  if (err != cudaSuccess) throw_error("Failed to allocate CUDA memory");
+  err = cudaDeviceSynchronize();
+  if (err != cudaSuccess) throw_error("Failed to synchronize CUDA device");
+  return std::unique_ptr<T[], DeleterFunc<T>>(static_cast<T*>(mem), cuda_deleter);
+}
 
 #endif // UTILS_HPP
