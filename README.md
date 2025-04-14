@@ -8,8 +8,7 @@ to analyze various EC implementations based on multiple system parameters.
 
 ## Features
 * **Multi-Library Support**: Benchmarks [cm256](https://github.com/catid/cm256),
-[Intel ISA-L](https://github.com/intel/isa-l), [Leopard](https://github.com/catid/leopard)
-and [Wirehair](https://github.com/catid/wirehair) as well as a custom baseline implementation.
+[Intel ISA-L](https://github.com/intel/isa-l) and [Leopard](https://github.com/catid/leopard) as well as a custom baseline implementation.
 
 * **Customizable Parameters**: Evaluate performance based on payload size, parity size,
 algorithm and SIMD (amongst others).
