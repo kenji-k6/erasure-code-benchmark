@@ -37,8 +37,10 @@ uint32_t PCGRandom::next() {
 // Utility functions
 int write_validation_pattern(uint32_t block_idx, uint8_t* block_ptr, size_t bytes) {
   if (bytes < 2) throw_error("write_validation_pattern: num_bytes must be at least 2");
-  
-  PCGRandom rng(block_idx, 1);
+  auto now = std::chrono::system_clock::now(); // used as seed for random number generator
+  uint64_t time_seed = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+
+  PCGRandom rng(block_idx+time_seed, 1);
 
   if (bytes < 16) { // CRC check not viable
     uint8_t val = static_cast<uint8_t>(rng.next());
