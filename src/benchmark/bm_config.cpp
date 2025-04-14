@@ -16,9 +16,9 @@ const std::vector<size_t> VAR_NUM_LOST_BLOCKS = {
 };
 
 const std::vector<size_t> VAR_NUM_GPU_BLOCKS = {
-  8, 16, 32, 64, 128, 256, 512, 1024
+  8, 16, 32, 64, 128, 256
 };
 
 const std::vector<size_t> VAR_NUM_THREADS_PER_BLOCK = {
-  32, 64, 128, 256, 512, 1024
+  32, 64, 128, 256, 512
 };
