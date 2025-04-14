@@ -83,7 +83,7 @@ inline const std::vector<OptionLine> option_lines = {
   { "", "", "-g", "--gpu",            "xorec,",           "run the specified algorithms (GPU computation)",""                   },
   { "", "", "",   "",                 "",                 "", "0 or more comma seperated args"                                  },
   { "XOR-EC version selection:", "", "", "", "", "", ""                                                                         },
-  { "", "", "",   "--simd",           "scalar,avx,avx2,avx512", "Xorec SIMD version selection", ""                              },
+  { "", "", "-s", "--simd",           "scalar,avx,avx2,avx512", "Xorec SIMD version selection", ""                              },
   { "", "", "",   "",                 "",                 format_requirement("--xorec", "scalar|unified-ptr|gpu-ptr"), ""       },
   { "", "", "",   "",                 "",                 "","0 or more comma separated args (default: all)"                    }
 };
@@ -111,9 +111,6 @@ void print_options() {
     max_left_width = std::max(max_left_width, left_width);
     max_width = std::max(max_width, total_width);
   }
-
-  max_width += 5; // add extra padding
-
 
   // Build top and bottom box borders.
   std::string box_top = std::string(BoxDraw::TopLeft)
