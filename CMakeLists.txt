@@ -38,13 +38,13 @@ set (SOURCES
 
   src/benchmark/bm_config.cpp
   src/benchmark/runners.cpp
-  src/benchmark/bm_utils.cpp
-
+  
   src/reporters/console_reporter.cpp
   src/reporters/csv_reporter.cpp
-
+  
+  src/utils/benchmark_cli.cpp
+  src/utils/benchmark_suite.cpp
   src/utils/utils.cpp
-  src/utils/bm_cli.cpp
 
   src/xorec/xorec_gpu_cmp.cu
   src/xorec/xorec_utils.cpp

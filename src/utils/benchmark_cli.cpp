@@ -1,4 +1,4 @@
-#include "bm_cli.hpp"
+#include "benchmark_cli.hpp"
 
 #include <iomanip>
 #include <iostream>

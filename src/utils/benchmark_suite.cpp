@@ -1,10 +1,10 @@
 /**
- * @file bm_utils.cpp
+ * @file benchmark_suite.cpp
  * @brief Implementations of utility functions for parsing and validating command-line arguments
  */
 
-#include "bm_cli.hpp"
-#include "bm_utils.hpp"
+#include "benchmark_cli.hpp"
+#include "benchmark_suite.hpp"
 #include "benchmark/benchmark.h"
 #include "bm_config.hpp"
 #include "console_reporter.hpp"
