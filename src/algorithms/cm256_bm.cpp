@@ -20,6 +20,10 @@ CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept
 
 {
   if (cm256_init()) throw_error("CM256: Initialization failed.");
+}
+
+void CM256Benchmark::setup() noexcept {
+  std::fill_n(m_block_bitmap.get(), m_num_tot_blocks, 1);
   
   // Initialize block vector
   for (unsigned i = 0; i < m_num_data_blocks; ++i) {

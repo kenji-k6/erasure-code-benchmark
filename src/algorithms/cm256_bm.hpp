@@ -16,6 +16,7 @@
 class CM256Benchmark : public AbstractBenchmark {
 public:
   explicit CM256Benchmark(const BenchmarkConfig& config) noexcept;
+  void setup() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
 

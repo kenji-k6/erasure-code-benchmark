@@ -13,9 +13,13 @@
  
 XorecBenchmark::XorecBenchmark(const BenchmarkConfig& config) noexcept
   : AbstractBenchmark(config),
-    m_version(config.xorec_params.version)
+    m_version(config.xorec_version)
 {
   xorec_init(m_num_data_blocks);
+}
+
+void XorecBenchmark::setup() noexcept {
+  std::fill_n(m_block_bitmap.get(), m_num_tot_blocks, 1);
   m_write_data_buffer();
 }
 

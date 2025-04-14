@@ -11,12 +11,16 @@
 class XorecBenchmarkUnifiedPtr : public AbstractBenchmark {
 public:
   explicit XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config) noexcept;
+  void setup() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
-  void touch_unified_memory() noexcept override;
-
-protected:
-  // Data Buffers
+  void simulate_data_loss() noexcept override;
+  
+private:
+  /**
+   * @brief Function to ensure the CPU memory is cold (i.e. not cached)
+   */
+  void m_touch_unified_memory() noexcept;
   XorecVersion m_version;
 };
 

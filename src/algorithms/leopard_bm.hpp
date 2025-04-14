@@ -15,6 +15,7 @@
 class LeopardBenchmark : public AbstractBenchmark {
 public:
   explicit LeopardBenchmark(const BenchmarkConfig& config) noexcept;
+  void setup() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
 

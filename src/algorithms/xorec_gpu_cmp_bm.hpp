@@ -6,6 +6,7 @@
 class XorecBenchmarkGpuCmp : public AbstractBenchmark {
 public:
   explicit XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexcept;
+  void setup() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
   void simulate_data_loss() noexcept override;

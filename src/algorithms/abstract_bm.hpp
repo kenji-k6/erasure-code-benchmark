@@ -17,6 +17,8 @@
 class AbstractBenchmark {
 public:
   virtual ~AbstractBenchmark() noexcept = default; ///< Default virtual destructor
+  virtual void setup() noexcept = 0; ///< Pure virtual function for setup
+
   /**
    * @brief Run the encoding process.
    * 
@@ -58,13 +60,6 @@ public:
    * @return True if the data is not corrupted, false otherwise.
    */
   virtual bool check_for_corruption() const noexcept;
-
-  /**
-   * @brief Function to ensure the CPU memory is cold (only relevant for GPU memory benchmarks)
-   * 
-   * If not overwritten it doesn nothing.
-   */
-  virtual void touch_unified_memory() noexcept {};
 
 protected:
   explicit AbstractBenchmark(const BenchmarkConfig& config) noexcept;

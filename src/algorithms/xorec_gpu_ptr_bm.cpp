@@ -5,14 +5,17 @@
 
 XorecBenchmarkGpuPtr::XorecBenchmarkGpuPtr(const BenchmarkConfig& config) noexcept
   : AbstractBenchmark(config),
-    m_version(config.xorec_params.version),
+    m_version(config.xorec_version),
     m_gpu_data_buf(make_unique_cuda<uint8_t>(m_block_size * m_num_data_blocks))
 {
 
   // Overwrite default initialization
   m_data_buf = make_unique_cuda_host<uint8_t>(m_block_size * m_num_data_blocks);
   xorec_init(m_num_data_blocks);
+}
 
+void XorecBenchmarkGpuPtr::setup() noexcept {
+  std::fill_n(m_block_bitmap.get(), m_num_tot_blocks, 1);
   m_write_data_buffer();
   cudaError_t err = cudaMemcpy(m_gpu_data_buf.get(), m_data_buf.get(), m_block_size * m_num_data_blocks, cudaMemcpyHostToDevice);
   if (err != cudaSuccess) throw_error("Xorec: Failed to copy data buffer to GPU.");

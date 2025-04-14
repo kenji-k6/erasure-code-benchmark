@@ -7,6 +7,10 @@ XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexce
   m_data_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_data_blocks);
   m_parity_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_parity_blocks);
   xorec_gpu_init(FIXED_GPU_BLOCKS, FIXED_GPU_THREADS_PER_BLOCK, m_num_data_blocks);
+}
+
+void XorecBenchmarkGpuCmp::setup() noexcept {
+  std::fill_n(m_block_bitmap.get(), m_num_tot_blocks, 1);
   m_write_data_buffer();
 }
 

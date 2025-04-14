@@ -20,7 +20,11 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept
     m_invert_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
     m_temp_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
     m_g_tbls(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks * 32))
-{
+{}
+
+void ISALBenchmark::setup() noexcept {
+  std::fill_n(m_block_bitmap.get(), m_num_tot_blocks, 1);
+  
   for (unsigned i = 0; i < m_num_data_blocks; ++i) m_frag_ptrs[i] = &m_data_buf[i*m_block_size];
   for (unsigned i = 0; i < m_num_parity_blocks; ++i) {
     m_frag_ptrs[m_num_data_blocks + i] = &m_parity_buf[i*m_block_size];

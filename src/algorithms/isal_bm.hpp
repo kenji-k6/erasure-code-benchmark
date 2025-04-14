@@ -15,6 +15,7 @@
 class ISALBenchmark : public AbstractBenchmark {
 public:
   explicit ISALBenchmark(const BenchmarkConfig& config) noexcept;
+  void setup() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
   

@@ -15,10 +15,11 @@
 class XorecBenchmark : public AbstractBenchmark {
 public:
   explicit XorecBenchmark(const BenchmarkConfig& config) noexcept;
+  void setup() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
 
-protected:
+private:
   XorecVersion m_version;
 };
 

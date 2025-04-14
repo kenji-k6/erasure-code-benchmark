@@ -28,11 +28,15 @@ LeopardBenchmark::LeopardBenchmark(const BenchmarkConfig& config) noexcept
   if (leo_init() || m_parity_work_count == 0 || m_recovery_work_count == 0) {
     throw_error("Leopard: Initialization failed.");
   }
+}
+
+void LeopardBenchmark::setup() noexcept {
+  std::fill_n(m_block_bitmap.get(), m_num_tot_blocks, 1);
 
   for (unsigned i = 0; i < m_num_data_blocks; ++i) m_data_ptrs[i] = &m_data_buf[i*m_block_size];
   for (unsigned i = 0; i < m_parity_work_count; ++i) m_parity_ptrs[i] = &m_parity_buf[i*m_block_size];
   for (unsigned i = 0; i < m_recovery_work_count; ++i) m_recovery_ptrs[i] = &m_recovery_buf[i*m_block_size];
-
+  
   m_write_data_buffer();
 }
 
