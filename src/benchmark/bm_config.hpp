@@ -27,12 +27,7 @@ struct BenchmarkConfig {
   size_t num_data_blocks;                   ///< Number of original data blocks
   size_t num_parity_blocks;                   ///< Number of recovery blocks
 
-  bool is_xorec_config;                           ///< Flag to indicate whether this configuration is for XOR-EC algorithm(s)
-  struct {
-    XorecVersion version;
-    bool unified_mem;
-  } xorec_params;
-
+  XorecVersion version;
   ConsoleReporter* reporter = nullptr;
 };
 
