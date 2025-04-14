@@ -259,7 +259,6 @@ void run_benchmarks(int argc, char** argv) {
 
   std::unique_ptr<ConsoleReporter> console_reporter = std::make_unique<ConsoleReporter>(NUM_ITERATIONS * benchmarks.size(), start_time);
   std::unique_ptr<CSVReporter> csv_reporter = std::make_unique<CSVReporter>(RAW_DIR + OUTPUT_FILE, OVERWRITE_FILE);
-  console_reporter->update_bar();
 
   benchmark::ClearRegisteredBenchmarks();
   for (auto [name, func, cfg] : benchmarks) {

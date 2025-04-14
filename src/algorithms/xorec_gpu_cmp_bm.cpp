@@ -10,7 +10,7 @@ XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexce
   // Overwrite default initializations
   m_data_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_data_blocks);
   m_parity_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_parity_blocks);
-  xorec_gpu_init(m_num_gpu_blocks, m_threads_per_gpu_block, m_num_data_blocks, m_block_size);
+  xorec_gpu_init(m_num_data_blocks, m_block_size);
 }
 
 void XorecBenchmarkGpuCmp::setup() noexcept {
@@ -30,13 +30,30 @@ void XorecBenchmarkGpuCmp::m_write_data_buffer() noexcept {
 }
 
 int XorecBenchmarkGpuCmp::encode() noexcept {
-  XorecResult res = xorec_gpu_encode(m_data_buf.get(), m_parity_buf.get(), m_block_size, m_num_data_blocks, m_num_parity_blocks);
+  XorecResult res = xorec_gpu_encode(
+    m_data_buf.get(),
+    m_parity_buf.get(),
+    m_block_size,
+    m_num_data_blocks,
+    m_num_parity_blocks,
+    m_num_gpu_blocks,
+    m_threads_per_gpu_block
+  );
   cudaDeviceSynchronize();
   return (res == XorecResult::Success) ? 0 : -1;
 }
 
 int XorecBenchmarkGpuCmp::decode() noexcept {
-  XorecResult res = xorec_gpu_decode(m_data_buf.get(), m_parity_buf.get(), m_block_size, m_num_data_blocks, m_num_parity_blocks, m_block_bitmap.get());
+  XorecResult res = xorec_gpu_decode(
+    m_data_buf.get(),
+    m_parity_buf.get(),
+    m_block_size,
+    m_num_data_blocks,
+    m_num_parity_blocks,
+    m_block_bitmap.get(),
+    m_num_gpu_blocks,
+    m_threads_per_gpu_block
+  );
   cudaDeviceSynchronize();
   return (res == XorecResult::Success) ? 0 : -1;
   return 0;
