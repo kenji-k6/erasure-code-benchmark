@@ -14,6 +14,10 @@ public:
 
 protected:
   void m_write_data_buffer() noexcept override;
+
+private:
+  size_t m_num_gpu_blocks;
+  size_t m_threads_per_gpu_block;
 };
 
 #endif // XOREC_GPU_CMP_BM_HPP

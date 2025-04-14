@@ -2,11 +2,15 @@
 #include "xorec_gpu_cmp.cuh"
 #include "utils.hpp"
 
-XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexcept : AbstractBenchmark(config) {
+XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexcept
+  : AbstractBenchmark(config),
+    m_num_gpu_blocks(config.num_gpu_blocks),
+    m_threads_per_gpu_block(config.threads_per_gpu_block)
+{
   // Overwrite default initializations
   m_data_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_data_blocks);
   m_parity_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_parity_blocks);
-  xorec_gpu_init(FIXED_GPU_BLOCKS, FIXED_GPU_THREADS_PER_BLOCK, m_num_data_blocks);
+  xorec_gpu_init(m_num_gpu_blocks, m_threads_per_gpu_block, m_num_data_blocks, m_block_size);
 }
 
 void XorecBenchmarkGpuCmp::setup() noexcept {
