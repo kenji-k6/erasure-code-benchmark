@@ -24,7 +24,9 @@ struct BenchmarkConfig {
   size_t block_size;                              ///< Size of each block (in bytes)
   ECTuple ec_params;                            
   size_t num_lost_blocks;                         ///< Number of total blocks lost (recovery + original)
+
   int num_iterations;                             ///< Number of iterations to run the benchmark
+  int num_warmup_iterations;                     ///< Number of warm-up iterations
 
   XorecVersion xorec_version;
 
