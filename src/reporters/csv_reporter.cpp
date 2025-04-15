@@ -24,7 +24,7 @@ CSVReporter::~CSVReporter() {
 
 void CSVReporter::write_header() {
   constexpr std::string_view header =
-  "name,err_msg,iterations, warmup_iterations,"
+  "name,err_msg,iterations,warmup_iterations,"
   "gpu_computation,gpu_blocks,threads_per_block,"
   "data_size_B,block_size_B,EC,lost_blocks,"
   "encode_time_ns,encode_time_ns_stddev,"
