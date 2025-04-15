@@ -1,6 +1,7 @@
 import os
 import utils.data as data
 import utils.plot as plot
+from utils.utils import Category, PlotType
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__)) 
 RAW_DIR = os.path.join(SCRIPT_DIR, "../results/raw")
@@ -23,8 +24,8 @@ def ensure_directories() -> None:
 
 if __name__ == "__main__":
   ensure_directories()
-  
+
   df = data.get_df(CPU_COMPARISON_FILE)
 
-  plot.plot_EC(df, "encode", PLOT_DIR)
+  plot.plot_EC(df, y_type=PlotType.ENCODE, category=Category.CPU, output_dir=PLOT_DIR)
   

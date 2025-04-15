@@ -17,8 +17,8 @@ def get_df(path: str) -> pd.DataFrame:
   # Ensure that no measurements have corruption, delete the error column afterwards
   assert(df["err_msg"].isna().all()), "Error: Some measurements have corruption"
 
-  # Ensure that either all gpu computation values are true or all are false
-  assert(len(df["gpu_computation"].unique()) == 1), "Error: Mixed GPU computation values"
+  # Change gpu col-type to bool
+  df["gpu_computation"] = df["gpu_computation"].astype(bool)
 
   # Sort the Dataframe by:
   # name -> gpu_blocks -> threads_per_block -> block_size -> lost_blocks -> EC
@@ -41,13 +41,6 @@ def get_df(path: str) -> pd.DataFrame:
 
   # Drop the auxiliary columns
   df = df.drop(columns=["EC_x", "EC_y"])
-
-
-  # Drop the gpu computation column, and drop the gpu columns if they are not needed
-  if df.iloc[0]["gpu_computation"]:
-    df = df.drop(columns=["gpu_computation"])
-  else:
-    df = df.drop(columns=["gpu_computation", "gpu_blocks", "threads_per_block"])
 
 
   # Get KiB for the block size

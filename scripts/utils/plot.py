@@ -2,25 +2,53 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os
-from utils.utils import Column, FIXED_VALS
+from utils.utils import Column, FIXED_VALS, Category, CATEGORY_INFO, PlotType
 
 
 
-def plot_EC(df: pd.DataFrame, tp_type: str, output_dir: str) -> None:
+CPU_PLOT_ALGS = [
+  "Xorec, AVX2",
+  "ISA-L",
+  "CM256",
+  "LEOPARD"
+]
+
+GPU_PLOT_ALGS = [
+  "Xorec (GPU Computation)"
+]
+
+XOREC_SIMD_PLOT_ALGS = [
+  "Xorec, AVX",
+  "Xorec, AVX2",
+  "Xorec, AVX512",
+]
+
+XOREC_VARIANT_PLOT_ALGS = [
+
+]
+
+
+def plot_EC(df: pd.DataFrame, y_type: str, category: str, output_dir: str) -> None:
   """
   X-axis: EC parameters
   Y-Axes: throughput
   """
-  assert(tp_type in ["encode", "decode"]), "Invalid tp_type. Must be 'encode' or 'decode'."
-  y_col = Column.ENC_THROUGHPUT if tp_type == "encode" else Column.DEC_THROUGHPUT
+  assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
+  assert(category in [Category.CPU, Category.GPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.GPU}', '{Category.SIMD}', or '{Category.XOREC}'."
+  
+  # Filter the dataframe to only include the valid algorithms
+  df = df[df[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
+
+  assert(df[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
 
   # Fix all parameters besides EC
   df = df[df[Column.BLOCK_SIZE] == FIXED_VALS[Column.BLOCK_SIZE]]
   df = df[df[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
 
   # Initialize labels, output file name, font-size, etc.
-  output_file = os.path.join(output_dir, f"ec_{tp_type[0:3]}.pdf")
+  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_{y_type[0:3]}.pdf")
   x_label = r"Redundancy Ratio $(n/k)$"
+  y_col = Column.ENC_THROUGHPUT if y_type == "encode" else Column.DEC_THROUGHPUT
   y_label = (
     "Encoding Throughput\n[Gbit/s]"
     if y_col == Column.ENC_THROUGHPUT
@@ -68,3 +96,26 @@ def plot_EC(df: pd.DataFrame, tp_type: str, output_dir: str) -> None:
   plt.savefig(output_file, format="pdf", dpi=300)
   plt.close(fig)
   pass
+
+
+def plot_ec_blocksize_heatmap(df: pd.DataFrame, y_type: str, category: str, output_dir: str) -> None:
+  """
+  X-axis: EC parameters
+  Y-Axis: block size
+  """
+
+  assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
+  assert(category in [Category.CPU]), f"Invalid category. Must be '{Category.CPU}'."
+
+  # Filter the dataframe to only include the valid algorithms
+  df = df[df[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
+
+  assert(df[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
+
+  # Fix the number of lost blocks
+  df = df[df[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
+
+  # Initialize labels, output file name, font-size, etc.
+  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_blocksize_heatmap_{y_type[0:3]}.pdf")
+
+#TODO: Continue Heatmap from here!!!
