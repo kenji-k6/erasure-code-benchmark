@@ -80,7 +80,7 @@ inline const std::vector<OptionLine> option_lines = {
   { "", "", "",   "",                 "",                 "","              parity buffer in CPU memory"                        },
   { "", "", "",   "",                 "",                 "","gpu-ptr:      data buffer in GPU memory,"                         },
   { "", "", "",   "",                 "",                 "","              parity buffer in CPU memory"                        },
-  { "", "", "-g", "--gpu",            "xorec,",           "run the specified algorithms (GPU computation)",""                   },
+  { "", "", "-g", "--gpu",            "xorec-gpu,",       "run the specified algorithms (GPU computation)",""                   },
   { "", "", "",   "",                 "",                 "", "0 or more comma seperated args"                                  },
   { "XOR-EC version selection:", "", "", "", "", "", ""                                                                         },
   { "", "", "-s", "--simd",           "scalar,avx,avx2,avx512", "Xorec SIMD version selection", ""                              },

@@ -54,11 +54,11 @@ namespace {
   };
 
   const std::unordered_map<std::string, BenchmarkFunction> GPU_BM_FUNCTIONS = {
-    { "xorec",      BM_XOREC_GPU_CMP }
+    { "xorec-gpu",      BM_XOREC_GPU_CMP }
   };
   
   const std::unordered_map<std::string, std::string> GPU_BM_NAMES = {
-    { "xorec",  "Xorec (GPU Computation)" }
+    { "xorec-gpu",  "Xorec (GPU Computation)" }
   };
   
   const std::unordered_map<std::string, XorecVersion> XOREC_VERSIONS = {
@@ -315,11 +315,12 @@ namespace {
 } // namespace
 
 
-//
-// Main entry point for running benchmarks.
-// This is the only function exposed to the outside world.
-//
-//
+/**
+ * @brief Parse the command-line arguments, construct the benchmarks and run them
+ * 
+ * @param argc 
+ * @param argv 
+ */
 void run_benchmarks(int argc, char** argv) {
   auto start_time = std::chrono::system_clock::now();
 
