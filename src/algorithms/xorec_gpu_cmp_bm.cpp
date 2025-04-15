@@ -21,7 +21,7 @@ void XorecBenchmarkGpuCmp::setup() noexcept {
 void XorecBenchmarkGpuCmp::m_write_data_buffer() noexcept {
   std::unique_ptr<uint8_t[]> temp_data_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_data_blocks);
   for (unsigned i = 0; i < m_num_data_blocks; ++i) {
-    if (write_validation_pattern(i, &temp_data_buffer[i*m_block_size], m_block_size)) {
+    if (write_validation_pattern(&temp_data_buffer[i*m_block_size], m_block_size)) {
       throw_error("Xorec (Gpu Computation): Failed to write validation pattern");
     }
   }
@@ -60,7 +60,7 @@ int XorecBenchmarkGpuCmp::decode() noexcept {
 }
 
 void XorecBenchmarkGpuCmp::simulate_data_loss() noexcept {
-  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap.get());
+  select_lost_blocks(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap.get());
   unsigned i;
   for (i = 0; i < m_num_data_blocks; ++i) {
     if (!m_block_bitmap[i]) {

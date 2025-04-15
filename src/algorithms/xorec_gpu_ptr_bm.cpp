@@ -36,7 +36,7 @@ int XorecBenchmarkGpuPtr::decode() noexcept {
 }
 
 void XorecBenchmarkGpuPtr::simulate_data_loss() noexcept {
-  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap.get());
+  select_lost_blocks(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap.get());
   unsigned i;
   for (i = 0; i < m_num_data_blocks; ++i) {
     if (!m_block_bitmap[i]) {

@@ -12,7 +12,7 @@ AbstractBenchmark::AbstractBenchmark(const BenchmarkConfig& config) noexcept
 {}
 
 void AbstractBenchmark::simulate_data_loss() noexcept {
-  select_lost_block_idxs(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap.get());
+  select_lost_blocks(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap.get());
 
   unsigned i;
   for (i = 0; i < m_num_data_blocks; ++i) {
@@ -34,7 +34,7 @@ bool AbstractBenchmark::check_for_corruption() const noexcept {
 
 void AbstractBenchmark::m_write_data_buffer() noexcept {
   for (unsigned i = 0; i < m_num_data_blocks; ++i) {
-    if (write_validation_pattern(i, &m_data_buf[i*m_block_size], m_block_size)) {
+    if (write_validation_pattern(&m_data_buf[i*m_block_size], m_block_size)) {
       throw_error("Failed to write random checking packet.");
     }
   }
