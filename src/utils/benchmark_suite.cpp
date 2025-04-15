@@ -23,7 +23,7 @@
 
 namespace {
 
-  // Internal configuration & globals
+  /// Internal configuration & globals
   constexpr std::string_view RAW_DIR = "../results/raw/";
   inline std::string OUTPUT_FILE = "results.csv";
   inline bool OVERWRITE_FILE = true;
@@ -34,7 +34,7 @@ namespace {
   std::unordered_set<std::string> selected_gpu_benchmarks;
   std::unordered_set<XorecVersion> selected_xorec_versions;
 
-  // Function maps and names
+  /// Function maps and names
   inline const std::unordered_map<std::string, BenchmarkFunction> CPU_BM_FUNCTIONS = {
     { "cm256",              BM_CM256              },
     { "isal",               BM_ISAL               },
@@ -68,10 +68,12 @@ namespace {
     { "avx512",  XorecVersion::AVX512  }
   };
 
-  //
-  // Utility: Split comma-separated string using ranges and transform
-  //          each substring to lower case
-  //
+  /**
+   * @brief Split comma-separated string using ranges and transform
+   * each substring to lower case
+   * @param input User's command line input
+   * @return std::vector<std::string> 
+   */
   std::vector<std::string> get_arg_vector(std::string_view input) {
     auto split_view = std::views::split(input, ',');
     auto tokens_view = std::views::transform([](auto&& subrange) {
@@ -82,18 +84,21 @@ namespace {
     return std::vector<std::string>(tokens_view.begin(), tokens_view.end());
   }
 
-  //
-  // Print usage information and exit
-  //
+  /**
+   * @brief Print usage information and exit
+   */
   [[noreturn]] void usage() {
     print_usage();
     print_options();
     std::exit(EXIT_SUCCESS);
   }
 
-  //
-  //
-  // Parse command-line arguments and configure globals accordingly
+  /**
+   * @brief Parses the command-line arguments and sets the global variables
+   * 
+   * @param argc 
+   * @param argv 
+   */
   void parse_args(int argc, char** argv) {
     struct option long_options[] = {
       { "help",       no_argument,        nullptr, 'h'  },
@@ -206,82 +211,76 @@ namespace {
     }
   }
 
-  //
-  // Generte CPU benchmark configurations
-  //
-   void get_cpu_configs(std::vector<BenchmarkConfig>& configs) {
-    for (const auto& block_size : VAR_BLOCK_SIZES) {
-      for (const auto& ec_params : VAR_EC_PARAMS) {
-        const auto& [tot_blocks, data_blocks] = ec_params;
-        for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
-          if (lost_blocks > tot_blocks-data_blocks) continue;
-          configs.push_back({
-            .data_size = block_size * data_blocks,
-            .block_size = block_size,
-            .ec_params = ec_params,
-            .num_lost_blocks = lost_blocks,
-            .num_iterations = NUM_ITERATIONS,
-            .num_warmup_iterations = NUM_WARMUP_ITERATIONS,
-            .gpu_computation = false,
-          });
-        }
-      } 
-    }
-  }
-
-  //
-  // Generte GPU benchmark configurations
-  //
-  void get_gpu_configs(std::vector<BenchmarkConfig>& configs) {
-    for (const auto& block_size : VAR_BLOCK_SIZES) {
-      for (const auto& ec_params : VAR_EC_PARAMS) {
-        const auto& [tot_blocks, data_blocks] = ec_params;
-        for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
-          if (lost_blocks > tot_blocks-data_blocks) continue;
-          for (const auto& num_gpu_blocks : VAR_NUM_GPU_BLOCKS) {
-            for (const auto& threads_per_block : VAR_NUM_THREADS_PER_BLOCK) {
-              configs.push_back({
-                .data_size = block_size * data_blocks,
-                .block_size = block_size,
-                .ec_params = ec_params,
-                .num_lost_blocks = lost_blocks,
-                .num_iterations = NUM_ITERATIONS,
-                .num_warmup_iterations = NUM_WARMUP_ITERATIONS,
-                .gpu_computation = true,
-                .num_gpu_blocks = num_gpu_blocks,
-                .threads_per_gpu_block = threads_per_block,
-              });
-            }
-          }
-        }
-      }
-    }
-  }
-
-  //
-  // Return the proper benchmark name given an input key
-  //
-  std::string get_benchmark_name(const std::string& inp_name) {
-    if (GPU_BM_NAMES.find(inp_name) != GPU_BM_NAMES.end()) {
-      return GPU_BM_NAMES.at(inp_name);
-    }
-    return CPU_BM_NAMES.at(inp_name);
-  }
-
-
-  //
-  // Combine user selections with all available configurations to create benchmarks.
-  //
+  /**
+   * @brief Populate the benchmarks vector with all the benchmarks
+   * based on the selected algorithms and configurations.
+   * 
+   * @param benchmarks empty vector to be populated with benchmarks
+   */
   void get_benchmarks(std::vector<BenchmarkTuple>& benchmarks) {
     if (!benchmarks.empty()) {
       std::cerr << "Error: Benchmarks already generated. Cannot generate again.\n";
       std::exit(EXIT_FAILURE);
     }
-
     std::vector<BenchmarkConfig> cpu_configs;
     std::vector<BenchmarkConfig> gpu_configs;
-    get_cpu_configs(cpu_configs);
-    get_gpu_configs(gpu_configs);
+
+    auto get_cpu_configs = [&cpu_configs]() {
+      for (const auto& block_size : VAR_BLOCK_SIZES) {
+        for (const auto& ec_params : VAR_EC_PARAMS) {
+          const auto& [tot_blocks, data_blocks] = ec_params;
+          for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
+            if (lost_blocks > tot_blocks-data_blocks) continue;
+            cpu_configs.push_back({
+              .data_size = block_size * data_blocks,
+              .block_size = block_size,
+              .ec_params = ec_params,
+              .num_lost_blocks = lost_blocks,
+              .num_iterations = NUM_ITERATIONS,
+              .num_warmup_iterations = NUM_WARMUP_ITERATIONS,
+              .gpu_computation = false,
+            });
+          }
+        } 
+      }
+    };
+
+    auto get_gpu_configs = [&gpu_configs]() {
+      for (const auto& block_size : VAR_BLOCK_SIZES) {
+        for (const auto& ec_params : VAR_EC_PARAMS) {
+          const auto& [tot_blocks, data_blocks] = ec_params;
+          for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
+            if (lost_blocks > tot_blocks-data_blocks) continue;
+            for (const auto& num_gpu_blocks : VAR_NUM_GPU_BLOCKS) {
+              for (const auto& threads_per_block : VAR_NUM_THREADS_PER_BLOCK) {
+                gpu_configs.push_back({
+                  .data_size = block_size * data_blocks,
+                  .block_size = block_size,
+                  .ec_params = ec_params,
+                  .num_lost_blocks = lost_blocks,
+                  .num_iterations = NUM_ITERATIONS,
+                  .num_warmup_iterations = NUM_WARMUP_ITERATIONS,
+                  .gpu_computation = true,
+                  .num_gpu_blocks = num_gpu_blocks,
+                  .threads_per_gpu_block = threads_per_block,
+                });
+              }
+            }
+          }
+        }
+      }
+    };
+
+    auto get_benchmark_name = [](const std::string& input_name) -> std::string {
+      if (GPU_BM_NAMES.find(input_name) != GPU_BM_NAMES.end()) {
+        return GPU_BM_NAMES.at(input_name);
+      }
+      return CPU_BM_NAMES.at(input_name);
+    };
+
+
+    get_cpu_configs();
+    get_gpu_configs();
 
     // CPU Benchmarks
     for (auto& inp_name : selected_cpu_benchmarks) {
