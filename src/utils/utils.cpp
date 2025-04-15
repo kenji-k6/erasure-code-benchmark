@@ -33,6 +33,7 @@ uint32_t PCGRandom::next() {
 
 // Utility function: Write validation pattern for data corrution detection
 int write_validation_pattern(uint8_t* block_ptr, size_t bytes) {
+  #if ENABLE_VALIDATION
   if (bytes < 2) return -1; // Invalid block size
 
   const auto now = std::chrono::system_clock::now(); // used as seed for random number generator
@@ -57,11 +58,19 @@ int write_validation_pattern(uint8_t* block_ptr, size_t bytes) {
     // Store the computed CRC at the beginning of the block
     *reinterpret_cast<uint32_t*>(block_ptr) = crc;
   }
+  #else
+  // Simulate a write, so that compiler doesn't optimize it away
+  PCGRandom rng(RANDOM_SEED, 1);
+  uint8_t val = static_cast<uint8_t>(rng.next());
+  std::fill(block_ptr, block_ptr + bytes, val);
+  asm volatile("" : "+m"(*block_ptr) : : "memory");
+  #endif
   return 0;
 }
 
 // Utility function: Validate block content integrity
 bool validate_block(const uint8_t* block_ptr, size_t bytes) {
+  #if ENABLE_VALIDATION
   if (bytes < 2) return false; // Invalid block size
 
   if (bytes < 16) { // No CRC, check for uniform data
@@ -82,6 +91,9 @@ bool validate_block(const uint8_t* block_ptr, size_t bytes) {
     const uint32_t block_crc = *reinterpret_cast<const uint32_t*>(block_ptr); // the actual stored CRC
     return block_crc == crc;
   }
+  #else
+  return true; // Validation disabled
+  #endif
 }
 
 // Utility function: Select lost blocks, ensuring the set is recoverable for Xorec

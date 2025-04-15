@@ -7,6 +7,10 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+/// @attention THIS MACRO TOGGLES WHETHER TO CORRUPTION CHECK AND VALIDATION OF DATA IS MADE OR NOT
+/// Since validation incurs a significant overhead, one can get results faster by disabling it.
+#define ENABLE_VALIDATION 0
+
 
 #include <algorithm>
 #include <cstdint>
