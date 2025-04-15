@@ -4,6 +4,7 @@ class Column:
   NAME              = "name"
   GPU_BLOCKS        = "gpu_blocks"
   THREADS_PER_BLOCK = "threads_per_block"
+  DATA_SIZE         = "data_size_B"  # B
   BLOCK_SIZE        = "block_size_KiB"  # KiB
   EC                = "EC"
   LOST_BLOCKS       = "lost_blocks"
