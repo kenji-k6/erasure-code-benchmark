@@ -7,6 +7,7 @@
 #include <vector>
 #include <cmath>
 #include <numeric>
+#include <ranges>
 
 
 /**
@@ -34,19 +35,70 @@
  */
 template <typename BenchmarkType>
 static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
+
+  struct Stats {
+    double t_mean;
+    double t_stddev;
+    double tp_mean;
+    double tp_stddev;
+  };
+
+  auto run_warmup = [](BenchmarkType& bench, const BenchmarkConfig& cfg) {
+    for (int i = 0; i < cfg.num_iterations; ++i) {
+      bench.setup();
+      bench.encode();
+      bench.simulate_data_loss();
+      bench.decode();
+    }
+  };
+
+  auto compute_stats = [](const std::vector<double>& times, size_t data_size) {
+    // Encode statistics (time is in nanoseconds)
+    const double time_mean =  std::accumulate(times.begin(), times.end(), 0.0) / times.size();
+    const double time_accum = std::transform_reduce(
+      times.begin(), times.end(), 0.0,
+      std::plus<>(),
+      [time_mean](double t) { return std::pow(t-time_mean, 2); }
+    );
+    const double time_stddev = std::sqrt(time_accum / (times.size()-1));
+    
+    // Throughput statistics (throughput is in Gbit/s)
+    const size_t bits = data_size * 8;
+    // the TP computation is equivalent to (#bits / 10^9) / (t_ns / 10^9) = #Gbits / s
+    auto throughputs = std::views::transform([bits](double t) { return bits / t; })(times);
+    const double throughput_mean = std::accumulate(throughputs.begin(), throughputs.end(), 0.0) / throughputs.size();
+    const double throughput_accum = std::transform_reduce(
+      throughputs.begin(), throughputs.end(), 0.0,
+      std::plus<>(),
+      [throughput_mean](double tp) { return std::pow(tp-throughput_mean, 2); }
+    );
+    const double throughput_stddev = std::sqrt(throughput_accum / (throughputs.size()-1));
+
+    return Stats{
+      .t_mean = time_mean,
+      .t_stddev = time_stddev,
+      .tp_mean = throughput_mean,
+      .tp_stddev = throughput_stddev,
+    };
+  };
+
+  auto set_counters = [&state](const std::string& prefix, const Stats& stats) {
+    state.counters[prefix + "_time_ns"] = stats.t_mean;
+    state.counters[prefix + "_time_ns_stddev"] = stats.t_stddev;
+    state.counters[prefix + "_throughput_Gbps"] = stats.tp_mean;
+    state.counters[prefix + "_throughput_Gbps_stddev"] = stats.tp_stddev;
+  };
+
+
   std::vector<double> enc_times(config.num_iterations);
   std::vector<double> dec_times(config.num_iterations);
-
   unsigned it = 0;
 
   BenchmarkType bench(config);
-  for (int i = 0; i < config.num_warmup_iterations; ++i) {
-    bench.setup();
-    bench.encode();
-    bench.simulate_data_loss();
-    bench.decode();
-  }
+  run_warmup(bench, config);
+
   for (auto _ : state) {
+    //Timing loop
     bench.setup();
     
     auto start_encode = std::chrono::steady_clock::now();
@@ -69,64 +121,32 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
     enc_times[it] = time_encode;
     dec_times[it++] = time_decode;
 
-    if (config.reporter != nullptr) config.reporter->update_bar();
+    if (config.reporter) config.reporter->update_bar();
     state.SetIterationTime(static_cast<double>(time_encode+time_decode)/1e9);
   }
 
 
-  double enc_sum = std::accumulate(enc_times.begin(), enc_times.end(), 0.0);
-  double dec_sum = std::accumulate(dec_times.begin(), dec_times.end(), 0.0);
+  const Stats enc_stats = compute_stats(enc_times, config.data_size);
+  const Stats dec_stats = compute_stats(dec_times, config.data_size);
+
+  // Set counters
+  const std::vector<std::pair<std::string, double>> config_counters = {
+    { "num_warmup_iterations",  static_cast<double>(config.num_warmup_iterations)   },
+    { "data_size_B",            static_cast<double>(config.data_size)               },
+    { "block_size_B",           static_cast<double>(config.block_size)              },
+    { "ec_params_0",            static_cast<double>(std::get<0>(config.ec_params))  },
+    { "ec_params_1",            static_cast<double>(std::get<1>(config.ec_params))  },
+    { "num_lost_blocks",        static_cast<double>(config.num_lost_blocks)         },
+    { "gpu_computation",        config.gpu_computation ? 1.0 : 0.0                  },
+    { "num_gpu_blocks",         static_cast<double>(config.num_gpu_blocks)          },
+    { "threads_per_gpu_block",  static_cast<double>(config.threads_per_gpu_block)   }
+  };
   
-
-  double enc_t_ns = enc_sum / config.num_iterations;
-  double dec_t_ns = dec_sum / config.num_iterations;
-
-  double enc_accum = 0.0;
-  double dec_accum = 0.0;
-
-  std::for_each(enc_times.begin(), enc_times.end(), [&](const double t) {
-    enc_accum += std::pow(t - enc_t_ns, 2);
-  });
-
-  std::for_each(dec_times.begin(), dec_times.end(), [&](const double t) {
-    dec_accum += std::pow(t - dec_t_ns, 2);
-  });
-
-  double enc_t_ns_stddev = std::sqrt(enc_accum / (config.num_iterations-1));
-  double dec_t_ns_stddev = std::sqrt(dec_accum / (config.num_iterations-1));
-
-  // equal to (#bits / 10^9) / (t_ns / 10^9) = #Gbits / s
-  double enc_tp_Gbps = (config.data_size * 8) / enc_t_ns;
-  double dec_tp_Gbps = (config.data_size * 8) / dec_t_ns;
-
-  // First order talor approximation for stddev of throughput
-  double enc_tp_Gbps_stddev = enc_tp_Gbps * (enc_t_ns_stddev / enc_t_ns);
-  double dec_tp_Gbps_stddev = dec_tp_Gbps * (dec_t_ns_stddev / dec_t_ns);
-
-
-  // Save results to counters
-  state.counters["num_warmup_iterations"] = config.num_warmup_iterations;
-
-  state.counters["data_size_B"] = config.data_size;
-  state.counters["block_size_B"] = config.block_size;
-  state.counters["ec_params_0"] = get<0>(config.ec_params);
-  state.counters["ec_params_1"] = get<1>(config.ec_params);
-  state.counters["num_lost_blocks"] = config.num_lost_blocks;
-
-
-  state.counters["gpu_computation"] = (config.gpu_computation) ? 1 : 0;
-  state.counters["num_gpu_blocks"] = config.num_gpu_blocks;
-  state.counters["threads_per_gpu_block"] = config.threads_per_gpu_block;
-
-  state.counters["encode_time_ns"] = enc_t_ns;
-  state.counters["encode_time_ns_stddev"] = enc_t_ns_stddev;
-  state.counters["encode_throughput_Gbps"] = enc_tp_Gbps;
-  state.counters["encode_throughput_Gbps_stddev"] = enc_tp_Gbps_stddev;
-
-  state.counters["decode_time_ns"] = dec_t_ns;
-  state.counters["decode_time_ns_stddev"] = dec_t_ns_stddev;
-  state.counters["decode_throughput_Gbps"] = dec_tp_Gbps;
-  state.counters["decode_throughput_Gbps_stddev"] = dec_tp_Gbps_stddev;
+  for (const auto& [key, value] : config_counters) {
+    state.counters[key] = value;
+  }
+  set_counters("encode", enc_stats);
+  set_counters("decode", dec_stats);
 }
 
 #endif // ABSTRACT_RUNNER_HPP
