@@ -21,6 +21,8 @@ void xorec_gpu_init(size_t num_data_blocks, size_t block_size);
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
+ * @param num_gpu_blocks Number of GPU blocks to use for encoding.
+ * @param threads_per_block Number of threads per block to use for encoding.
  * @return XorecResult 
  */
 XorecResult xorec_gpu_encode(
@@ -42,6 +44,8 @@ XorecResult xorec_gpu_encode(
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
  * @param block_bitmap Bitmap of which blocks are present. Indexing for parity blocks starts at bit 128, e.g. the j-th parity block is at bit 128 + j, j < 128
+ * @param num_gpu_blocks Number of GPU blocks to use for decoding.
+ * @param threads_per_block Number of threads per block to use for decoding.
  * @return XorecResult 
  */
 XorecResult xorec_gpu_decode(
