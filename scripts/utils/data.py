@@ -29,7 +29,7 @@ def get_df(path: str) -> pd.DataFrame:
       "name",
       "gpu_blocks",
       "threads_per_block",
-      "block_size_B",
+      "data_size_B",
       "lost_blocks",
       "EC_y",
       "EC_x",

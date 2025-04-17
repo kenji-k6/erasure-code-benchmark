@@ -28,4 +28,6 @@ if __name__ == "__main__":
   df = data.get_df(CPU_COMPARISON_FILE)
 
   plot.plot_EC(df, y_type=PlotType.ENCODE, category=Category.CPU, output_dir=PLOT_DIR)
+  plot.plot_datasize(df, y_type=PlotType.ENCODE, category=Category.CPU, output_dir=PLOT_DIR)
+  plot.plot_ec_datasize_heatmap(df, y_type=PlotType.ENCODE, category=Category.CPU, output_dir=PLOT_DIR)
   
