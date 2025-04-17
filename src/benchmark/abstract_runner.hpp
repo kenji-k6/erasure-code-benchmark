@@ -44,7 +44,7 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   };
 
   auto run_warmup = [](BenchmarkType& bench, const BenchmarkConfig& cfg) {
-    for (int i = 0; i < cfg.num_iterations; ++i) {
+    for (int i = 0; i < cfg.num_warmup_iterations; ++i) {
       bench.setup();
       bench.encode();
       bench.simulate_data_loss();

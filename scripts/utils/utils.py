@@ -19,6 +19,13 @@ class Category:
   SIMD = "XOREC SIMD"
   XOREC = "XOREC VARIANT"
 
+OUTPUT_SUBDIR = {
+  Category.CPU: "cpu",
+  Category.GPU: "gpu",
+  Category.SIMD: "simd",
+  Category.XOREC: "xorec"
+}
+
 
 FIXED_VALS = {
   Column.DATA_SIZE: 512,
@@ -48,6 +55,7 @@ CATEGORY_INFO = {
   },
   Category.SIMD: {
     "algorithms": [
+      "Xorec, Scalar",
       "Xorec, AVX",
       "Xorec, AVX2",
       "Xorec, AVX512"
@@ -59,6 +67,7 @@ CATEGORY_INFO = {
       "Xorec, AVX2",
       "Xorec (Unified Memory), AVX2",
       "Xorec (GPU Memory), AVX2",
+      "Xorec (GPU Computation)"
     ],
     "file_prefix": "xorec"
   }
