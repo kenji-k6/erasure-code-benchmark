@@ -43,7 +43,7 @@ struct BenchmarkConfig {
 using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
 
 /// @brief Constants for fixed values
-extern const std::vector<size_t> VAR_BLOCK_SIZES;
+extern const std::vector<size_t> VAR_DATA_SIZES;
 extern const std::vector<ECTuple> VAR_EC_PARAMS;
 extern const std::vector<size_t> VAR_NUM_LOST_BLOCKS;
 extern const std::vector<size_t> VAR_NUM_GPU_BLOCKS;

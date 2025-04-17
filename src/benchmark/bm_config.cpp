@@ -1,8 +1,9 @@
 #include "bm_config.hpp"
 #define KiB *1024
+# define MiB *1024*1024
 
-const std::vector<size_t> VAR_BLOCK_SIZES = {
-  4 KiB, 8 KiB, 16 KiB, 32 KiB, 64 KiB, 128 KiB, 256 KiB
+const std::vector<size_t> VAR_DATA_SIZES = {
+  128 KiB, 256 KiB, 512 KiB, 1 MiB, 2 MiB
 };
 
 const std::vector<ECTuple> VAR_EC_PARAMS = {

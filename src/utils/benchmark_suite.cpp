@@ -226,13 +226,14 @@ namespace {
     std::vector<BenchmarkConfig> gpu_configs;
 
     auto get_cpu_configs = [&cpu_configs]() {
-      for (const auto& block_size : VAR_BLOCK_SIZES) {
+      for (const auto& data_size : VAR_DATA_SIZES) {
         for (const auto& ec_params : VAR_EC_PARAMS) {
           const auto& [tot_blocks, data_blocks] = ec_params;
+          const auto block_size = data_size / data_blocks;
           for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
             if (lost_blocks > tot_blocks-data_blocks) continue;
             cpu_configs.push_back({
-              .data_size = block_size * data_blocks,
+              .data_size = data_size,
               .block_size = block_size,
               .ec_params = ec_params,
               .num_lost_blocks = lost_blocks,
@@ -246,15 +247,16 @@ namespace {
     };
 
     auto get_gpu_configs = [&gpu_configs]() {
-      for (const auto& block_size : VAR_BLOCK_SIZES) {
+      for (const auto& data_size : VAR_DATA_SIZES) {
         for (const auto& ec_params : VAR_EC_PARAMS) {
           const auto& [tot_blocks, data_blocks] = ec_params;
+          const auto block_size = data_size / data_blocks;
           for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
             if (lost_blocks > tot_blocks-data_blocks) continue;
             for (const auto& num_gpu_blocks : VAR_NUM_GPU_BLOCKS) {
               for (const auto& threads_per_block : VAR_NUM_THREADS_PER_BLOCK) {
                 gpu_configs.push_back({
-                  .data_size = block_size * data_blocks,
+                  .data_size = data_size,
                   .block_size = block_size,
                   .ec_params = ec_params,
                   .num_lost_blocks = lost_blocks,
