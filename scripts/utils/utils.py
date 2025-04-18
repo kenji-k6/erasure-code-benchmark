@@ -1,3 +1,4 @@
+from enum import Enum
 Z_VALUE = 3.291 # 99.9% confidence interval
 
 class Column:
@@ -13,11 +14,15 @@ class Column:
   ENC_THROUGHPUT_CI = "encode_throughput_Gbps_ci"
   DEC_THROUGHPUT_CI = "decode_throughput_Gbps_ci"
 
-class Category:
+class Category(Enum):
   CPU = "CPU"
   GPU = "GPU"
   SIMD = "XOREC SIMD"
   XOREC = "XOREC VARIANT"
+
+class PlotType(Enum):
+  ENCODE = "encode"
+  DECODE = "decode"
 
 OUTPUT_SUBDIR = {
   Category.CPU: "cpu",
@@ -33,9 +38,7 @@ FIXED_VALS = {
   Column.EC: "(36/32)"
 }
 
-class PlotType:
-  ENCODE = "encode"
-  DECODE = "decode"
+
 
 CATEGORY_INFO = {
   Category.CPU: {
@@ -67,7 +70,6 @@ CATEGORY_INFO = {
       "Xorec, AVX2",
       "Xorec (Unified Memory), AVX2",
       "Xorec (GPU Memory), AVX2",
-      "Xorec (GPU Computation)"
     ],
     "file_prefix": "xorec"
   }

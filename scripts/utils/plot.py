@@ -33,27 +33,27 @@ XOREC_VARIANT_PLOT_ALGS = [
 ]
 
 
-def plot_EC(df: pd.DataFrame, y_type: str, category: str, output_dir: str) -> None:
+def plot_EC(data: pd.DataFrame, y_type: PlotType, category: str, output_dir: str) -> None:
   """
   X-axis: EC parameters
   Y-Axis: throughput
   """
   assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
   assert(category in [Category.CPU, Category.GPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.GPU}', '{Category.SIMD}', or '{Category.XOREC}'."
-  
-  # Filter the dataframe to only include the valid algorithms
-  df = df[df[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
 
-  assert(df[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
+  # Filter the dataframe to only include the valid algorithms
+  data = data[data[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
+
+  assert(data[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
 
   # Fix all parameters besides EC
-  df = df[df[Column.DATA_SIZE] == FIXED_VALS[Column.DATA_SIZE]]
-  df = df[df[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
+  data = data[data[Column.DATA_SIZE] == FIXED_VALS[Column.DATA_SIZE]]
+  data = data[data[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
 
   # Initialize labels, output file name, font-size, etc.
-  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_{y_type[0:3]}.pdf")
+  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_{y_type.value[0:3]}.pdf")
   x_label = r"Redundancy Ratio $(n/k)$"
-  y_col = Column.ENC_THROUGHPUT if y_type == "encode" else Column.DEC_THROUGHPUT
+  y_col = Column.ENC_THROUGHPUT if y_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
   y_label = (
     "Encoding Throughput\n[Gbit/s]"
     if y_col == Column.ENC_THROUGHPUT
@@ -63,27 +63,39 @@ def plot_EC(df: pd.DataFrame, y_type: str, category: str, output_dir: str) -> No
   plt.rcParams.update({"font.size": 17})
   fig, ax = plt.subplots(figsize=(14, 5))
 
-  algorithms = df[Column.NAME].unique()
-  categories = df[Column.EC].unique()
+  algorithms = data[Column.NAME].unique()
+  categories = data[Column.EC].unique()
   x_label_loc = np.arange(len(categories))
   width = 0.15 #width of each bar
   tot_width = width * len(algorithms) #total width of each group of bars
   multiplier = 0
 
   for alg in algorithms:
-    df_alg = df[df[Column.NAME] == alg]
+    df_alg = data[data[Column.NAME] == alg]
     vals = df_alg[y_col].values
     ci_vals = df_alg[y_col + "_ci"].values
-
-    offset = width * multiplier
+    bar_positions = x_label_loc + width * multiplier
     ax.bar(
-      x=x_label_loc + offset,
+      x=bar_positions,
       height=vals,
       width=width,
       label=alg,
       yerr=ci_vals,
       capsize=5,
     )
+
+    for i, val in zip(bar_positions, vals):
+      ax.text(
+        x=i,
+        y=val,
+        s=f"{val:.0f}",
+        ha="center",
+        va="bottom",
+        fontsize=12,
+        fontweight="bold",
+        rotation=30,
+      )
+
     multiplier += 1
 
   # Y-axis plotting
@@ -102,7 +114,7 @@ def plot_EC(df: pd.DataFrame, y_type: str, category: str, output_dir: str) -> No
   plt.close(fig)
 
 
-def plot_datasize(df: pd.DataFrame, y_type: str, category: str, output_dir: str) -> None:
+def plot_datasize(data: pd.DataFrame, y_type: PlotType, category: str, output_dir: str) -> None:
   """
   X-axis: data size
   Y-Axis: throughput
@@ -111,18 +123,18 @@ def plot_datasize(df: pd.DataFrame, y_type: str, category: str, output_dir: str)
   assert(category in [Category.CPU, Category.GPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.GPU}', '{Category.SIMD}', or '{Category.XOREC}'."
 
   # Filter the dataframe to only include the valid algorithms
-  df = df[df[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
+  data = data[data[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
 
-  assert(df[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
+  assert(data[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
 
   # Fix all parameters besides EC
-  df = df[df[Column.EC] == FIXED_VALS[Column.EC]]
-  df = df[df[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
+  data = data[data[Column.EC] == FIXED_VALS[Column.EC]]
+  data = data[data[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
 
   # Initialize labels, output file name, font-size, etc.
-  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_datasize_{y_type[0:3]}.pdf")
+  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_datasize_{y_type.value[0:3]}.pdf")
   x_label = "Data Size [KiB]"
-  y_col = Column.ENC_THROUGHPUT if y_type == "encode" else Column.DEC_THROUGHPUT
+  y_col = Column.ENC_THROUGHPUT if y_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
   y_label = (
     "Encoding Throughput\n[Gbit/s]"
     if y_col == Column.ENC_THROUGHPUT
@@ -132,27 +144,42 @@ def plot_datasize(df: pd.DataFrame, y_type: str, category: str, output_dir: str)
   plt.rcParams.update({"font.size": 17})
   fig, ax = plt.subplots(figsize=(14, 5))
 
-  algorithms = df[Column.NAME].unique()
-  categories = df[Column.DATA_SIZE].unique()
+  algorithms = data[Column.NAME].unique()
+  categories = data[Column.DATA_SIZE].unique()
   x_label_loc = np.arange(len(categories))
   width = 0.15 #width of each bar
   tot_width = width * len(algorithms) #total width of each group of bars
   multiplier = 0
 
   for alg in algorithms:
-    df_alg = df[df[Column.NAME] == alg]
+    df_alg = data[data[Column.NAME] == alg]
     vals = df_alg[y_col].values
     ci_vals = df_alg[y_col + "_ci"].values
+    bar_positions = x_label_loc + width * multiplier
 
-    offset = width * multiplier
+
     ax.bar(
-      x=x_label_loc + offset,
+      x=bar_positions,
       height=vals,
       width=width,
       label=alg,
       yerr=ci_vals,
       capsize=5,
     )
+    
+    # Add the exact value on top of the bar
+    for i, val in zip(bar_positions, vals):
+      ax.text(
+        x=i,
+        y=val,
+        s=f"{val:.0f}",
+        ha="center",
+        va="bottom",
+        fontsize=12,
+        fontweight="bold",
+        rotation=30,
+      ) 
+
     multiplier += 1
 
   # Y-axis plotting
@@ -172,38 +199,42 @@ def plot_datasize(df: pd.DataFrame, y_type: str, category: str, output_dir: str)
 
 
 
-def plot_ec_datasize_heatmap(df: pd.DataFrame, y_type: str, category: str, output_dir: str) -> None:
+def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: str, output_dir: str) -> None:
   """
   X-axis: EC parameters
   Y-Axis: data size
   """
-
-  assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
+  assert(val_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
   assert(category in [Category.CPU]), f"Invalid category. Must be '{Category.CPU}'."
 
   # Filter the dataframe to only include the valid algorithms
-  df = df[df[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
+  data = data[data[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
 
-  assert(df[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
+  assert(data[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
 
   # Fix the number of lost blocks
-  df = df[df[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
+  data = data[data[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
 
   # Initialize labels, output file name, font-size, etc.
-  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_datasize_heatmap_{y_type[0:3]}.pdf")
+  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_datasize_heatmap_{val_type.value[0:3]}.pdf")
   x_label = r"Redundancy Ratio $(n/k)$"
   y_label = "Data Size [KiB]"
-  val_col = Column.ENC_THROUGHPUT if y_type == "encode" else Column.DEC_THROUGHPUT
+  val_col = Column.ENC_THROUGHPUT if val_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
 
-  algorithms = df[Column.NAME].unique()
+  algorithms = data[Column.NAME].unique()
 
   plt.rcParams.update({"font.size": 17})
   fig, axs = plt.subplots(1, len(algorithms), figsize=(len(algorithms)*7,7))
   axs = axs.flatten()
-
+  
+  # ensure gradients are on a global (not per-plot) scale
+  global_vmin = data[val_col].min()
+  global_vmax = data[val_col].max()
 
   for i, alg in enumerate(algorithms):
-    df_alg = df[df[Column.NAME] == alg]
+    df_alg = data[data[Column.NAME] == alg]
+
+
     pivot = df_alg.pivot(
         index=Column.DATA_SIZE,
         columns=Column.EC,
@@ -218,15 +249,21 @@ def plot_ec_datasize_heatmap(df: pd.DataFrame, y_type: str, category: str, outpu
     
     im = axs[i].imshow(
       pivot.values,
-      cmap="coolwarm"
+      cmap="coolwarm",
+      vmin=global_vmin,
+      vmax=global_vmax,
     )
 
     for (y,x), val in np.ndenumerate(pivot.values):
       axs[i].text(
-        x, y, f"{val:.1f}",
-        ha="center", va="center",
+        x=x,
+        y=y,
+        s=f"{val:.0f}",
+        ha="center",
+        va="center",
         color="black",
         fontsize=12,
+        fontweight="bold",
       )
 
     axs[i].set_xlabel(x_label)
