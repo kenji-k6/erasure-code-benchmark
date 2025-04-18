@@ -2,53 +2,43 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os
+from utils.utils import Column, Category, CATEGORY_INFO, PlotType
+import math
 
-from pyparsing import col
-from utils.utils import Column, FIXED_VALS, Category, CATEGORY_INFO, PlotType
-
-
-
-CPU_PLOT_ALGS = [
-  "Xorec, AVX2",
-  "ISA-L",
-  "CM256",
-  "LEOPARD"
-]
-
-GPU_PLOT_ALGS = [
-  "Xorec (GPU Computation)"
-]
-
-XOREC_SIMD_PLOT_ALGS = [
-  "Xorec, Scalar",
-  "Xorec, AVX",
-  "Xorec, AVX2",
-  "Xorec, AVX512",
-]
-
-XOREC_VARIANT_PLOT_ALGS = [
-  "Xorec, AVX2",
-  "Xorec (Unified Memory), AVX2",
-  "Xorec (GPU Memory), AVX2"
-]
+MAIN_FONTSIZE = 15
+LEGEND_FONTSIZE = 12
+BAR_FONTSIZE = 12
+LEGEND_LOC = "best"
 
 
-def plot_EC(data: pd.DataFrame, y_type: PlotType, category: str, output_dir: str) -> None:
+def plot_EC(data: pd.DataFrame, y_type: PlotType, category: Category, output_dir: str) -> None:
   """
   X-axis: EC parameters
   Y-Axis: throughput
   """
   assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
-  assert(category in [Category.CPU, Category.GPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.GPU}', '{Category.SIMD}', or '{Category.XOREC}'."
+  assert(category in [Category.CPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.SIMD}', or '{Category.XOREC}'."
+
+  fixed_vals = CATEGORY_INFO[category]["fixed_vals"]
 
   # Filter the dataframe to only include the valid algorithms
   data = data[data[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
 
-  assert(data[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
+  if category == Category.XOREC:
+    data = data[
+      (data[Column.IS_GPU_COMPUTE] == False) |
+      (
+       (data[Column.IS_GPU_COMPUTE] == True) & 
+       (data[Column.GPU_BLOCKS] == fixed_vals[Column.GPU_BLOCKS]) &
+        (data[Column.THREADS_PER_BLOCK] == fixed_vals[Column.THREADS_PER_BLOCK] ) 
+      ) 
+    ]
+  else:
+    assert(data[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
 
   # Fix all parameters besides EC
-  data = data[data[Column.DATA_SIZE] == FIXED_VALS[Column.DATA_SIZE]]
-  data = data[data[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
+  data = data[data[Column.DATA_SIZE] == fixed_vals[Column.DATA_SIZE]]
+  data = data[data[Column.LOST_BLOCKS] == fixed_vals[Column.LOST_BLOCKS]]
 
   # Initialize labels, output file name, font-size, etc.
   output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_{y_type.value[0:3]}.pdf")
@@ -60,7 +50,7 @@ def plot_EC(data: pd.DataFrame, y_type: PlotType, category: str, output_dir: str
     else "Decoding Throughput\n[Gbit/s]"
   )
 
-  plt.rcParams.update({"font.size": 17})
+  plt.rcParams.update({"font.size": MAIN_FONTSIZE})
   fig, ax = plt.subplots(figsize=(14, 5))
 
   algorithms = data[Column.NAME].unique()
@@ -91,7 +81,7 @@ def plot_EC(data: pd.DataFrame, y_type: PlotType, category: str, output_dir: str
         s=f"{val:.0f}",
         ha="center",
         va="bottom",
-        fontsize=12,
+        fontsize=BAR_FONTSIZE,
         fontweight="bold",
         rotation=30,
       )
@@ -107,29 +97,41 @@ def plot_EC(data: pd.DataFrame, y_type: PlotType, category: str, output_dir: str
   ax.set_xlabel(x_label)
   ax.set_xticks(x_label_loc-(width/2)+(tot_width/2), labels=categories)
 
-  ax.legend(loc="upper right", ncols=1)
+  ax.legend(loc=LEGEND_LOC, ncols=1, fontsize=LEGEND_FONTSIZE)
 
   plt.tight_layout()
   plt.savefig(output_file, format="pdf", dpi=300)
   plt.close(fig)
 
 
-def plot_datasize(data: pd.DataFrame, y_type: PlotType, category: str, output_dir: str) -> None:
+def plot_datasize(data: pd.DataFrame, y_type: PlotType, category: Category, output_dir: str) -> None:
   """
   X-axis: data size
   Y-Axis: throughput
   """
   assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
-  assert(category in [Category.CPU, Category.GPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.GPU}', '{Category.SIMD}', or '{Category.XOREC}'."
+  assert(category in [Category.CPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.SIMD}', or '{Category.XOREC}'."
+
+  fixed_vals = CATEGORY_INFO[category]["fixed_vals"]
 
   # Filter the dataframe to only include the valid algorithms
   data = data[data[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
 
-  assert(data[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
+  if category == Category.XOREC:
+    data = data[
+      (data[Column.IS_GPU_COMPUTE] == False) |
+      (
+       (data[Column.IS_GPU_COMPUTE] == True) & 
+       (data[Column.GPU_BLOCKS] == fixed_vals[Column.GPU_BLOCKS]) &
+        (data[Column.THREADS_PER_BLOCK] == fixed_vals[Column.THREADS_PER_BLOCK] ) 
+      ) 
+    ]
+  else:
+    assert(data[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
 
   # Fix all parameters besides EC
-  data = data[data[Column.EC] == FIXED_VALS[Column.EC]]
-  data = data[data[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
+  data = data[data[Column.EC] == fixed_vals[Column.EC]]
+  data = data[data[Column.LOST_BLOCKS] == fixed_vals[Column.LOST_BLOCKS]]
 
   # Initialize labels, output file name, font-size, etc.
   output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_datasize_{y_type.value[0:3]}.pdf")
@@ -141,7 +143,7 @@ def plot_datasize(data: pd.DataFrame, y_type: PlotType, category: str, output_di
     else "Decoding Throughput\n[Gbit/s]"
   )
 
-  plt.rcParams.update({"font.size": 17})
+  plt.rcParams.update({"font.size": MAIN_FONTSIZE})
   fig, ax = plt.subplots(figsize=(14, 5))
 
   algorithms = data[Column.NAME].unique()
@@ -175,7 +177,7 @@ def plot_datasize(data: pd.DataFrame, y_type: PlotType, category: str, output_di
         s=f"{val:.0f}",
         ha="center",
         va="bottom",
-        fontsize=12,
+        fontsize=BAR_FONTSIZE,
         fontweight="bold",
         rotation=30,
       ) 
@@ -191,7 +193,7 @@ def plot_datasize(data: pd.DataFrame, y_type: PlotType, category: str, output_di
   ax.set_xlabel(x_label)
   ax.set_xticks(x_label_loc-(width/2)+(tot_width/2), labels=categories)
 
-  ax.legend(loc="upper right", ncols=1)
+  ax.legend(loc=LEGEND_LOC, ncols=1, fontsize=LEGEND_FONTSIZE)
 
   plt.tight_layout()
   plt.savefig(output_file, format="pdf", dpi=300)
@@ -199,7 +201,7 @@ def plot_datasize(data: pd.DataFrame, y_type: PlotType, category: str, output_di
 
 
 
-def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: str, output_dir: str) -> None:
+def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: Category, output_dir: str) -> None:
   """
   X-axis: EC parameters
   Y-Axis: data size
@@ -207,13 +209,15 @@ def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: s
   assert(val_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
   assert(category in [Category.CPU]), f"Invalid category. Must be '{Category.CPU}'."
 
+  fixed_vals = CATEGORY_INFO[category]["fixed_vals"]
+
   # Filter the dataframe to only include the valid algorithms
   data = data[data[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
 
   assert(data[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
 
   # Fix the number of lost blocks
-  data = data[data[Column.LOST_BLOCKS] == FIXED_VALS[Column.LOST_BLOCKS]]
+  data = data[data[Column.LOST_BLOCKS] == fixed_vals[Column.LOST_BLOCKS]]
 
   # Initialize labels, output file name, font-size, etc.
   output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_datasize_heatmap_{val_type.value[0:3]}.pdf")
@@ -223,7 +227,7 @@ def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: s
 
   algorithms = data[Column.NAME].unique()
 
-  plt.rcParams.update({"font.size": 17})
+  plt.rcParams.update({"font.size": MAIN_FONTSIZE})
   fig, axs = plt.subplots(1, len(algorithms), figsize=(len(algorithms)*7,7))
   axs = axs.flatten()
   
@@ -262,7 +266,7 @@ def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: s
         ha="center",
         va="center",
         color="black",
-        fontsize=12,
+        fontsize=BAR_FONTSIZE,
         fontweight="bold",
       )
 
@@ -274,8 +278,71 @@ def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: s
     axs[i].set_title(f"{alg}")
     axs[i].invert_yaxis()
 
-
   plt.tight_layout()
   plt.savefig(output_file, format="pdf", dpi=300)
   plt.close(fig)
 
+
+
+# Below are functions to plot probabilities of recoverability
+
+#auxiliary functions
+def P_recoverable_MDS(k: int, m: int, P_drop: float) -> float:
+  """
+  Calculate the probability of failure for MDS codes.
+  """
+  P_failure = 0.0
+  for i in range(0,m+1):
+    P_failure += math.comb(k+m, i) * (P_drop**i) * ((1-P_drop)**(k+m-i))
+  return P_failure
+
+def P_recoverable_Xorec(k: int, m: int, P_drop: float) -> float:
+  """
+  Calculate the probability of failure for XOREC codes.
+  """
+  assert(k % m == 0), "k must be divisible by m for XOREC codes."
+  return ((1+((P_drop * k)/m))**m) * ((1 - P_drop)**k)
+
+
+def plot_P_recoverable(output_dir: str) -> None:
+  ec_params = [
+    (4+32, 32), (8+64, 64), (16+128, 128)
+  ]
+
+  output_file = os.path.join(output_dir, "p_recoverable.pdf")
+  P_drop = np.logspace(-3, 0, 100)
+  plt.figure(figsize=(7, 5))
+
+  x_label = r"$P_{drop}$"
+  y_label = r"$P_{recoverable}$"
+
+  for (n, k) in ec_params:
+    m = n - k
+    P_MDS = [P_recoverable_MDS(k, m, p) for p in P_drop]
+    P_Xorec = [P_recoverable_Xorec(k, m, p) for p in P_drop]
+    plt.plot(
+      P_drop,
+      P_MDS,
+      label=fr"MDS ${n}/{k}$",
+      linestyle="--",
+    )
+
+  for (n, k) in ec_params:
+    m = n - k
+    P_MDS = [P_recoverable_MDS(k, m, p) for p in P_drop]
+    P_Xorec = [P_recoverable_Xorec(k, m, p) for p in P_drop]
+    plt.plot(
+      P_drop,
+      P_Xorec,
+      label=fr"Xorec ${n}/{k}$",
+      linestyle="-",
+    )
+  plt.xscale("log")
+  plt.xlim((1e-3)*3, (1e-1)*1.1)
+  plt.xlabel(x_label)
+  plt.ylabel(y_label)
+  plt.legend(loc=LEGEND_LOC, ncols=1, fontsize=LEGEND_FONTSIZE)
+  plt.grid(True, which="both", linestyle="--")
+  plt.tight_layout()
+  plt.savefig(output_file, format="pdf", dpi=300)
+  plt.close()

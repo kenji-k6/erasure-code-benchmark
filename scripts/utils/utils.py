@@ -16,7 +16,6 @@ class Column:
 
 class Category(Enum):
   CPU = "CPU"
-  GPU = "GPU"
   SIMD = "XOREC SIMD"
   XOREC = "XOREC VARIANT"
 
@@ -26,19 +25,9 @@ class PlotType(Enum):
 
 OUTPUT_SUBDIR = {
   Category.CPU: "cpu",
-  Category.GPU: "gpu",
   Category.SIMD: "simd",
   Category.XOREC: "xorec"
 }
-
-
-FIXED_VALS = {
-  Column.DATA_SIZE: 512,
-  Column.LOST_BLOCKS: 0,
-  Column.EC: "(36/32)"
-}
-
-
 
 CATEGORY_INFO = {
   Category.CPU: {
@@ -48,13 +37,12 @@ CATEGORY_INFO = {
       "CM256",
       "Leopard"
     ],
-    "file_prefix": "cpu"
-  },
-  Category.GPU: {
-    "algorithms": [
-      "Xorec (GPU Computation)"
-    ],
-    "file_prefix": "xorec_gpu"
+    "file_prefix": "cpu",
+    "fixed_vals": {
+      Column.DATA_SIZE: 512,
+      Column.LOST_BLOCKS: 0,
+      Column.EC: "(36/32)",
+    }
   },
   Category.SIMD: {
     "algorithms": [
@@ -63,15 +51,28 @@ CATEGORY_INFO = {
       "Xorec, AVX2",
       "Xorec, AVX512"
     ],
-    "file_prefix": "simd"
+    "file_prefix": "simd",
+    "fixed_vals": {
+      Column.DATA_SIZE: 512,
+      Column.LOST_BLOCKS: 0,
+      Column.EC: "(36/32)",
+    }
   },
   Category.XOREC: {
     "algorithms": [
       "Xorec, AVX2",
       "Xorec (Unified Memory), AVX2",
       "Xorec (GPU Memory), AVX2",
+      "Xorec (GPU Computation)"
     ],
-    "file_prefix": "xorec"
+    "file_prefix": "xorec",
+    "fixed_vals": {
+      Column.DATA_SIZE: 512,
+      Column.LOST_BLOCKS: 0,
+      Column.EC: "(36/32)",
+      Column.GPU_BLOCKS: 256,
+      Column.THREADS_PER_BLOCK: 512
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 import os
 import utils.data as data
 import utils.plot as plot
-from utils.utils import Category, PlotType, OUTPUT_SUBDIR, CATEGORY_INFO
+from utils.utils import Category, PlotType, OUTPUT_SUBDIR
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__)) 
 RAW_FILE = os.path.join(SCRIPT_DIR, "../results/raw", "ec_results.csv")
@@ -16,6 +16,10 @@ def ensure_directories() -> None:
     category_dir = os.path.join(PLOT_DIR, OUTPUT_SUBDIR[category])
     if not os.path.exists(category_dir):
       os.makedirs(category_dir)
+  
+  misc_dir = os.path.join(PLOT_DIR, "misc")
+  if not os.path.exists(misc_dir):
+    os.makedirs(misc_dir)
 
 
 
@@ -51,5 +55,6 @@ if __name__ == "__main__":
     output_dir=os.path.join(PLOT_DIR, OUTPUT_SUBDIR[Category.CPU])
   )
 
+  plot.plot_P_recoverable(output_dir=os.path.join(PLOT_DIR, "misc"))
 
   
