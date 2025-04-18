@@ -42,7 +42,7 @@ def plot_EC(data: pd.DataFrame, y_type: PlotType, category: Category, output_dir
 
   # Initialize labels, output file name, font-size, etc.
   output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_{y_type.value[0:3]}.pdf")
-  x_label = r"Redundancy Ratio $(n/k)$"
+  x_label = r"Redundancy $(n/k)$"
   y_col = Column.ENC_THROUGHPUT if y_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
   y_label = (
     "Encoding Throughput\n[Gbit/s]"
@@ -221,7 +221,7 @@ def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: C
 
   # Initialize labels, output file name, font-size, etc.
   output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_ec_datasize_heatmap_{val_type.value[0:3]}.pdf")
-  x_label = r"Redundancy Ratio $(n/k)$"
+  x_label = r"Redundancy $(n/k)$"
   y_label = "Data Size [KiB]"
   val_col = Column.ENC_THROUGHPUT if val_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
 
