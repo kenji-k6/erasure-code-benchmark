@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os
+
+from psutil.tests.test_posix import df
 from utils.utils import Column, Category, CATEGORY_INFO, PlotType
 import math
 
@@ -199,6 +201,91 @@ def plot_datasize(data: pd.DataFrame, y_type: PlotType, category: Category, outp
   plt.savefig(output_file, format="pdf", dpi=300)
   plt.close(fig)
 
+def plot_lost_blocks(data: pd.DataFrame, y_type: PlotType, category: Category, output_dir: str) -> None:
+  """
+  X-axis: lost blocks
+  Y-Axis: throughput
+  """
+  assert(y_type in [PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.DECODE}'."
+  assert(category in [Category.CPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.SIMD}', or '{Category.XOREC}'."
+
+  fixed_vals = CATEGORY_INFO[category]["fixed_vals"]
+  
+  # Filter the dataframe to only include the valid algorithms
+  data = data[data[Column.NAME].isin(CATEGORY_INFO[category]["algorithms"])]
+
+  if category == Category.XOREC:
+    data = data[
+      (data[Column.IS_GPU_COMPUTE] == False) |
+      (
+       (data[Column.IS_GPU_COMPUTE] == True) & 
+       (data[Column.GPU_BLOCKS] == fixed_vals[Column.GPU_BLOCKS]) &
+        (data[Column.THREADS_PER_BLOCK] == fixed_vals[Column.THREADS_PER_BLOCK] ) 
+      ) 
+    ]
+  else:
+    assert(data[Column.IS_GPU_COMPUTE].nunique() == 1), "Error: The dataframe contains multiple GPU compute values. This is not expected."
+  
+  # Fix all parameters besides lost blocks
+  data = data[data[Column.DATA_SIZE] == fixed_vals[Column.DATA_SIZE]]
+  data = data[data[Column.EC] == fixed_vals[Column.EC]]
+
+  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category]['file_prefix']}_lostblocks_{y_type.value[0:3]}.pdf")
+  x_label = "Lost Blocks"
+  y_col = Column.DEC_THROUGHPUT
+  y_label = "Decoding Throughput\n[Gbit/s]"
+
+  plt.rcParams.update({"font.size": MAIN_FONTSIZE})
+  fig, ax = plt.subplots(figsize=(14, 5))
+
+  algorithms = data[Column.NAME].unique()
+  categories = data[Column.LOST_BLOCKS].unique()
+  x_label_loc = np.arange(len(categories))
+  width = 0.15 #width of each bar
+  tot_width = width * len(algorithms) #total width of each group of bars
+  multiplier = 0
+
+  for alg in algorithms:
+    df_alg = data[data[Column.NAME] == alg]
+    vals = df_alg[y_col].values
+    ci_vals = df_alg[y_col + "_ci"].values
+    bar_positions = x_label_loc + width * multiplier
+    ax.bar(
+      x=bar_positions,
+      height=vals,
+      width=width,
+      label=alg,
+      yerr=ci_vals,
+      capsize=5,
+    )
+    # Add the exact value on top of the bar
+    for i, val in zip(bar_positions, vals):
+      ax.text(
+        x=i,
+        y=val,
+        s=f"{val:.0f}",
+        ha="center",
+        va="bottom",
+        fontsize=BAR_FONTSIZE,
+        fontweight="bold",
+        rotation=30,
+      )
+    multiplier += 1
+  
+  # Y-axis plotting
+  ax.set_ylabel(y_label)
+  ax.set_yscale("log", base=10)
+  ax.grid(axis="y", linestyle="--", which="both")
+  # X-axis plotting
+  ax.set_xlabel(x_label)
+  ax.set_xticks(x_label_loc-(width/2)+(tot_width/2), labels=categories)
+  ax.legend(loc=LEGEND_LOC, ncols=1, fontsize=LEGEND_FONTSIZE)
+  plt.tight_layout()
+  plt.savefig(output_file, format="pdf", dpi=300)
+  plt.close(fig)
+
+
+  
 
 
 def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: Category, output_dir: str) -> None:

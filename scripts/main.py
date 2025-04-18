@@ -26,13 +26,12 @@ def ensure_directories() -> None:
 
 if __name__ == "__main__":
   ensure_directories()
-
   df = data.get_df(RAW_FILE)
 
   # Plot the bar plots for encoding and decoding throughput for each category
   for category in [Category.CPU, Category.SIMD, Category.XOREC]:
     category_dir = os.path.join(PLOT_DIR, OUTPUT_SUBDIR[category])
-    for y_type in [PlotType.ENCODE]:
+    for y_type in PlotType:
       plot.plot_EC(
         data=df.copy(),
         y_type=y_type,
@@ -45,6 +44,12 @@ if __name__ == "__main__":
         category=category,
         output_dir=category_dir
       )
+    plot.plot_lost_blocks(
+      data=df.copy(),
+      y_type=PlotType.DECODE,
+      category=category,
+      output_dir=category_dir
+    )
   
 
   # Plot the heatmap for encoding throughput for CPU category
