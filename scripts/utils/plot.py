@@ -8,7 +8,7 @@ from utils.utils import Column, Category, CATEGORY_INFO, PlotType
 import math
 
 MAIN_FONTSIZE = 15
-LEGEND_FONTSIZE = 12
+LEGEND_FONTSIZE = 15
 BAR_FONTSIZE = 12
 LEGEND_LOC = "best"
 
