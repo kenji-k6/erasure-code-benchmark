@@ -314,7 +314,7 @@ def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: C
 
   algorithms = data[Column.NAME].unique()
 
-  plt.rcParams.update({"font.size": MAIN_FONTSIZE})
+  plt.rcParams.update({"font.size": MAIN_FONTSIZE+9})
   fig, axs = plt.subplots(1, len(algorithms), figsize=(len(algorithms)*7,7))
   axs = axs.flatten()
   
@@ -353,12 +353,12 @@ def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: C
         ha="center",
         va="center",
         color="black",
-        fontsize=BAR_FONTSIZE,
+        fontsize=MAIN_FONTSIZE+2,
         fontweight="bold",
       )
 
-    axs[i].set_xlabel(x_label)
-    axs[i].set_ylabel(y_label)
+    axs[i].set_xlabel(x_label, fontsize=MAIN_FONTSIZE+9)
+    axs[i].set_ylabel(y_label, fontsize=MAIN_FONTSIZE+9)
     axs[i].set_xticks(np.arange(len(ec_order)))
     axs[i].set_xticklabels(ec_order, rotation=45)
     axs[i].set_yticks(np.arange(len(df_alg[Column.DATA_SIZE].unique())), labels=df_alg[Column.DATA_SIZE].unique())
