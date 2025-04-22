@@ -1,11 +1,9 @@
 #include "xorec_gpu_cmp.cuh"
 #include "utils.hpp"
 
-int DEVICE_ID = 0;
-
 static bool XOREC_GPU_INIT_CALLED = false;
 
-void xorec_gpu_init(size_t num_data_blocks, size_t block_size) {
+void xorec_gpu_init(size_t num_data_blocks, int device_id) {
   if (XOREC_GPU_INIT_CALLED) return;
 
   int device_count;
@@ -14,11 +12,11 @@ void xorec_gpu_init(size_t num_data_blocks, size_t block_size) {
 
   if (device_count <= 0) throw_error("No CUDA devices found");
 
-  cudaError_t err = cudaSetDevice(DEVICE_ID);
+  cudaError_t err = cudaSetDevice(device_id);
   if (err != cudaSuccess) throw_error("Failed to set device");
   
   cudaDeviceProp device_prop;
-  err = cudaGetDeviceProperties(&device_prop, DEVICE_ID);
+  err = cudaGetDeviceProperties(&device_prop, device_id);
   if (err != cudaSuccess) throw_error("Failed to rertrieve device properties");
 
   COMPLETE_DATA_BITMAP.resize(num_data_blocks);

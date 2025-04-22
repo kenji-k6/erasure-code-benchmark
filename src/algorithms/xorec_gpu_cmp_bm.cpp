@@ -10,7 +10,7 @@ XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexce
   // Overwrite default initializations
   m_data_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_data_blocks);
   m_parity_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_parity_blocks);
-  xorec_gpu_init(m_num_data_blocks, m_block_size);
+  xorec_gpu_init(m_num_data_blocks);
 }
 
 void XorecBenchmarkGpuCmp::setup() noexcept {
