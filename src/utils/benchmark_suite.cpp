@@ -63,7 +63,7 @@ namespace {
   
   const std::unordered_map<std::string, XorecVersion> XOREC_VERSIONS = {
     { "scalar",  XorecVersion::Scalar  },
-    { "avx",     XorecVersion::AVX     },
+    { "sse2",    XorecVersion::SSE2    },
     { "avx2",    XorecVersion::AVX2    },
     { "avx512",  XorecVersion::AVX512  }
   };

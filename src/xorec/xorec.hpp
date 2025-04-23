@@ -15,10 +15,10 @@
 
 extern std::vector<uint8_t> COMPLETE_DATA_BITMAP;
 
-#if defined(__AVX__)
-  #define TRY_XOREC_AVX
+#if defined(__SSE2__)
+  #define TRY_XOREC_SSE2
   #include <immintrin.h>
-  #define XOREC_AVX __m128i
+  #define XOREC_SSE2 __m128i
 #endif
 
 #if defined(__AVX2__)
@@ -221,29 +221,29 @@ static void inline xorec_xor_blocks_avx2(void * XOREC_RESTRICT dest, const void 
 
 
 /**
- * @brief XORs two blocks of data with AVX SIMD instructions.
+ * @brief XORs two blocks of data with SSE2 SIMD instructions.
  * 
  * @param dest Pointer to the destination block.
  * @param src Pointer to the source block.
  * @param bytes Number of bytes to XOR.
  */
-static void inline xorec_xor_blocks_avx(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, size_t bytes) {
-  #if defined(TRY_XOREC_AVX)
-    XOREC_AVX * XOREC_RESTRICT dest128 = reinterpret_cast<XOREC_AVX*>(__builtin_assume_aligned(dest, 64));
-    const XOREC_AVX * XOREC_RESTRICT src128 = reinterpret_cast<const XOREC_AVX*>(__builtin_assume_aligned(src, 64));
+static void inline xorec_xor_blocks_sse2(void * XOREC_RESTRICT dest, const void * XOREC_RESTRICT src, size_t bytes) {
+  #if defined(TRY_XOREC_SSE2)
+    XOREC_SSE2 * XOREC_RESTRICT dest128 = reinterpret_cast<XOREC_SSE2*>(__builtin_assume_aligned(dest, 64));
+    const XOREC_SSE2 * XOREC_RESTRICT src128 = reinterpret_cast<const XOREC_SSE2*>(__builtin_assume_aligned(src, 64));
 
     for (; bytes >= 64; bytes -= 64, dest128 += 4, src128 += 4) {
-      XOREC_AVX x0 = _mm_xor_si128(_mm_load_si128(dest128), _mm_load_si128(src128));
-      XOREC_AVX x1 = _mm_xor_si128(_mm_load_si128(dest128 + 1), _mm_load_si128(src128 + 1));
-      XOREC_AVX x2 = _mm_xor_si128(_mm_load_si128(dest128 + 2), _mm_load_si128(src128 + 2));
-      XOREC_AVX x3 = _mm_xor_si128(_mm_load_si128(dest128 + 3), _mm_load_si128(src128 + 3));
+      XOREC_SSE2 x0 = _mm_xor_si128(_mm_load_si128(dest128), _mm_load_si128(src128));
+      XOREC_SSE2 x1 = _mm_xor_si128(_mm_load_si128(dest128 + 1), _mm_load_si128(src128 + 1));
+      XOREC_SSE2 x2 = _mm_xor_si128(_mm_load_si128(dest128 + 2), _mm_load_si128(src128 + 2));
+      XOREC_SSE2 x3 = _mm_xor_si128(_mm_load_si128(dest128 + 3), _mm_load_si128(src128 + 3));
       _mm_store_si128(dest128, x0);
       _mm_store_si128(dest128 + 1, x1);
       _mm_store_si128(dest128 + 2, x2);
       _mm_store_si128(dest128 + 3, x3);
     }
   #else
-    throw_error("AVX not supported");
+    throw_error("SSE2 not supported");
   #endif
 }
 

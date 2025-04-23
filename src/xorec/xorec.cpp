@@ -44,8 +44,8 @@ XorecResult xorec_encode(
       case XorecVersion::Scalar:
         xorec_xor_blocks_scalar(parity_block, data_block, block_size);
         break;
-      case XorecVersion::AVX:
-        xorec_xor_blocks_avx(parity_block, data_block, block_size);
+      case XorecVersion::SSE2:
+        xorec_xor_blocks_sse2(parity_block, data_block, block_size);
         break;
       case XorecVersion::AVX2:
         xorec_xor_blocks_avx2(parity_block, data_block, block_size);
@@ -94,8 +94,8 @@ XorecResult xorec_decode(
         case XorecVersion::Scalar:
           xorec_xor_blocks_scalar(recover_block, data_block, block_size);
           break;
-        case XorecVersion::AVX:
-          xorec_xor_blocks_avx(recover_block, data_block, block_size);
+        case XorecVersion::SSE2:
+          xorec_xor_blocks_sse2(recover_block, data_block, block_size);
           break;
         case XorecVersion::AVX2:
           xorec_xor_blocks_avx2(recover_block, data_block, block_size);
@@ -136,8 +136,8 @@ XorecResult xorec_unified_encode(
       case XorecVersion::Scalar:
         xorec_xor_blocks_scalar(parity_block, data_block, block_size);
         break;
-      case XorecVersion::AVX:
-        xorec_xor_blocks_avx(parity_block, data_block, block_size);
+      case XorecVersion::SSE2:
+        xorec_xor_blocks_sse2(parity_block, data_block, block_size);
         break;
       case XorecVersion::AVX2:
         xorec_xor_blocks_avx2(parity_block, data_block, block_size);
@@ -192,8 +192,8 @@ XorecResult xorec_unified_decode(
         case XorecVersion::Scalar:
           xorec_xor_blocks_scalar(recover_block, data_block, block_size);
           break;
-        case XorecVersion::AVX:
-          xorec_xor_blocks_avx(recover_block, data_block, block_size);
+        case XorecVersion::SSE2:
+          xorec_xor_blocks_sse2(recover_block, data_block, block_size);
           break;
         case XorecVersion::AVX2:
           xorec_xor_blocks_avx2(recover_block, data_block, block_size);
@@ -239,8 +239,8 @@ XorecResult xorec_gpu_encode(
       case XorecVersion::Scalar:
         xorec_xor_blocks_scalar(parity_block, data_block, block_size);
         break;
-      case XorecVersion::AVX:
-        xorec_xor_blocks_avx(parity_block, data_block, block_size);
+      case XorecVersion::SSE2:
+        xorec_xor_blocks_sse2(parity_block, data_block, block_size);
         break;
       case XorecVersion::AVX2:
         xorec_xor_blocks_avx2(parity_block, data_block, block_size);
@@ -302,8 +302,8 @@ XorecResult xorec_gpu_decode(
         case XorecVersion::Scalar:
           xorec_xor_blocks_scalar(recover_block, data_block, block_size);
           break;
-        case XorecVersion::AVX:
-          xorec_xor_blocks_avx(recover_block, data_block, block_size);
+        case XorecVersion::SSE2:
+          xorec_xor_blocks_sse2(recover_block, data_block, block_size);
           break;
         case XorecVersion::AVX2:
           xorec_xor_blocks_avx2(recover_block, data_block, block_size);
