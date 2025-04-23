@@ -47,9 +47,9 @@ CATEGORY_INFO = {
   Category.SIMD: {
     "algorithms": [
       "Xorec, Scalar",
-      "Xorec, AVX",
+      "Xorec, SSE2",
       "Xorec, AVX2",
-      "Xorec, AVX512"
+      "Xorec, AVX-512"
     ],
     "file_prefix": "simd",
     "fixed_vals": {
