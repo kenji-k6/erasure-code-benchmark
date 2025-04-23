@@ -390,33 +390,53 @@ def P_recoverable_Xorec(k: int, m: int, P_drop: float) -> float:
   assert(k % m == 0), "k must be divisible by m for XOREC codes."
   return ((1+((P_drop * k)/m))**m) * ((1 - P_drop)**k)
 
-
 def plot_P_recoverable(output_dir: str) -> None:
   ec_params = [
     (4+32, 32), (8+64, 64), (16+128, 128)
   ]
+  plot_P_recoverable_mds(output_dir, ec_params)
+  plot_P_recoverable_xorec(output_dir, ec_params)
 
-  output_file = os.path.join(output_dir, "p_recoverable.pdf")
+def plot_P_recoverable_mds(output_dir: str, ec_params) -> None:
+
+  output_file = os.path.join(output_dir, "p_recoverable_mds.pdf")
   P_drop = np.logspace(-3, 0, 100)
   plt.figure(figsize=(7, 5))
 
   x_label = r"$P_{drop}$"
-  y_label = r"$P_{recoverable}$"
+  y_label = r"$P^{MDS}_{rec}$"
 
   for (n, k) in ec_params:
     m = n - k
     P_MDS = [P_recoverable_MDS(k, m, p) for p in P_drop]
-    P_Xorec = [P_recoverable_Xorec(k, m, p) for p in P_drop]
     plt.plot(
       P_drop,
       P_MDS,
       label=fr"MDS ${n}/{k}$",
-      linestyle="--",
+      linestyle="-",
     )
+  plt.xscale("log")
+  plt.xlim((1e-3)*3, (1e-1)*1.1)
+  plt.xlabel(x_label)
+  plt.ylabel(y_label)
+  plt.legend(loc=LEGEND_LOC, ncols=1, fontsize=LEGEND_FONTSIZE)
+  plt.grid(True, which="both", linestyle="--")
+  plt.tight_layout()
+  plt.savefig(output_file, format="pdf", dpi=300)
+  plt.close()
+
+
+def plot_P_recoverable_xorec(output_dir: str, ec_params) -> None:
+
+  output_file = os.path.join(output_dir, "p_recoverable_xorec.pdf")
+  P_drop = np.logspace(-3, 0, 100)
+  plt.figure(figsize=(7, 5))
+
+  x_label = r"$P_{drop}$"
+  y_label = r"$P^{Xorec}_{rec}$"
 
   for (n, k) in ec_params:
     m = n - k
-    P_MDS = [P_recoverable_MDS(k, m, p) for p in P_drop]
     P_Xorec = [P_recoverable_Xorec(k, m, p) for p in P_drop]
     plt.plot(
       P_drop,
