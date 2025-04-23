@@ -1,30 +1,38 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(CMAKE_BUILD_TYPE Release)
 
-# Prevent in-source builds
+# Prevent in-source builds to keep build artifacts separate
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-    message(FATAL_ERROR "In-source builds are not allowed. Please run cmake from a 'build' directory.")
+message(FATAL_ERROR "In-source builds are not allowed. Please run cmake from a 'build' directory.")
 endif()
 
+# If not specified otherwise, set the build type to Release
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+# Set the project name and languages
 project(ec-benchmark LANGUAGES CXX CUDA)
 
 # Set C++ standard to 20
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Set CUDA standard
+# Set CUDA standard and compilation settings
 set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+
 
 # Set architecture to sm_70 (since we have Tesla V100s)
 set(CMAKE_CUDA_ARCHITECTURES 70)
 
-# Set proper compiler flags
+# Set proper compiler flags (aggresive optimizations & SIMD)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -O3 -march=native -funroll-loops -mavx -mavx2 -mavx512f")
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3")
 
-find_package(OpenMP REQUIRED) # needed for leopard
+# Required for Leopard
+find_package(OpenMP REQUIRED)
 
 # Add source files
 set (SOURCES
@@ -58,15 +66,12 @@ set (SOURCES
 # Create the ec-benchmark executable
 add_executable(ec-benchmark ${SOURCES})
 
+set_target_properties(ec-benchmark PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build
+)
 
-
-# Maybe in the future: link necessary libraries / check if submodules are initialized
-set_target_properties(ec-benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
-
-
-# Google benchmarking library
+# Google benchmarking library (download dependencies, disable tests)
 # Enable libpfm for benchmarking (needed for counting cycles, instructions, etc.)
-set(CMAKE_BUILD_TYPE Release)
 set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON CACHE BOOL "Enable downloading of dependencies" FORCE)
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable testing in Google Benchmark" FORCE)
 add_subdirectory(libraries/google_benchmark)
@@ -97,7 +102,7 @@ target_include_directories(ec-benchmark PRIVATE
 )
 
 
-# CUDA Stuff
+# Ensure CUDA is available
 find_package(CUDA REQUIRED)
 
 # Include CUDA headers and libraries
