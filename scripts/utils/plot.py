@@ -315,7 +315,7 @@ def plot_ec_datasize_heatmap(data: pd.DataFrame, val_type: PlotType, category: C
   algorithms = data[Column.NAME].unique()
 
   plt.rcParams.update({"font.size": MAIN_FONTSIZE})
-  fig, axs = plt.subplots(2, (len(algorithms)+2-1)//2, figsize=(((len(algorithms)+2-1)//2)*7,2*7))
+  fig, axs = plt.subplots(2, (len(algorithms)+2-1)//2, figsize=(((len(algorithms)+2-1)//2)*7,2*5))
   axs = axs.flatten()
   
   # ensure gradients are on a global (not per-plot) scale
