@@ -8,24 +8,28 @@ XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexce
     m_threads_per_gpu_block(config.threads_per_gpu_block)
 {
   // Overwrite default initializations
-  m_data_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_data_blocks);
-  m_parity_buf = make_unique_cuda<uint8_t>(m_block_size * m_num_parity_blocks);
-  xorec_gpu_init(m_num_data_blocks);
+  m_data_buf = make_unique_cuda<uint8_t>(m_chunks * m_chunk_data_size);
+  m_parity_buf = make_unique_cuda<uint8_t>(m_chunks * m_chunk_parity_size);
+  xorec_gpu_init(m_chunk_data_blocks);
 }
 
 void XorecBenchmarkGpuCmp::setup() noexcept {
-  std::fill_n(m_block_bitmap.get(), m_num_tot_blocks, 1);
+  std::fill_n(m_block_bitmap.get(), m_chunks * m_chunk_tot_blocks, 1);
   m_write_data_buffer();
 }
 
 void XorecBenchmarkGpuCmp::m_write_data_buffer() noexcept {
-  std::unique_ptr<uint8_t[]> temp_data_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_data_blocks);
-  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
-    if (write_validation_pattern(&temp_data_buffer[i*m_block_size], m_block_size)) {
-      throw_error("Xorec (Gpu Computation): Failed to write validation pattern");
+  std::unique_ptr<uint8_t[]> temp_data_buffer = std::make_unique<uint8_t[]>(m_chunks * m_chunk_data_size);
+
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    auto data_buf = temp_data_buffer.get() + c * m_chunk_data_size;
+    for (unsigned i = 0; i < m_chunk_data_blocks; ++i) {
+      if (write_validation_pattern(&data_buf[i*m_block_size], m_block_size)) {
+        throw_error("Failed to write random checking packet.");
+      }
     }
   }
-  cudaMemcpy(m_data_buf.get(), temp_data_buffer.get(), m_block_size * m_num_data_blocks, cudaMemcpyHostToDevice);
+  cudaMemcpy(m_data_buf.get(), temp_data_buffer.get(), m_chunks * m_chunk_data_size, cudaMemcpyHostToDevice);
   cudaDeviceSynchronize();
 }
 
@@ -33,9 +37,10 @@ int XorecBenchmarkGpuCmp::encode() noexcept {
   XorecResult res = xorec_gpu_encode(
     m_data_buf.get(),
     m_parity_buf.get(),
+    m_chunks,
     m_block_size,
-    m_num_data_blocks,
-    m_num_parity_blocks,
+    m_chunk_data_blocks,
+    m_chunk_parity_blocks,
     m_num_gpu_blocks,
     m_threads_per_gpu_block
   );
@@ -47,45 +52,51 @@ int XorecBenchmarkGpuCmp::decode() noexcept {
   XorecResult res = xorec_gpu_decode(
     m_data_buf.get(),
     m_parity_buf.get(),
+    m_chunks,
     m_block_size,
-    m_num_data_blocks,
-    m_num_parity_blocks,
+    m_chunk_data_blocks,
+    m_chunk_parity_blocks,
     m_block_bitmap.get(),
     m_num_gpu_blocks,
     m_threads_per_gpu_block
   );
   cudaDeviceSynchronize();
   return (res == XorecResult::Success) ? 0 : -1;
-  return 0;
 }
 
 void XorecBenchmarkGpuCmp::simulate_data_loss() noexcept {
-  select_lost_blocks(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap.get());
-  unsigned i;
-  for (i = 0; i < m_num_data_blocks; ++i) {
-    if (!m_block_bitmap[i]) {
-      cudaError_t err = cudaMemsetAsync(&m_data_buf[i*m_block_size], 0, m_block_size);
-      if (err != cudaSuccess) throw_error("Xorec (Gpu Computation): Failed to memset in simulate_data_loss.");
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    auto bitmap = m_block_bitmap.get() + c * m_chunk_tot_blocks;
+    auto data_buf = m_data_buf.get() + c * m_chunk_data_size;
+    auto parity_buf = m_parity_buf.get() + c * m_chunk_parity_size;
+
+    select_lost_blocks(m_chunk_data_blocks, m_chunk_parity_blocks, m_chunk_lost_blocks, bitmap);
+
+    unsigned i;
+    for (i = 0; i < m_chunk_data_blocks; ++i) {
+      if (!bitmap[i]) cudaMemsetAsync(&data_buf[i*m_block_size], 0, m_block_size);
+    }
+
+    for (; i < m_chunk_tot_blocks; ++i) {
+      auto idx = i - m_chunk_data_blocks;
+      if (!bitmap[i]) cudaMemsetAsync(&parity_buf[idx*m_block_size], 0, m_block_size);
     }
   }
 
-  for (; i < m_num_tot_blocks; ++i) {
-    auto idx = i - m_num_data_blocks;
-    if (!m_block_bitmap[i]) {
-      cudaError_t err = cudaMemsetAsync(&m_parity_buf[idx*m_block_size], 0, m_block_size);
-      if (err != cudaSuccess) throw_error("Xorec (Gpu Computation): Failed to memset in simulate_data_loss.");
-    }
-  }
   cudaDeviceSynchronize();
 }
 
 bool XorecBenchmarkGpuCmp::check_for_corruption() const noexcept {
-  std::unique_ptr<uint8_t[]> temp_data_buffer = std::make_unique<uint8_t[]>(m_block_size * m_num_data_blocks);
-  cudaMemcpy(temp_data_buffer.get(), m_data_buf.get(), m_block_size * m_num_data_blocks, cudaMemcpyDeviceToHost);
+  std::unique_ptr<uint8_t[]> temp_data_buffer = std::make_unique<uint8_t[]>(m_chunks * m_chunk_data_size);
+  cudaMemcpy(temp_data_buffer.get(), m_data_buf.get(), m_chunks * m_chunk_data_size, cudaMemcpyDeviceToHost);
   cudaDeviceSynchronize();
 
-  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
-    if (!validate_block(&temp_data_buffer[i*m_block_size], m_block_size)) return false;
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    auto data_buf = temp_data_buffer.get() + c * m_chunk_data_size;
+
+    for (unsigned i = 0; i < m_chunk_data_blocks; ++i) {
+      if (!validate_block(&data_buf[i*m_block_size], m_block_size)) return false;
+    }
   }
   return true;
 }
