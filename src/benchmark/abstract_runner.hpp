@@ -125,9 +125,8 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
     state.SetIterationTime(static_cast<double>(time_encode+time_decode)/1e9);
   }
 
-
-  const Stats enc_stats = compute_stats(enc_times, config.data_size);
-  const Stats dec_stats = compute_stats(dec_times, config.data_size);
+  const Stats enc_stats = compute_stats(enc_times, config.message_size);
+  const Stats dec_stats = compute_stats(dec_times, config.message_size);
 
   // Set counters
   const std::vector<std::pair<std::string, double>> config_counters = {

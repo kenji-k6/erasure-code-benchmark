@@ -230,9 +230,10 @@ namespace {
         for (const auto& block_size : VAR_BLOCK_SIZES) {
           for (const auto& ec_params : VAR_EC_PARAMS) {
             const auto& [tot_blocks, data_blocks] = ec_params;
-
             for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
-              if (lost_blocks > tot_blocks-data_blocks) continue;
+              // if (lost_blocks > tot_blocks-data_blocks) continue;
+              if ((tot_blocks != 8+32 || block_size != 4 KiB || cpu_threads != 1) && lost_blocks > 0) continue;
+              
               cpu_configs.push_back({
                 .message_size = MESSAGE_SIZE,
                 .block_size = block_size,
@@ -254,7 +255,8 @@ namespace {
         for (const auto& ec_params : VAR_EC_PARAMS) {
           const auto& [tot_blocks, data_blocks] = ec_params;
           for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
-            if (lost_blocks > tot_blocks-data_blocks) continue;
+            // if (lost_blocks > tot_blocks-data_blocks) continue;
+            if ((tot_blocks != 8+32 || block_size != 4 KiB) && lost_blocks > 0) continue;
             for (const auto& num_gpu_blocks : VAR_NUM_GPU_BLOCKS) {
               for (const auto& threads_per_block : VAR_NUM_THREADS_PER_BLOCK) {
                 gpu_configs.push_back({
@@ -262,6 +264,7 @@ namespace {
                   .block_size = block_size,
                   .ec_params = ec_params,
                   .num_lost_blocks = lost_blocks,
+                  .num_cpu_threads = 0,
                   .num_iterations = NUM_ITERATIONS,
                   .num_warmup_iterations = NUM_WARMUP_ITERATIONS,
                   .gpu_computation = true,

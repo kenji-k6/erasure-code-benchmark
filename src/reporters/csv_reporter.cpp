@@ -26,7 +26,7 @@ void CSVReporter::write_header() {
   constexpr std::string_view header =
   "name,err_msg,iterations,warmup_iterations,"
   "gpu_computation,gpu_blocks,threads_per_block,"
-  "message_size_B,block_size_B,EC,lost_blocks,cpu_threads"
+  "message_size_B,block_size_B,EC,lost_blocks,cpu_threads,"
   "encode_time_ns,encode_time_ns_stddev,"
   "encode_throughput_Gbps,encode_throughput_Gbps_stddev,"
   "decode_time_ns,decode_time_ns_stddev,"
@@ -45,11 +45,7 @@ void CSVReporter::ReportRuns(const std::vector<Run>& runs) {
   const auto& run = runs[0];
   const auto& counters = run.counters;
 
-  auto get_counter = [&counters](const std::string& key) -> double {
-    auto it = counters.find(key);
-    if (it != counters.end()) return it->second.value;
-    throw std::runtime_error("Counter not found: " + key);
-  };
+  auto get_counter = [&counters](const std::string& key) -> double { return counters.find(key)->second.value; };
 
   auto benchmark_name = run.benchmark_name();
   auto cut_off = benchmark_name.find_first_of("/");

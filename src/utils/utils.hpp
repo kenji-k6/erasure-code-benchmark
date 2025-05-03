@@ -9,7 +9,7 @@
 
 /// @attention THIS MACRO TOGGLES WHETHER TO CORRUPTION CHECK AND VALIDATION OF DATA IS MADE OR NOT
 /// Since validation incurs a significant overhead, one can get results faster by disabling it.
-#define ENABLE_VALIDATION 0
+#define ENABLE_VALIDATION 1
 
 
 #include <algorithm>
