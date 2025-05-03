@@ -26,7 +26,7 @@ void CSVReporter::write_header() {
   constexpr std::string_view header =
   "name,err_msg,iterations,warmup_iterations,"
   "gpu_computation,gpu_blocks,threads_per_block,"
-  "data_size_B,block_size_B,EC,lost_blocks,"
+  "message_size_B,block_size_B,EC,lost_blocks,cpu_threads"
   "encode_time_ns,encode_time_ns_stddev,"
   "encode_throughput_Gbps,encode_throughput_Gbps_stddev,"
   "decode_time_ns,decode_time_ns_stddev,"
@@ -56,10 +56,11 @@ void CSVReporter::ReportRuns(const std::vector<Run>& runs) {
   std::string name = "\"" + std::string(benchmark_name.substr(0, cut_off)) + "\"";
 
   int warmup_iterations = static_cast<int>(get_counter("num_warmup_iterations"));
+  int cpu_threads = static_cast<int>(get_counter("num_cpu_threads"));
   int gpu_computation = static_cast<int>(get_counter("gpu_computation"));
   int gpu_blocks = static_cast<int>(get_counter("num_gpu_blocks"));
   int threads_per_block = static_cast<int>(get_counter("threads_per_gpu_block"));
-  size_t data_size_B = static_cast<size_t>(get_counter("data_size_B"));
+  size_t message_size_B = static_cast<size_t>(get_counter("message_size_B"));
   size_t block_size_B = static_cast<size_t>(get_counter("block_size_B"));
   size_t lost_blocks = static_cast<size_t>(get_counter("num_lost_blocks"));
 
@@ -84,10 +85,11 @@ void CSVReporter::ReportRuns(const std::vector<Run>& runs) {
          << gpu_computation << ","
          << gpu_blocks << ","
          << threads_per_block << ","
-         << data_size_B << ","
+         << message_size_B << ","
          << block_size_B << ","
          << ec_params << ","
          << lost_blocks << ","
+         << cpu_threads << ","
          << enc_t_ns << ","
          << enc_t_ns_stddev << ","
          << enc_tp_Gbps << ","

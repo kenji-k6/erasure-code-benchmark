@@ -132,11 +132,12 @@ static void BM_generic(benchmark::State& state, const BenchmarkConfig& config) {
   // Set counters
   const std::vector<std::pair<std::string, double>> config_counters = {
     { "num_warmup_iterations",  static_cast<double>(config.num_warmup_iterations)   },
-    { "data_size_B",            static_cast<double>(config.data_size)               },
+    { "message_size_B",         static_cast<double>(config.message_size)            },
     { "block_size_B",           static_cast<double>(config.block_size)              },
     { "ec_params_0",            static_cast<double>(std::get<0>(config.ec_params))  },
     { "ec_params_1",            static_cast<double>(std::get<1>(config.ec_params))  },
     { "num_lost_blocks",        static_cast<double>(config.num_lost_blocks)         },
+    { "num_cpu_threads",        static_cast<double>(config.num_cpu_threads)         },
     { "gpu_computation",        config.gpu_computation ? 1.0 : 0.0                  },
     { "num_gpu_blocks",         static_cast<double>(config.num_gpu_blocks)          },
     { "threads_per_gpu_block",  static_cast<double>(config.threads_per_gpu_block)   }
