@@ -29,7 +29,7 @@ if __name__ == "__main__":
   df = data.get_df(RAW_FILE)
 
   # Plot the bar plots for encoding and decoding throughput for each category
-  for category in [Category.CPU, Category.SIMD, Category.XOREC]:
+  for category in [Category.CPU, Category.SIMD, Category.XOREC, Category.OPENSOURCE]:
     category_dir = os.path.join(PLOT_DIR, OUTPUT_SUBDIR[category])
     for y_type in PlotType:
       plot.plot_EC(

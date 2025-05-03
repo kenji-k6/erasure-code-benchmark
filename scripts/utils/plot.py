@@ -19,7 +19,7 @@ def plot_EC(data: pd.DataFrame, y_type: PlotType, category: Category, output_dir
   Y-Axis: throughput
   """
   assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
-  assert(category in [Category.CPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.SIMD}', or '{Category.XOREC}'."
+  assert(category in [Category.CPU, Category.SIMD, Category.XOREC, Category.OPENSOURCE]), f"Invalid category. Must be '{Category.CPU}', '{Category.SIMD}', '{Category.OPENSOURCE}', or '{Category.XOREC}'."
 
   fixed_vals = CATEGORY_INFO[category]["fixed_vals"]
 
@@ -112,7 +112,7 @@ def plot_datasize(data: pd.DataFrame, y_type: PlotType, category: Category, outp
   Y-Axis: throughput
   """
   assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
-  assert(category in [Category.CPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.SIMD}', or '{Category.XOREC}'."
+  assert(category in [Category.CPU, Category.SIMD, Category.XOREC, Category.OPENSOURCE]), f"Invalid category. Must be '{Category.CPU}', '{Category.SIMD}', '{Category.OPENSOURCE}', or '{Category.XOREC}'."
 
   fixed_vals = CATEGORY_INFO[category]["fixed_vals"]
 
@@ -207,7 +207,7 @@ def plot_lost_blocks(data: pd.DataFrame, y_type: PlotType, category: Category, o
   Y-Axis: throughput
   """
   assert(y_type in [PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.DECODE}'."
-  assert(category in [Category.CPU, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.CPU}', '{Category.SIMD}', or '{Category.XOREC}'."
+  assert(category in [Category.CPU, Category.SIMD, Category.XOREC, Category.OPENSOURCE]), f"Invalid category. Must be '{Category.CPU}', '{Category.SIMD}', '{Category.OPENSOURCE}', or '{Category.XOREC}'."
 
   fixed_vals = CATEGORY_INFO[category]["fixed_vals"]
   
@@ -403,8 +403,8 @@ def plot_P_recoverable_mds(output_dir: str, ec_params) -> None:
   P_drop = np.logspace(-3, 0, 100)
   plt.figure(figsize=(7, 5))
 
-  x_label = r"$P_{drop}$"
-  y_label = r"$P^{MDS}_{rec}$"
+  x_label = r"$P_{\mathrm{drop}}$"
+  y_label = r"$P^{\mathrm{MDS}}_{\mathrm{rec}}$"
 
   for (n, k) in ec_params:
     m = n - k
@@ -412,7 +412,7 @@ def plot_P_recoverable_mds(output_dir: str, ec_params) -> None:
     plt.plot(
       P_drop,
       P_MDS,
-      label=fr"MDS ${n}/{k}$",
+      label=fr"MDS $({n}/{k})$",
       linestyle="-",
     )
   plt.xscale("log")
@@ -432,8 +432,8 @@ def plot_P_recoverable_xorec(output_dir: str, ec_params) -> None:
   P_drop = np.logspace(-3, 0, 100)
   plt.figure(figsize=(7, 5))
 
-  x_label = r"$P_{drop}$"
-  y_label = r"$P^{Xorec}_{rec}$"
+  x_label = r"$P_{\mathrm{drop}}$"
+  y_label = r"$P^{\mathrm{XOR\!-\!EC}}_{\mathrm{rec}}$"
 
   for (n, k) in ec_params:
     m = n - k
@@ -441,7 +441,7 @@ def plot_P_recoverable_xorec(output_dir: str, ec_params) -> None:
     plt.plot(
       P_drop,
       P_Xorec,
-      label=fr"Xorec ${n}/{k}$",
+      label=fr"XOR-EC $({n}/{k})$",
       linestyle="-",
     )
   plt.xscale("log")

@@ -16,6 +16,7 @@ class Column:
 
 class Category(Enum):
   CPU = "CPU"
+  OPENSOURCE = "OPEN_SOURCE"
   SIMD = "XOREC SIMD"
   XOREC = "XOREC VARIANT"
 
@@ -25,6 +26,7 @@ class PlotType(Enum):
 
 OUTPUT_SUBDIR = {
   Category.CPU: "cpu",
+  Category.OPENSOURCE: "opensource",
   Category.SIMD: "simd",
   Category.XOREC: "xorec"
 }
@@ -32,7 +34,7 @@ OUTPUT_SUBDIR = {
 CATEGORY_INFO = {
   Category.CPU: {
     "algorithms": [
-      "Xorec, AVX2",
+      "XOR-EC, AVX2",
       "ISA-L",
       "CM256",
       "Leopard"
@@ -44,12 +46,25 @@ CATEGORY_INFO = {
       Column.EC: "(36/32)",
     }
   },
+  Category.OPENSOURCE: {
+    "algorithms": [
+      "ISA-L",
+      "CM256",
+      "Leopard"
+    ],
+    "file_prefix": "os",
+    "fixed_vals": {
+      Column.DATA_SIZE: 512,
+      Column.LOST_BLOCKS: 0,
+      Column.EC: "(36/32)",
+    }
+  },
   Category.SIMD: {
     "algorithms": [
-      "Xorec, Scalar",
-      "Xorec, SSE2",
-      "Xorec, AVX2",
-      "Xorec, AVX-512"
+      "XOR-EC, Scalar",
+      "XOR-EC, SSE2",
+      "XOR-EC, AVX2",
+      "XOR-EC, AVX-512"
     ],
     "file_prefix": "simd",
     "fixed_vals": {
@@ -60,10 +75,10 @@ CATEGORY_INFO = {
   },
   Category.XOREC: {
     "algorithms": [
-      "Xorec, AVX2",
-      "Xorec (Unified Memory), AVX2",
-      "Xorec (GPU Memory), AVX2",
-      "Xorec (GPU Computation)"
+      "XOR-EC, AVX2",
+      "XOR-EC (Unified Memory), AVX2",
+      "XOR-EC (GPU Memory), AVX2",
+      "XOR-EC (GPU Computation)"
     ],
     "file_prefix": "xorec",
     "fixed_vals": {
