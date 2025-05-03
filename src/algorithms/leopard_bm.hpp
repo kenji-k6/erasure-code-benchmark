@@ -18,6 +18,7 @@ public:
   void setup() noexcept override;
   int encode() noexcept override;
   int decode() noexcept override;
+  void simulate_data_loss() noexcept override;
 
 private:
   size_t m_parity_work_count;
@@ -26,9 +27,9 @@ private:
   std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_recovery_buf;
 
   // Pointer vectors
-  std::vector<uint8_t*> m_data_ptrs;      ///< Pointers to the original data blocks
-  std::vector<uint8_t*> m_parity_ptrs;    ///< Pointers to the encoded data blocks
-  std::vector<uint8_t*> m_recovery_ptrs;  ///< Pointers to the decoded data blocks
+  std::vector<void*> m_data_ptrs;      ///< Pointers to the original data blocks
+  std::vector<void*> m_parity_ptrs;    ///< Pointers to the encoded data blocks
+  std::vector<void*> m_recovery_ptrs;  ///< Pointers to the decoded data blocks
 };
 
 #endif // LEOPARD_BM_HPP

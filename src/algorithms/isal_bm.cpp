@@ -17,22 +17,16 @@ ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept
     m_recovery_outp_buf(make_unique_aligned<uint8_t>(m_chunks * m_chunk_data_size)),
     m_encode_matrix(make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks))
 {
-  // size vectors appropriately
-  m_decode_matrix_vec.reserve(m_chunks);
-  m_invert_matrix_vec.reserve(m_chunks);
-  m_temp_matrix_vec.reserve(m_chunks);
-  m_g_tbls_vec.reserve(m_chunks);
-  m_frag_ptrs_vec.reserve(m_chunks);
-  m_parity_src_ptrs_vec.reserve(m_chunks);
-  m_recovery_outp_ptrs_vec.reserve(m_chunks);
-  m_block_err_list_vec.reserve(m_chunks);
-  m_decode_index_vec.reserve(m_chunks);
-
+  m_frag_ptrs_vec.resize(m_chunks);
+  m_parity_src_ptrs_vec.resize(m_chunks);
+  m_recovery_outp_ptrs_vec.resize(m_chunks);
+  m_block_err_list_vec.resize(m_chunks);
+  m_decode_index_vec.resize(m_chunks);
   for (unsigned c = 0; c < m_chunks; ++c) {
-    m_decode_matrix_vec[c] = make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks);
-    m_invert_matrix_vec[c] = make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks);
-    m_temp_matrix_vec[c] = make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks);
-    m_g_tbls_vec[c] = make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks * 32);
+    m_decode_matrix_vec.push_back(make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks));
+    m_invert_matrix_vec.push_back(make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks));
+    m_temp_matrix_vec.push_back(make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks));
+    m_g_tbls_vec.push_back(make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks * 32));
   }
 }
 
@@ -45,8 +39,8 @@ void ISALBenchmark::setup() noexcept {
     auto parity_buf = m_parity_buf.get() + c * m_chunk_parity_size;
     auto recovery_outp_buf = m_recovery_outp_buf.get() + c * m_chunk_data_size;
     auto g_tbls = m_g_tbls_vec[c].get();
-    auto frag_ptrs = m_frag_ptrs_vec[c];
-    auto recovery_outp_ptrs = m_recovery_outp_ptrs_vec[c];
+    auto& frag_ptrs = m_frag_ptrs_vec[c];
+    auto& recovery_outp_ptrs = m_recovery_outp_ptrs_vec[c];
 
     for (unsigned i = 0; i < m_chunk_data_blocks; ++i) frag_ptrs[i] = &data_buf[i*m_block_size];
     for (unsigned i = 0; i < m_chunk_parity_blocks; ++i) {
@@ -64,13 +58,13 @@ int ISALBenchmark::encode() noexcept {
   #pragma omp parallel for
   for (unsigned c = 0; c < m_chunks; ++c) {
     auto g_tbls = m_g_tbls_vec[c].get();
-    auto frag_ptrs = m_frag_ptrs_vec[c];
+    auto& frag_ptrs = m_frag_ptrs_vec[c];
     ec_encode_data(
       m_block_size,
       m_chunk_data_blocks,
       m_chunk_parity_blocks,
       g_tbls,
-      frag_ptrs.data(),
+      &frag_ptrs[0],
       &frag_ptrs[m_chunk_data_blocks]
     );
   }
@@ -90,11 +84,11 @@ int ISALBenchmark::decode() noexcept {
     auto invert_matrix = m_invert_matrix_vec[c].get();
     auto temp_matrix = m_temp_matrix_vec[c].get();
     auto g_tbls = m_g_tbls_vec[c].get();
-    auto frag_ptrs = m_frag_ptrs_vec[c];
-    auto parity_src_ptrs = m_parity_src_ptrs_vec[c];
-    auto recovery_outp_ptrs = m_recovery_outp_ptrs_vec[c];
-    auto block_err_list = m_block_err_list_vec[c];
-    auto decode_index = m_decode_index_vec[c];
+    auto& frag_ptrs = m_frag_ptrs_vec[c];
+    auto& parity_src_ptrs = m_parity_src_ptrs_vec[c];
+    auto& recovery_outp_ptrs = m_recovery_outp_ptrs_vec[c];
+    auto& block_err_list = m_block_err_list_vec[c];
+    auto& decode_index = m_decode_index_vec[c];
 
     size_t nerrs = 0;
 

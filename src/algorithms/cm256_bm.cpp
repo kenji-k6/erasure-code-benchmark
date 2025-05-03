@@ -20,7 +20,7 @@ CM256Benchmark::CM256Benchmark(const BenchmarkConfig& config) noexcept
 
 {
   if (cm256_init()) throw_error("CM256: Initialization failed.");
-  m_blocks.reserve(ECLimits::CM256_MAX_TOT_BLOCKS * m_chunks);
+  m_blocks.resize(ECLimits::CM256_MAX_TOT_BLOCKS * m_chunks);
 }
 
 void CM256Benchmark::setup() noexcept {
