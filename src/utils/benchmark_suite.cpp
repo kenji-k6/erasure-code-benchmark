@@ -48,9 +48,9 @@ namespace {
     { "cm256",              "CM256"                   },
     { "isal",               "ISA-L"                   },
     { "leopard",            "Leopard"                 },
-    { "xorec",              "Xorec"                   },
-    { "xorec-unified-ptr",  "Xorec (Unified Memory)"  },
-    { "xorec-gpu-ptr",      "Xorec (GPU Memory)"      }
+    { "xorec",              "XOR-EC"                  },
+    { "xorec-unified-ptr",  "XOR-EC (Unified Memory)" },
+    { "xorec-gpu-ptr",      "XOR-EC (GPU Memory)"     }
   };
 
   const std::unordered_map<std::string, BenchmarkFunction> GPU_BM_FUNCTIONS = {
@@ -58,7 +58,7 @@ namespace {
   };
   
   const std::unordered_map<std::string, std::string> GPU_BM_NAMES = {
-    { "xorec-gpu",  "Xorec (GPU Computation)" }
+    { "xorec-gpu",  "XOR-EC (GPU Computation)" }
   };
   
   const std::unordered_map<std::string, XorecVersion> XOREC_VERSIONS = {
