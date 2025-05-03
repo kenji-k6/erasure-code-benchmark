@@ -413,7 +413,7 @@ def plot_P_recoverable_mds(output_dir: str, ec_params) -> None:
     plt.plot(
       P_drop,
       P_MDS,
-      label=fr"MDS ${n}/{k}$",
+      label=fr"MDS $({n}/{k})$",
       linestyle="-",
     )
   plt.xscale("log")
@@ -444,7 +444,7 @@ def plot_P_recoverable_xorec(output_dir: str, ec_params) -> None:
     plt.plot(
       P_drop,
       P_Xorec,
-      label=fr"Xorec ${n}/{k}$",
+      label=fr"XOR-EC $({n}/{k})$",
       linestyle="-",
     )
   plt.xscale("log")
