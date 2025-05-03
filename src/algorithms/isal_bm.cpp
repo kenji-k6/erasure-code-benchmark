@@ -14,73 +14,130 @@
 
 ISALBenchmark::ISALBenchmark(const BenchmarkConfig& config) noexcept
   : AbstractBenchmark(config),
-    m_recovery_outp_buf(make_unique_aligned<uint8_t>(m_num_data_blocks * m_block_size)),
-    m_encode_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
-    m_decode_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
-    m_invert_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
-    m_temp_matrix(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks)),
-    m_g_tbls(make_unique_aligned<uint8_t>(m_num_tot_blocks * m_num_data_blocks * 32))
-{}
+    m_recovery_outp_buf(make_unique_aligned<uint8_t>(m_chunks * m_chunk_data_size)),
+    m_encode_matrix(make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks))
+{
+  // size vectors appropriately
+  m_decode_matrix_vec.reserve(m_chunks);
+  m_invert_matrix_vec.reserve(m_chunks);
+  m_temp_matrix_vec.reserve(m_chunks);
+  m_g_tbls_vec.reserve(m_chunks);
+  m_frag_ptrs_vec.reserve(m_chunks);
+  m_parity_src_ptrs_vec.reserve(m_chunks);
+  m_recovery_outp_ptrs_vec.reserve(m_chunks);
+  m_block_err_list_vec.reserve(m_chunks);
+  m_decode_index_vec.reserve(m_chunks);
+
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    m_decode_matrix_vec[c] = make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks);
+    m_invert_matrix_vec[c] = make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks);
+    m_temp_matrix_vec[c] = make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks);
+    m_g_tbls_vec[c] = make_unique_aligned<uint8_t>(m_chunk_tot_blocks * m_chunk_data_blocks * 32);
+  }
+}
 
 void ISALBenchmark::setup() noexcept {
-  std::fill_n(m_block_bitmap.get(), m_num_tot_blocks, 1);
-  
-  for (unsigned i = 0; i < m_num_data_blocks; ++i) m_frag_ptrs[i] = &m_data_buf[i*m_block_size];
-  for (unsigned i = 0; i < m_num_parity_blocks; ++i) {
-    m_frag_ptrs[m_num_data_blocks + i] = &m_parity_buf[i*m_block_size];
-    m_recovery_outp_ptrs[i] = &m_recovery_outp_buf[i*m_block_size];
+  std::fill_n(m_block_bitmap.get(), m_chunks * m_chunk_tot_blocks, 1);
+  gf_gen_cauchy1_matrix(m_encode_matrix.get(), m_chunk_tot_blocks, m_chunk_data_blocks);
+
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    auto data_buf = m_data_buf.get() + c * m_chunk_data_size;
+    auto parity_buf = m_parity_buf.get() + c * m_chunk_parity_size;
+    auto recovery_outp_buf = m_recovery_outp_buf.get() + c * m_chunk_data_size;
+    auto g_tbls = m_g_tbls_vec[c].get();
+    auto frag_ptrs = m_frag_ptrs_vec[c];
+    auto recovery_outp_ptrs = m_recovery_outp_ptrs_vec[c];
+
+    for (unsigned i = 0; i < m_chunk_data_blocks; ++i) frag_ptrs[i] = &data_buf[i*m_block_size];
+    for (unsigned i = 0; i < m_chunk_parity_blocks; ++i) {
+      frag_ptrs[m_chunk_data_blocks + i] = &parity_buf[i*m_block_size];
+      recovery_outp_ptrs[i] = &recovery_outp_buf[i*m_block_size];
+    }
+    ec_init_tables(m_chunk_data_blocks, m_chunk_parity_blocks, &m_encode_matrix[m_chunk_data_blocks*m_chunk_data_blocks], g_tbls);
   }
-  // Generate encode matricx, can be precomputed as it is fixed for a given m_num_original_blocks
-  gf_gen_cauchy1_matrix(m_encode_matrix.get(), m_num_tot_blocks, m_num_data_blocks);
-  
-  // Initialize generator tables for encoding, can be precomputed as it is fixed for a given m_num_original_blocks
-  ec_init_tables(m_num_data_blocks, m_num_parity_blocks, &m_encode_matrix[m_num_data_blocks*m_num_data_blocks], m_g_tbls.get());
   m_write_data_buffer();
+  omp_set_num_threads(m_threads);
 }
 
 
 int ISALBenchmark::encode() noexcept {
-  ec_encode_data(
-    m_block_size,
-    m_num_data_blocks,
-    m_num_parity_blocks,
-    m_g_tbls.get(),
-    m_frag_ptrs.data(),
-    &m_frag_ptrs[m_num_data_blocks]
-  );
+  #pragma omp parallel for
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    auto g_tbls = m_g_tbls_vec[c].get();
+    auto frag_ptrs = m_frag_ptrs_vec[c];
+    ec_encode_data(
+      m_block_size,
+      m_chunk_data_blocks,
+      m_chunk_parity_blocks,
+      g_tbls,
+      frag_ptrs.data(),
+      &frag_ptrs[m_chunk_data_blocks]
+    );
+  }
   return 0;
 }
 
 
 
 int ISALBenchmark::decode() noexcept {
-  size_t nerrs = 0;
-  for (unsigned i = 0; i < m_num_tot_blocks; ++i) {
-    if (!m_block_bitmap[i]) m_block_err_list[nerrs++] = static_cast<uint8_t>(i);
-  }
+  int return_code = 0;
 
-  if (nerrs == 0) return 0;
+  #pragma omp parallel for
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    auto bitmap = m_block_bitmap.get() + c * m_chunk_tot_blocks;
+    auto recovery_outp_buf = m_recovery_outp_buf.get() + c * m_chunk_data_size;
+    auto decode_matrix = m_decode_matrix_vec[c].get();
+    auto invert_matrix = m_invert_matrix_vec[c].get();
+    auto temp_matrix = m_temp_matrix_vec[c].get();
+    auto g_tbls = m_g_tbls_vec[c].get();
+    auto frag_ptrs = m_frag_ptrs_vec[c];
+    auto parity_src_ptrs = m_parity_src_ptrs_vec[c];
+    auto recovery_outp_ptrs = m_recovery_outp_ptrs_vec[c];
+    auto block_err_list = m_block_err_list_vec[c];
+    auto decode_index = m_decode_index_vec[c];
 
-  if (gf_gen_decode_matrix_simple(m_encode_matrix.get(), m_decode_matrix.get(), m_invert_matrix.get(),
-                                  m_temp_matrix.get(), m_decode_index.data(), m_block_err_list.data(),
-                                  nerrs, m_num_data_blocks, m_num_tot_blocks)) {
-    return -1;
-  }
+    size_t nerrs = 0;
 
-  for (unsigned i = 0; i < m_num_data_blocks; ++i) {
-    m_parity_src_ptrs[i] = m_frag_ptrs[m_decode_index[i]];
-  }
+    for (unsigned i = 0; i < m_chunk_tot_blocks; ++i) {
+      if (!bitmap[i]) block_err_list[nerrs++] = static_cast<uint8_t>(i);
+    }
 
-  ec_init_tables(m_num_data_blocks, nerrs, m_decode_matrix.get(), m_g_tbls.get());
-  ec_encode_data(m_block_size, m_num_data_blocks, nerrs,
-                 m_g_tbls.get(), m_parity_src_ptrs.data(), m_recovery_outp_ptrs.data());
-  
-  for (unsigned i = 0; i < nerrs; ++i) {
-    if (m_block_err_list[i] < m_num_data_blocks) {
-      memcpy(m_frag_ptrs[m_block_err_list[i]], &m_recovery_outp_buf[i*m_block_size], m_block_size);
+    if (nerrs == 0) continue;
+
+    if (gf_gen_decode_matrix_simple(
+      m_encode_matrix.get(),
+      decode_matrix,
+      invert_matrix,
+      temp_matrix,
+      decode_index.data(),
+      block_err_list.data(),
+      nerrs, m_chunk_data_blocks, m_chunk_tot_blocks
+    )) {
+      #pragma omp atomic write
+      return_code = 1;
+    }
+
+    for (unsigned i = 0; i < m_chunk_data_blocks; ++i) {
+      parity_src_ptrs[i] = frag_ptrs[decode_index[i]];
+    }
+
+    ec_init_tables(m_chunk_data_blocks, nerrs, decode_matrix, g_tbls);
+    ec_encode_data(
+      m_block_size,
+      m_chunk_data_blocks,
+      nerrs,
+      g_tbls,
+      parity_src_ptrs.data(),
+      recovery_outp_ptrs.data()
+    );
+
+    for (unsigned i = 0; i < nerrs; ++i) {
+      if (block_err_list[i] < m_chunk_data_blocks) {
+        memcpy(frag_ptrs[block_err_list[i]], &recovery_outp_buf[i*m_block_size], m_block_size);
+      }
     }
   }
-  return 0;
+  return return_code;
 }
 
 int gf_gen_decode_matrix_simple(

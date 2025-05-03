@@ -24,18 +24,18 @@ private:
 
   // Erasure and Coefficient Matrices
   std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_encode_matrix;
-  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_decode_matrix;
-  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_invert_matrix;
-  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_temp_matrix;
-  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_g_tbls; ///< Generator tables for encoding
+  std::vector<std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>>> m_decode_matrix_vec;
+  std::vector<std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>>> m_invert_matrix_vec;
+  std::vector<std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>>> m_temp_matrix_vec;
+  std::vector<std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>>> m_g_tbls_vec;
 
   // Data Block Pointers
-  std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS> m_frag_ptrs;
-  std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS> m_parity_src_ptrs;
-  std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS> m_recovery_outp_ptrs;
+  std::vector<std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS>> m_frag_ptrs_vec;
+  std::vector<std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS>> m_parity_src_ptrs_vec;
+  std::vector<std::array<uint8_t*, ECLimits::ISAL_MAX_TOT_BLOCKS>> m_recovery_outp_ptrs_vec;
   
-  std::array<uint8_t, ECLimits::ISAL_MAX_TOT_BLOCKS> m_block_err_list;
-  std::array<uint8_t, ECLimits::ISAL_MAX_TOT_BLOCKS> m_decode_index;
+  std::vector<std::array<uint8_t, ECLimits::ISAL_MAX_TOT_BLOCKS>> m_block_err_list_vec;
+  std::vector<std::array<uint8_t, ECLimits::ISAL_MAX_TOT_BLOCKS>> m_decode_index_vec;
 };
 
 // Helper function for generating the decode matrix (simple version, implementation from ISA-L Github repository)
