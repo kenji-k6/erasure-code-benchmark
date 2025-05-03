@@ -209,6 +209,33 @@ def main() -> None:
     (df["fq_num"] == final_params["fq_num"])
   ]
 
+
+
+  df1 = filtered_df[filtered_df["packet_size_KiB"] == 1]
+  df2 = filtered_df[filtered_df["packet_size_KiB"] == 2]
+  df4 = filtered_df[filtered_df["packet_size_KiB"] == 4]
+  df8 = filtered_df[filtered_df["packet_size_KiB"] == 8]
+
+  min1 = df1["drop_rate"].min()
+  min2 = df2["drop_rate"].min()
+  min4 = df4["drop_rate"].min()
+  min8 = df8["drop_rate"].min()
+
+  max1 = df1["drop_rate"].max()
+  max2 = df2["drop_rate"].max()
+  max4 = df4["drop_rate"].max()
+  max8 = df8["drop_rate"].max()
+
+  mean1 = df1["drop_rate"].mean()
+  mean2 = df2["drop_rate"].mean()
+  mean4 = df4["drop_rate"].mean()
+  mean8 = df8["drop_rate"].mean()
+
+  print(f"DF1, Min: {min1}", f"Max: {max1}", f"Mean: {mean1}")
+  print(f"DF2, Min: {min2}", f"Max: {max2}", f"Mean: {mean2}")
+  print(f"DF4, Min: {min4}", f"Max: {max4}", f"Mean: {mean4}")
+  print(f"DF8, Min: {min8}", f"Max: {max8}", f"Mean: {mean8}")
+
   # Create the plot
   write_plot(filtered_df)
   
