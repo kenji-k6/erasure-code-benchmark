@@ -49,10 +49,10 @@ using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
 
 /// @brief Constants for fixed values
 constexpr size_t MESSAGE_SIZE = 128 MiB;
-constexpr size_t NUM_GPU_BLOCKS = 256;
-constexpr size_t NUM_THREADS_PER_BLOCK = 512;
 extern const std::vector<size_t> VAR_BLOCK_SIZES;
 extern const std::vector<ECTuple> VAR_EC_PARAMS;
 extern const std::vector<size_t> VAR_NUM_CPU_THREADS;
 extern const std::vector<size_t> VAR_NUM_LOST_BLOCKS;
+extern const std::vector<size_t> VAR_NUM_GPU_BLOCKS;
+extern const std::vector<size_t> VAR_NUM_THREADS_PER_BLOCK;
 #endif // BM_CONFIG_HPP

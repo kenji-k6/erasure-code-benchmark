@@ -17,3 +17,7 @@ const std::vector<size_t> VAR_NUM_CPU_THREADS = {
 const std::vector<size_t> VAR_NUM_LOST_BLOCKS = {
   0, 1, 2, 4, 8
 };
+
+const std::vector<size_t> VAR_NUM_GPU_BLOCKS = { 256 };
+
+const std::vector<size_t> VAR_NUM_THREADS_PER_BLOCK = { 512 };
