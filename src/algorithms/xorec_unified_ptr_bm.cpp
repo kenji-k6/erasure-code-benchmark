@@ -8,40 +8,70 @@ XorecBenchmarkUnifiedPtr::XorecBenchmarkUnifiedPtr(const BenchmarkConfig& config
     m_version(config.xorec_version)
 {
   // Overwrite default initialization
-  m_data_buf = make_unique_cuda_managed<uint8_t>(m_block_size * m_num_data_blocks);
-  xorec_init(m_num_data_blocks);
+  m_data_buf = make_unique_cuda_managed<uint8_t>(m_chunks * m_chunk_data_size);
+  xorec_init(m_chunk_data_blocks);
 }
 
 void XorecBenchmarkUnifiedPtr::setup() noexcept {
   // Initialize data buffer with CRC blocks
-  std::fill_n(m_block_bitmap.get(), m_num_tot_blocks, 1);
+  std::fill_n(m_block_bitmap.get(), m_chunks * m_chunk_tot_blocks, 1);
   m_write_data_buffer();
   m_touch_unified_memory();
   cudaError_t err = cudaDeviceSynchronize();
   if (err != cudaSuccess) throw_error("setup: cudaDeviceSynchronize failed");
+  omp_set_num_threads(m_threads);
 }
 
 int XorecBenchmarkUnifiedPtr::encode() noexcept {
-  XorecResult res = xorec_unified_encode(m_data_buf.get(), m_parity_buf.get(), m_block_size, m_num_data_blocks, m_num_parity_blocks, m_version);
-  return (res == XorecResult::Success) ? 0 : -1;
+  int return_code = 0;
+
+  #pragma omp parallel for
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    auto data_buf = m_data_buf.get() + c * m_chunk_data_size;
+    auto parity_buf = m_parity_buf.get() + c * m_chunk_parity_size;
+
+    if (xorec_unified_encode(data_buf, parity_buf, m_block_size, m_chunk_data_blocks, m_chunk_parity_blocks, m_version) != XorecResult::Success) {
+      #pragma omp atomic write
+      return_code = 1;
+    }
+  }
+  return return_code;
 }
 
 int XorecBenchmarkUnifiedPtr::decode() noexcept {
-  XorecResult res = xorec_unified_decode(m_data_buf.get(), m_parity_buf.get(), m_block_size, m_num_data_blocks, m_num_parity_blocks, m_block_bitmap.get(), m_version);
-  return (res == XorecResult::Success) ? 0 : -1;
+  int return_code = 0;
+
+  #pragma omp parallel for
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    auto bitmap = m_block_bitmap.get() + c * m_chunk_tot_blocks;
+    auto data_buf = m_data_buf.get() + c * m_chunk_data_size;
+    auto parity_buf = m_parity_buf.get() + c * m_chunk_parity_size;
+
+    if (xorec_unified_decode(data_buf, parity_buf, m_block_size, m_chunk_data_blocks, m_chunk_parity_blocks, bitmap, m_version) != XorecResult::Success) {
+      #pragma omp atomic write
+      return_code = 1;
+    }
+  }
+  return return_code;
 }
 
 void XorecBenchmarkUnifiedPtr::simulate_data_loss() noexcept {
-  select_lost_blocks(m_num_data_blocks, m_num_parity_blocks, m_num_lost_blocks, m_block_bitmap.get());
+  for (unsigned c = 0; c < m_chunks; ++c) {
+    auto bitmap = m_block_bitmap.get() + c * m_chunk_tot_blocks;
+    auto data_buf = m_data_buf.get() + c * m_chunk_data_size;
+    auto parity_buf = m_parity_buf.get() + c * m_chunk_parity_size;
 
-  unsigned i;
-  for (i = 0; i < m_num_data_blocks; ++i) {
-    if (!m_block_bitmap[i]) memset(&m_data_buf[i*m_block_size], 0, m_block_size);
-  }
+    select_lost_blocks(m_chunk_data_blocks, m_chunk_parity_blocks, m_chunk_lost_blocks, bitmap);
 
-  for (; i < m_num_tot_blocks; ++i) {
-    auto idx = i - m_num_data_blocks;
-    if (!m_block_bitmap[i]) memset(&m_parity_buf[idx*m_block_size], 0, m_block_size);
+    unsigned i;
+    for (i = 0; i < m_chunk_data_blocks; ++i) {
+      if (!bitmap[i]) memset(&data_buf[i*m_block_size], 0, m_block_size);
+    }
+
+    for (; i < m_chunk_tot_blocks; ++i) {
+      auto idx = i - m_chunk_data_blocks;
+      if (!bitmap[i]) memset(&parity_buf[idx*m_block_size], 0, m_block_size);
+    }
   }
 
   m_touch_unified_memory();
@@ -51,6 +81,6 @@ void XorecBenchmarkUnifiedPtr::simulate_data_loss() noexcept {
 
 void XorecBenchmarkUnifiedPtr::m_touch_unified_memory() noexcept {
   int device_id = 0;
-  cudaError_t err = cudaMemPrefetchAsync(m_data_buf.get(), m_block_size * m_num_data_blocks, device_id);
+  cudaError_t err = cudaMemPrefetchAsync(m_data_buf.get(), m_chunks * m_chunk_data_size, device_id);
   if (err != cudaSuccess) throw_error("touch_memory: cudaMemPrefetchAsync failed");
 }
