@@ -22,8 +22,8 @@ public:
 
 private:
   // CM256 Internals
-  cm256_encoder_params m_params;       ///< cm256 internal parameters
-  std::array<cm256_block, ECLimits::CM256_MAX_TOT_BLOCKS> m_blocks; ///< cm256 blocks
+  cm256_encoder_params m_params;        ///< cm256 internal parameters
+  std::vector<cm256_block> m_blocks;    ///< cm256 blocks
 };
 
 #endif // CM256_BM_HPP

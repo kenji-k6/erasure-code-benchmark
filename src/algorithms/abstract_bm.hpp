@@ -5,6 +5,7 @@
 #include "utils.hpp"
 #include <immintrin.h>
 #include <cstring>
+#include <omp.h>
 
 /**
  * @class AbstractBenchmark
