@@ -400,7 +400,7 @@ def plot_P_recoverable(output_dir: str) -> None:
 def plot_P_recoverable_mds(output_dir: str, ec_params) -> None:
 
   output_file = os.path.join(output_dir, "p_recoverable_mds.pdf")
-  plt.rcParams.update({"font.size": 21})
+  plt.rcParams.update({"font.size": 24})
   P_drop = np.logspace(-3, 0, 100)
   plt.figure(figsize=(7, 5))
 
@@ -421,7 +421,7 @@ def plot_P_recoverable_mds(output_dir: str, ec_params) -> None:
   plt.xlabel(x_label)
   plt.ylabel(y_label)
   plt.yticks(np.arange(0, 1.01, 0.25))
-  plt.legend(loc=LEGEND_LOC, ncols=1, fontsize=LEGEND_FONTSIZE)
+  plt.legend(loc=LEGEND_LOC, ncols=1, fontsize=19)
   plt.grid(True, which="both", linestyle="--")
   plt.tight_layout()
   plt.savefig(output_file, format="pdf", dpi=300)
@@ -431,7 +431,7 @@ def plot_P_recoverable_mds(output_dir: str, ec_params) -> None:
 def plot_P_recoverable_xorec(output_dir: str, ec_params) -> None:
 
   output_file = os.path.join(output_dir, "p_recoverable_xorec.pdf")
-  plt.rcParams.update({"font.size": 21})
+  plt.rcParams.update({"font.size": 24})
   P_drop = np.logspace(-3, 0, 100)
   plt.figure(figsize=(7, 5))
 
@@ -452,7 +452,7 @@ def plot_P_recoverable_xorec(output_dir: str, ec_params) -> None:
   plt.xlabel(x_label)
   plt.ylabel(y_label)
   plt.yticks(np.arange(0, 1.01, 0.25))
-  plt.legend(loc=LEGEND_LOC, ncols=1, fontsize=LEGEND_FONTSIZE)
+  plt.legend(loc=LEGEND_LOC, ncols=1, fontsize=19)
   plt.grid(True, which="both", linestyle="--")
   plt.tight_layout()
   plt.savefig(output_file, format="pdf", dpi=300)
