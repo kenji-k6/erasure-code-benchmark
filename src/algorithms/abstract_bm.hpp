@@ -65,11 +65,21 @@ protected:
   explicit AbstractBenchmark(const BenchmarkConfig& config) noexcept;
   virtual void m_write_data_buffer() noexcept; ///< writes validation pattern to data buffer
 
+  size_t m_threads;
+  size_t m_message_size;
   size_t m_block_size;
-  size_t m_num_data_blocks;
-  size_t m_num_parity_blocks;
-  size_t m_num_tot_blocks;
-  size_t m_num_lost_blocks;
+  
+  
+  size_t m_chunk_data_blocks;
+  size_t m_chunk_parity_blocks;
+  size_t m_chunk_tot_blocks;
+
+  size_t m_chunks;
+
+  size_t m_chunk_data_size;
+  size_t m_chunk_parity_size;
+
+  size_t m_chunk_lost_blocks;
 
   std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_data_buf;
   std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_parity_buf;
