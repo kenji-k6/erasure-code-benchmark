@@ -1,13 +1,13 @@
 #include "bm_config.hpp"
 
 const std::vector<size_t> VAR_BLOCK_SIZES = {
-  4 KiB//, 8 KiB, 16 KiB, 32 KiB, 64 KiB
+  4 KiB, 8 KiB, 16 KiB, 32 KiB, 64 KiB
 };
 
 const std::vector<ECTuple> VAR_EC_PARAMS = {
-  /*{ 4+8,  8 },
+  { 4+8,  8 },
   { 4+16, 16 }, { 8+16, 16 },
-  { 4+32, 32 },*/ { 8+32, 32 }
+  { 4+32, 32 }, { 8+32, 32 }
 };
 
 const std::vector<size_t> VAR_NUM_CPU_THREADS = {

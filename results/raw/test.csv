@@ -1,0 +1,6 @@
+name,err_msg,iterations,warmup_iterations,gpu_computation,gpu_blocks,threads_per_block,message_size_B,block_size_B,EC,lost_blocks,cpu_threads,encode_time_ns,encode_time_ns_stddev,encode_throughput_Gbps,encode_throughput_Gbps_stddev,decode_time_ns,decode_time_ns_stddev,decode_throughput_Gbps,decode_throughput_Gbps_stddev
+"XOR-EC (GPU Computation)",,3,3,1,256,512,134217728,4096,"(40/32)",0,0,427919,7055.52,2509.67,41.0242,3113.67,103.582,345101,11417.6
+"XOR-EC (GPU Computation)",Corruption Detected,3,0,0,0,0,0,0,"(0/0)",0,0,2.85076e-321,2.85076e-321,2.85076e-321,2.85076e-321,2.85076e-321,2.85076e-321,2.85076e-321,2.85076e-321
+"XOR-EC (GPU Computation)",,3,3,1,256,512,134217728,4096,"(40/32)",2,0,424505,2706.12,2529.46,16.1569,1.0823e+07,724913,99.4959,6.41605
+"XOR-EC (GPU Computation)",,3,3,1,256,512,134217728,4096,"(40/32)",4,0,424947,2603.07,2526.83,15.48,1.83444e+07,1.2852e+06,58.7328,4.28801
+"XOR-EC (GPU Computation)",,3,3,1,256,512,134217728,4096,"(40/32)",8,0,429282,800.429,2501.26,4.66162,3.13727e+07,1.37592e+06,34.27,1.52589
