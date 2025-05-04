@@ -47,7 +47,7 @@ def get_df(path: str) -> pd.DataFrame:
   df["block_size_KiB"] = (df["block_size_B"] // 1024).astype(int)
 
   # Get KiB for the data size
-  df["data_size_KiB"] = (df["data_size_B"] // 1024).astype(int)
+  df["message_size_KiB"] = (df["message_size_B"] // 1024).astype(int)
 
   # Compute the 99.9% confidence interval(s) for later plotting
   for col in ["encode_throughput_Gbps", "decode_throughput_Gbps"]:
