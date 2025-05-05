@@ -29,7 +29,7 @@ def get_df(path: str) -> pd.DataFrame:
       "name",
       "gpu_blocks",
       "threads_per_block",
-      "data_size_B",
+      "message_size_B",
       "lost_blocks",
       "EC_y",
       "EC_x",
@@ -45,7 +45,7 @@ def get_df(path: str) -> pd.DataFrame:
 
   # Get KiB for the block size
   df["block_size_KiB"] = (df["block_size_B"] // 1024).astype(int)
-
+  print(df.columns)
   # Get KiB for the data size
   df["message_size_KiB"] = (df["message_size_B"] // 1024).astype(int)
 
@@ -61,7 +61,7 @@ def get_df(path: str) -> pd.DataFrame:
       "err_msg",
       "iterations",
       "warmup_iterations", 
-      "data_size_B",
+      "message_size_B",
       "block_size_B",
       "encode_time_ns",
       "encode_time_ns_stddev",
