@@ -1,5 +1,6 @@
 #include "xorec_gpu_cmp.cuh"
 #include "utils.hpp"
+#include <iostream>
 
 static bool XOREC_GPU_INIT_CALLED = false;
 
@@ -49,33 +50,10 @@ XorecResult xorec_gpu_encode(
     chunk_data_blocks,
     chunk_parity_blocks
   );
-  
+
   return XorecResult::Success;
 }
 
-
-__global__ void xorec_gpu_xor_parity_kernel(
-  const uint8_t * XOREC_RESTRICT data_buf,
-  uint8_t * XOREC_RESTRICT parity_buf,
-  size_t block_size,
-  size_t num_data_blocks,
-  size_t num_parity_blocks
-) {
-  unsigned num_threads = blockDim.x * gridDim.x;
-  unsigned glbl_thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned block_elems = block_size / sizeof(CUDA_ATOMIC_XOR_T);
-  unsigned tot_elems = num_data_blocks * block_elems;
-
-  for (unsigned i = glbl_thread_idx; i < tot_elems; i += num_threads) {
-    unsigned block_idx = i / block_elems;
-    unsigned parity_idx = block_idx % num_parity_blocks;
-
-    const CUDA_ATOMIC_XOR_T * XOREC_RESTRICT data_block_64 = reinterpret_cast<const CUDA_ATOMIC_XOR_T*>(data_buf + block_idx * block_size);
-    CUDA_ATOMIC_XOR_T * XOREC_RESTRICT parity_block_64 = reinterpret_cast<CUDA_ATOMIC_XOR_T*>(parity_buf + parity_idx * block_size);
-
-    atomicXor(&parity_block_64[i % block_elems], data_block_64[i % block_elems]);
-  }
-}
 
 
 XorecResult xorec_gpu_decode(
@@ -94,35 +72,43 @@ XorecResult xorec_gpu_decode(
   XorecResult err = xorec_check_args(data_buf, parity_buf, block_size, chunk_data_blocks, chunk_parity_blocks);
   if (err != XorecResult::Success) return err;
   if (block_size % sizeof(CUDA_ATOMIC_XOR_T) != 0) return XorecResult::InvalidSize;
+  
+  bool recover_required = false;
+  for (unsigned c = 0; c < num_chunks; ++c) {
+    auto chunk_bitmap = block_bitmap + c * (chunk_data_blocks + chunk_parity_blocks);
+    auto chunk_data_buf = data_buf + c * chunk_data_blocks * block_size;
+    
+    if (require_recovery(chunk_data_blocks, chunk_bitmap)) recover_required = true;
+    if (!is_recoverable(chunk_data_blocks, chunk_parity_blocks, chunk_bitmap)) return XorecResult::DecodeFailure;
+    // Zero out lost blocks
+    for (unsigned i = 0; i < chunk_data_blocks; ++i) {
+      if (!chunk_bitmap[i]) cudaMemsetAsync(chunk_data_buf + i * block_size, 0, block_size);
+    }
+  }
 
+  if (!recover_required) return XorecResult::Success;
+
+  xorec_gpu_xor_kernel<<<num_gpu_blocks, threads_per_block>>>(
+    data_buf,
+    parity_buf,
+    num_chunks,
+    block_size,
+    chunk_data_blocks,
+    chunk_parity_blocks
+  );
+
+  // copy recovered blocks back to data_buf
   for (unsigned c = 0; c < num_chunks; ++c) {
     auto chunk_bitmap = block_bitmap + c * (chunk_data_blocks + chunk_parity_blocks);
     auto chunk_data_buf = data_buf + c * chunk_data_blocks * block_size;
     auto chunk_parity_buf = parity_buf + c * chunk_parity_blocks * block_size;
-    if (!require_recovery(chunk_data_blocks, chunk_bitmap)) return XorecResult::Success;
-    if (!is_recoverable(chunk_data_blocks, chunk_parity_blocks, chunk_bitmap)) return XorecResult::DecodeFailure;
 
-    // Zero out lost blocks
-    for (uint32_t i = 0; i < chunk_data_blocks; ++i) {
-      if (!chunk_bitmap[i]) cudaMemsetAsync(chunk_data_buf + i * block_size, 0, block_size);
-    }
-    // xorec_gpu_xor_kernel<<<num_gpu_blocks, threads_per_block>>>(
-    //   data_buf,
-    //   parity_buf,
-    //   num_chunks,
-    //   block_size,
-    //   chunk_data_blocks,
-    //   chunk_parity_blocks
-    // );
-
-    xorec_gpu_xor_parity_kernel<<<num_gpu_blocks, threads_per_block>>>(chunk_data_buf, chunk_parity_buf, block_size, chunk_data_blocks, chunk_parity_blocks);
-
-    for (uint32_t i = 0; i < chunk_data_blocks; ++i) {
+    for (unsigned i = 0; i < chunk_data_blocks; ++i) {
       if (!chunk_bitmap[i]) cudaMemcpyAsync(chunk_data_buf + i * block_size, chunk_parity_buf + (i % chunk_parity_blocks) * block_size, block_size, cudaMemcpyDeviceToDevice);
     }
   }
-  return XorecResult::Success;
 
+  return XorecResult::Success;
 }
 
 
@@ -154,7 +140,7 @@ __global__ void xorec_gpu_xor_kernel(
       parity_buf + (chunk_idx * chunk_parity_blocks * block_size) + (parity_idx * block_size)
     );
 
-    atomicXor(&parity_block[(i % chunk_elems)%block_elems], data_block[(i% chunk_elems)%block_elems]);
+    atomicXor(&parity_block[(i%chunk_elems)%block_elems], data_block[(i%chunk_elems)%block_elems]);
   }
 }
 

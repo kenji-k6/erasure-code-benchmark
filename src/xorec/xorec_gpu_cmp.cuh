@@ -40,6 +40,8 @@ XorecResult xorec_gpu_encode(
 /**
  * @brief Runs the XOR decoding algorithm on the GPU.
  * 
+ * @attention LOST BLOCKS MUST BE ZEROED OUT BEFOREHAND
+ * 
  * @param data_buf The data buffer to encode. Must be allocated in unified memory.
  * @param parity_buf The parity buffer to write the encoded parity blocks to. Must be allocated in unified memory.
  * @param block_size Size of each block in bytes.
