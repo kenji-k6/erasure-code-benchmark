@@ -148,7 +148,7 @@ def plot_blocksize(data: pd.DataFrame, y_type: PlotType, category: Category, out
   data = data[data[Column.LOST_BLOCKS] == fixed_vals[Column.LOST_BLOCKS]]
 
   # Initialize labels, output file name, font-size, etc.
-  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category][FILE_PREFIX]}_datasize_{y_type.value[0:3]}.pdf")
+  output_file = os.path.join(output_dir, f"{CATEGORY_INFO[category][FILE_PREFIX]}_blocksize_{y_type.value[0:3]}.pdf")
   x_label = "Block Size [KiB]"
   y_col = Column.ENC_THROUGHPUT if y_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
   y_label = (
