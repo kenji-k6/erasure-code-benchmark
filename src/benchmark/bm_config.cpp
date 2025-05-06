@@ -1,7 +1,7 @@
 #include "bm_config.hpp"
 
 const std::vector<size_t> VAR_BLOCK_SIZES = {
-  4 KiB, 8 KiB, 16 KiB, 32 KiB, 64 KiB
+  1 KiB, 2 KiB, 4 KiB, 8 KiB
 };
 
 const std::vector<ECTuple> VAR_EC_PARAMS = {

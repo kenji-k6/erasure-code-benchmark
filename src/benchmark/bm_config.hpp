@@ -48,7 +48,7 @@ struct BenchmarkConfig {
 using BenchmarkFunction = void(*)(benchmark::State&, const BenchmarkConfig&);
 
 /// @brief Constants for fixed values
-constexpr size_t MESSAGE_SIZE = 128 MiB;
+constexpr size_t MESSAGE_SIZE = 8 MiB;
 extern const std::vector<size_t> VAR_BLOCK_SIZES;
 extern const std::vector<ECTuple> VAR_EC_PARAMS;
 extern const std::vector<size_t> VAR_NUM_CPU_THREADS;
