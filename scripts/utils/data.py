@@ -45,7 +45,7 @@ def get_df(path: str) -> pd.DataFrame:
 
   # Get KiB for the block size
   df["block_size_KiB"] = (df["block_size_B"] // 1024).astype(int)
-  print(df.columns)
+
   # Get KiB for the data size
   df["message_size_KiB"] = (df["message_size_B"] // 1024).astype(int)
 

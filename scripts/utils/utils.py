@@ -8,6 +8,7 @@ class Column:
   IS_GPU_COMPUTE    = "gpu_computation"
   GPU_BLOCKS        = "gpu_blocks"
   THREADS_PER_BLOCK = "threads_per_block"
+  MESSAGE_SIZE      = "message_size_KiB"
   BLOCK_SIZE        = "block_size_KiB"
   EC                = "EC"
   LOST_BLOCKS       = "lost_blocks"
@@ -20,8 +21,7 @@ class Category(Enum):
   OPEN_SOURCE = "OPEN_SOURCE"
   SIMD = "SIMD"
   XOREC = "XOREC"
-  HEATMAP = "HEATMAP"
-  MULTI_THREAD = "MULTITHREAD"
+  XOREC_GPU = "XOREC_GPU"
   PAPER_COMPARISON = "PAPER_COMPARISON"
 
 
@@ -45,10 +45,11 @@ CATEGORY_INFO = {
     OUTPUT_DIR: "opensource",
     FILE_PREFIX: "os",
     FIXED_VALS: {
-      Column.BLOCK_SIZE: 4,
+      Column.MESSAGE_SIZE: 8192,
+      Column.BLOCK_SIZE: 1,
       Column.LOST_BLOCKS: 0,
-      Column.EC: "(36/32)",
-      Column.CPU_THREADS: 1,
+      Column.EC: "(40/32)",
+      Column.CPU_THREADS: 32,
     }
   },
   Category.SIMD: {
@@ -61,10 +62,11 @@ CATEGORY_INFO = {
     OUTPUT_DIR: "simd",
     FILE_PREFIX: "simd",
     FIXED_VALS: {
-      Column.BLOCK_SIZE: 4,
+      Column.MESSAGE_SIZE: 8192,
+      Column.BLOCK_SIZE: 1,
       Column.LOST_BLOCKS: 0,
-      Column.EC: "(36/32)",
-      Column.CPU_THREADS: 1,
+      Column.EC: "(40/32)",
+      Column.CPU_THREADS: 32,
     }
   },
   Category.XOREC: {
@@ -77,40 +79,29 @@ CATEGORY_INFO = {
     OUTPUT_DIR: "xorec",
     FILE_PREFIX: "xorec",
     FIXED_VALS: {
-      Column.BLOCK_SIZE: 4,
+      Column.MESSAGE_SIZE: 8192,
+      Column.BLOCK_SIZE: 1,
       Column.LOST_BLOCKS: 0,
-      Column.EC: "(36/32)",
+      Column.EC: "(40/32)",
       Column.GPU_BLOCKS: 256,
       Column.THREADS_PER_BLOCK: 512,
-      Column.CPU_THREADS: 1,
+      Column.CPU_THREADS: 32,
     }
   },
-  Category.HEATMAP: {
+  Category.XOREC_GPU: {
     ALGORITHMS: [
-      "XOR-EC, AVX2",
-      "ISA-L",
-      "CM256",
-      "Leopard"
+      "XOR-EC (GPU Computation)"
     ],
-    OUTPUT_DIR: "misc",
-    FILE_PREFIX: "heatmap",
+    OUTPUT_DIR: "xorec_gpu",
+    FILE_PREFIX: "xorec_gpu",
     FIXED_VALS: {
-      Column.CPU_THREADS: 1,
-    }
-  },
-  Category.MULTI_THREAD: {
-    ALGORITHMS: [
-      "XOR-EC, AVX2",
-      "ISA-L",
-      "CM256",
-      "Leopard"
-    ],
-    OUTPUT_DIR: "multithread",
-    FILE_PREFIX: "multi",
-    FIXED_VALS: {
+      Column.MESSAGE_SIZE: 131072,
       Column.BLOCK_SIZE: 4,
       Column.LOST_BLOCKS: 0,
-      Column.EC: "(36/32)",
+      Column.EC: "(40/32)",
+      Column.GPU_BLOCKS: 256,
+      Column.THREADS_PER_BLOCK: 512,
+      Column.CPU_THREADS: 32,
     }
   },
   Category.PAPER_COMPARISON: {
@@ -121,6 +112,7 @@ CATEGORY_INFO = {
     OUTPUT_DIR: "misc",
     FILE_PREFIX: "cmp",
     FIXED_VALS: {
+      Column.MESSAGE_SIZE: 131072,
       Column.BLOCK_SIZE: 64,
       Column.LOST_BLOCKS: 0,
       Column.EC: "(40/32)"

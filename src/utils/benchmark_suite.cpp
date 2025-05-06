@@ -232,7 +232,7 @@ namespace {
             const auto& [tot_blocks, data_blocks] = ec_params;
             for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
               // if (lost_blocks > tot_blocks-data_blocks) continue;
-              if ((tot_blocks != 8+32 || block_size != 4 KiB || cpu_threads != 1) && lost_blocks > 0) continue;
+              if ((tot_blocks != 8+32 || block_size != 1 KiB || cpu_threads != 32) && lost_blocks > 0) continue;
               
               cpu_configs.push_back({
                 .message_size = MESSAGE_SIZE,
@@ -256,7 +256,7 @@ namespace {
           const auto& [tot_blocks, data_blocks] = ec_params;
           for (const auto& lost_blocks : VAR_NUM_LOST_BLOCKS) {
             // if (lost_blocks > tot_blocks-data_blocks) continue;
-            if ((tot_blocks != 8+32 || block_size != 4 KiB) && lost_blocks > 0) continue;
+            if ((tot_blocks != 8+32 || block_size != 1 KiB) && lost_blocks > 0) continue;
             for (const auto& num_gpu_blocks : VAR_NUM_GPU_BLOCKS) {
               for (const auto& threads_per_block : VAR_NUM_THREADS_PER_BLOCK) {
                 gpu_configs.push_back({
@@ -295,13 +295,32 @@ namespace {
       auto bm_func = CPU_BM_FUNCTIONS.at(inp_name);
 
       if (inp_name.find("xorec") != std::string::npos) {
-        for (const auto version : selected_xorec_versions) {
+        //temp
+        if ((inp_name.find("xorec-unified-ptr") == std::string::npos) && (inp_name.find("xorec-gpu-ptr") == std::string::npos)) {
+          for (const auto version : selected_xorec_versions) {
+            auto full_bm_name = bm_name + ", " + get_version_name(version);
+            for (auto config : cpu_configs) {
+              config.xorec_version = version;
+              benchmarks.push_back({ full_bm_name, bm_func, config });
+            }
+          }
+        } else {
+          auto version = XorecVersion::AVX2;
           auto full_bm_name = bm_name + ", " + get_version_name(version);
           for (auto config : cpu_configs) {
             config.xorec_version = version;
             benchmarks.push_back({ full_bm_name, bm_func, config });
           }
         }
+        //temp
+
+        // for (const auto version : selected_xorec_versions) {
+        //   auto full_bm_name = bm_name + ", " + get_version_name(version);
+        //   for (auto config : cpu_configs) {
+        //     config.xorec_version = version;
+        //     benchmarks.push_back({ full_bm_name, bm_func, config });
+        //   }
+        // }
       } else {
         for (auto config : cpu_configs) {
           benchmarks.push_back({ bm_name, bm_func, config });
