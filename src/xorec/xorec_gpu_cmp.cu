@@ -75,8 +75,6 @@ XorecResult xorec_gpu_decode(
   bool recover_required = false;
   for (unsigned c = 0; c < num_chunks; ++c) {
     auto chunk_bitmap = block_bitmap + c * (chunk_data_blocks + chunk_parity_blocks);
-    auto chunk_data_buf = data_buf + c * chunk_data_blocks * block_size;
-    
     if (require_recovery(chunk_data_blocks, chunk_bitmap)) recover_required = true;
     if (!is_recoverable(chunk_data_blocks, chunk_parity_blocks, chunk_bitmap)) return XorecResult::DecodeFailure;
   }
@@ -155,7 +153,7 @@ __global__ void xorec_gpu_zero_kernel(
   size_t block_size,
   size_t chunk_data_blocks,
   size_t chunk_parity_blocks,
-  uint8_t* block_bitmap
+  const uint8_t* block_bitmap
 ) {
   unsigned num_threads = blockDim.x * gridDim.x;
   unsigned glbl_thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -184,7 +182,7 @@ __global__ void xorec_gpu_recover_kernel(
   size_t block_size,
   size_t chunk_data_blocks,
   size_t chunk_parity_blocks,
-  uint8_t* block_bitmap
+  const uint8_t* block_bitmap
 ) {
   unsigned num_threads = blockDim.x * gridDim.x;
   unsigned glbl_thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
