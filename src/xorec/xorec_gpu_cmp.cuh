@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 #include "xorec_utils.hpp"
 
-#define CUDA_ATOMIC_XOR_T unsigned long long int
+#define CUDA_ATOMIC_T unsigned long long int
 
 extern std::vector<uint8_t> COMPLETE_DATA_BITMAP;
 
@@ -60,6 +60,7 @@ XorecResult xorec_gpu_decode(
   size_t chunk_data_blocks,
   size_t chunk_parity_blocks,
   const uint8_t* XOREC_RESTRICT block_bitmap,
+  uint8_t* XOREC_RESTRICT device_block_bitmap,
   size_t num_gpu_blocks,
   size_t threads_per_block
 );
@@ -77,13 +78,23 @@ __global__ void xorec_gpu_xor_kernel(
   size_t chunk_parity_blocks
 );
 
-__global__ void xorec_gpu_decode_kernel(
-  uint8_t* XOREC_RESTRICT data_chunk_buf,
-  const uint8_t* XOREC_RESTRICT parity_chunk_buf,
-  size_t lost_block_idx,
+__global__ void xorec_gpu_zero_kernel(
+  uint8_t* XOREC_RESTRICT data_buf,
+  size_t num_chunks,
   size_t block_size,
   size_t chunk_data_blocks,
-  size_t chunk_parity_blocks
+  size_t chunk_parity_blocks,
+  uint8_t* block_bitmap
+);
+
+__global__ void xorec_gpu_recover_kernel(
+  uint8_t* XOREC_RESTRICT data_buf,
+  const uint8_t* XOREC_RESTRICT parity_buf,
+  size_t num_chunks,
+  size_t block_size,
+  size_t chunk_data_blocks,
+  size_t chunk_parity_blocks,
+  uint8_t* block_bitmap
 );
 
 
