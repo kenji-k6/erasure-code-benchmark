@@ -20,6 +20,7 @@ class Column:
 class Category(Enum):
   OPEN_SOURCE = "OPEN_SOURCE"
   SIMD = "SIMD"
+  SMALL_SIMD = "SMALL_SIMD"
   XOREC = "XOREC"
   XOREC_GPU = "XOREC_GPU"
   PAPER_COMPARISON = "PAPER_COMPARISON"
@@ -68,6 +69,23 @@ CATEGORY_INFO = {
       Column.EC: "(40/32)",
       Column.CPU_THREADS: 32,
     }
+  },
+  Category.SMALL_SIMD: {
+    ALGORITHMS: [
+      "XOR-EC, Scalar",
+      "XOR-EC, SSE2",
+      "XOR-EC, AVX2",
+      "XOR-EC, AVX-512"
+    ],
+    OUTPUT_DIR: "small_simd",
+    FILE_PREFIX: "small_simd",
+    FIXED_VALS: {
+      Column.MESSAGE_SIZE: 256,
+      Column.BLOCK_SIZE: 1,
+      Column.LOST_BLOCKS: 0,
+      Column.EC: "(40/32)",
+      Column.CPU_THREADS: 1,
+    },
   },
   Category.XOREC: {
     ALGORITHMS: [

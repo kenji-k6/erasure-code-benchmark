@@ -19,7 +19,7 @@ def plot_EC(data: pd.DataFrame, y_type: PlotType, category: Category, output_dir
   Y-Axis: throughput
   """
   assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
-  assert(category in [Category.OPEN_SOURCE, Category.SIMD, Category.XOREC, Category.XOREC_GPU]), f"Invalid category. Must be '{Category.OPEN_SOURCE}', '{Category.SIMD}', or '{Category.XOREC}'."
+  assert(category in [Category.OPEN_SOURCE, Category.SIMD, Category.SMALL_SIMD, Category.XOREC, Category.XOREC_GPU]), f"Invalid category. Must be '{Category.OPEN_SOURCE}', '{Category.SIMD}', '{Category.SMALL_SIMD}', '{Category.XOREC}' or '{Category.XOREC_GPU}'."
 
   fixed_vals = CATEGORY_INFO[category][FIXED_VALS]
 
@@ -119,7 +119,7 @@ def plot_blocksize(data: pd.DataFrame, y_type: PlotType, category: Category, out
   Y-Axis: throughput
   """
   assert(y_type in [PlotType.ENCODE, PlotType.DECODE]), f"Invalid y_type. Must be '{PlotType.ENCODE}' or '{PlotType.DECODE}'."
-  assert(category in [Category.OPEN_SOURCE, Category.SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.OPEN_SOURCE}', '{Category.SIMD}', or '{Category.XOREC}'."
+  assert(category in [Category.OPEN_SOURCE, Category.SIMD, Category.SMALL_SIMD, Category.XOREC]), f"Invalid category. Must be '{Category.OPEN_SOURCE}', '{Category.SIMD}', '{Category.SMALL_SIMD}' or '{Category.XOREC}'."
 
   fixed_vals = CATEGORY_INFO[category][FIXED_VALS]
 

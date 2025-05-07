@@ -118,6 +118,21 @@ if __name__ == "__main__":
     output_dir=dir
   )
 
+  # Small SIMD plots
+  dir = os.path.join(PLOT_DIR, CATEGORY_INFO[Category.SMALL_SIMD][OUTPUT_DIR])
+  plot.plot_EC(
+    data=df.copy(),
+    y_type=PlotType.ENCODE,
+    category=Category.SMALL_SIMD,
+    output_dir=dir
+  )
+  plot.plot_blocksize(
+    data=df.copy(),
+    y_type=PlotType.ENCODE,
+    category=Category.SMALL_SIMD,
+    output_dir=dir
+  )
+
   # Recoverability probability plots
   plot.plot_P_recoverable(output_dir=os.path.join(PLOT_DIR, "misc"))
 
