@@ -5,12 +5,14 @@
 
 XorecBenchmarkGpuCmp::XorecBenchmarkGpuCmp(const BenchmarkConfig& config) noexcept
   : AbstractBenchmark(config),
+    m_gpu_block_bitmap(make_unique_cuda<uint8_t>(m_chunks * m_chunk_tot_blocks)),
     m_num_gpu_blocks(config.num_gpu_blocks),
     m_threads_per_gpu_block(config.threads_per_gpu_block)
 {
   // Overwrite default initializations
   m_data_buf = make_unique_cuda<uint8_t>(m_chunks * m_chunk_data_size);
   m_parity_buf = make_unique_cuda<uint8_t>(m_chunks * m_chunk_parity_size);
+  m_block_bitmap = make_unique_cuda_host<uint8_t>(m_chunks * m_chunk_tot_blocks);
   xorec_gpu_init(m_chunk_data_blocks);
   xorec_init(m_chunk_data_blocks);
 }
@@ -58,6 +60,7 @@ int XorecBenchmarkGpuCmp::decode() noexcept {
     m_chunk_data_blocks,
     m_chunk_parity_blocks,
     m_block_bitmap.get(),
+    m_gpu_block_bitmap.get(),
     m_num_gpu_blocks,
     m_threads_per_gpu_block
   );

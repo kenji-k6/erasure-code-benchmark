@@ -16,6 +16,7 @@ protected:
   void m_write_data_buffer() noexcept override;
 
 private:
+  std::unique_ptr<uint8_t[], DeleterFunc<uint8_t>> m_gpu_block_bitmap; ///< Buffer for the original data we want to transmit
   size_t m_num_gpu_blocks;
   size_t m_threads_per_gpu_block;
 };
