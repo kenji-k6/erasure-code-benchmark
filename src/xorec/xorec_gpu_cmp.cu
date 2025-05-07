@@ -71,7 +71,6 @@ XorecResult xorec_gpu_decode(
   XorecResult err = xorec_check_args(data_buf, parity_buf, block_size, chunk_data_blocks, chunk_parity_blocks);
   if (err != XorecResult::Success) return err;
   if (block_size % sizeof(CUDA_ATOMIC_T) != 0) return XorecResult::InvalidSize;
-  cudaMemcpyAsync(device_block_bitmap, block_bitmap, num_chunks * (chunk_data_blocks + chunk_parity_blocks), cudaMemcpyHostToDevice);
   
   bool recover_required = false;
   for (unsigned c = 0; c < num_chunks; ++c) {
@@ -81,8 +80,9 @@ XorecResult xorec_gpu_decode(
     if (require_recovery(chunk_data_blocks, chunk_bitmap)) recover_required = true;
     if (!is_recoverable(chunk_data_blocks, chunk_parity_blocks, chunk_bitmap)) return XorecResult::DecodeFailure;
   }
-
+  
   if (!recover_required) return XorecResult::Success;
+  cudaMemcpyAsync(device_block_bitmap, block_bitmap, num_chunks * (chunk_data_blocks + chunk_parity_blocks), cudaMemcpyHostToDevice);
 
   xorec_gpu_zero_kernel<<<num_gpu_blocks, threads_per_block>>>(
     data_buf,
