@@ -84,7 +84,7 @@ __global__ void xorec_gpu_zero_kernel(
   size_t block_size,
   size_t chunk_data_blocks,
   size_t chunk_parity_blocks,
-  uint8_t* block_bitmap
+  const uint8_t* block_bitmap
 );
 
 __global__ void xorec_gpu_recover_kernel(
@@ -94,7 +94,7 @@ __global__ void xorec_gpu_recover_kernel(
   size_t block_size,
   size_t chunk_data_blocks,
   size_t chunk_parity_blocks,
-  uint8_t* block_bitmap
+  const uint8_t* block_bitmap
 );
 
 

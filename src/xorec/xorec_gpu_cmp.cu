@@ -164,7 +164,7 @@ __global__ void xorec_gpu_zero_kernel(
   for (unsigned i = glbl_thread_idx; i < tot_elems; i += num_threads) {
     unsigned chunk_idx = i / chunk_elems;
     unsigned block_idx = (i % chunk_elems) / block_elems;
-    uint8_t* XOREC_RESTRICT chunk_bitmap = block_bitmap + chunk_idx * (chunk_data_blocks + chunk_parity_blocks);
+    const uint8_t* XOREC_RESTRICT chunk_bitmap = block_bitmap + chunk_idx * (chunk_data_blocks + chunk_parity_blocks);
 
     if (!chunk_bitmap[block_idx]) {
       CUDA_ATOMIC_T* XOREC_RESTRICT data_block = (CUDA_ATOMIC_T*)(
@@ -193,7 +193,7 @@ __global__ void xorec_gpu_recover_kernel(
   for (unsigned i = glbl_thread_idx; i < tot_elems; i += num_threads) {
     unsigned chunk_idx = i / chunk_elems;
     unsigned block_idx = (i % chunk_elems) / block_elems;
-    uint8_t* XOREC_RESTRICT chunk_bitmap = block_bitmap + chunk_idx * (chunk_data_blocks + chunk_parity_blocks);
+    const uint8_t* XOREC_RESTRICT chunk_bitmap = block_bitmap + chunk_idx * (chunk_data_blocks + chunk_parity_blocks);
 
     if (!chunk_bitmap[block_idx]) {
       CUDA_ATOMIC_T* XOREC_RESTRICT data_block = (CUDA_ATOMIC_T*)(
