@@ -33,7 +33,7 @@ ran on [Swis National Supercomputing Centre's](https://www.cscs.ch/) nodes.
 
 * **Python**: 3.8+ (for result analysis and visualization)
 
-* **SIMD Support**: AVX2 / AVX-512 recommended for best performance
+* **SIMD Support**: SSE2/AVX2/AVX-512 recommended for best performance
 
 * **NVIDIA CUDA Toolkit** CUDA 11.4.0+
 
