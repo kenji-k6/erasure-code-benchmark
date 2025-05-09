@@ -35,7 +35,7 @@ int XorecBenchmarkGpuPtr::encode() noexcept {
     auto gpu_data_buf = m_gpu_data_buf.get() + c * m_chunk_data_size;
     auto parity_buf = m_parity_buf.get() + c * m_chunk_parity_size;
 
-    if (xorec_gpu_encode(gpu_data_buf, data_buf, parity_buf, m_block_size, m_chunk_data_blocks, m_chunk_parity_blocks, m_version) != XorecResult::Success) {
+    if (xorec_gpu_ptr_encode(gpu_data_buf, data_buf, parity_buf, m_block_size, m_chunk_data_blocks, m_chunk_parity_blocks, m_version) != XorecResult::Success) {
       #pragma omp atomic write
       return_code = 1;
     }
@@ -55,7 +55,7 @@ int XorecBenchmarkGpuPtr::decode() noexcept {
     auto gpu_data_buf = m_gpu_data_buf.get() + c * m_chunk_data_size;
     auto parity_buf = m_parity_buf.get() + c * m_chunk_parity_size;
 
-    if (xorec_gpu_decode(gpu_data_buf, data_buf, parity_buf, m_block_size, m_chunk_data_blocks, m_chunk_parity_blocks, bitmap, m_version) != XorecResult::Success) {
+    if (xorec_gpu_ptr_decode(gpu_data_buf, data_buf, parity_buf, m_block_size, m_chunk_data_blocks, m_chunk_parity_blocks, bitmap, m_version) != XorecResult::Success) {
       #pragma omp atomic write
       return_code = 1;
     }

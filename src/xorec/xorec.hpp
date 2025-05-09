@@ -46,7 +46,7 @@ void xorec_init(size_t num_data_blocks);
  * @param block_size Size of each block in bytes.
  * @param num_data_blocks Number of data blocks.
  * @param num_parity_blocks Number of parity blocks.
- * @return XorecResult XorecResult indicating success or failure.
+ * @return XorecResult indicating success or failure.
  */
 XorecResult xorec_encode(
   const uint8_t *XOREC_RESTRICT data_buf,
@@ -131,7 +131,7 @@ XorecResult xorec_unified_decode(
  * @param num_parity_blocks Number of parity blocks.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_gpu_encode(
+XorecResult xorec_gpu_ptr_encode(
   const uint8_t *XOREC_RESTRICT gpu_data_buf,
   uint8_t *XOREC_RESTRICT cpu_data_buf,
   uint8_t *XOREC_RESTRICT parity_buf,
@@ -153,7 +153,7 @@ XorecResult xorec_gpu_encode(
  * @param block_bitmap A bitmap indicating which blocks are present.
  * @return XorecResult XorecResult indicating success or failure.
  */
-XorecResult xorec_gpu_decode(
+XorecResult xorec_gpu_ptr_decode(
   uint8_t *XOREC_RESTRICT gpu_data_buf,
   uint8_t *XOREC_RESTRICT cpu_data_buf,
   const uint8_t *XOREC_RESTRICT parity_buf,
