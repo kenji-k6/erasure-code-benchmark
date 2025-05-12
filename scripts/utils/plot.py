@@ -53,9 +53,9 @@ def plot_EC(data: pd.DataFrame, y_type: PlotType, category: Category, output_dir
   x_label = r"Redundancy $(n/k)$"
   y_col = Column.ENC_THROUGHPUT if y_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
   y_label = (
-    "Encoding Throughput\n[Gbit/s]"
+    "Avg. Encoding Throughput\n[Gbit/s]"
     if y_col == Column.ENC_THROUGHPUT
-    else "Decoding Throughput\n[Gbit/s]"
+    else "Avg. Decoding Throughput\n[Gbit/s]"
   )
 
   plt.rcParams.update({"font.size": MAIN_FONTSIZE})
@@ -152,9 +152,9 @@ def plot_blocksize(data: pd.DataFrame, y_type: PlotType, category: Category, out
   x_label = "Block Size [KiB]"
   y_col = Column.ENC_THROUGHPUT if y_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
   y_label = (
-    "Encoding Throughput\n[Gbit/s]"
+    "Avg. Encoding Throughput\n[Gbit/s]"
     if y_col == Column.ENC_THROUGHPUT
-    else "Decoding Throughput\n[Gbit/s]"
+    else "Avg. Decoding Throughput\n[Gbit/s]"
   )
 
   plt.rcParams.update({"font.size": MAIN_FONTSIZE})
@@ -246,9 +246,9 @@ def plot_cpu_threads(data: pd.DataFrame, y_type: PlotType, category: Category, o
   x_label = r"Number of CPU Threads"
   y_col = Column.ENC_THROUGHPUT if y_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
   y_label = (
-    "Encoding Throughput\n[Gbit/s]"
+    "Avg. Encoding Throughput\n[Gbit/s]"
     if y_col == Column.ENC_THROUGHPUT
-    else "Decoding Throughput\n[Gbit/s]"
+    else "Avg. Decoding Throughput\n[Gbit/s]"
   )
 
   plt.rcParams.update({"font.size": MAIN_FONTSIZE})
@@ -346,9 +346,9 @@ def plot_lost_blocks(data: pd.DataFrame, y_type: PlotType, category: Category, o
   x_label = r"Lost blocks per chunk"
   y_col = Column.ENC_THROUGHPUT if y_type == PlotType.ENCODE else Column.DEC_THROUGHPUT
   y_label = (
-    "Encoding Throughput\n[Gbit/s]"
+    "Avg. Encoding Throughput\n[Gbit/s]"
     if y_col == Column.ENC_THROUGHPUT
-    else "Decoding Throughput\n[Gbit/s]"
+    else "Avg. Decoding Throughput\n[Gbit/s]"
   )
 
   plt.rcParams.update({"font.size": MAIN_FONTSIZE})
